@@ -107,6 +107,12 @@ create a repository on github
 https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository
 
 
+~~~
+cd ~/vtamR
+git remote add origin https://github.com/meglecz/vtamR.git
+git remote -v
+~~~
+
 
 
 
