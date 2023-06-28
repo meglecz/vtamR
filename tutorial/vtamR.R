@@ -141,14 +141,50 @@ FilterPCRerror <- function(read_count_df, write_csv=F, outdir=outdir, pcr_error_
     group_by(asv) %>%
     summarize(read_count = sum(read_count)) %>%
     arrange(desc(read_count))
-  
+  # make fasta file with unique reads 
   fas <- paste(outdir_tmp, 'unique.fas', sep="")
-  blastout <- paste(outdir_tmp, 'unique_blastout.out', sep="")
+  vsearch_out <- paste(outdir_tmp, 'unique_vsearch_out.out', sep="")
   create_fasta_file(unique_asv_df$asv, fas)
+  # vsearch --usearch_global to find highly similar sequence pairs
+  vsearch <- paste("vsearch --usearch_global ", fas, " --db ", fas, " --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+  #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
+  system(vsearch)
+  results_vsearch<- read.csv(vsearch_out, header = FALSE, sep="\t")
+  colnames(results_vsearch) <- c("query","target","nb_ids","aln")
+  # non of the values easily outputted by vsearch take into the extenal gaps as a diff => correct this based on the alnlen and the number of identities
+  results_vsearch$nb_diff <- nchar(results_vsearch$aln) - results_vsearch$nb_ids
+  results_vsearch <- select(results_vsearch, -c(nb_ids, aln))
+  # keep only pairs with max_mismatch differences 
+  results_vsearch <- results_vsearch %>%
+    filter(nb_diff <= max_mismatch)
   
-  # vsearch all seq against all to find similar sequences
-  vsearch <- paste("vsearch --usearch_global ", fas, " --db ", fas, " --iddef 1 --self --id 0.90 --blast6out ", blastout, sep="")
-  --maxaccepts 0 --maxrejects 0
+  results_vsearch <- rename(results_vsearch, asv = query)
+  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")
+  results_vsearch <- rename(results_vsearch, qasv = asv)
+  results_vsearch <- rename(results_vsearch, asv = target)
+  results_vsearch <- rename(results_vsearch, qread_count = read_count)
+  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")  
+  results_vsearch <- rename(results_vsearch, tread_count = read_count)
+  results_vsearch <- rename(results_vsearch, tasv = asv)
+  
+  results_vsearch$PCRerror_target <- ((results_vsearch$qread_count * pcr_error_var_prop) > results_vsearch$tread_count)
+ 
+  results_vsearch <- results_vsearch %>%
+    filter(PCRerror_target==TRUE) %>%
+    group_by(tasv) %>%
+    select(tasv)
+  
+  
+   rownames(unique_asv_df) <- unique_asv_df$asv
+  
+  
+  for(i in 1:length(results_vsearch$qasv)){
+    if((results_vsearch$qread_count * pcr_error_var_prop) > results_vsearch$tread_count){
+      unique_asv_df[results_vsearch$tasv, "PCRerror_target"] <- 1
+    }
+  }
+  
+  results_vsearch <- filter(results_vsearch$PCRerror_target == 1)
   
   if(by_sample){ # sample by sample
     sample_list <- unique(read_count_df$sample)
@@ -202,9 +238,8 @@ create_fasta_file <- function(sequences, filename) {
   file <- file(filename, "w")
   # Iterate over the sequences and write them to the file
   for (i in seq_along(sequences)) {
-    header <- paste0(">Seq", i)
-    sequence <- sequences[[i]]
-    writeLines(c(header, sequence, ""), file)
+    header <- paste0(">", sequences[[i]])
+    writeLines(c(header, sequences[[i]], ""), file)
   }
   # Close the file
   close(file)
@@ -299,4 +334,19 @@ close(cmd)
 
 # Print the output
 print(output)
+
+
+
+makeblastdb -in local/out/small/tmp_1687945245/test.fas -dbtype nucl
+blastn –db local/out/small/tmp_1687945245/test.fas –query local/out/small/tmp_1687945245/test.fas –outfmt 6 –out local/out/small/tmp_1687945245/test_blastout.out
+
+pipe_vsearch <- pipe(vsearch)
+results <- read.table( pipe_vsearch )
+
+blast <- "blastn -db local/out/small/tmp_1687945245/test.fas -query local/out/small/tmp_1687945245/test.fas -outfmt 6"
+myPipe <- pipe(blast)
+results <- read.table( myPipe )
+colnames( results ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
+                          "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
+                          "S.start", "S.end", "E", "Bits" )
 
