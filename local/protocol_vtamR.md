@@ -86,3 +86,28 @@ vtamR can deal with just one marker and plate in one go
 
 
 
+## versioning with git
+
+https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github
+
+~~~
+cd ~/vtamR
+
+git init -b main
+git add .
+
+git config --global user.email emese.meglecz@imbe.fr
+git config --global user.name meglecz
+
+git commit -m "First commit"
+
+~~~
+
+create a repository on github
+https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository
+
+
+
+
+
+
