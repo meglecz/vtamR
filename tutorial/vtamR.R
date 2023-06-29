@@ -33,7 +33,7 @@ fastqdir <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/"
 fileinfo <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/fileinfo_vtamr.csv"
 
 # create the output directory and check the the slash at the end
-outdir <- check_dir(dir="local/out/small")
+outdir <- check_dir(dir="local/out")
 
 # Measure runtime using system.time()
 start_time <- Sys.time()  # Record the start time
@@ -65,19 +65,19 @@ stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", param
 ### LFN_filters
 ###
 # LFN_read_count
-lfn_read_count_cutoff = 2
+lfn_read_count_cutoff = 10
 read_count_df_lfn_read_count <- LFN_read_count(read_count_df, lfn_read_count_cutoff, write_csv=F, outdir = outdir)
 stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
 
 
 # LFN_sample_replicate (by column)
-lfn_sample_replicate_cutoff = 0.1
+lfn_sample_replicate_cutoff = 0.001
 read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, lfn_sample_replicate_cutoff, write_csv=F, outdir = outdir)
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 
 
 # LFN_sample_variant (by line)
-lnf_variant_cutoff = 0.1
+lnf_variant_cutoff = 0.001
 by_replicate = TRUE
 read_count_df_lnf_variant <- LFN_variant(read_count_df, lnf_variant_cutoff, by_replicate, write_csv=F, outdir = outdir)
 param_values <- paste(lnf_variant_cutoff, by_replicate, sep=";")
@@ -113,11 +113,6 @@ genetic_code = 5
 read_count_df <- FilterCodonStop(read_count_df, write_csv=F, outdir=outdir, genetic_code=genetic_code)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
 
-temp_df <- read_count_df
-read_count_df <- temp_df
-
-start_time <- Sys.time()  # Record the start time
-
 ###
 ### FilerPCRerror
 ###
@@ -125,127 +120,10 @@ pcr_error_var_prop = 0.1
 max_mismatch = 1
 by_sample = T
 sample_prop = 0.8
-read_count_df <- FilterPCRerror(read_count_df, write_csv=F, outdir=outdir, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, sample_prop=sample_prop)
-params <- paste(pcr_error_var_prop, max_mismatch, sample_prop, by_sample, sep=";")
+vsearch_path = ""
+read_count_df <- FilterPCRerror(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop)
+params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sample_prop, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
-
-
-FilterPCRerror <- function(read_count_df, write_csv=F, outdir=outdir, pcr_error_var_prop=0.1, max_mismatch=1, sample_prop=0.8){
-  
-  # create a tmp directory for temporary files
-  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sep='')
-  outdir_tmp <- check_dir(outdir_tmp)
-  
-  # get unique list of ASVs with their total read_count in the run
-  unique_asv_df <- read_count_df %>%
-    group_by(asv) %>%
-    summarize(read_count = sum(read_count)) %>%
-    arrange(desc(read_count))
-  # make fasta file with unique reads 
-  fas <- paste(outdir_tmp, 'unique.fas', sep="")
-  vsearch_out <- paste(outdir_tmp, 'unique_vsearch_out.out', sep="")
-  create_fasta_file(unique_asv_df$asv, fas)
-  # vsearch --usearch_global to find highly similar sequence pairs
-  vsearch <- paste("vsearch --usearch_global ", fas, " --db ", fas, " --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
-  #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
-  system(vsearch)
-  results_vsearch<- read.csv(vsearch_out, header = FALSE, sep="\t")
-  colnames(results_vsearch) <- c("query","target","nb_ids","aln")
-  # non of the values easily outputted by vsearch take into the extenal gaps as a diff => correct this based on the alnlen and the number of identities
-  results_vsearch$nb_diff <- nchar(results_vsearch$aln) - results_vsearch$nb_ids
-  results_vsearch <- select(results_vsearch, -c(nb_ids, aln))
-  # keep only pairs with max_mismatch differences 
-  results_vsearch <- results_vsearch %>%
-    filter(nb_diff <= max_mismatch)
-  
-  results_vsearch <- rename(results_vsearch, asv = query)
-  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")
-  results_vsearch <- rename(results_vsearch, qasv = asv)
-  results_vsearch <- rename(results_vsearch, asv = target)
-  results_vsearch <- rename(results_vsearch, qread_count = read_count)
-  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")  
-  results_vsearch <- rename(results_vsearch, tread_count = read_count)
-  results_vsearch <- rename(results_vsearch, tasv = asv)
-  
-  results_vsearch$PCRerror_target <- ((results_vsearch$qread_count * pcr_error_var_prop) > results_vsearch$tread_count)
- 
-  results_vsearch <- results_vsearch %>%
-    filter(PCRerror_target==TRUE) %>%
-    group_by(tasv) %>%
-    select(tasv)
-  
-  
-   rownames(unique_asv_df) <- unique_asv_df$asv
-  
-  
-  for(i in 1:length(results_vsearch$qasv)){
-    if((results_vsearch$qread_count * pcr_error_var_prop) > results_vsearch$tread_count){
-      unique_asv_df[results_vsearch$tasv, "PCRerror_target"] <- 1
-    }
-  }
-  
-  results_vsearch <- filter(results_vsearch$PCRerror_target == 1)
-  
-  if(by_sample){ # sample by sample
-    sample_list <- unique(read_count_df$sample)
-    # loop over samples
-    for(sample_loc in sample_list){
-      # get unique list of ASVs with their total read_count in the sample
-      unique_asv_df_sample <- read_count_df %>%
-        filter(sample == sample_loc) %>%
-        group_by(asv)%>%
-        summarize(read_count = sum(read_count))%>%
-        arrange(desc(read_count))
-      
-      
-      
-      # flag PCR errors
-      
-      
-      # remove read_count column
-      unique_asv_df_sample <- unique_asv_df_sample[, -which(names(unique_asv_df_sample) == "read_count")]
-      # add a column for for each sample to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
-    }
-  }
-  else{ # whole dataset
-    # add a column for for each sample to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-    unique_asv_df <- flagPCRerrors(unique_asv_df_sample, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
-  }
-  
-  # count the number of times each ASV has been flagged and when it has not. Ignore NA, when the ASV is not present in the sample
-  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
-  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
-  # keep only ASVs, that are not flagged in sample_prop proportion of the samples where they are present  
-  unique_asv_df <- unique_asv_df %>%
-    filter(no/(yes+no) >= (1-sample_prop))
-  
-  # eliminate potential PCRerrors from read_count_df
-  read_count_df <- read_count_df %>%
-    filter(asv %in% unique_asv_df$asv)
-  
-  if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
-  }
-  
-  return(read_count_df)
-}
-
-
-
-create_fasta_file <- function(sequences, filename) {
-  # Open the file for writing
-  file <- file(filename, "w")
-  # Iterate over the sequences and write them to the file
-  for (i in seq_along(sequences)) {
-    header <- paste0(">", sequences[[i]])
-    writeLines(c(header, sequences[[i]], ""), file)
-  }
-  # Close the file
-  close(file)
-}
-
-
 
 ###
 ### print output files

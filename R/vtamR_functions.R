@@ -487,6 +487,167 @@ FilterCodonStop <- function (read_count_df, write_csv=F, outdir=outdir, genetic_
   return(read_count_df)
 }
 
+#' write_fasta_seq_as_id
+#' 
+#' Write a fasta file using the sequences as ID
+#'  
+#' @param sequences list of sequences
+#' @param filename output file name, including path
+#' @export
+#' 
+write_fasta_seq_as_id <- function(sequences, filename) {
+  # Open the file for writing
+  file <- file(filename, "w")
+  # Iterate over the sequences and write them to the file
+  for (i in seq_along(sequences)) {
+    header <- paste0(">", sequences[[i]])
+    writeLines(c(header, sequences[[i]], ""), file)
+  }
+  # Close the file
+  close(file)
+}
 
+#' flagPCRerror_vsearch
+#' 
+#' Filter out all ASVs if they are very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a dataframe
+#' The whole plate can be analysed et once (by_sampe=F)
+#'  
+#' @param unique_asv_df data frame with the following variables: asv, read_count; ASVs should be unique
+#' @param pcr_error_var_prop if the proportion of read_counts of two similar ASVs is bellow pcr_error_var_prop, the less abundant is flagged as a PCR error
+#' @param max_mismatch maximum number of mismatches (gaps included) to consider two ASVs as similar
+#' @param outdir name of the output directory for temporary files
+#' @param vsearch_path path to vsearch executable; can be empty if vsearch in the the PATH
+#' @export
+#' 
+flagPCRerror_vsearch <- function(unique_asv_df, outdir="", vsearch_path="", pcr_error_var_prop=0.1, max_mismatch=1){
+  
+  # no ASV in the unique_asv_df => return a dataframe with 0 for all ASVs in PCRerror column
+  if(length(unique_asv_df$asv) == 0){ 
+    unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
+    return(unique_asv_df)
+  }
+  
+  # create a tmp directory for temporary files using time and a random number
+  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  # make fasta file with unique reads; use sequences as ids
+  fas <- paste(outdir_tmp, 'unique.fas', sep="")
+  write_fasta_seq_as_id(unique_asv_df$asv, fas)
+  # vsearch --usearch_global to find highly similar sequence pairs
+  vsearch_out <- paste(outdir_tmp, 'unique_vsearch_out.out', sep="")
+  vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, " --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+  #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
+  system(vsearch)
 
+  # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs
+  if(file.size(vsearch_out) == 0){
+    unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
+    # Delete the temp directory
+    unlink(outdir_tmp, recursive = TRUE)
+    return(unique_asv_df)
+  }
+  
+  # read vsearch results
+  results_vsearch<- read.csv(vsearch_out, header = FALSE, sep="\t")
+  colnames(results_vsearch) <- c("query","target","nb_ids","aln")
+  # none of the values easily outputted by vsearch take into the extenal gaps as a diff => correct this, based on the alnlen and the number of identities
+  results_vsearch$nb_diff <- nchar(results_vsearch$aln) - results_vsearch$nb_ids
+  # delete unnecessary columns
+  results_vsearch <- select(results_vsearch, -c(nb_ids, aln))
+  # keep only pairs with max_mismatch differences 
+  results_vsearch <- results_vsearch %>%
+    filter(nb_diff <= max_mismatch)
+  
+  # rename columns and add read counts to query and target ASVs in results_vsearch from unique_asv_df
+  results_vsearch <- rename(results_vsearch, asv = query)
+  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")
+  results_vsearch <- rename(results_vsearch, qasv = asv)
+  results_vsearch <- rename(results_vsearch, asv = target)
+  results_vsearch <- rename(results_vsearch, qread_count = read_count)
+  results_vsearch <- left_join(results_vsearch, unique_asv_df, by="asv")  
+  results_vsearch <- rename(results_vsearch, tread_count = read_count)
+  results_vsearch <- rename(results_vsearch, tasv = asv)
+  
+  # flag target ASV as a PCR error, if low read_count compared to query ASV
+  results_vsearch$PCRerror_target <- ((results_vsearch$qread_count * pcr_error_var_prop) > results_vsearch$tread_count)
+  # keep only one column (tasv) with unique ASVs, that were flagged as PCRerror
+  results_vsearch <- results_vsearch %>%
+    filter(PCRerror_target==TRUE) %>%
+    group_by(tasv) %>%
+    select(tasv)
+  # complete unique_asv_df with a PCRerror column
+  unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
+  unique_asv_df$PCRerror[unique_asv_df$asv %in% results_vsearch$tasv] <- 1
+  
+  # Delete the temp directory
+  unlink(outdir_tmp, recursive = TRUE)
+  
+  return(unique_asv_df)
+}
+
+#' FilerPCRerror
+#' 
+#' Filter out all ASVs if they very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop)
+#' The whole plate can be analyzed et once (by_sampe=F) or sample by sample
+#'  
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param pcr_error_var_prop if the proportion of read_counts of two similar ASVs is bellow pcr_error_var_prop, the less abundant is flagged as a PCR error
+#' @param max_mismatch maximum number of mismatches (gaps included) to consider two ASVs as similar
+#' @param by_sample T/F, if T ASVs are flagged as an PCR error separately for each sample
+#' @param sample_prop if by_sample=T, the ASV must be flagged as an PCRerror in sample_prop of the cases to be eliminated
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @param vsearch_path path to vsearch executable; can be empty if vsearch in the the PATH
+#' @export
+#' 
+FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="", pcr_error_var_prop=0.1, max_mismatch=1, by_sample=T, sample_prop=0.8){
+  
+  # get unique list of ASVs with their total read_count in the run
+  unique_asv_df <- read_count_df %>%
+    group_by(asv) %>%
+    summarize(read_count = sum(read_count)) %>%
+    arrange(desc(read_count))
+  
+  if(by_sample){ # sample by sample
+    sample_list <- unique(read_count_df$sample)
+    # loop over samples
+    for(sample_loc in sample_list){
+      # get unique list of ASVs with their total read_count in the sample
+      unique_asv_df_sample <- read_count_df %>%
+        filter(sample == sample_loc) %>%
+        group_by(asv)%>%
+        summarize(read_count = sum(read_count))%>%
+        arrange(desc(read_count))
+      
+      # flag PCR errors; add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 0 otherwise
+      unique_asv_df_sample <- flagPCRerror_vsearch(unique_asv_df_sample, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
+      
+      # remove read_count column
+      unique_asv_df_sample <- unique_asv_df_sample[, -which(names(unique_asv_df_sample) == "read_count")]
+      # add a column for for each sample to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
+      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
+    }
+  }
+  else{ # whole dataset
+    # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
+    unique_asv_df <- flagPCRerror_vsearch(unique_asv_df, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
+  }
+  
+  # count the number of times each ASV has been flagged and when it has not. Ignore NA, when the ASV is not present in the sample
+  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
+  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
+  # keep only ASVs, that are not flagged in sample_prop proportion of the samples where they are present  
+  unique_asv_df <- unique_asv_df %>%
+    filter(no/(yes+no) >= (1-sample_prop))
+  
+  # eliminate potential PCRerrors from read_count_df
+  read_count_df <- read_count_df %>%
+    filter(asv %in% unique_asv_df$asv)
+  
+  if(write_csv){
+    write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
+  }
+  return(read_count_df)
+}
 

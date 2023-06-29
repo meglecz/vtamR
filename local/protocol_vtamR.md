@@ -117,3 +117,17 @@ git remote -v
 
 
 
+## Windows
+
+### vsearch
+
+Download binaries from
+
+https://github.com/torognes/vsearch/releases/download/v2.22.1/vsearch-2.22.1-win-x86_64.zip
+
+Dezipped to C:
+
+It is possible to ron from a terminal using vsearch.exe at the beginning of the command
+
+ 
+
