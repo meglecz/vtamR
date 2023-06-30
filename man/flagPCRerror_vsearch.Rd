@@ -24,6 +24,5 @@ flagPCRerror_vsearch(
 \item{max_mismatch}{maximum number of mismatches (gaps included) to consider two ASVs as similar}
 }
 \description{
-Filter out all ASVs if they are very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a dataframe
-The whole plate can be analysed et once (by_sampe=F)
+Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame
 }

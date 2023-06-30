@@ -51,6 +51,32 @@ read_count_df <- read_fastas_from_fileinfo(file=fileinfo, dir=fastqdir, write_cs
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 
 temp_df <- read_count_df
+read_count_df <- temp_df
+
+###
+### FilterChimera
+###
+vsearch_path = ""
+abskew=2
+by_sample = T
+sample_prop = 0.8
+read_count_df <- FilterChimera(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
+params <- paste(abskew, by_sample, sample_prop, sep=";")
+stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
+
+
+###
+### FilerPCRerror
+###
+pcr_error_var_prop = 0.1
+max_mismatch = 1
+by_sample = T
+sample_prop = 0.8
+vsearch_path = ""
+read_count_df <- FilterPCRerror(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop)
+params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sample_prop, sep=";")
+stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
+
 
 ###
 ### LFN_global_read_count
@@ -113,17 +139,6 @@ genetic_code = 5
 read_count_df <- FilterCodonStop(read_count_df, write_csv=F, outdir=outdir, genetic_code=genetic_code)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
 
-###
-### FilerPCRerror
-###
-pcr_error_var_prop = 0.1
-max_mismatch = 1
-by_sample = T
-sample_prop = 0.8
-vsearch_path = ""
-read_count_df <- FilterPCRerror(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop)
-params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sample_prop, sep=";")
-stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
 
 ###
 ### print output files

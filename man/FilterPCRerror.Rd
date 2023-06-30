@@ -24,7 +24,7 @@ FilterPCRerror(
 
 \item{vsearch_path}{path to vsearch executable; can be empty if vsearch in the the PATH}
 
-\item{pcr_error_var_prop}{if the proportion of read_counts of two similar ASVs is bellow pcr_error_var_prop, the less abundant is flagged as a PCR error}
+\item{pcr_error_var_prop}{if the proportion of read_counts of two similar ASVs is less or equal to pcr_error_var_prop, the less abundant is flagged as a PCR error}
 
 \item{max_mismatch}{maximum number of mismatches (gaps included) to consider two ASVs as similar}
 
@@ -33,6 +33,6 @@ FilterPCRerror(
 \item{sample_prop}{if by_sample=T, the ASV must be flagged as an PCRerror in sample_prop of the cases to be eliminated}
 }
 \description{
-Filter out all ASVs if they very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop)
-The whole plate can be analyzed et once (by_sampe=F) or sample by sample
+Filter out an ASVs if it is very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop).
+The whole dataset can be analyzed at once (by_sampe=F) or sample by sample.
 }
