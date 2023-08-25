@@ -12,7 +12,8 @@ FilterPCRerror(
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
   by_sample = T,
-  sample_prop = 0.8
+  sample_prop = 0.8,
+  sep = ","
 )
 }
 \arguments{
@@ -35,4 +36,5 @@ FilterPCRerror(
 \description{
 Filter out an ASVs if it is very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop).
 The whole dataset can be analyzed at once (by_sampe=F) or sample by sample.
+Returns the filtered read_count_df data frame.
 }

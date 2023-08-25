@@ -8,7 +8,8 @@ FilterCodonStop(
   read_count_df,
   write_csv = F,
   outdir = outdir,
-  genetic_code = 5
+  genetic_code = 5,
+  sep = ","
 )
 }
 \arguments{
@@ -21,5 +22,6 @@ FilterCodonStop(
 \item{genetic_code}{genetic code number from https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}
 }
 \description{
-Filter out all ASVs, if there is a codon stop in all three frames of the direct strand
+Filter out all ASVs, if there is a codon stop in all three frames of the direct strand.
+Returns the filtered read_count_df data frame.
 }

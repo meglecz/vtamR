@@ -4,7 +4,13 @@
 \alias{LFN_sample_replicate}
 \title{LFN_sample_replicate}
 \usage{
-LFN_sample_replicate(read_count_df, cutoff = 0.001, write_csv = F, outdir = NA)
+LFN_sample_replicate(
+  read_count_df,
+  cutoff = 0.001,
+  write_csv = F,
+  outdir = NA,
+  sep = ","
+)
 }
 \arguments{
 \item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
@@ -16,5 +22,6 @@ LFN_sample_replicate(read_count_df, cutoff = 0.001, write_csv = F, outdir = NA)
 \item{outdir}{name of the output directory}
 }
 \description{
-Eliminate occurrences where the readcount/sum(reacount of the sample-replicate) is less than cutoff
+Eliminate occurrences where the readcount/sum(reacount of the sample-replicate) is less than cutoff.
+Returns the filtered read_count_df data frame.
 }

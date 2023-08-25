@@ -4,10 +4,10 @@
 \alias{read_fastas_from_fileinfo}
 \title{Read all fasta files in fileinfo file to a data frame}
 \usage{
-read_fastas_from_fileinfo(file, dir, write_csv = F, outdir = NA)
+read_fastas_from_fileinfo(file, dir, write_csv = F, outdir = NA, sep = ",")
 }
 \arguments{
-\item{file}{tsv file with columns: plate    marker    sample    replicate    file}
+\item{file}{csv file with columns:  plate, marker, sample,  replicate, file, (optional: sample_type(mock/negative/real), habitat)}
 
 \item{dir}{name of the directory with fasta file}
 

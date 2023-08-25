@@ -7,7 +7,7 @@
 read_fasta_count_reads(file)
 }
 \arguments{
-\item{file}{tsv file with columns: plate    marker    sample    replicate    file}
+\item{file}{fasta file}
 }
 \description{
 Read only sequences from input fasta file.

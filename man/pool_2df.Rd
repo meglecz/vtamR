@@ -12,5 +12,6 @@ pool_2df(df1, df2)
 \item{df2}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
 }
 \description{
-pool 2 count_read_df data frames, and keep only occurrences present in all filters
+pool 2 count_read_df data frames, and keep only occurrences present in all filters.
+returns a merged data frame containing only lines present in the 2 input data frames
 }

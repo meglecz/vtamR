@@ -15,7 +15,8 @@ check_dir <- function(dir){
   return(dir)
 }
 
-#' Get read, variant, sample and replicate counts
+#' Get read, variant, sample and replicate counts.
+#' Complete the stat_df with the above statistics.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param stat_df data frame with the following variables: parameters, asv_count, read_count, read_count, sample_count, sample_replicate_count
@@ -51,7 +52,7 @@ get_stat <- function(read_count_df, stat_df, stage, params=NA){
 #' Count the number of reads of each ASVs.
 #' Return a tibble with asv and nb_reads.
 #' 
-#' @param file tsv file with columns: plate	marker	sample	replicate	file
+#' @param file fasta file
 #' @export
 read_fasta_count_reads <- function (file) {
   fas <- read.fasta(file, seqonly = T)
@@ -77,15 +78,15 @@ read_fasta_count_reads <- function (file) {
 #' Count the number of reads of each ASVs in each sample-replicate.
 #' Returns a df ("asv", "plate", "marker", "sample", "replicate", "read_count").
 #' 
-#' @param file tsv file with columns: plate	marker	sample	replicate	file
+#' @param file csv file with columns:  plate, marker, sample,  replicate, file, (optional: sample_type(mock/negative/real), habitat)
 #' @param dir name of the directory with fasta file 
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-read_fastas_from_fileinfo <- function (file, dir, write_csv=F, outdir=NA) {
+read_fastas_from_fileinfo <- function (file, dir, write_csv=F, outdir=NA, sep=",") {
   # read all fasta files in fileinfo to a read_count_df
   # read fileinfo to df
-  fileinfo_df <- read.csv(file, header=T, sep="\t")
+  fileinfo_df <- read.csv(file, header=T, sep=sep)
   dir <- check_dir(dir)
   # define empty read_count_df to pool the results of variables
   read_count_df <- data.frame(asv=character(),
@@ -114,21 +115,22 @@ read_fastas_from_fileinfo <- function (file, dir, write_csv=F, outdir=NA) {
   read_count_df <- read_count_df[, c("asv", "plate", "marker", "sample", "replicate", "read_count")]
   
   if(write_csv){
-     write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "Input.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
 #' LFN_global_read_count
 #' 
-#' Eliminate ASVs with less than cutoff reads in the dataset
+#' Eliminate ASVs with less than cutoff reads in the dataset.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum number of reads for an ASV; default=10
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-LFN_global_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA) {
+LFN_global_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA, sep=",") {
   df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count=sum(read_count)) %>%
@@ -136,38 +138,40 @@ LFN_global_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "LFN_global_read_count.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_global_read_count.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
 #' LFN_read_count
 #' 
-#' Eliminate occurrences with less than cutoff reads
+#' Eliminate occurrences with less than cutoff reads.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum number of reads for an occurrence; default=10; default=10
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-LFN_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA) {
+LFN_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA, sep=",") {
   read_count_df <- filter(read_count_df,  (read_count >= cutoff))
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "LFN_read_count.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_read_count.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
 #' LFN_sample_replicate
 #' 
-#' Eliminate occurrences where the readcount/sum(reacount of the sample-replicate) is less than cutoff
+#' Eliminate occurrences where the readcount/sum(reacount of the sample-replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum proportion for an occurrence within a sample-replicate; default=0.001
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-LFN_sample_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA) {
+LFN_sample_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
   
   #Make wide format from de df
   wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
@@ -186,20 +190,21 @@ LFN_sample_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outd
   read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "LFN_sample_replicate.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_sample_replicate.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_sample_replicate)
 }
 #' LFN_variant_all
 #' 
-#' Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff 
+#' Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum proportion for an occurrence within an asv; default=0.001
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA) {
+LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
   
   #Make wide format from de df
   wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
@@ -218,13 +223,14 @@ LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA
   read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "LFN_variant_all.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_variant_all.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_sample_replicate)
 }
 #' LFN_variant_replicate
 #' 
-#' Eliminate occurrences where the read_count/sum(read_count of all asvs in replicate) is less than cutoff 
+#' Eliminate occurrences where the read_count/sum(read_count of all asvs in replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum proportion for an occurrence within a asv-replicate; default=0.001
@@ -232,7 +238,7 @@ LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA
 #' @param outdir name of the output directory 
 #' @export
 #' 
-LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA) {
+LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
   
   #get the list of replicates
   replicate_list <- unique(read_count_df$replicate)
@@ -246,20 +252,21 @@ LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, out
   # make one data frame for each replicate and filter them as in filter_lnf_variant
   for(i in replicate_list){
     replicate_df <- filter(read_count_df,  (replicate == i))
-    replicate_df_filtered <- LFN_variant_all(replicate_df, cutoff, write_csv, outdir)
+    replicate_df_filtered <- LFN_variant_all(replicate_df, cutoff, write_csv, outdir, sep=",")
     read_count_df_lnf_variant_replicate <- rbind(read_count_df_lnf_variant_replicate, replicate_df_filtered)
   }
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "LFN_variant_replicate.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_variant_replicate.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_variant_replicate)
 }
 
 #' LFN_variant
 #' 
-#' If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff 
-#' If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv with its replicate) is less than cutoff 
+#' If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
+#' If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv with its replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
 #' 
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff minimum proportion for an occurrence within an asv or an asv-replicate; default=0.001
@@ -267,19 +274,20 @@ LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, out
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-LFN_variant <- function (read_count_df, cutoff=0.001, by_replicate=FALSE, write_csv=F, outdir=NA) {
+LFN_variant <- function (read_count_df, cutoff=0.001, by_replicate=FALSE, write_csv=F, outdir=NA, sep=",") {
   if(by_replicate == T){
-    read_count_df_lnf_variant <- LFN_variant_replicate(read_count_df, cutoff, write_csv, outdir)
+    read_count_df_lnf_variant <- LFN_variant_replicate(read_count_df, cutoff, write_csv, outdir, sep=",")
   }
   else{
-    read_count_df_lnf_variant <- LFN_variant_all(read_count_df, cutoff, write_csv, outdir)
+    read_count_df_lnf_variant <- LFN_variant_all(read_count_df, cutoff, write_csv, outdir, sep=",")
   }
   return(read_count_df_lnf_variant)
 }
 
 #' pool_2df
 #' 
-#' pool 2 count_read_df data frames, and keep only occurrences present in all filters
+#' pool 2 count_read_df data frames, and keep only occurrences present in all filters.
+#' returns a merged data frame containing only lines present in the 2 input data frames
 #' 
 #' @param df1 data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param df2 data frame with the following variables: asv, plate, marker, sample, replicate, read_count
@@ -306,7 +314,7 @@ pool_2df <- function (df1, df2) {
 #' @param outdir name of the output directory
 #' @export
 #' 
-pool_LFN <- function (... , write_csv=F, outdir=NA) {
+pool_LFN <- function (... , write_csv=F, outdir=NA, sep=",") {
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
@@ -314,14 +322,15 @@ pool_LFN <- function (... , write_csv=F, outdir=NA) {
   }
   
   if(write_csv){
-    write.csv(merged, file = paste(outdir, "LFN_pooled.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "LFN_pooled.csv", sep=""),  row.names = F, sep=sep)
   }
   return(merged)
 }
 
 #' FilterMinReplicateNumber
 #' 
-#' Filter out all occurrences where the asv in not present in cutoff replicates
+#' Filter out all occurrences where the asv in not present in cutoff replicates.
+#' Returns the filtered read_count_df data frame.
 #'  
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param cutoff Minimum number of replicates; default=2
@@ -329,7 +338,7 @@ pool_LFN <- function (... , write_csv=F, outdir=NA) {
 #' @param outdir name of the output directory
 #' @export
 #'
-FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdir=NA){
+FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdir=NA, sep=","){
   # add a temporary column with asv and sample concatenated
   read_count_df$tmp <- paste(read_count_df$asv,  read_count_df$sample, sep="-")
   # make a df_tmp containing the number of replicates for each asv-sample combination
@@ -342,7 +351,7 @@ FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdi
   read_count_df$tmp <- NULL
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "FilterMinReplicateNumber.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "FilterMinReplicateNumber.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
@@ -356,7 +365,7 @@ FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdi
 #' @param outdir name of the output directory
 #' @export
 #' 
-FilterIndel <- function(read_count_df, write_csv=F, outdir){
+FilterIndel <- function(read_count_df, write_csv=F, outdir, sep=","){
   # add a column with the modulo 3 of the length of the asvs
   read_count_df$mod3 <- nchar(read_count_df$asv) %% 3
   # make a tibble with modulo3 of the length of the ASVs and their count 
@@ -376,7 +385,7 @@ FilterIndel <- function(read_count_df, write_csv=F, outdir){
   read_count_df$mod3 <- NULL
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "FilerIndel.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "FilerIndel.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
@@ -424,7 +433,8 @@ codon_stops_from_genetic_code <- function(genetic_code=5){
 
 #' FilterCodonStop
 #' 
-#' Filter out all ASVs, if there is a codon stop in all three frames of the direct strand
+#' Filter out all ASVs, if there is a codon stop in all three frames of the direct strand.
+#' Returns the filtered read_count_df data frame.
 #'  
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
@@ -432,7 +442,7 @@ codon_stops_from_genetic_code <- function(genetic_code=5){
 #' @param genetic_code genetic code number from https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes
 #' @export
 #' 
-FilterCodonStop <- function (read_count_df, write_csv=F, outdir=outdir, genetic_code=5){
+FilterCodonStop <- function (read_count_df, write_csv=F, outdir=outdir, genetic_code=5, sep=","){
   
   codon_stops <- codon_stops_from_genetic_code(genetic_code=genetic_code)
   if(length(codon_stops) == 0){
@@ -482,34 +492,43 @@ FilterCodonStop <- function (read_count_df, write_csv=F, outdir=outdir, genetic_
   read_count_df <- filter(read_count_df, (asv %in% unique_asv_df$asv))
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "FilterCodonStop.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
-#' write_fasta_seq_as_id
+#' write_fasta
 #' 
 #' Write a fasta file using the sequences as ID
 #'  
 #' @param sequences list of sequences
 #' @param filename output file name, including path
+#' @param seq_as_id T/F; It TRUE, use sequences as seqID (FALSE by default)
 #' @export
 #' 
-write_fasta_seq_as_id <- function(sequences, filename) {
+write_fasta <- function(sequences, filename, seq_as_id=F) {
   # Open the file for writing
   file <- file(filename, "w")
   # Iterate over the sequences and write them to the file
   for (i in seq_along(sequences)) {
-    header <- paste0(">", sequences[[i]])
+    if(seq_as_id){
+      header <- paste0(">", sequences[[i]])
+    }else{
+      header <- paste0(">", i)
+    }
     writeLines(c(header, sequences[[i]], ""), file)
   }
   # Close the file
   close(file)
 }
 
+
+
+
 #' flagPCRerror_vsearch
 #' 
-#' Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame
+#' Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame.
+#' Adds a column to the input data frame, with 1 if sequence is a probable PCR error, an d0 otherwise
 #'  
 #' @param unique_asv_df data frame with the following variables: asv, read_count; ASVs should be unique
 #' @param pcr_error_var_prop if the proportion of read_counts of two similar ASVs is bellow pcr_error_var_prop, the less abundant is flagged as a PCR error
@@ -532,7 +551,7 @@ flagPCRerror_vsearch <- function(unique_asv_df, outdir="", vsearch_path="", pcr_
   
   # make fasta file with unique reads; use sequences as ids
   fas <- paste(outdir_tmp, 'unique.fas', sep="")
-  write_fasta_seq_as_id(unique_asv_df$asv, fas)
+  write_fasta(unique_asv_df$asv, fas, seq_as_id=T)
   # vsearch --usearch_global to find highly similar sequence pairs
   vsearch_out <- paste(outdir_tmp, 'unique_vsearch_out.out', sep="")
   vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
@@ -589,6 +608,7 @@ flagPCRerror_vsearch <- function(unique_asv_df, outdir="", vsearch_path="", pcr_
 #' 
 #' Filter out an ASVs if it is very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop).
 #' The whole dataset can be analyzed at once (by_sampe=F) or sample by sample.
+#' Returns the filtered read_count_df data frame.
 #'  
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param pcr_error_var_prop if the proportion of read_counts of two similar ASVs is less or equal to pcr_error_var_prop, the less abundant is flagged as a PCR error
@@ -600,7 +620,7 @@ flagPCRerror_vsearch <- function(unique_asv_df, outdir="", vsearch_path="", pcr_
 #' @param vsearch_path path to vsearch executable; can be empty if vsearch in the the PATH
 #' @export
 #' 
-FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="", pcr_error_var_prop=0.1, max_mismatch=1, by_sample=T, sample_prop=0.8){
+FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="", pcr_error_var_prop=0.1, max_mismatch=1, by_sample=T, sample_prop=0.8, sep=","){
   
   # get unique list of ASVs with their total read_count in the run
   unique_asv_df <- read_count_df %>%
@@ -645,14 +665,15 @@ FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="
     filter(!asv %in% unique_asv_df$asv)
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "FilterPCRerror.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
 #' flagChimera
 #' 
-#' Select chimeras in a dataframe of unique ASVs
+#' Select chimeras in a dataframe of unique ASVs.
+#' Add a column to the input data frame if the ASV is a probable chimera and 0 otherwise.
 #'  
 #' @param unique_asv_df data frame with the following variables: asv, read_count
 #' @param abskew A chimera must be at least abskew times less frequent that the parental ASVs 
@@ -718,7 +739,8 @@ flagChimera <- function(unique_asv_df, outdir="", vsearch_path="", abskew=2){
 
 #' FilterChimera
 #' 
-#' Filter out Chimeras
+#' Filter out Chimeras.
+#' Returns the filtered read_count_df data frame
 #'  
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
 #' @param abskew A chimera must be at least abskew times less frequent that the parental ASVs 
@@ -729,7 +751,7 @@ flagChimera <- function(unique_asv_df, outdir="", vsearch_path="", abskew=2){
 #' @param vsearch_path path to vsearch executable; can be empty if vsearch in the the PATH
 #' @export
 #' 
-FilterChimera <- function(read_count_df, write_csv=F, outdir="", vsearch_path="", by_sample=T, sample_prop=0.8, abskew=abskew){
+FilterChimera <- function(read_count_df, write_csv=F, outdir="", vsearch_path="", by_sample=T, sample_prop=0.8, abskew=abskew, sep=","){
   
   # get unique list of ASVs with their total read_count in the run
   unique_asv_df <- read_count_df %>%
@@ -774,9 +796,247 @@ FilterChimera <- function(read_count_df, write_csv=F, outdir="", vsearch_path=""
     filter(!asv %in% unique_asv_df$asv)
   
   if(write_csv){
-    write.csv(read_count_df, file = paste(outdir, "Input.csv", sep=""))
+    write.table(read_count_df, file = paste(outdir, "FilterChimera.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
 }
 
+#' make_renkonen_df
+#' 
+#' Calculate renkonen distances between all pairs  of replicates within samples.
+#' Return a data frame with the following columns: sample, replicate1, replicate2, renkonen_d
+#'  
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @export
+#'
+make_renkonen_df <- function(read_count_df){
+  
+  # list of samples
+  sample_list <- unique(read_count_df$sample)
+  # fine empty dataframe
+  renkonen_df <- data.frame("sample" = character(),
+                            "replicate1"  = character(),
+                            "replicate2"  = character(),
+                            "renkonen_d" = numeric())
+  # loop over samples
+  for(samp in sample_list){
+    # get data for a given samples
+    sample_df <- read_count_df %>%
+      filter(sample == samp)
+    # list of replicates for the sample
+    replicate_list <- unique(sample_df$replicate)
+    
+    # loop over all pairs of replicates within sample
+    for(i in 1:(length(replicate_list)-1)){
+      # data frame for samp replicate i
+      dfi <- filter(sample_df, replicate == replicate_list[[i]])
+      for(j in ((i+1):length(replicate_list))){
+        # data frame for samp replicate j
+        dfj <- filter(sample_df, replicate == replicate_list[[j]])
+        # make a data frame with all ASVs in at least one of the 2 replicates
+        df <- full_join(dfi, dfj, by="asv")
+        # replace NA by 0
+        df <- df %>%
+          mutate(read_count.x = ifelse(is.na(read_count.x), 0, read_count.x)) %>%
+          mutate(read_count.y = ifelse(is.na(read_count.y), 0, read_count.y))
+        # calculate  number of reads for variant x in replicate i / number of reads in replicate i
+        df$read_count.x <- df$read_count.x/ sum(df$read_count.x)
+        df$read_count.y <- df$read_count.y/ sum(df$read_count.y)
+        # minimum of the above proportion between the 2 replicates
+        df$min <- pmin(df$read_count.x, df$read_count.y)
+        rdist <- 1- sum(df$min)
+        # add line to renkonen_df
+        new_line <- data.frame(sample = samp, replicate1 = as.character(replicate_list[[i]]), replicate2 = as.character(replicate_list[[j]]), renkonen_d = rdist)
+        renkonen_df <- rbind(renkonen_df, new_line)
+      }
+    }
+  }
+  return(renkonen_df)
+}
 
+#' FilerRenkonen
+#' 
+#' Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample.
+#' Returns the filtered read_count_df data frame
+#'  
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param renkonen_distance_quantile quantile renkonen distance to determine cutoff value (among all distances, the lowest renkonen_distance_quantile proportion of values are considered as bellow cutoff)
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @export
+#' 
+FilerRenkonen <- function(read_count_df, write_csv=F, outdir="", renkonen_distance_quantile=0.9, sep=","){
+  # calculate Renkonen distances between all pairs of replicates of the within sample
+  renkonen_df <- make_renkonen_df(read_count_df)
+  # det the cut off renkonen distance; values > cutoff are considered as high
+  renkonen_df <- renkonen_df %>%
+    arrange(renkonen_d)
+  last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)
+  cutoff <- renkonen_df$renkonen_d[last_row]
+  
+  # get list of samples
+  sample_list <- unique(renkonen_df$sample)
+  # filter out replicates sample by smaple
+  for(samp in sample_list){
+    sample_df <- renkonen_df %>%
+      filter(sample == samp)
+    # make a df with the replicate columns exchanged
+    sample_tmp <- data.frame("sample" = sample_df$sample,
+                             "replicate1"  = sample_df$replicate2,
+                             "replicate2"  = sample_df$replicate1,
+                             "renkonen_d" = sample_df$renkonen_d)
+    # complete sample_df to include distances between repl X and Y and also Y and X
+    sample_df <- rbind(sample_df, sample_tmp)
+    # get unique list of replicates
+    replicate_list <-  unique(sample_df$replicate1)
+    # the minimum number of distances to be bellow cutoff, to keep the replicate
+    min_number_of_distances_bellow_cutoff <- (length(replicate_list) -1) / 2
+    
+    # keep only distances above cutoff in sample_df
+    sample_df <- sample_df %>%
+      filter(renkonen_d > cutoff)
+    
+    # count for each replicate the number of distances above ctuoff 
+    sample_df <- sample_df %>%
+      group_by(replicate1) %>%
+      summarize(n_dist=length(renkonen_d)) %>%
+      filter(n_dist > min_number_of_distances_bellow_cutoff)
+    
+    # eliminate replicates with too many distances above cutoff
+    read_count_df <- read_count_df %>%
+      filter(!(sample == samp & replicate %in% sample_df$replicate1))
+  }
+  
+  if(write_csv){
+    write.table(read_count_df, file = paste(outdir, "FilerRenkonen.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(read_count_df)  
+}
+
+#' Pool replicates sample by sample
+#' 
+#' Take the mean non-zero read counts over replicates for each sample and asv.
+#' Returns a data frame with the following columns: asv, plate, marker, sample, mean_read_count (over replicates)
+#'  
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param digits round the mean read counts to digits
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @export
+#'
+PoolReplicates <- function(read_count_df, digits=0, write_csv=F, outdir="", sep=","){
+  
+  read_count_samples_df <- read_count_df %>%
+    group_by(asv,plate,marker,sample) %>%
+    summarize(mean_read_count = mean(read_count), .groups="drop_last")
+  
+  read_count_samples_df$mean_read_count <- round(read_count_samples_df$mean_read_count, digits =digits)
+  
+  if(write_csv){
+    write.table(read_count_df, file = paste(outdir, "PoolReplicates.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(read_count_samples_df)
+}
+
+#' Write ASV table
+#' 
+#' Samples in columns, ASVs in lines
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv, plate, marker, sample, read_count
+#' @param outfile name of the output csv file including path
+#' @param fileinfo 
+#' @param tsv file with columns: plate	marker	sample	replicate	file; only necessary if add_empty_samples==T
+#' @param add_empty_samples [T/F] add a column for each samples in the original data set, even if they do not have reads after filtering
+#' @param add_sums_by_sample [T/F] add a line with the total number of reads in each sample, and another with the number of ASVs in each sample
+#' @param add_sums_by_asv [T/F] add a column with the total number of reads for each ASV, and another with the number of samples, where the ASV is present
+#' @param add_expected_asv [T/F] add a column for each mock sample where keep and tolerate ASVs are marked
+#' @param mock_composition csv file with the following columns: plate,marker,sample,action,asv; action can take the following values: keep/tolerate
+#' @export
+#'
+write_asvtable <- function(read_count_samples_df, outfile="", fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
+  
+  # make a wide datafram with samples in columns, ASVs in lines
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(plate, marker, sample), values_from = mean_read_count, values_fill=0, names_sep = ".", names_sort=T))
+  
+  # read the fileinfo to a data frame 
+  if(add_empty_samples | add_expected_asv){
+    fileinfo_df <- read.csv(fileinfo, header=T, sep=sep)
+  }
+  
+  
+  if(add_empty_samples){
+    # make vector with samples already in the data frame
+    samples <- colnames(wide_read_count_df)
+    n <- nrow(wide_read_count_df)
+    
+    # make a vector with all unique samples in the fileinfo
+    all_samples <-unique(paste(fileinfo_df$plate, fileinfo_df$marker, fileinfo_df$sample, sep="."))
+    
+    # add a column for each samples tht are not yet in the data frame, with 0 read counts for all variants
+    for(sample in all_samples){
+      if(!(sample %in% samples)){
+        wide_read_count_df[[sample]] <- rep(0, n)
+      }
+    }
+  }
+  
+  # add a line with the total number of reads of each sample and another with the number of ASVs in the sample
+  if(add_sums_by_sample){
+    
+    # make a data frame with same columns as wide_read_count_df
+    sum_rc <- data.frame(matrix(0, nrow=2, ncol= ncol(wide_read_count_df)))
+    colnames(sum_rc) <- colnames(wide_read_count_df)
+    #  and total number of reads in line 1 
+    sum_rc[1,1] <- "Total number of reads"
+    sum_rc[1,-1] <- colSums(wide_read_count_df[,-1])
+    # Number of ASVs in each sample in line 2
+    sum_rc[2,1] <- "Number of ASVs"
+    sum_rc[2,-1] <- colSums(wide_read_count_df[,-1] != 0)
+    wide_read_count_df <- rbind(sum_rc, wide_read_count_df)
+  }
+  
+  # add sum of read and occurrence count for each asv and sample
+  if(add_sums_by_asv){
+    # count the total number of reads for each asv and add a column
+    wide_read_count_df$Total_number_of_reads <- rowSums(wide_read_count_df[,-1])
+    
+    # count the number of samples where the ASV is present
+    tmp <- read_count_samples_df %>%
+      group_by(asv) %>%
+      summarize(Number_of_samples=length(sample))
+    # add sample count to wide_read_count_df
+    wide_read_count_df <- full_join(wide_read_count_df, tmp, by="asv")
+  }
+  
+  if(add_expected_asv){
+    
+    # keep only mock samples in fileinfo_df
+    fileinfo_df <- fileinfo_df %>%
+      filter(sample_type=="mock")
+    
+    # make a vector with all unique samples in the fileinfo
+    mock_samples <-unique(paste(fileinfo_df$plate, fileinfo_df$marker, fileinfo_df$sample, sep="."))
+    
+    # keep only keep and tolerate action, in case the file contains ohter lines 
+    mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
+      filter(action=="keep" || action=="tolerate")
+    # rename samples
+    mock_asv$sample <- paste(mock_asv$plate, mock_asv$marker, mock_asv$sample, sep=".")
+    
+    # add a column for each mock samples with keep or tolerate if relevent for each ASV 
+    for(mock in mock_samples){
+      # make a df containing only data for a given mock sample
+      df <- mock_asv %>%
+        filter(sample==mock) %>%
+        select(action,asv)
+      
+      # add action to wide_read_count_df
+      new_colname <- paste("action", mock,  sep=".")
+      wide_read_count_df <- left_join(wide_read_count_df, df, by="asv") %>%
+        rename_with(~new_colname, action)
+    }
+  }
+  
+  write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
+  
+}

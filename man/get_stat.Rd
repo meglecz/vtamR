@@ -2,7 +2,8 @@
 % Please edit documentation in R/vtamR_functions.R
 \name{get_stat}
 \alias{get_stat}
-\title{Get read, variant, sample and replicate counts}
+\title{Get read, variant, sample and replicate counts.
+Complete the stat_df with the above statistics.}
 \usage{
 get_stat(read_count_df, stat_df, stage, params = NA)
 }
@@ -16,5 +17,6 @@ get_stat(read_count_df, stat_df, stage, params = NA)
 \item{params}{parameter value (or their concatenation if more than one) used for the filtering step}
 }
 \description{
-Get read, variant, sample and replicate counts
+Get read, variant, sample and replicate counts.
+Complete the stat_df with the above statistics.
 }

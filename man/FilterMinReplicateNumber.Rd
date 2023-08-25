@@ -4,7 +4,13 @@
 \alias{FilterMinReplicateNumber}
 \title{FilterMinReplicateNumber}
 \usage{
-FilterMinReplicateNumber(read_count_df, cutoff = 2, write_csv = F, outdir = NA)
+FilterMinReplicateNumber(
+  read_count_df,
+  cutoff = 2,
+  write_csv = F,
+  outdir = NA,
+  sep = ","
+)
 }
 \arguments{
 \item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
@@ -16,5 +22,6 @@ FilterMinReplicateNumber(read_count_df, cutoff = 2, write_csv = F, outdir = NA)
 \item{outdir}{name of the output directory}
 }
 \description{
-Filter out all occurrences where the asv in not present in cutoff replicates
+Filter out all occurrences where the asv in not present in cutoff replicates.
+Returns the filtered read_count_df data frame.
 }

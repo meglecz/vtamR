@@ -4,7 +4,7 @@
 \alias{FilterIndel}
 \title{FilterIndel}
 \usage{
-FilterIndel(read_count_df, write_csv = F, outdir)
+FilterIndel(read_count_df, write_csv = F, outdir, sep = ",")
 }
 \arguments{
 \item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}

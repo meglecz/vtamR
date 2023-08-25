@@ -4,7 +4,7 @@
 \alias{pool_LFN}
 \title{pool_LFN}
 \usage{
-pool_LFN(..., write_csv = F, outdir = NA)
+pool_LFN(..., write_csv = F, outdir = NA, sep = ",")
 }
 \arguments{
 \item{...}{a list of data frames}

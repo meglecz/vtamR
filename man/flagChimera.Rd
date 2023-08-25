@@ -16,5 +16,6 @@ flagChimera(unique_asv_df, outdir = "", vsearch_path = "", abskew = 2)
 \item{abskew}{A chimera must be at least abskew times less frequent that the parental ASVs}
 }
 \description{
-Select chimeras in a dataframe of unique ASVs
+Select chimeras in a dataframe of unique ASVs.
+Add a column to the input data frame if the ASV is a probable chimera and 0 otherwise.
 }

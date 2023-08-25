@@ -24,5 +24,6 @@ flagPCRerror_vsearch(
 \item{max_mismatch}{maximum number of mismatches (gaps included) to consider two ASVs as similar}
 }
 \description{
-Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame
+Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame.
+Adds a column to the input data frame, with 1 if sequence is a probable PCR error, an d0 otherwise
 }

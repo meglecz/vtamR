@@ -11,7 +11,8 @@ FilterChimera(
   vsearch_path = "",
   by_sample = T,
   sample_prop = 0.8,
-  abskew = abskew
+  abskew = abskew,
+  sep = ","
 )
 }
 \arguments{
@@ -30,5 +31,6 @@ FilterChimera(
 \item{abskew}{A chimera must be at least abskew times less frequent that the parental ASVs}
 }
 \description{
-Filter out Chimeras
+Filter out Chimeras.
+Returns the filtered read_count_df data frame
 }

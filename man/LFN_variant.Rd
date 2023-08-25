@@ -9,7 +9,8 @@ LFN_variant(
   cutoff = 0.001,
   by_replicate = FALSE,
   write_csv = F,
-  outdir = NA
+  outdir = NA,
+  sep = ","
 )
 }
 \arguments{
@@ -24,6 +25,7 @@ LFN_variant(
 \item{outdir}{name of the output directory}
 }
 \description{
-If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff
-If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv with its replicate) is less than cutoff
+If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
+If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv with its replicate) is less than cutoff.
+Returns the filtered read_count_df data frame.
 }

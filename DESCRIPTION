@@ -4,3 +4,4 @@ Title: Validation and Taxonomic Assigment of Metabarcoding data with R
 Version: 0.0.1.0
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
+Encoding: UTF-8

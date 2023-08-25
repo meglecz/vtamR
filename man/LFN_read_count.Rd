@@ -4,7 +4,13 @@
 \alias{LFN_read_count}
 \title{LFN_read_count}
 \usage{
-LFN_read_count(read_count_df, cutoff = 10, write_csv = F, outdir = NA)
+LFN_read_count(
+  read_count_df,
+  cutoff = 10,
+  write_csv = F,
+  outdir = NA,
+  sep = ","
+)
 }
 \arguments{
 \item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
@@ -16,5 +22,6 @@ LFN_read_count(read_count_df, cutoff = 10, write_csv = F, outdir = NA)
 \item{outdir}{name of the output directory}
 }
 \description{
-Eliminate occurrences with less than cutoff reads
+Eliminate occurrences with less than cutoff reads.
+Returns the filtered read_count_df data frame.
 }
