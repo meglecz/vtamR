@@ -107,6 +107,7 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, b
   outdir_tmp <- check_dir(outdir_tmp)
   
   # get unique list of ASVs 
+  # !!!!! TODO Make it possible to use an input file with asv as column => complete file
   seqs <- unique(read_count_samples_df$asv)
   blast_out <- paste(outdir_tmp, 'blast.out', sep="")
   # run blast
@@ -131,18 +132,23 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, b
   
   # replace old taxids (if any) by up to date ones 
   blast_res <- left_join(blast_res, old_taxid, by=c("staxids" = "old_tax_id"))
+#  blast_res[2, "tax_id"] <- 3333333
   blast_res$staxids[which(!is.na(blast_res$tax_id))] <- blast_res$tax_id[which(!is.na(blast_res$tax_id))]
+  # delete tax_id column since the values (if non NA were used to replace staxids)
   blast_res <- blast_res %>%
     select(-tax_id)
   
   # add taxonomy info
-  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id"))  
+  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
+    select(-parent_tax_id, -rank, -name_txt)
   
   for(i in 1:length(seqs)){ # go through all sequences 
+#    i=1
     df <- blast_res %>%
       filter(qseqid==i)
     
     for(p in 1:nrow(ltg_params_df)){ # for each pid
+#      p <- 6
       pidl <- ltg_params_df[p,"pid"]
       pcovl <- ltg_params_df[p,"pcov"]
       phitl <- ltg_params_df[p,"phit"]
@@ -157,10 +163,13 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, b
         filter(qcovhsp>=pcovl) %>%
         filter(taxlevel>=refresl)
       
-      # check if enough tata and seq among validated hits
+      # check if enough taxa and seq among validated hits
       tn <- length(unique(df_intern$staxids))
       if(tn >= taxnl & nrow(df_intern) > seqnl ){
-        #        make_ltg(df_intern$staxids)
+        ltg <- make_ltg(df_intern$staxids, phit = phitl)
+        print(i)
+        print(p)
+        print(ltg)
         break
       }
     }
@@ -168,9 +177,84 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, b
   
 }
 
-make_ltg <- function(taxids){
-
+make_ltg <- function(taxids, phit=70){
+  # taxids is a vector of taxids; there can be duplicated values
+#  taxids <- df_intern$staxids
+#  phit <- 70
+  
+  lineages <- get_lineage_ids(taxids, tax_df)
+  
+  ltg <- NA
+  for(i in 1:ncol(lineages)){
+#    i = 1
+    tmp <- as.data.frame(lineages[,i])
+    colnames(tmp) <- c("tax_id")
+    tmp <- tmp %>%
+      group_by(tax_id) %>%
+      summarize(nhit=length(tax_id)) %>%
+      arrange(desc(nhit))
+    
+    
+    max_hitn <- as.numeric(tmp[1,"nhit"])
+    if(max_hitn/sum(tmp[,"nhit"]) < phit/100){
+      break
+    }
+    ltg <- as.numeric(tmp[1,"tax_id"])
+  }
+  return(ltg)
+  
 }
+
+
+get_lineage_ids <- function(taxids, tax_df){
+  
+  lineages <- as.data.frame(taxids)
+  colnames(lineages) <- c("tax_id")
+  
+  # if input is dataframe with blast output
+  #lineages <- df_intern %>%
+  #  select(staxids) %>%
+  #  rename(tax_id=staxids)
+  
+  i <- 1
+  while(i < 100){
+    # use i as name instead of tax_id
+    new_colname <- as.character(i)
+    # add parent_tax_id and rename columns
+    lineages <- left_join(lineages, tax_df, by="tax_id")%>%
+    select(-rank, -name_txt, -taxlevel) %>%
+    # !! = interprent the variable
+    rename(!!new_colname :=tax_id, "tax_id"=parent_tax_id)
+    
+    i <- i+1
+    # stop if all lines has the same value (usually 1)
+    tid_list <- unique(lineages$tax_id)
+    if(length(tid_list) == 1 && tid_list[1] ==1){
+      break
+    }
+  }
+  # reverse order of columns
+  lineages <- lineages[, ncol(lineages):1]
+  # Apply the function to each row of the lineages data frame: 
+  # delete all 1, shift the remaining elements of each row to the beginning, 
+  # and replace missing values at the end of the row bu NA
+  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row, ncol(lineages))))
+  
+  return(lineages)
+}
+
+
+# Function to process a row
+delete_1_by_row <- function(row, col_number) {
+  # Remove all occurrences of 1
+  row <- row[row != 1]
+  
+  # Create a new row with NA at the end
+  new_row <- c(row, rep(NA, col_number - length(row)))
+  
+  return(new_row)
+}
+
 
 
 ###
