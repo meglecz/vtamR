@@ -107,26 +107,9 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 asv_tax <- TaxAssign(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir)
   
 TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy="", blast_db="", blast_path="", outdir=""){
-  ####
-  # create a tmp directory for temporary files using time and a random number
-  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir_tmp <- check_dir(outdir_tmp)
-  
-  ####
-  # get unique list of ASVs make BLAST and read results to data frame
-  # !!!!! TODO Make it possible to use an input file with asv as column => complete file
-  seqs <- unique(read_count_samples_df$asv)
-  blast_out <- paste(outdir_tmp, 'blast.out', sep="")
-  # run blast
-  run_blast(seqs, blast_db=blast_db, blast_path=blast_path, out=blast_out, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=8)
-  # read BLAST results 
-  blast_res <- read.delim(blast_out, header=F, sep="\t", fill=T, quote="")
-  colnames(blast_res) <- c("qseqid","sseqid","pident","length","qcovhsp","staxids","evalue") 
-  blast_res <- blast_res %>%
-    select(qseqid, pident, qcovhsp, staxids)
-  
+
   #### Read taxonomy info 
-  # read taxonomy file; quote="" is important, snce some of the taxon names have quites and this should be ignored
+  # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
   tax_df <- read.delim(taxonomy, header=T, sep="\t", fill=T, quote="")
   # make data frame with old taxids as line numbers and taxids in a columns
   old_taxid <- tax_df %>%
@@ -137,26 +120,26 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy="", blast_d
     select(-old_tax_id)
   tax_df <- unique(tax_df)
   
-  #### add taxinfo th blastres
-  # replace old taxids (if any) by up to date ones 
-  blast_res <- left_join(blast_res, old_taxid, by=c("staxids" = "old_tax_id"))
-  blast_res$staxids[which(!is.na(blast_res$tax_id))] <- blast_res$tax_id[which(!is.na(blast_res$tax_id))]
-  # delete tax_id column since the values (if non NA were used to replace staxids)
-  blast_res <- blast_res %>%
-    select(-tax_id)
-  # add taxonomy info
+  ####
+  # create a tmp directory for temporary files using time and a random number
+  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  ### run blast and clean/complete results
+  # run blast and read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
+  blast_res <- run_blast(read_count_samples_df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=8)
+  # add update old taxids to valid ones
+  blast_res <- update_taxids(blast_res, old_taxid)
+  # add taxlevel
   blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
     select(-parent_tax_id, -rank, -name_txt)
   
   ### make a lineage for each taxid in blastres
-  taxid_list <- unique(blast_res$staxids)
-  lineages <- get_lineage_ids(taxid_list, tax_df)
-  
-  taxres_df <- data.frame(asv = seqs, ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA)
-  for(i in 1:length(seqs)){ # go through all sequences 
- #  i=14
+  lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
+  # initialize data frame with asv and NA for all other cells
+  taxres_df <- data.frame(asv = unique(read_count_samples_df$asv), ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA)
+  for(i in 1:nrow(taxres_df)){ # go through all sequences 
     for(p in 1:nrow(ltg_params_df)){ # for each pid
-#      p <- 1
       pidl <- ltg_params_df[p,"pid"]
       pcovl <- ltg_params_df[p,"pcov"]
       phitl <- ltg_params_df[p,"phit"]
@@ -172,64 +155,30 @@ TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy="", blast_d
       # check if enough taxa and seq among validated hits
       tn <- length(unique(df_intern$staxids))
       if(tn >= taxnl & nrow(df_intern) >= seqnl ){
+        # make ltg if all conditions are met
         ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
+        # fill out line with the ltg and the parmeters that were used to get it
         taxres_df[i,2:ncol(taxres_df)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
-        print(i)
-        print(p)
-        print(ltg)
         break
       } # end if
     } # end p (pids)
   } # end i (asvs)
   
   
+  
+  
   return(taxres_df)
-  
-}
-
-make_ltg <- function(taxids, lineages, phit=70){
-  # taxids is a vector of taxids; there can be duplicated values
-  # taxids <- df_intern$staxids
-  lin <- as.data.frame(taxids)
-  colnames(lin) <- c("staxid")
-  
-  lin <- left_join(lin, lineages, by=c("staxid" = "taxids")) %>%
-    select(-where(~all(is.na(.))))
-  
-  ltg <- NA
-  if(length(unique(lin$staxid)) == 1){ # only one taxid among hits; avoid loops
-    ltg <-lin$staxid[1]
-  }else{
-    for(i in 2:ncol(lineages)){
-  #    i = 1
-      tmp <- as.data.frame(lineages[,i])
-      colnames(tmp) <- c("tax_id")
-      tmp <- tmp %>%
-        group_by(tax_id) %>%
-        summarize(nhit=length(tax_id)) %>%
-        arrange(desc(nhit))
-      
-      
-      max_hitn <- as.numeric(tmp[1,"nhit"])
-      if(max_hitn/sum(tmp[,"nhit"]) < phit/100){
-        break
-      }
-      ltg <- as.numeric(tmp[1,"tax_id"])
-    }
-  }
-  return(ltg)
 }
 
 
-get_lineage_ids <- function(taxids, tax_df){
+
+taxids <- unique(taxres_df$ltg_taxid)
+# !!!! finish this to get not simply the linega and the ranked lineage with names and taxlevels
+get_ranked_lineages <- function(taxids, tax_df){
+  
   # taxids is a vector of taxids; there can be duplicated values
   lineages <- as.data.frame(taxids)
   colnames(lineages) <- c("tax_id")
-  
-  # if input is dataframe with blast output
-  #lineages <- df_intern %>%
-  #  select(staxids) %>%
-  #  rename(tax_id=staxids)
   
   i <- 1
   while(i < 100){
@@ -237,9 +186,9 @@ get_lineage_ids <- function(taxids, tax_df){
     new_colname <- as.character(i)
     # add parent_tax_id and rename columns
     lineages <- left_join(lineages, tax_df, by="tax_id")%>%
-    select(-rank, -name_txt, -taxlevel) %>%
-    # !! = interprent the variable
-    rename(!!new_colname :=tax_id, "tax_id"=parent_tax_id)
+      select(-name_txt, -taxlevel) %>%
+      # !! = interprent the variable
+      rename(!!new_colname :=tax_id, "tax_id"=parent_tax_id)
     
     i <- i+1
     # stop if all lines has the same value (usually 1)
@@ -256,7 +205,7 @@ get_lineage_ids <- function(taxids, tax_df){
   # Apply the function to each row of the lineages data frame: 
   # delete all 1, shift the remaining elements of each row to the beginning, 
   # and replace missing values at the end of the row bu NA
-  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row, ncol(lineages))))
+  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row)))
   # add as a first column the taxid, so thay can easily me accessed
   lineages <- cbind(taxids, lineages)
   
@@ -264,16 +213,6 @@ get_lineage_ids <- function(taxids, tax_df){
 }
 
 
-# Function to process a row
-delete_1_by_row <- function(row, col_number) {
-  # Remove all occurrences of 1
-  row <- row[row != 1]
-  
-  # Create a new row with NA at the end
-  new_row <- c(row, rep(NA, col_number - length(row)))
-  
-  return(new_row)
-}
 
 
 

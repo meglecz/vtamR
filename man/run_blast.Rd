@@ -5,27 +5,29 @@
 \title{run_blast}
 \usage{
 run_blast(
-  seqs,
+  df,
   blast_db = "",
   blast_path = "",
-  out = "",
+  outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
   num_threads = 1
 )
 }
 \arguments{
-\item{seqs}{vector containing the quary sequences}
-
 \item{blast_db}{BLAST DB incuding path}
 
 \item{blast_path}{path to BLAST executables}
+
+\item{outdir}{output directory}
 
 \item{qcov_hsp_perc}{minimum query coverage}
 
 \item{perc_identity}{minimum percentage of identity}
 
 \item{num_threads}{number of threads}
+
+\item{seqs}{vector containing the query sequences}
 }
 \description{
 Run BLAST
