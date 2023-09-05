@@ -165,3 +165,221 @@ update_taxids <- function(df, old_taxid){
     select(-tax_id)
   return(df)
 }
+
+#' get_ranked_lineages
+#' 
+#' Returns  a data frame with the ranked lineages of taxids (columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
+#' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,
+#' family_taxid,family,genus_taxid,genus,species_taxid,species,)
+#'  
+#' @param taxids vector of taxIDs
+#' @param tax_df data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @export
+#'
+get_ranked_lineages <- function(taxids, tax_df){
+  
+  # taxids is a vector of taxids; there can be duplicated values
+  ranked_lineages <- as.data.frame(taxids)%>%
+    filter(!is.na(taxids)) %>%
+    rename(tax_id=taxids)
+  # make tmp data frame to keep a list of taxids
+  tmp <- ranked_lineages
+  # make tmp_lin data frame to keep a list of taxids and the lineage of each taxid (including, names, taxid, taxlevel)
+  tmp_lin <- ranked_lineages
+  
+  # define first colums, with taxid, name, taxlevel
+  ranked_lineages <- left_join(ranked_lineages, tax_df, by="tax_id")%>%
+    select(-parent_tax_id)%>%
+    rename(ltg_taxid=tax_id, ltg_name=name_txt, ltg_rank=rank, ltg_rank_index=taxlevel) %>%
+    select(ltg_taxid, ltg_name, ltg_rank, ltg_rank_index)
+  # add columns for each major taxlevel (taxid and name)
+  now_cols <- c(
+    "superkingdom_taxid", "superkingdom",
+    "kingdom_taxid", "kingdom",
+    "phylum_taxid", "phylum",
+    "class_taxid", "class",
+    "order_taxid", "order",
+    "family_taxid", "family",
+    "genus_taxid", "genus",
+    "species_taxid", "species"
+  )
+  ranked_lineages[now_cols] <- NA
+  
+  # get linegaes of each taxid
+  i <- 1
+  while(i < 100){
+    # get the tax name, and tax rank for each taxid
+    tmp <- left_join(tmp, tax_df, by="tax_id")
+    # tock info in tmp_lin
+    tmp_lin <- cbind(tmp_lin, tmp$tax_id, tmp$name_txt, tmp$rank )
+    # re-initilize tmp
+    tmp <- tmp %>%
+      select(parent_tax_id)%>%
+      rename(tax_id=parent_tax_id)
+    # stop if all linage ends with root
+    if(all(tmp$tax_id ==1)){
+      break
+    }
+    i<- i+1
+  }
+  
+  # select only major taxonomic ranks from each line of tmp_lin; keep the results in ranked_lineages
+  for (c in seq(from=6, to=ncol(ranked_lineages), by=2)) {# go though all major taxlevel
+    taxrank <- colnames(ranked_lineages[c])
+    for (i in 1:nrow(tmp_lin)) {
+      row <- tmp_lin[i, ]  # Extract the current row
+      col_index <- which(row == taxrank)  # Find the column index containing "species"
+      
+      if (length(col_index) > 0) {
+        # Add taxon name and taxid to ranked_lineages
+        ranked_lineages[i,c-1] <- tmp_lin[i,col_index-2]
+        ranked_lineages[i,c] <- tmp_lin[i,col_index-1]
+      }
+    }
+  }
+  return(ranked_lineages)
+}
+
+#' adjust_ltgres
+#' 
+#' If the ltg has a higher resolution than the ltgres parameter, adjust the ltg and stop lineage at ltgres level; Returns the adjusted data frame
+#'  
+#' @param taxres_df data frame with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
+#' superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
+#' pcov,phit,taxn,seqn,refres,ltgres
+#' @param tax_df data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @export
+#'
+adjust_ltgres <- function(taxres_df, tax_df){
+  
+  # link taxlevel index and tax rank
+  taxlevel_index = data.frame(taxlevel_index=c(1,2,3,4,5,6,7,8),
+                              taxrank=c("superkingdom","kingdom","phylum","class","order","family","genus","species")
+  )
+  
+  # add the name of the tax rank equivalent to the index in ltgref
+  taxres_df <- left_join(taxres_df, taxlevel_index, by=c("ltgres" = "taxlevel_index"))
+  
+  for(i in 1:nrow(taxres_df)){ # all rows
+    
+    if(!is.na(taxres_df[i,"ltg_taxid"]) & taxres_df[i,"ltg_rank_index"] > taxres_df[i,"ltgres"]){ # if resolution of ltg is higher then ltgres
+      # get the taxrank that corresponds to ltgres 
+      tl <- taxres_df[i,"taxrank"]
+      # get the index of the column that corresponds to the ltgres
+      col_index <- which(colnames(taxres_df) == tl)
+      # make a data frame with taxid, and get taxinfo from tax_df
+      new_taxid <- as.data.frame(taxres_df[i, col_index-1]) 
+      colnames(new_taxid) <- c("tax_id")
+      new_taxid <- left_join(new_taxid, tax_df, by="tax_id") %>%
+        select(tax_id, name_txt, rank, taxlevel)
+      
+      # replace ltg taxid and associated info
+      taxres_df[i, 2:5] <- new_taxid[1,]
+      # replace tax lineage over the ltgref by NA
+      taxres_df[i, (col_index+1):(ncol(taxres_df)-9)] <- NA
+    }# end if
+  }# end for i
+  
+  taxres_df <- taxres_df %>%
+    select(-taxrank)
+  
+  return(taxres_df)
+}
+
+#' TaxAssign
+#' 
+#' Find LTG for each asv in the input dataframe
+#'  
+#' @param taxres_df data frame with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
+#' superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
+#' pcov,phit,taxn,seqn,refres,ltgres
+#' 
+#' 
+#' @param df a data frame contining and asv column
+#' @param ltg_params_df data frame with a list of ercentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)
+#' @param taxonomy file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @param blast_db BLAST database
+#' @param blast_path path to BBAST executables
+#' @param outdir name of the output directory
+#' @export
+#'
+TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path="", outdir=""){
+  
+  # default value for ltg_params_df
+  if(nrow(ltg_params_df)==0){
+    ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
+                                pcov=c(70,70,70,70,70,70),
+                                phit=c(70,70,70,70,70,70),
+                                taxn=c(1,1,2,3,4,4),
+                                seqn=c(1,1,2,3,4,4),
+                                refres=c(8,8,8,7,6,6),
+                                ltgres=c(8,8,8,8,7,7)
+    )
+  }
+  
+  #### Read taxonomy info 
+  # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
+  tax_df <- read.delim(taxonomy, header=T, sep="\t", fill=T, quote="")
+  # make data frame with old taxids as line numbers and taxids in a columns
+  old_taxid <- tax_df %>%
+    filter(!is.na(old_tax_id)) %>%
+    select(tax_id, old_tax_id)
+  # delete old_tax_ids from tax_df and make taxids unique
+  tax_df <- tax_df %>%
+    select(-old_tax_id)
+  tax_df <- unique(tax_df)
+  
+  ####
+  # create a tmp directory for temporary files using time and a random number
+  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  ### run blast and clean/complete results
+  # run blast and read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
+  blast_res <- run_blast(df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=8)
+  # add update old taxids to valid ones
+  blast_res <- update_taxids(blast_res, old_taxid)
+  # add taxlevel
+  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
+    select(-parent_tax_id, -rank, -name_txt)
+  
+  ### make a lineage for each taxid in blastres
+  lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
+  # initialize data frame with asv and NA for all other cells
+  taxres_df <- data.frame(asv = unique(df$asv), ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA)
+  for(i in 1:nrow(taxres_df)){ # go through all sequences 
+    for(p in 1:nrow(ltg_params_df)){ # for each pid
+      pidl <- ltg_params_df[p,"pid"]
+      pcovl <- ltg_params_df[p,"pcov"]
+      phitl <- ltg_params_df[p,"phit"]
+      taxnl <- ltg_params_df[p,"taxn"]
+      seqnl <- ltg_params_df[p,"seqn"]
+      refresl <- ltg_params_df[p,"refres"]
+      ltgresl <- ltg_params_df[p,"ltgres"]
+      
+      # filter the blastres according to  pid, pcov, refres
+      df_intern <- blast_res %>%
+        filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
+      
+      # check if enough taxa and seq among validated hits
+      tn <- length(unique(df_intern$staxids))
+      if(tn >= taxnl & nrow(df_intern) >= seqnl ){
+        # make ltg if all conditions are met
+        ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
+        # fill out line with the ltg and the parmeters that were used to get it
+        taxres_df[i,2:ncol(taxres_df)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
+        break
+      } # end if
+    } # end p (pids)
+  } # end i (asvs)
+  
+  # get the ranked lineage for each taxid in taxres_df
+  ranked_lineages <- get_ranked_lineages(unique(taxres_df$ltg_taxid), tax_df)
+  # add lineage to taxres_df
+  taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
+    select(asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres)
+  # adjust resolution if it is higher than ltgres
+  taxres_df <- adjust_ltgres(taxres_df, tax_df)
+  
+  return(taxres_df)
+}

@@ -12,10 +12,10 @@ library("tidyr")
 
 setwd("~/vtamR")
 vsearch_path = ""
-#blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
-blast_path="" # endoume deactivate conda
-db_path="~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/" # Endoume
-#db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/" # Bombyx
+blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
+#blast_path="" # endoume deactivate conda
+#db_path="~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/" # Endoume
+db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/" # Bombyx
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
 
@@ -37,6 +37,8 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                             refres=c(8,8,8,7,6,6),
                             ltgres=c(8,8,8,8,7,7)
 )
+
+
 
 #setwd("D:/vtamR")
 # load local packages
@@ -91,7 +93,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 ### LFN_global_read_count
 ###
 # Eliminate variants with less than global_read_count_cutoff reads in the dataset
-global_read_count_cutoff = 60
+global_read_count_cutoff = 2
 read_count_df <- LFN_global_read_count(read_count_df, global_read_count_cutoff, write_csv=T, outdir=outdir, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", params=global_read_count_cutoff)
 
@@ -104,116 +106,15 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 ###
 ### TaxAssign
 ###
-asv_tax <- TaxAssign(read_count_samples_df, ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir)
+start_time <- Sys.time()  # Record the start time
+asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir)
   
-TaxAssign <- function(read_count_samples_df, ltg_params_df, taxonomy="", blast_db="", blast_path="", outdir=""){
-
-  #### Read taxonomy info 
-  # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
-  tax_df <- read.delim(taxonomy, header=T, sep="\t", fill=T, quote="")
-  # make data frame with old taxids as line numbers and taxids in a columns
-  old_taxid <- tax_df %>%
-    filter(!is.na(old_tax_id)) %>%
-    select(tax_id, old_tax_id)
-  # delete old_tax_ids from tax_df and make taxids unique
-  tax_df <- tax_df %>%
-    select(-old_tax_id)
-  tax_df <- unique(tax_df)
-  
-  ####
-  # create a tmp directory for temporary files using time and a random number
-  outdir_tmp <- paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir_tmp <- check_dir(outdir_tmp)
-  
-  ### run blast and clean/complete results
-  # run blast and read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
-  blast_res <- run_blast(read_count_samples_df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=8)
-  # add update old taxids to valid ones
-  blast_res <- update_taxids(blast_res, old_taxid)
-  # add taxlevel
-  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
-    select(-parent_tax_id, -rank, -name_txt)
-  
-  ### make a lineage for each taxid in blastres
-  lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
-  # initialize data frame with asv and NA for all other cells
-  taxres_df <- data.frame(asv = unique(read_count_samples_df$asv), ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA)
-  for(i in 1:nrow(taxres_df)){ # go through all sequences 
-    for(p in 1:nrow(ltg_params_df)){ # for each pid
-      pidl <- ltg_params_df[p,"pid"]
-      pcovl <- ltg_params_df[p,"pcov"]
-      phitl <- ltg_params_df[p,"phit"]
-      taxnl <- ltg_params_df[p,"taxn"]
-      seqnl <- ltg_params_df[p,"seqn"]
-      refresl <- ltg_params_df[p,"refres"]
-      ltgresl <- ltg_params_df[p,"ltgres"]
-      
-      # filter the blastres according to  pid, pcov, refres
-      df_intern <- blast_res %>%
-        filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
-      
-      # check if enough taxa and seq among validated hits
-      tn <- length(unique(df_intern$staxids))
-      if(tn >= taxnl & nrow(df_intern) >= seqnl ){
-        # make ltg if all conditions are met
-        ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
-        # fill out line with the ltg and the parmeters that were used to get it
-        taxres_df[i,2:ncol(taxres_df)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
-        break
-      } # end if
-    } # end p (pids)
-  } # end i (asvs)
-  
-  
-  
-  
-  return(taxres_df)
-}
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)
 
 
-
-taxids <- unique(taxres_df$ltg_taxid)
-# !!!! finish this to get not simply the linega and the ranked lineage with names and taxlevels
-get_ranked_lineages <- function(taxids, tax_df){
-  
-  # taxids is a vector of taxids; there can be duplicated values
-  lineages <- as.data.frame(taxids)
-  colnames(lineages) <- c("tax_id")
-  
-  i <- 1
-  while(i < 100){
-    # use i as name instead of tax_id
-    new_colname <- as.character(i)
-    # add parent_tax_id and rename columns
-    lineages <- left_join(lineages, tax_df, by="tax_id")%>%
-      select(-name_txt, -taxlevel) %>%
-      # !! = interprent the variable
-      rename(!!new_colname :=tax_id, "tax_id"=parent_tax_id)
-    
-    i <- i+1
-    # stop if all lines has the same value (usually 1)
-    tid_list <- unique(lineages$tax_id)
-    if(length(tid_list) == 1 && tid_list[1] ==1){
-      break
-    }
-  }
-  # delete the last column, where all values are 1
-  lineages <- lineages %>%
-    select(-tax_id)
-  # reverse order of columns
-  lineages <- lineages[, ncol(lineages):1]
-  # Apply the function to each row of the lineages data frame: 
-  # delete all 1, shift the remaining elements of each row to the beginning, 
-  # and replace missing values at the end of the row bu NA
-  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row)))
-  # add as a first column the taxid, so thay can easily me accessed
-  lineages <- cbind(taxids, lineages)
-  
-  return(lineages)
-}
-
-
-
+                        
 
 
 ###
