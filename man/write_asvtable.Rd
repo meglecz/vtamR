@@ -6,7 +6,8 @@
 \usage{
 write_asvtable(
   read_count_samples_df,
-  outfile = "",
+  outfile,
+  asv_tax = NULL,
   fileinfo = "",
   add_empty_samples = F,
   add_sums_by_sample = F,
@@ -21,7 +22,9 @@ write_asvtable(
 
 \item{outfile}{name of the output csv file including path}
 
-\item{fileinfo}{}
+\item{asv_tax}{optional: data frame with taxonomic assignments}
+
+\item{fileinfo}{tsv file with columns: plate    marker    sample    replicate    file; only necessary if add_empty_samples==T or add_expected_asv==T}
 
 \item{add_empty_samples}{\link{T/F} add a column for each samples in the original data set, even if they do not have reads after filtering}
 
@@ -31,9 +34,9 @@ write_asvtable(
 
 \item{add_expected_asv}{\link{T/F} add a column for each mock sample where keep and tolerate ASVs are marked}
 
-\item{mock_composition}{csv file with the following columns: plate,marker,sample,action,asv; action can take the following values: keep/tolerate}
+\item{mock_composition}{csv file with the following columns: plate,marker,sample,action,asv; action can take the following values: keep/tolerate; ; only necessary if add_expected_asv==T}
 
-\item{tsv}{file with columns: plate    marker    sample    replicate    file; only necessary if add_empty_samples==T}
+\item{sep}{separator used in the I/O csv files}
 }
 \description{
 Samples in columns, ASVs in lines

@@ -8,9 +8,11 @@ library("roxygen2")
 library("seqinr")
 library("dplyr")
 library("tidyr")
+library("utils") # to handle zipped files
 #library("Biostrings")
 
 setwd("~/vtamR")
+cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
 vsearch_path = ""
 blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
 #blast_path="" # endoume deactivate conda
@@ -18,6 +20,7 @@ blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
 db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/" # Bombyx
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
+
 
 
 ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
@@ -52,11 +55,13 @@ usethis::use_roxygen_md() # rebuild the help files ?
 #fileinfo <- "local/user_input/fileinfo_small.csv"
 
 
+
+fastqdir <- "/home/meglecz/vtam_test/example/fastq/"
+fastqinfo <- "local/user_input/fastqinfo_mfzr_eu.csv"
 fastadir <- "local/mfzr/sorted/"
 fileinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
 mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
 sep=";"
-
 
 #fastadir <- "/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/"
 #fileinfo <-"/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/fileinfo_vtamr.csv"
@@ -79,13 +84,111 @@ stat_df <- data.frame(parameters=character(),
                       sample_count=integer(),
                       sample_replicate_count=integer())
 
+
+fastq_ascii <- 33
+fastq_maxdiffs <- 10
+fastq_maxee <- 1
+fastq_minlen <- 50
+fastq_maxlen <- 500
+fastq_minmergelen <- 50
+fastq_maxmergelen <-500
+fastq_maxns <- 0
+fastq_truncqual <- 10
+fastq_minovlen <- 50
+fastq_allowmergestagger <- F
+compress="gz" # "gz" or "zip" for compressing output files; no comprssion by default
+merged_dir <- paste(outdir, "merged", sep="")
+# read fastqinfo
+fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+
+
+sorted_dir <- paste(outdir, "sorted", sep="")
+no_reverse <- T
+tag_to_end <- F
+primer_to_end <-F
+cutadapt_error_rate <- 0.1 # -e in cutadapt
+cutadapt_minimum_length <- 50 # -m in cutadapt
+cutadapt_maximum_length <- 500 # -M in cutadapt
+
+SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, no_reverse=no_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length)
+
+SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,no_reverse=T, tag_to_end=F, primer_to_end=F, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500){
+  outdir = sorted_dir
+  fastadir = merged_dir
+  
+  fastainfo_df$tag_fw <- toupper(fastainfo_df$tag_fw)
+  fastainfo_df$tag_rv <- toupper(fastainfo_df$tag_rv)
+  fastainfo_df$primer_fw <- toupper(fastainfo_df$primer_fw)
+  fastainfo_df$primer_rv <- toupper(fastainfo_df$primer_rv)
+  
+  # check dirs and make temp dir
+  outdir <- check_dir(outdir)
+  fastadir<- check_dir(fastadir)
+  tmp_dir <-paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  tmp_dir <- check_dir(tmp_dir)
+  
+  # get unique list of input fasta files
+  fastas <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(fastas)){ # for each input fasta (each of them can be multi run or multi marker)
+    i=1
+    fasta_file <- fastas[i]
+    df <- fastainfo_df %>%
+      filter(fasta==fasta_file)
+    
+    # make a tags.fasta file with all tag combinations of the fasta to be demultiplexed
+    tag_file <- make_adapater_fasta(fastainfo_df, fasta_file=fasta_file, tag_to_end=tag_to_end, outdir=tmp_dir)
+    # add path
+    fasta_file <- paste(fastadir, fasta_file, sep="")
+    # demultiplex fasta
+    demultiplex_cmd = paste(cutadapt_path, "cutadapt --cores=0 -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", outdir, "tagtrimmed-{name}.fasta ", fasta_file, sep="")
+    print(demultiplex_cmd)
+    system(demultiplex_cmd)
+    
+    # get marker list
+    markers <- unique(df$marker)
+    for(m in 1:length(markers)){ # for each marker trim the sequences from primers
+      m=1
+      df_marker <- df %>%
+        filter(marker==markers[m])
+      
+      primer_fwl <- df_marker[1,"primer_fw"]
+      primer_rvl <- df_marker[1,"primer_rv"]
+      primer_rvl_rc <- reverse_complement(primer_rvl)
+      for(f in 1:nrow(df_marker)){# go through each demultiplexed, tagtrimmed file and trim primers
+        primer_trimmed_file <- paste(df_marker[f,"plate"], df_marker[f,"marker"], df_marker[f,"sample"], df_marker[f,"replicate"], sep="-")
+        primer_trimmed_file <- paste(outdir, primer_trimmed_file, ".fasta", sep="")
+        tag_trimmed_file <- paste(outdir, "tagtrimmed-", df_marker[f,"tag_fw"], "-", df_marker[f,"tag_rv"], ".fasta", sep="")
+        primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " --front ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
+        print(primer_trim_cmd)
+        system(primer_trim_cmd)
+        #!!!!!! no trimmed read => correct code
+      }
+      
+      
+    }
+      
+    
+  }
+    
+  
+}
+
+
+
+# get list of tagtrimmed files from the outdir
+tagtrimmed_files <- list.files(path = outdir)
+# Filter the files based on the motif using regular expressions
+tagtrimmed_files <- grep(pattern = "^tagtrimmed\\.", x = tagtrimmed_files, value = TRUE)
+
+
+
+
 # read input fasta files in fileinfo, demultiplex and count the number of reads in each plate-sample-replicate
 read_count_df <- read_fastas_from_fileinfo(file=fileinfo, dir=fastadir, write_csv=F, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
-
-#temp_df <- read_count_df
-#read_count_df <- temp_df
 
 
 
@@ -106,34 +209,34 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 ###
 ### TaxAssign
 ###
-start_time <- Sys.time()  # Record the start time
 asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir)
-  
-end_time <- Sys.time()  # Record the end time
-runtime <- end_time - start_time  # Calculate the run time
-print(runtime)
+# write the list of ASV and their taxonomic assignment
+write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
+# write ASV table completed by taxonomic assignments
+outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
+write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
-
-                        
 
 
 ###
 ### LFN_filters
 ###
 # LFN_read_count
-read_count_df_lfn_read_count <- LFN_read_count(read_count_df, lfn_read_count_cutoff, write_csv=T, outdir = outdir, sep=sep)
+lfn_read_count_cutoff <- 10
+read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, write_csv=T, outdir = outdir, sep=sep)
 stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
 
 
 # LFN_sample_replicate (by column)
-read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, lfn_sample_replicate_cutoff, write_csv=T, outdir = outdir, sep=sep)
+lfn_sample_replicate_cutoff <- 0.001
+read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, write_csv=T, outdir = outdir, sep=sep)
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 
 
 # LFN_sample_variant (by line)
 lnf_variant_cutoff = 0.001
 by_replicate = TRUE
-read_count_df_lnf_variant <- LFN_variant(read_count_df, lnf_variant_cutoff, by_replicate, write_csv=T, outdir = outdir, sep=sep)
+read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, by_replicate, write_csv=T, outdir = outdir, sep=sep)
 param_values <- paste(lnf_variant_cutoff, by_replicate, sep=";")
 stat_df <- get_stat(read_count_df_lnf_variant, stat_df, stage="LFN_variant", params=param_values)
 
@@ -149,12 +252,17 @@ read_count_df_lnf_sample_replicate <- NULL
 ###
 ### keep repeatable occurrences
 ###
+min_replicate_number <- 2
 read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, write_csv=T, outdir = outdir, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
 
 ###
 ### FilerPCRerror
 ###
+pcr_error_var_prop <- 0.1
+max_mismatch <- 1
+by_sample <- T
+sample_prop <- 0.8
 read_count_df <- FilterPCRerror(read_count_df, write_csv=T, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
 params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sample_prop, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
@@ -206,11 +314,7 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 write.csv(stat_df, file = paste(outdir, "count_stat.csv", sep=""))
 write.csv(read_count_samples_df, file = paste(outdir, "Final_asvtable_long.csv", sep=""))
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
-write_asvtable(read_count_samples_df, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
-
-
-
-
+write_asvtable(read_count_samples_df, asv_tax=asv_tax, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 
 

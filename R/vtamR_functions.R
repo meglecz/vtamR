@@ -83,11 +83,13 @@ read_fasta_count_reads <- function (file) {
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-read_fastas_from_fileinfo <- function (file, dir, write_csv=F, outdir=NA, sep=",") {
+read_fastas_from_fileinfo <- function (file, dir="", write_csv=F, outdir=NA, sep=",") {
   # read all fasta files in fileinfo to a read_count_df
   # read fileinfo to df
   fileinfo_df <- read.csv(file, header=T, sep=sep)
-  dir <- check_dir(dir)
+  if(nchar(dir)>0){
+    dir <- check_dir(dir)
+  }
   # define empty read_count_df to pool the results of variables
   read_count_df <- data.frame(asv=character(),
                               read_count=integer(),
@@ -944,18 +946,19 @@ PoolReplicates <- function(read_count_df, digits=0, write_csv=F, outdir="", sep=
 #'  
 #' @param read_count_samples_df data frame with the following variables: asv, plate, marker, sample, read_count
 #' @param outfile name of the output csv file including path
-#' @param fileinfo 
-#' @param tsv file with columns: plate	marker	sample	replicate	file; only necessary if add_empty_samples==T
+#' @param asv_tax optional: data frame with taxonomic assignments
+#' @param fileinfo tsv file with columns: plate	marker	sample	replicate	file; only necessary if add_empty_samples==T or add_expected_asv==T
 #' @param add_empty_samples [T/F] add a column for each samples in the original data set, even if they do not have reads after filtering
 #' @param add_sums_by_sample [T/F] add a line with the total number of reads in each sample, and another with the number of ASVs in each sample
 #' @param add_sums_by_asv [T/F] add a column with the total number of reads for each ASV, and another with the number of samples, where the ASV is present
 #' @param add_expected_asv [T/F] add a column for each mock sample where keep and tolerate ASVs are marked
-#' @param mock_composition csv file with the following columns: plate,marker,sample,action,asv; action can take the following values: keep/tolerate
+#' @param mock_composition csv file with the following columns: plate,marker,sample,action,asv; action can take the following values: keep/tolerate; ; only necessary if add_expected_asv==T
+#' @param sep separator used in the I/O csv files
 #' @export
 #'
-write_asvtable <- function(read_count_samples_df, outfile="", fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
+write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
   
-  # make a wide datafram with samples in columns, ASVs in lines
+  # make a wide dataframe with samples in columns, ASVs in lines
   wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(plate, marker, sample), values_from = mean_read_count, values_fill=0, names_sep = ".", names_sort=T))
   
   # read the fileinfo to a data frame 
@@ -1035,6 +1038,12 @@ write_asvtable <- function(read_count_samples_df, outfile="", fileinfo="", add_e
       wide_read_count_df <- left_join(wide_read_count_df, df, by="asv") %>%
         rename_with(~new_colname, action)
     }
+  }
+  
+ 
+  
+  if(!is.null(asv_tax)){ # df with taxonomic assignation is given
+    wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by="asv")
   }
   
   write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
