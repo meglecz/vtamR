@@ -74,7 +74,7 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
     }
     
   }
-  # make fastinfo file
+  # make fastainfo file
   fastainfo_df <- left_join(fastqinfo_df, tmp, by=c("fastq_fw", "fastq_rv")) %>%
     select(-fastq_fw, -fastq_rv)
   write.table(fastainfo_df, file = paste(outdir, "fastainfo.csv", sep=""),  row.names = F, sep=sep)
@@ -144,14 +144,18 @@ make_adapater_fasta <- function(fastainfo_df, fasta_file, tag_to_end, outdir){
 #'
 
 reverse_complement <- function(sequence){
-  # define complemetary bases
-  comp <- data.frame(orig=c("A","T","C","G","R","Y","M","K","B","H","D","V","a","t","c","g","r","y","m","k","b","h","d","v"),
-                     complement=c("T","A","G","C","Y","R","K","M","V","D","H","B","t","a","g","c","y","r","k","m","v","d","h","b")
+  # define complementary bases
+  comp <- data.frame(orig=c("A","T","C","G","R","Y","W","S","M","K","B","H","D","V","N","a","t","c","g","r","y","w","s","m","k","b","h","d","v","n"),
+               complement=c("T","A","G","C","Y","R","W","S","K","M","V","D","H","B","N","t","a","g","c","y","r","w","s","k","m","v","d","h","b","n")
   )
   # revers, split sequneces and make dataframe
   sequence_df <- data.frame(reverse=rev(strsplit(sequence, NULL)[[1]]))
   # add complimetary nt
   sequence_df <- left_join(sequence_df, comp, by=c("reverse"="orig"))
+  if(any(is.na(sequence_df$complement))){
+    print(sequence)
+    stop("ERROR: Sequence contains non-IUPAC character")
+  }
   # collaps vector to string
   reverse_comp <- paste(sequence_df$complement, collapse = "")
   
