@@ -27,7 +27,7 @@ Merge(
 \arguments{
 \item{fastqinfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,plate,marker,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv}
 
-\item{fastqdir}{directory with input fastq files}
+\item{fastqdir}{directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)}
 
 \item{vsearch_path}{path to vsearch executables}
 
@@ -62,6 +62,6 @@ Merge(
 \description{
 Merge forward are reverse fastq read pairs to fasta.
 Output fasta files can be compressed if compress option is used.
-The output fastainfo file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files
-Returns data frame of from the outout csv file
+The output fastainfo.csv file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files
+Returns data frame corresponding to the output csv file
 }

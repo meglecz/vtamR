@@ -56,7 +56,7 @@ get_stat <- function(read_count_df, stat_df, stage, params=NA){
 #' @export
 read_fasta_count_reads <- function (file) {
   fas <- read.fasta(file, seqonly = T)
-  # transform lust to matrix (1 column)
+  # transform list to matrix (1 column)
   fas <-as.matrix(fas)
   # all nt to upper case letters
   fas <-toupper(fas)
@@ -73,20 +73,18 @@ read_fasta_count_reads <- function (file) {
 
 #' Read all fasta files in fileinfo file to a data frame
 #' 
-#' Read all fasta file in fileinfo file (plate	marker	sample	replicate	filename).
-#' Demultiplex reads to ASVs.
-#' Count the number of reads of each ASVs in each sample-replicate.
+#' Read all fasta file in fileinfo_df data frame (plate	marker	sample	replicate	filename).
+#' Dereplicate reads to ASVs.
+#' Count the number of reads of each ASVs in each plate-marker-sample-replicate.
 #' Returns a df ("asv", "plate", "marker", "sample", "replicate", "read_count").
 #' 
-#' @param file csv file with columns:  plate, marker, sample,  replicate, file, (optional: sample_type(mock/negative/real), habitat)
+#' @param fileinfo_df data frame with columns:  plate, marker, sample,  replicate, filename, (optional: sample_type(mock/negative/real), habitat)
 #' @param dir name of the directory with fasta file 
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
-read_fastas_from_fileinfo <- function (file, dir="", write_csv=F, outdir=NA, sep=",") {
+read_fastas_from_fileinfo <- function (fileinfo_df, dir="", write_csv=F, outdir=NA, sep=",") {
   # read all fasta files in fileinfo to a read_count_df
-  # read fileinfo to df
-  fileinfo_df <- read.csv(file, header=T, sep=sep)
   if(nchar(dir)>0){
     dir <- check_dir(dir)
   }

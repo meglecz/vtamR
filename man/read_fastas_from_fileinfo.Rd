@@ -5,7 +5,7 @@
 \title{Read all fasta files in fileinfo file to a data frame}
 \usage{
 read_fastas_from_fileinfo(
-  file,
+  fileinfo_df,
   dir = "",
   write_csv = F,
   outdir = NA,
@@ -13,7 +13,7 @@ read_fastas_from_fileinfo(
 )
 }
 \arguments{
-\item{file}{csv file with columns:  plate, marker, sample,  replicate, file, (optional: sample_type(mock/negative/real), habitat)}
+\item{fileinfo_df}{data frame with columns:  plate, marker, sample,  replicate, filename, (optional: sample_type(mock/negative/real), habitat)}
 
 \item{dir}{name of the directory with fasta file}
 
@@ -22,8 +22,8 @@ read_fastas_from_fileinfo(
 \item{outdir}{name of the output directory}
 }
 \description{
-Read all fasta file in fileinfo file (plate	marker	sample	replicate	filename).
-Demultiplex reads to ASVs.
-Count the number of reads of each ASVs in each sample-replicate.
+Read all fasta file in fileinfo_df data frame (plate	marker	sample	replicate	filename).
+Dereplicate reads to ASVs.
+Count the number of reads of each ASVs in each plate-marker-sample-replicate.
 Returns a df ("asv", "plate", "marker", "sample", "replicate", "read_count").
 }

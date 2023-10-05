@@ -424,7 +424,7 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
       # FilterMinReplicateNumber
       df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
       # PoolReplicates
-      df_tmp_sample <- PoolReplicates(df_tmp, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+      df_tmp_sample <- PoolReplicates(df_tmp, digits=digits, write_csv=F, outdir=outdir, sep=sep)
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("plate", "marker", "sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentionned in the known occurrences

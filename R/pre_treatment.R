@@ -2,11 +2,11 @@
 #' 
 #' Merge forward are reverse fastq read pairs to fasta.
 #' Output fasta files can be compressed if compress option is used.
-#' The output fastainfo file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files
-#' Returns data frame of from the outout csv file
+#' The output fastainfo.csv file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files
+#' Returns data frame corresponding to the output csv file
 #'  
 #' @param fastqinfo_df data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,plate,marker,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv  
-#' @param fastqdir directory with input fastq files
+#' @param fastqdir directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)
 #' @param vsearch_path path to vsearch executables
 #' @param outdir output directory
 #' @param fastq_ascii [33/64] ASCII character number used as the basis for the FASTQ quality score; default: 33 
@@ -161,3 +161,229 @@ reverse_complement <- function(sequence){
   
   return(reverse_comp)
 }
+
+#' SortReads
+#' 
+#' Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.
+#' Trim primers from demultiplexed reads.
+#' Output fasta files can be compressed if compress option is used.
+#' The output fileinfo.csv file is similar to the fastainfo file, but the but do not have tag and primer columns.
+#' Returns data frame of corresponding to the output csv file.
+#'  
+#' @param fastainfo_df data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,plate,marker,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta  
+#' @param fastadir directory with input fasta files (listed in fastainfo_df$fasta)
+#' @param vsearch_path path to vsearch executables
+#' @param cutadapt_path path to cutadapt executables
+#' @param outdir output directory
+#' @param check_reverse [T/F] if TRUE, ckeck the reverse comlementary sequences of the input fasta as well; default: F
+#' @param tag_to_end tags are at the extremity of the reads (starting at the first base); default: T
+#' @param primer_to_end primers follow directly the tags (no heterogeneity spacer); default: T
+#' @param cutadapt_error_rate maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1
+#' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
+#' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
+#' @param sep separator in input and output csv files; default: ","
+#' @param compress [gz/zip]; compress output to gz or zip files. Do not compress by default;
+#' @export
+
+SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=0){
+  #########
+  # SortReads_no_reverse dos the wole demultilexin, trimming and compress on the + strane
+  # If seqences are notorienetd, the -strand sould be checked => 
+  # run SortReads_no_reverse of plus starnd and on - starnd after swapping fw and rev tags and primers,
+  # take the reverse complement of the -stard results
+  # pool the results of the 2 strands
+  # compress if necessary
+  #########
+  #!!!!!!!!!!!!!!! check latter the zip option for compress, especially for windows
+  
+  # run on strand +
+  if(check_reverse){
+    #### use +strand, output to sorted_dir, uncompressed
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    
+    #### use - strand
+    # swap fw and rv tags and primers
+    fastainfo_df_tmp <- fastainfo_df %>%
+      select(tag_fw_tmp = tag_rv, tag_rv_tmp = tag_fw, primer_fw_tmp = primer_rv, primer_rv_tmp = primer_fw, plate, marker, sample, sample_type,habitat, replicate, fasta) %>%
+      select(tag_fw = tag_fw_tmp, tag_rv = tag_rv_tmp, primer_fw = primer_fw_tmp, primer_rv = primer_rv_tmp, plate, marker, sample, sample_type,habitat, replicate, fasta)
+    # make temp dir 
+    outdir <- check_dir(outdir)
+    rc_dir <-paste(outdir, 'rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    rc_dir <- check_dir(rc_dir)
+    # run sortreads on for reverse strand
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df_tmp, fastadir=merged_dir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    
+    ### reverse complment and pool
+    # get list of files demultiplexed on - strand
+    files <- list.files(path = rc_dir)
+    # Filter the files based on the motif using regular expressions
+    # reverse complement sequences on the minus stand, and append info to the plus strand output
+    files <- grep(pattern = "\\.fasta", x = files, value = TRUE)
+    for(i in 1:length(files)){
+      plus <- paste(outdir, files[i], sep="")
+      minus <- paste(rc_dir, files[i], sep="")
+      minus_rc <- paste(rc_dir, "rc_", files[i], sep="")
+      # reverse complement sequences in minus file
+      rev_comp_cmd <- paste("vsearch --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
+      print(rev_comp_cmd)
+      system(rev_comp_cmd)
+      # append content of minus_rc to plus file
+      file.append(plus, minus_rc)
+    }
+    
+    # delete tamporary reverse_comp dir
+    unlink(rc_dir, recursive = TRUE)
+    
+    ### compress
+    if(compress == "gz"){
+      
+      for(i in 1:nrow(fileinfo_df)){
+        
+        file <- fileinfo_df$filename[i]
+        
+        # Specify the path for the gzipped output file
+        file <- paste(outdir, file, sep="")
+        file_gz <- paste(file, ".gz", sep="")
+        
+        # Open the existing uncompressed file for reading
+        file_content <- readBin(file, "raw", file.info(file)$size)
+        # Create a gzipped copy of the file
+        gz <- gzfile(file_gz, "wb")
+        writeBin(file_content, gz)
+        close(gz)
+        file.remove(file)
+        fileinfo_df$filename[i] <- paste(fileinfo_df$filename[i], ".gz", sep="")
+      }
+      write.table(fileinfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
+    }
+    if(compress == "zip"){
+      
+      for(i in 1:nrow(fileinfo_df)){
+        
+        file <- fileinfo_df$filename[i]
+        
+        file_zip <- paste(file, ".zip", sep="")
+        zip(file_zip, file)
+        file.remove(outfile)
+        fileinfo_df$filename[i] <- paste(fileinfo_df$filename[i], ".gz", sep="")
+      }
+      # overwrite fileinfo file using zipped filenames
+      write.table(fileinfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
+    }
+  }
+  else{
+    # check only + strand
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=outdir, cutadapt_path=cutadapt_path, check_reverse=F, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+  }
+  return(fileinfo_df)
+  
+}
+
+#' SortReads_no_reverse
+#' 
+#' Same as SortReads, but do not check the reverse complement of the sequences.
+#' Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.
+#' Trim primers from demultiplexed reads.
+#' Output fasta files can be compressed if compress option is used.
+#' The output fileinfo.csv file is similar to the fastainfo file, but the but do not have tag and primer columns.
+#' Returns data frame of corresponding to the output csv file.
+#'  
+#' @param fastainfo_df data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,plate,marker,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta  
+#' @param fastadir directory with input fasta files (listed in fastainfo_df$fasta)
+#' @param cutadapt_path path to cutadapt executables
+#' @param outdir output directory
+#' @param tag_to_end tags are at the extremity of the reads (starting at the first base); default: T
+#' @param primer_to_end primers follow directly the tags (no heterogeneity spacer); default: T
+#' @param cutadapt_error_rate maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1
+#' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
+#' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
+#' @param sep separator in input and output csv files; default: ","
+#' @param compress [gz/zip]; compress output to gz or zip files. Do not compress by default;
+#' @export
+SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=0){
+  # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
+  # !!!!! Makes gz files using cutadapt, but adapt this to windows, later
+  
+  # upper case for all primers and tags
+  fastainfo_df$tag_fw <- toupper(fastainfo_df$tag_fw)
+  fastainfo_df$tag_rv <- toupper(fastainfo_df$tag_rv)
+  fastainfo_df$primer_fw <- toupper(fastainfo_df$primer_fw)
+  fastainfo_df$primer_rv <- toupper(fastainfo_df$primer_rv)
+  # make a column for output filenames
+  fastainfo_df$filename <- NA
+  
+  # check dirs and make temp dir
+  outdir <- check_dir(outdir)
+  fastadir<- check_dir(fastadir)
+  
+  # get unique list of input fasta files
+  fastas <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(fastas)){ # for each input fasta (each of them can be multi run or multi marker)
+    # make temp dir for tag file and tag-trimmed files
+    tmp_dir <-paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    tmp_dir <- check_dir(tmp_dir)
+    
+    # select lines in fastainfo_df that corresponds to a given input fasta file
+    fasta_file <- fastas[i]
+    df <- fastainfo_df %>%
+      filter(fasta==fasta_file)
+    
+    # make a tags.fasta file with all tag combinations of the fasta to be demultiplexed
+    tag_file <- make_adapater_fasta(fastainfo_df, fasta_file=fasta_file, tag_to_end=tag_to_end, outdir=tmp_dir)
+    # add path
+    fasta_file <- paste(fastadir, fasta_file, sep="")
+    # demultiplex fasta, write output to tmp file
+    demultiplex_cmd = paste(cutadapt_path, "cutadapt --cores=0 -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", tmp_dir, "tagtrimmed-{name}.fasta ", fasta_file, sep="")
+    print(demultiplex_cmd)
+    system(demultiplex_cmd)
+    
+    # get marker list; different markers can have the same tag combinations, so the tagtrimmed files can contain ore than one marker
+    markers <- unique(df$marker)
+    for(m in 1:length(markers)){ # for each marker trim the sequences from primers
+      #      m=1
+      # select lines for a given input fasta and marker
+      df_marker <- df %>%
+        filter(marker==markers[m])
+      
+      # for a given marker, ter is only one primer combination
+      primer_fwl <- df_marker[1,"primer_fw"]
+      primer_rvl <- df_marker[1,"primer_rv"]
+      primer_rvl_rc <- reverse_complement(primer_rvl)
+      
+      for(f in 1:nrow(df_marker)){# go through each demultiplexed, tagtrimmed file and trim primers
+        #        f=1
+        outfilename <- paste(df_marker[f,"plate"], df_marker[f,"marker"], df_marker[f,"sample"], df_marker[f,"replicate"], sep="-")
+        outfilename <- paste(outfilename, ".fasta", sep="")
+        if(compress=="gz"){
+          outfilename <- paste(outfilename, ".gz", sep="")
+        }
+        if(compress=="zip"){ # !!!! this might not be operational => work on it whan using windows
+          outfilename <- paste(outfilename, ".zip", sep="")
+        }
+        # complete fastainfo_df with output fasta name
+        fastainfo_df$filename[which(fastainfo_df$plate==df_marker[f,"plate"] & fastainfo_df$marker==df_marker[f,"marker"] & fastainfo_df$sample==df_marker[f,"sample"] & fastainfo_df$replicate==df_marker[f,"replicate"])] <- outfilename
+        # add path to output file
+        primer_trimmed_file <- paste(outdir, outfilename, sep="")
+        tag_trimmed_file <- paste(tmp_dir, "tagtrimmed-", df_marker[f,"tag_fw"], "-", df_marker[f,"tag_rv"], ".fasta", sep="")
+        if(primer_to_end){
+          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
+        }
+        else{
+          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g '", primer_fwl, ";min_overlap=",nchar(primer_fwl),"...", primer_rvl_rc,  ";min_overlap=",nchar(primer_rvl_rc),"' --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
+        }
+        print(primer_trim_cmd)
+        system(primer_trim_cmd)
+      } # end tagtrimmed within marker
+    }# end marker
+    # delete the tpp dir wit the tagtrimmed filese
+    unlink(tmp_dir, recursive = TRUE)
+  }# end fasta
+  
+  # make sortedinfo file
+  fastainfo_df <- fastainfo_df %>%
+    select(-tag_fw, -primer_fw, -tag_rv, -primer_rv, -fasta)
+  write.table(fastainfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
+  return(fastainfo_df)
+}
+
