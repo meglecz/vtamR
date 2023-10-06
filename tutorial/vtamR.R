@@ -99,42 +99,143 @@ fastq_maxns <- 0
 fastq_truncqual <- 10
 fastq_minovlen <- 50
 fastq_allowmergestagger <- F
-compress="gz" # "gz" or "zip" for compressing output files; no comprssion by default
+compress="zip" # "gz" or "zip" for compressing output files; no comprssion by default
 merged_dir <- paste(outdir, "merged", sep="")
 # read fastqinfo
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
+randomseq_dir = paste(outdir, "random_seq", sep="")
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=100)
 
-RandomSeq <- function(){
+#!!!!!!!!!!!!!!! work on file compression decompressison
+# it weem that zip files should en compressed/decopressed before working on them, and it is easier to work with the filename without the path included
+# for gz file, it is possible to read compressed file without producing the decompressed file
+
+RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", n){
+  
+  fasta_dir<- check_dir(fasta_dir)
+  outdir<- check_dir(outdir)
+  
+  unique_fasta <- unique(fastainfo_df$fasta)
+  print(unique_fasta)
+  
+  for(i in 1:length(unique_fasta)){
+    i=1
+    input_fasta <- unique_fasta[i]
+    decompress(file=input_fasta, dir=fasta_dir)
+    seq_n <- count_seq(dir=fasta_dir, file=input_fasta)
+    print(seq_n)
+    
+    set.seed(Sys.time())
+    # Generate k random integers between 1 and n
+    random_integers <- sample(1:seq_n, size = n, replace = FALSE)
+    select_sequences(fasta_dir=fasta_dir, file=input_fasta, outdir=outdir, random_integers)
+    
+  }
   
 }
 
+getwd()
+setwd("~/vtamR")
 
 
-file_path <- "your_file.txt"
 
-# Open the file and count the lines
-line_count <- 0
-con <- file(file_path, "r")
-
-while (length(readLines(con, n = 1)) > 0) {
-  line_count <- line_count + 1
+decompress<- function(file=input_fasta, dir=fasta_dir){
+  backup_wd <- getwd()
+  setwd(dir)
+  
+  decompressed_file <- ""
+  
+  if(endsWith(file, ".zip")){
+    unzip(file)
+    decompressed_file <- sub(".zip", "", file)
+  }else if(endsWith(file, ".gz")){
+     # Open a connection to the gzipped file
+    file_connection <- gzfile(file, "rb")  # "rb" stands for read binary mode
+    
+    # Read the contents of the gzipped file
+    file_contents <- readLines(file_connection)
+    
+    # Close the file connection
+    close(file_connection)
+    
+  }else{
+    setwd(backup_wd)
+    stop("Only gz and zip files are supported")
+  }
+  
+  
+  # reset wd
+  setwd(backup_wd)
 }
 
-# Close the file connection
-close(con)
 
 
+select_sequences(fasta_dir=fasta_dir, file=input_fasta, outdir=outdir, random_integers)
 
-set.seed(Sys.time())
-# Generate k random integers between 1 and n
-random_integers <- sample(1:1000, size = 10, replace = FALSE)
+select_sequences <- function(fasta_dir=".", file, outdir=".", random_integers){
+  
+  outfile <- paste(outdir, input_fasta, sep="")
+  outfile <- sub(".zip", "", outfile)
+  outfile <- sub(".gz", "", outfile)
+  outfile_connection <- file(outfile, "w")
+  
+  # set wd to directory
+  backup_wd <- getwd()
+  setwd(fasta_dir)
+  
+  if(endsWith(file, ".gz")){
+    file_connection <- gzfile(file, "rb") 
+  }else if(endsWith(file, ".zip")){
+    unzip(file)
+    unzipped_file <- sub(".zip", "", file)
+    file_connection <- file(unzipped_file, "r")
+  }else{
+    file_connection <- file(file, "r")
+  }
+  
+  random_integers <- sort(random_integers)
+  count = 0
+  bool = F
+  while (length(line <- readLines(file_connection, n = 1)) > 0) {
+    if(startsWith(line, ">")){
+      bool = F
+      if(length(random_integers)==0){
+        break
+      }
+      count <- count + 1
+      if(count == random_integers[1]){
+        writeLines(line, con=outfile_connection)
+        bool = T
+        random_integers <- random_integers[-1]
+      }
+    }else if(bool){
+      writeLines(line, con=outfile_connection)
+    }
+  }
+  close(outfile_connection)
+  close(file_connection)
+  
+ 
+  if(endsWith(file, ".zip")){
+    file.remove(unzipped_file)  # remove dezipped input file
+    setwd(outdir)
+    zipped_file <- paste(file, ".zip", sep="")
+    zip(zipped_file, file)
+  }
+  # reset wd
+  setwd(backup_wd)
+  
+}
+ 
+my_list <- list(1, 2, 3, 4, 5)
 
-# Print the selected random integers
-print(random_integers)
+# Delete the first element by assigning NULL to it
+my_list <- my_list[-1]
 
-
+# Now, my_list contains all elements except the first one
+print(my_list)
 
 ###
 ### SortReads

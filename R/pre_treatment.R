@@ -67,10 +67,16 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
       tmp$fasta[i] <- paste(tmp$fasta[i], ".gz", sep="")
     }
     if(compress == "zip"){
-      outfile_zip <- paste(outfile, ".zip", sep="")
-      zip(outfile_zip, outfile)
-      tmp$fasta[i] <- paste(tmp$fasta[i], ".zip", sep="")
-      file.remove(outfile)
+      # when zipping a file using a full path, the zip file will contain the embedded directory structure
+      # To avoid this, change the wd to the output dir zip, the file and change back to the orignal wd
+      backup_dir <- getwd()
+      setwd(outdir)
+      fasta <- tmp$fasta[i]
+      fasta_zip <- paste(fasta, ".zip", sep="")
+      zip(fasta_zip, fasta)
+      file.remove(fasta)
+      setwd(backup_dir)
+      tmp$fasta[i] <- fasta_zip
     }
     
   }
@@ -385,5 +391,46 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
     select(-tag_fw, -primer_fw, -tag_rv, -primer_rv, -fasta)
   write.table(fastainfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
   return(fastainfo_df)
+}
+
+#' count_seq
+#' 
+#' Count the number of sequences in the input fasta file. Input can be uncompressed, gz, or zip file
+#'  
+#' @param file fasta file, without it's path
+#' @param dir directory that contains the input file
+#' @export
+
+count_seq <- function(dir=".", file){
+  # set wd to directory
+  backup_wd <- getwd()
+  setwd(dir)
+  count = 0
+  # open the file for reading in function of its type
+  if(endsWith(file, ".gz")){
+    file_connection <- gzfile(file, "rb") 
+  }else if(endsWith(file, ".zip")){
+    unzip(file)
+    unzipped_file <- sub(".zip", "", file)
+    file_connection <- file(unzipped_file, "r")
+  }else{
+    file_connection <- file(file, "r")
+  }
+  
+  # count sequences
+  while (length(line <- readLines(file_connection, n = 1)) > 0) {
+    if(startsWith(line, ">")){
+      count <- count + 1
+    }
+  }
+  # close file
+  close(file_connection)
+  # remove dezipped file
+  if(endsWith(file, ".zip")){
+    file.remove(unzipped_file)
+  }
+  # reset wd
+  setwd(backup_wd)
+  return(count)
 }
 
