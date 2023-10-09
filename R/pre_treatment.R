@@ -401,18 +401,15 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
 #' @param dir directory that contains the input file
 #' @export
 
-count_seq <- function(dir=".", file){
-  # set wd to directory
-  backup_wd <- getwd()
-  setwd(dir)
+count_seq <- function(dir="", file){
+  
+  dir <- check_dir(dir)
+  file <- paste(dir, file, sep="")
+  
   count = 0
   # open the file for reading in function of its type
   if(endsWith(file, ".gz")){
     file_connection <- gzfile(file, "rb") 
-  }else if(endsWith(file, ".zip")){
-    unzip(file)
-    unzipped_file <- sub(".zip", "", file)
-    file_connection <- file(unzipped_file, "r")
   }else{
     file_connection <- file(file, "r")
   }
@@ -425,12 +422,118 @@ count_seq <- function(dir=".", file){
   }
   # close file
   close(file_connection)
-  # remove dezipped file
-  if(endsWith(file, ".zip")){
-    file.remove(unzipped_file)
-  }
-  # reset wd
-  setwd(backup_wd)
   return(count)
 }
 
+
+
+#' RandomSeq
+#' 
+#' Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
+#'  
+#' @param fastainfo_df data frame with a 'fasta' column containing input file names; files can be compressed in gz and zip format
+#' @param n integer; the number of randomly selected sequences 
+#' @param fasta_dir directory that contains the input fasta files
+#' @param outdir directory for the output files
+#' @export
+#' 
+RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", n){
+  
+  fasta_dir<- check_dir(fasta_dir)
+  outdir<- check_dir(outdir)
+  
+  unique_fasta <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(unique_fasta)){ # go throgh all fasta files
+    input_fasta <- unique_fasta[i]
+    # Zip files should be unzipped once for sequence count and select_seq, than results re-zipped, wd is changed several times
+    if(endsWith(input_fasta, ".zip")){
+      # change to fasta_dir
+      backup_wd <- getwd()
+      setwd(fasta_dir)
+      unzip(input_fasta)
+      unzipped_file <- sub(".zip", "", input_fasta)
+      # count the number of sequences in the input file
+      seq_n <- count_seq(dir="", file=unzipped_file)
+      # Generate k random integers between 1 and n
+      set.seed(Sys.time())
+      random_integers <- sample(1:seq_n, size = n, replace = FALSE)
+      # write sequences corresponding to the random numbers to an output file
+      setwd(backup_wd) # get back to the original wd, so input and output filepath can be habled more easily
+      select_sequences(fasta_dir=fasta_dir, file=unzipped_file, outdir=outdir, random_integers)
+      # delete unzipped input file
+      setwd(fasta_dir)
+      file.remove(unzipped_file)  # remove unzipped input file
+      # zip output file
+      setwd(backup_wd)
+      setwd(outdir)
+      zip(input_fasta, unzipped_file) # zip outfile
+      file.remove(unzipped_file) # rm unzipped outfile 
+      setwd(backup_wd)
+    }else{
+      seq_n <- count_seq(dir=fasta_dir, file=input_fasta)
+      # Generate k random integers between 1 and n
+      set.seed(Sys.time())
+      random_integers <- sample(1:seq_n, size = n, replace = FALSE)
+      select_sequences(fasta_dir=fasta_dir, file=input_fasta, outdir=outdir, random_integers)
+    }
+    
+  }
+  
+}
+
+#' select_sequences
+#' 
+#' Select sequences from the input file that correspond to the vector of integers
+#'  
+#' @param file input fasta file; can be  uncompressed o compressed in gz format only 
+#' @param fasta_dir path to the input fasta files
+#' @param outdir directory for the output files; same compression as the input file
+#' @param random_integers vector of random integers between 1 and the number of sequences in the input file
+#' @export
+#'
+select_sequences <- function(fasta_dir="", file, outdir="", random_integers){
+  
+  fasta_dir<- check_dir(fasta_dir)
+  outdir<- check_dir(outdir)
+  # can deal with uncompressed files and gz compressed files. Zip files should be decompressed previously
+  outfile <- paste(outdir, file, sep="")
+  #  outfile <- sub(".gz", "", outfile)
+  
+  
+  filename <- paste(fasta_dir, file, sep="")
+  if(endsWith(filename, ".gz")){
+    file_connection <- gzfile(filename, "rb") 
+    outfile_connection <- gzfile(outfile, "wb")
+  }else{
+    file_connection <- file(filename, "r")
+    outfile_connection <- file(outfile, "w")
+  }
+  
+  random_integers <- sort(random_integers)
+  count = 0
+  bool = F
+  while (length(line <- readLines(file_connection, n = 1)) > 0) {
+    if(startsWith(line, ">")){
+      bool = F
+      if(length(random_integers)==0){
+        break
+      }
+      count <- count + 1
+      if(count == random_integers[1]){
+        writeLines(line, con=outfile_connection)
+        bool = T
+        random_integers <- random_integers[-1]
+      }
+    }else if(bool){
+      writeLines(line, con=outfile_connection)
+    }
+  }
+  close(outfile_connection)
+  close(file_connection)
+  
+  #  if(endsWith(file, ".gz")){
+  #    outfile_gz <- paste(outfile_gz, ".gz", sep="")
+  
+  #  }
+}
