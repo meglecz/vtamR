@@ -250,7 +250,8 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
     
     # vsearch --usearch_global to find highly similar sequence pairs
     vsearch_out <- paste(outdir_tmp, mock, '_vsearch_out.out', sep="")
-    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+#    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
     #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
     system(vsearch)
     
@@ -385,6 +386,13 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
 #'
 
 OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=sep, outdir="", min_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2){
+#  read_count_df = optimize_read_count_df
+#  min_lfn_read_count_cutoff = 10
+#  min_lnf_variant_cutoff = 0.001
+#  rc_cutoff = 10
+#  var_cutoff = 0.001
+#  by_replicate = T
+  
   
   outdir <- check_dir(outdir)
   out = paste(outdir, "OptimizeLFNReaCountAndLFNvariant.csv", sep="")
@@ -400,9 +408,9 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
   df <- FilterMinReplicateNumber(df, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
   
   # make a series of cutoff values for LFN_read_count
-  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=100, by=5)
+  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=100, by=10)
   # make a series of cutoff values for LFN_read_count
-  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=0.05, by=0.001)
+  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=0.04, by=0.01)
   
   out_df <- data.frame( 
     lfn_sample_replicate_cutoff =numeric(),
@@ -414,21 +422,22 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
     FP=numeric()
   )
   # go through all parameter combination and count the number of TP and FN
+
   for(rc_cutoff in rc_cutoff_list){
     df_tmp <- df
     #LFN_read_count
     df_tmp <- LFN_read_count(df_tmp, rc_cutoff, write_csv=F, outdir = outdir, sep=sep)
     for(var_cutoff in var_cutoff_list){
       # LFN_variant
-      df_tmp <- LFN_variant(df_tmp, var_cutoff, by_replicate, write_csv=F, outdir = outdir, sep=sep)
+      df_tmp <- LFN_variant(df_tmp, var_cutoff, by_replicate=by_replicate, write_csv=F, outdir = outdir, sep=sep)
       # FilterMinReplicateNumber
       df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
       # PoolReplicates
       df_tmp_sample <- PoolReplicates(df_tmp, digits=digits, write_csv=F, outdir=outdir, sep=sep)
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("plate", "marker", "sample", "asv")) %>%
-        filter(!is.na(action)) %>% # keep only lines mentionned in the known occurrences
-        filter(!(is.na(mean_read_count) & action=="delete")) # delete lines if asv is nt present and the action is delete
+        filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
+        filter(!(is.na(mean_read_count) & action=="delete")) # delete lines if asv is not present (mean_read_count==NA) and the action is delete
       # get the number of FN (misssing expected occurrences) 
       missing <- ko %>%
         filter(is.na(mean_read_count) & action=="keep")
@@ -446,8 +455,22 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
         filter(action=="delete") %>%
         pull(TPFP)
       
+      print(lfn_sample_replicate_cutoff)
+      print(pcr_error_var_prop)
+      print(rc_cutoff)
+      print(var_cutoff)
+      print(FN_count)
+      print(TP_count)
+      print(FP_count)
+      
       new_line <- data.frame(lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
-      out_df <- rbind(out_df, new_line )
+      print(rc_cutoff)
+      print(var_cutoff)
+      print(new_line)
+      print(dim(new_line))
+      print(out_df)
+      print(dim(out_df))
+#      out_df <- bind_rows(out_df, new_line )
     }
   }
   

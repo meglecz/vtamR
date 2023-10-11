@@ -205,7 +205,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
   # run on strand +
   if(check_reverse){
     #### use +strand, output to sorted_dir, uncompressed
-    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
     
     #### use - strand
     # swap fw and rv tags and primers
@@ -217,7 +217,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
     rc_dir <-paste(outdir, 'rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- check_dir(rc_dir)
     # run sortreads on for reverse strand
-    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df_tmp, fastadir=merged_dir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df_tmp, fastadir=fastadir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
     
     ### reverse complment and pool
     # get list of files demultiplexed on - strand
@@ -279,7 +279,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
   }
   else{
     # check only + strand
-    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=outdir, cutadapt_path=cutadapt_path, check_reverse=F, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   }
   return(fileinfo_df)
   
@@ -374,10 +374,11 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
         tag_trimmed_file <- paste(tmp_dir, "tagtrimmed-", df_marker[f,"tag_fw"], "-", df_marker[f,"tag_rv"], ".fasta", sep="")
         if(primer_to_end){
           primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
-        }
+          }
         else{
-          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g '", primer_fwl, ";min_overlap=",nchar(primer_fwl),"...", primer_rvl_rc,  ";min_overlap=",nchar(primer_rvl_rc),"' --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
-        }
+#          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g '", primer_fwl, ";min_overlap=",nchar(primer_fwl),"...", primer_rvl_rc,  ";min_overlap=",nchar(primer_rvl_rc),"' --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
+          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fwl, ';min_overlap=',nchar(primer_fwl),'...', primer_rvl_rc,  ';min_overlap=',nchar(primer_rvl_rc),'" --output ', primer_trimmed_file, " ", tag_trimmed_file, sep="")
+          }
         print(primer_trim_cmd)
         system(primer_trim_cmd)
       } # end tagtrimmed within marker

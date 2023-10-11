@@ -11,16 +11,33 @@ library("tidyr")
 library("utils") # to handle zipped files
 #library("Biostrings")
 
-setwd("~/vtamR")
-cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
-vsearch_path = ""
-blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
-#blast_path="" # endoume deactivate conda
-#db_path="~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/" # Endoume
-db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/" # Bombyx
+
+computer <- "Endoume" # Bombyx/Endoume/Windows
+if(computer == "Bombyx"){
+  setwd("~/vtamR")
+  cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
+  vsearch_path = ""
+  blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
+  db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
+  fastqdir <- "local/fastq/"
+} else if (computer == "Endoume"){
+  setwd("~/vtamR")
+  cutadapt_path="/home/emese/miniconda3/bin/"
+  vsearch_path = "/home/emese/miniconda3/bin/"
+  blast_path="" # deactivate conda
+  db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
+  fastqdir <- "local/fastq/"
+}else if (computer == "Windows"){
+  setwd("C:/Users/emese/vtamR/")
+  cutadapt_path="C:/Users/Public/"
+  vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
+  blast_path="C:/Users/Public/blast-2.14.1+/bin/"
+  db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
+  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
+}
+
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
-
 
 
 ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
@@ -54,9 +71,6 @@ usethis::use_roxygen_md() # rebuild the help files ?
 #fastadir <- "local/small_test"
 #fileinfo <- "local/user_input/fileinfo_small.csv"
 
-
-
-fastqdir <- "/home/meglecz/vtam_test/example/fastq/"
 fastqinfo <- "local/user_input/fastqinfo_mfzr_eu.csv"
 fastadir <- "local/mfzr/sorted/"
 fileinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
@@ -124,8 +138,8 @@ primer_to_end <-F
 cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
-compress <- "gz"
-fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+compress <- "0"
+fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 
 ###
@@ -154,13 +168,13 @@ stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", param
 ### LFN_filters
 ###
 # LFN_read_count
-lfn_read_count_cutoff <- 70
+lfn_read_count_cutoff <- 10
 read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, write_csv=T, outdir = outdir, sep=sep)
 stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
 
 
 # LFN_sample_replicate (by column)
-lfn_sample_replicate_cutoff <- 0.003
+lfn_sample_replicate_cutoff <- 0.001
 read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, write_csv=T, outdir = outdir, sep=sep)
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 
@@ -257,24 +271,28 @@ write.csv(stat_df, file = paste(outdir, "count_stat.csv", sep=""))
 write.csv(read_count_samples_df, file = paste(outdir, "Final_asvtable_long.csv", sep=""))
 # wide format (ASV table), samples are in columns, ASVs in lines
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
-write_asvtable(read_count_samples_df, asv_tax=asv_tax, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+write_asvtable(read_count_samples_df, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 # write ASV table completed by taxonomic assignments
 outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
 write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 
+# start optimize from almodt unfiltered data (after eliminating ASV with low global reads count)
+LFN_global_read_count <- paste(outdir, "LFN_global_read_count.csv", sep="")
+optimize_read_count_df <- read.csv(LFN_global_read_count, sep=sep)
+dim(optimize_read_count_df)
 ###
 ### OptimizePCRError
 ###
 optimize_dir = paste(outdir, "optimize", sep="")
-OptimizePCRError(read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, min_read_count=10)
+OptimizePCRError(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, min_read_count=10)
 
 
 ###
 ### OptimizeLFNsampleReplicate
 ###
 optimize_dir = paste(outdir, "optimize", sep="")
-OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
+OptimizeLFNsampleReplicate(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
 
 ###
 ### Make known occurrences
@@ -300,193 +318,38 @@ sample_prop=0.8
 by_sample=T
 
 min_replicate_number=2
+OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
 
-optimize_dir = paste(outdir, "optimize", sep="")
+df1 <- data.frame(
+  Name = c("Alice", "Bob", "Charlie"),
+  Age = c(25, NA, 30),
+  Height = c(160, 175, NA)
+)
 
-OptimizeLFNReaCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
+df2 <- data.frame(
+  Name = c("David", "Eve", "Frank"),
+  Age = c(NA, 28, 32),
+  Height = c(165, NA, 180)
+)
+
+# Combine the data frames using bind_rows
+combined_df <- bind_rows(df1, df2)
 
 
 
+
+data <- data.frame(
+  Name = c("Alice", "Bob", "Charlie"),
+  Age = c(25, NA, 30),
+  Height = c(160, 175, NA)
+)
+
+rows_with_na <- data[apply(is.na(data), 1, any), ]
+
+# Use complete.cases to select only rows with complete data
+complete_rows <- data[complete.cases(data), ]
 
 
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
-
-####################################################
-####################################################
-####################################################
-####################################################
-
-# info divers
-
-
-decompress<- function(file=input_fasta, dir=fasta_dir){
-  backup_wd <- getwd()
-  setwd(dir)
-  
-  decompressed_file <- ""
-  
-  if(endsWith(file, ".zip")){
-    unzip(file)
-    decompressed_file <- sub(".zip", "", file)
-  }else if(endsWith(file, ".gz")){
-    # Open a connection to the gzipped file
-    file_connection <- gzfile(file, "rb")  # "rb" stands for read binary mode
-    
-    # Read the contents of the gzipped file
-    file_contents <- readLines(file_connection)
-    
-    # Close the file connection
-    close(file_connection)
-    
-  }else{
-    setwd(backup_wd)
-    stop("Only gz and zip files are supported")
-  }
-  
-  
-  # reset wd
-  setwd(backup_wd)
-}
-
-
-compressed_file <- compress_file("/home/meglecz/vtamR/local/out/sorted/plate1-MFZR-14ben01-1.fasta", compress="gz", remove_uncompressed=T)
-compress_file <- function(file, compress="gz", remove_uncompressed=T){
-  #### !!!!! zip is not working correctly in minux, since it produces and archive with the embedded directory structure in the path => correct it when using windows
-  outfile <- file
-  if(compress == "gz"){
-    # Specify the path for the gzipped output file
-    file_gz <- paste(file, ".gz", sep="")
-    # Open the existing uncompressed file for reading
-    file_content <- readBin(file, "raw", file.info(file)$size)
-    # Create a gzipped copy of the file
-    gz <- gzfile(file_gz, "wb")
-    writeBin(file_content, gz)
-    close(gz)
-    if(remove_uncompressed){
-      file.remove(file)
-    }
-    outfile <- file_gz
-  }
-  if(compress == "zip"){
-    file_zip <- paste(file, ".zip", sep="")
-    zip(file_zip, file, recursive = FALSE)
-    if(remove_uncompressed){
-      file.remove(file)
-    }
-    outfile <- file_zip
-  }
-  
-  return(outfile)
-}
-
-
-#' write_fasta_seq_as_id
-#' 
-#' Write a fasta file using the sequences as ID
-#'  
-#' @param sequences list of sequences
-#' @param filename output file name, including path
-#' @export
-#' 
-write_fasta_seq_as_id <- function(sequences, filename) {
-  # Open the file for writing
-  file <- file(filename, "w")
-  # Iterate over the sequences and write them to the file
-  for (i in seq_along(sequences)) {
-    header <- paste0(">", sequences[[i]])
-    writeLines(c(header, sequences[[i]], ""), file)
-  }
-  # Close the file
-  close(file)
-}
-
-
-
-### run blast with seqinr
-library("seqinr")
-# Load the query sequence from a file or define it directly
-query_sequence <- read.fasta(file = "/home/meglecz/vtamR/local/small_test/small_test1_1.fas")
-# Perform local sequence search using blast()
-results <- blast(query = query_sequence, database = "/home/meglecz/vtamR/local/small_test/small_test1_1.fas", type = "DNA")
-# Print the results
-print(results)
-
-
-if (!requireNamespace("BiocManager", quietly=TRUE))
-  install.packages("BiocManager")
-BiocManager::install("DECIPHER")
-library("DECIPHER")
-
-# Load the query sequence from a file or define it directly
-query_sequence <- readDNAStringSet("/home/meglecz/vtamR/local/small_test/small_test1_1.fas")
-
-# Load the reference sequences from a file or define them directly
-reference_sequences <- readDNAStringSet("database.fasta")
-
-# Perform local sequence search using blastn()
-results <- blastn(query_sequence, reference_sequences)
-
-# Print the results
-print(results)
-
-### get the list of function in a package
-functions_seqinr <- ls("package:seqinr", all.names = TRUE)
-print(functions_seqinr)
-
-
-### Define the command to run the third-party program
-command <- "path/to/program"
-args <- c("arg1", "arg2")
-# Run the command using system2()
-output <- system2(command, args, stdout = TRUE, stderr = TRUE)
-# Print the output
-print(output)
-
-
-command <- "path/to/program arg1 arg2"
-# Run the command using system()
-system(command)
-
-
-
-# start blast from R
-myPipe <- pipe( "blastall -p blastp -i text.fasta -d data.fasta" )
-results <- read.table( myPipe )
-colnames( blastResults ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
-                               "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
-                               "S.start", "S.end", "E", "Bits" )
-
-
-# http://rstudio-pubs-static.s3.amazonaws.com/12097_1352791b169f423f910d93222a4c2d85.html
-
-
-
-# Create a connection to an external command (e.g., "ls" command on Unix/Linux)
-cmd <- pipe("ls", "r")  # Open the "ls" command for reading
-
-# Read the output from the command
-output <- readLines(cmd)
-
-# Close the connection
-close(cmd)
-
-# Print the output
-print(output)
-
-
-
-makeblastdb -in local/out/small/tmp_1687945245/test.fas -dbtype nucl
-blastn –db local/out/small/tmp_1687945245/test.fas –query local/out/small/tmp_1687945245/test.fas –outfmt 6 –out local/out/small/tmp_1687945245/test_blastout.out
-
-pipe_vsearch <- pipe(vsearch)
-results <- read.table( pipe_vsearch )
-
-blast <- "blastn -db local/out/small/tmp_1687945245/test.fas -query local/out/small/tmp_1687945245/test.fas -outfmt 6"
-myPipe <- pipe(blast)
-results <- read.table( myPipe )
-colnames( results ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
-                          "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
-                          "S.start", "S.end", "E", "Bits" )
-

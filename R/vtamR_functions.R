@@ -554,8 +554,9 @@ flagPCRerror_vsearch <- function(unique_asv_df, outdir="", vsearch_path="", pcr_
   write_fasta(unique_asv_df$asv, fas, seq_as_id=T)
   # vsearch --usearch_global to find highly similar sequence pairs
   vsearch_out <- paste(outdir_tmp, 'unique_vsearch_out.out', sep="")
-  vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
-  #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
+#  vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+  vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
+    #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
   system(vsearch)
 
   # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs

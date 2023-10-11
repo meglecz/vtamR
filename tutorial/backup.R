@@ -104,3 +104,185 @@ flag_from_habitat <- function(occurrence_df, fileinfo_df){
   
   return(occurrence_df)
 }
+
+
+
+
+
+####################################################
+####################################################
+####################################################
+####################################################
+
+# info divers
+
+
+decompress<- function(file=input_fasta, dir=fasta_dir){
+  backup_wd <- getwd()
+  setwd(dir)
+  
+  decompressed_file <- ""
+  
+  if(endsWith(file, ".zip")){
+    unzip(file)
+    decompressed_file <- sub(".zip", "", file)
+  }else if(endsWith(file, ".gz")){
+    # Open a connection to the gzipped file
+    file_connection <- gzfile(file, "rb")  # "rb" stands for read binary mode
+    
+    # Read the contents of the gzipped file
+    file_contents <- readLines(file_connection)
+    
+    # Close the file connection
+    close(file_connection)
+    
+  }else{
+    setwd(backup_wd)
+    stop("Only gz and zip files are supported")
+  }
+  
+  
+  # reset wd
+  setwd(backup_wd)
+}
+
+
+compressed_file <- compress_file("/home/meglecz/vtamR/local/out/sorted/plate1-MFZR-14ben01-1.fasta", compress="gz", remove_uncompressed=T)
+compress_file <- function(file, compress="gz", remove_uncompressed=T){
+  #### !!!!! zip is not working correctly in minux, since it produces and archive with the embedded directory structure in the path => correct it when using windows
+  outfile <- file
+  if(compress == "gz"){
+    # Specify the path for the gzipped output file
+    file_gz <- paste(file, ".gz", sep="")
+    # Open the existing uncompressed file for reading
+    file_content <- readBin(file, "raw", file.info(file)$size)
+    # Create a gzipped copy of the file
+    gz <- gzfile(file_gz, "wb")
+    writeBin(file_content, gz)
+    close(gz)
+    if(remove_uncompressed){
+      file.remove(file)
+    }
+    outfile <- file_gz
+  }
+  if(compress == "zip"){
+    file_zip <- paste(file, ".zip", sep="")
+    zip(file_zip, file, recursive = FALSE)
+    if(remove_uncompressed){
+      file.remove(file)
+    }
+    outfile <- file_zip
+  }
+  
+  return(outfile)
+}
+
+
+#' write_fasta_seq_as_id
+#' 
+#' Write a fasta file using the sequences as ID
+#'  
+#' @param sequences list of sequences
+#' @param filename output file name, including path
+#' @export
+#' 
+write_fasta_seq_as_id <- function(sequences, filename) {
+  # Open the file for writing
+  file <- file(filename, "w")
+  # Iterate over the sequences and write them to the file
+  for (i in seq_along(sequences)) {
+    header <- paste0(">", sequences[[i]])
+    writeLines(c(header, sequences[[i]], ""), file)
+  }
+  # Close the file
+  close(file)
+}
+
+
+
+### run blast with seqinr
+library("seqinr")
+# Load the query sequence from a file or define it directly
+query_sequence <- read.fasta(file = "/home/meglecz/vtamR/local/small_test/small_test1_1.fas")
+# Perform local sequence search using blast()
+results <- blast(query = query_sequence, database = "/home/meglecz/vtamR/local/small_test/small_test1_1.fas", type = "DNA")
+# Print the results
+print(results)
+
+
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+BiocManager::install("DECIPHER")
+library("DECIPHER")
+
+# Load the query sequence from a file or define it directly
+query_sequence <- readDNAStringSet("/home/meglecz/vtamR/local/small_test/small_test1_1.fas")
+
+# Load the reference sequences from a file or define them directly
+reference_sequences <- readDNAStringSet("database.fasta")
+
+# Perform local sequence search using blastn()
+results <- blastn(query_sequence, reference_sequences)
+
+# Print the results
+print(results)
+
+### get the list of function in a package
+functions_seqinr <- ls("package:seqinr", all.names = TRUE)
+print(functions_seqinr)
+
+
+### Define the command to run the third-party program
+command <- "path/to/program"
+args <- c("arg1", "arg2")
+# Run the command using system2()
+output <- system2(command, args, stdout = TRUE, stderr = TRUE)
+# Print the output
+print(output)
+
+
+command <- "path/to/program arg1 arg2"
+# Run the command using system()
+system(command)
+
+
+
+# start blast from R
+myPipe <- pipe( "blastall -p blastp -i text.fasta -d data.fasta" )
+results <- read.table( myPipe )
+colnames( blastResults ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
+                               "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
+                               "S.start", "S.end", "E", "Bits" )
+
+
+# http://rstudio-pubs-static.s3.amazonaws.com/12097_1352791b169f423f910d93222a4c2d85.html
+
+
+
+# Create a connection to an external command (e.g., "ls" command on Unix/Linux)
+cmd <- pipe("ls", "r")  # Open the "ls" command for reading
+
+# Read the output from the command
+output <- readLines(cmd)
+
+# Close the connection
+close(cmd)
+
+# Print the output
+print(output)
+
+
+
+makeblastdb -in local/out/small/tmp_1687945245/test.fas -dbtype nucl
+blastn –db local/out/small/tmp_1687945245/test.fas –query local/out/small/tmp_1687945245/test.fas –outfmt 6 –out local/out/small/tmp_1687945245/test_blastout.out
+
+pipe_vsearch <- pipe(vsearch)
+results <- read.table( pipe_vsearch )
+
+blast <- "blastn -db local/out/small/tmp_1687945245/test.fas -query local/out/small/tmp_1687945245/test.fas -outfmt 6"
+myPipe <- pipe(blast)
+results <- read.table( myPipe )
+colnames( results ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
+                          "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
+                          "S.start", "S.end", "E", "Bits" )
+
