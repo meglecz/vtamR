@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Endoume" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   setwd("~/vtamR")
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -20,6 +20,7 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
   fastqdir <- "local/fastq/"
+  num_threads=8
 } else if (computer == "Endoume"){
   setwd("~/vtamR")
   cutadapt_path="/home/emese/miniconda3/bin/"
@@ -27,6 +28,7 @@ if(computer == "Bombyx"){
   blast_path="" # deactivate conda
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
   fastqdir <- "local/fastq/"
+  num_threads=8
 }else if (computer == "Windows"){
   setwd("C:/Users/emese/vtamR/")
   cutadapt_path="C:/Users/Public/"
@@ -34,6 +36,7 @@ if(computer == "Bombyx"){
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
   fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
+  num_threads=4
 }
 
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
@@ -257,7 +260,7 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 ###
 ### TaxAssign
 ###
-asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir)
+asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
 # write the list of ASV and their taxonomic assignment
 write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
 
@@ -277,9 +280,9 @@ outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
 write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 
-# start optimize from almodt unfiltered data (after eliminating ASV with low global reads count)
-LFN_global_read_count <- paste(outdir, "LFN_global_read_count.csv", sep="")
-optimize_read_count_df <- read.csv(LFN_global_read_count, sep=sep)
+# start optimize from almost unfiltered data (after eliminating ASV with low global reads count)
+LFN_global_read_count_out <- paste(outdir, "LFN_global_read_count.csv", sep="")
+optimize_read_count_df <- read.csv(LFN_global_read_count_out, sep=sep)
 dim(optimize_read_count_df)
 ###
 ### OptimizePCRError
@@ -319,35 +322,6 @@ by_sample=T
 
 min_replicate_number=2
 OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
-
-df1 <- data.frame(
-  Name = c("Alice", "Bob", "Charlie"),
-  Age = c(25, NA, 30),
-  Height = c(160, 175, NA)
-)
-
-df2 <- data.frame(
-  Name = c("David", "Eve", "Frank"),
-  Age = c(NA, 28, 32),
-  Height = c(165, NA, 180)
-)
-
-# Combine the data frames using bind_rows
-combined_df <- bind_rows(df1, df2)
-
-
-
-
-data <- data.frame(
-  Name = c("Alice", "Bob", "Charlie"),
-  Age = c(25, NA, 30),
-  Height = c(160, 175, NA)
-)
-
-rows_with_na <- data[apply(is.na(data), 1, any), ]
-
-# Use complete.cases to select only rows with complete data
-complete_rows <- data[complete.cases(data), ]
 
 
 end_time <- Sys.time()  # Record the end time

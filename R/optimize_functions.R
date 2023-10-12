@@ -389,8 +389,8 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
 #  read_count_df = optimize_read_count_df
 #  min_lfn_read_count_cutoff = 10
 #  min_lnf_variant_cutoff = 0.001
-#  rc_cutoff = 10
-#  var_cutoff = 0.001
+#  rc_cutoff = 55
+#  var_cutoff = 0.05
 #  by_replicate = T
   
   
@@ -408,9 +408,9 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
   df <- FilterMinReplicateNumber(df, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
   
   # make a series of cutoff values for LFN_read_count
-  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=100, by=10)
+  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=100, by=5)
   # make a series of cutoff values for LFN_read_count
-  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=0.04, by=0.01)
+  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=0.05, by=0.001)
   
   out_df <- data.frame( 
     lfn_sample_replicate_cutoff =numeric(),
@@ -448,29 +448,16 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
         group_by(action) %>%
         summarise(TPFP=length(action))
       
-      TP_count <- ko %>%
-        filter(action=="keep") %>%
-        pull(TPFP)
-      FP_count <- ko %>%
-        filter(action=="delete") %>%
-        pull(TPFP)
-      
-      print(lfn_sample_replicate_cutoff)
-      print(pcr_error_var_prop)
-      print(rc_cutoff)
-      print(var_cutoff)
-      print(FN_count)
-      print(TP_count)
-      print(FP_count)
-      
+      TP_count <- 0
+      if ("keep" %in% ko$action) {
+        TP_count <- subset(ko, action == "keep")$TPFP
+      }
+      FP_count <- 0
+      if ("delete" %in% ko$action) {
+        FP_count <- subset(ko, action == "delete")$TPFP
+      }
       new_line <- data.frame(lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
-      print(rc_cutoff)
-      print(var_cutoff)
-      print(new_line)
-      print(dim(new_line))
-      print(out_df)
-      print(dim(out_df))
-#      out_df <- bind_rows(out_df, new_line )
+      out_df <- bind_rows(out_df, new_line )
     }
   }
   

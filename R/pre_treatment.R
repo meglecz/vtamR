@@ -237,7 +237,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
       file.append(plus, minus_rc)
     }
     
-    # delete tamporary reverse_comp dir
+    # delete temporary reverse_comp dir
     unlink(rc_dir, recursive = TRUE)
     
     ### compress

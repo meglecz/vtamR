@@ -11,7 +11,7 @@
 #' @param num_threads number of threads
 #' @export
 #'
-run_blast <- function(df, blast_db="", blast_path="", outdir="", qcov_hsp_perc=70, perc_identity=70, num_threads=1){
+run_blast <- function(df, blast_db="", blast_path="", outdir="", qcov_hsp_perc=70, perc_identity=70, num_threads=8){
  
    # make fasta file with unique reads; use numbers as ids  
   seqs <- unique(df$asv)
@@ -304,7 +304,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' @param outdir name of the output directory
 #' @export
 #'
-TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path="", outdir=""){
+TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path="", outdir="", num_threads=8){
   
   # default value for ltg_params_df
   if(nrow(ltg_params_df)==0){
@@ -337,7 +337,7 @@ TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path
   
   ### run blast and clean/complete results
   # run blast and read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
-  blast_res <- run_blast(df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=8)
+  blast_res <- run_blast(df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=num_threads)
   # add update old taxids to valid ones
   blast_res <- update_taxids(blast_res, old_taxid)
   # add taxlevel
@@ -381,6 +381,9 @@ TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path
     select(asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres)
   # adjust resolution if it is higher than ltgres
   taxres_df <- adjust_ltgres(taxres_df, tax_df)
+  
+  # delete temporary  dir
+  unlink(outdir_tmp, recursive = TRUE)
   
   return(taxres_df)
 }
