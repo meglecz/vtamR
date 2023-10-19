@@ -103,6 +103,12 @@ stat_df <- data.frame(parameters=character(),
 
 
 ###
+# Test merge
+###
+#test_merge_and_sortreads(vsearch_path=vsearch_path)
+
+
+###
 ### Merge
 ###
 fastq_ascii <- 33
@@ -121,6 +127,10 @@ merged_dir <- paste(outdir, "merged", sep="")
 # read fastqinfo
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+
+
+
+
 
 
 ###

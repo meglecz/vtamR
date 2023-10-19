@@ -11,7 +11,7 @@ run_blast(
   outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
-  num_threads = 1
+  num_threads = 8
 )
 }
 \arguments{

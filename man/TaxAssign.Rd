@@ -10,7 +10,8 @@ TaxAssign(
   taxonomy = "",
   blast_db = "",
   blast_path = "",
-  outdir = ""
+  outdir = "",
+  num_threads = 8
 )
 }
 \arguments{

@@ -538,3 +538,68 @@ select_sequences <- function(fasta_dir="", file, outdir="", random_integers){
   
   #  }
 }
+
+#' read_fasta_local
+#' 
+#' Read a fasta file to a dataframe
+#'  
+#' @param filename input fasta file with full path; can be  uncompressed o compressed in gz format only 
+#' @param use_id [T/F] if TRUE returns data frame with seq_id and sequence columns; not compatible with dereplicate==T, where the seq_ids are lost; Default: T
+#' @param case ["uc"/"lc"/""] write sequences with upper or lower case letters; Default: "", do not change the case 
+#' @param dereplicate [T/F] if TRUE, returns a data frame with unique sequences in the sequence column and read counts in the read_count column; Default: F
+#' @export
+#'
+
+read_fasta_local <- function(filename, use_id=T, case="", dereplicate=F){
+# this function is rather slow, but easy to deal with it
+  # can deal deal gz or uncompressed files
+  # open file
+  if(endsWith(filename, ".gz")){
+    file_connection <- gzfile(filename, "rb") 
+  }else{
+    file_connection <- file(filename, "r")
+  }
+  
+  # define empty dataframe for sequences
+  df <- data.frame( seq_id=character(0),
+                      sequence=character(0))
+  
+  # read line by line
+  id <- NA
+  seq <- ""
+  while (length(line <- readLines(file_connection, n = 1)) > 0) {
+    if(startsWith(line, ">")){
+      if(!(is.na(id))){
+        df_tmp <- data.frame( seq_id=id,sequence=seq)
+        df <- rbind(df, df_tmp)
+        seq <- ""
+      }
+      id <- sub(">", "", line)
+    }else {
+      seq <- paste(seq, line, sep="")
+    }
+  }
+  # add last sequence
+  df_tmp <- data.frame( seq_id=id,sequence=seq)
+  df <- rbind(df, df_tmp)
+  close(file_connection)
+  
+  # eliminate id column if use_id==F
+  if(use_id==F){
+    df <- df %>%
+      select(sequence)
+  }
+  # change sequences ut upper or lower case
+  if(case=="uc"){
+    df$sequence <- toupper(df$sequence)
+  } else if(case=="lc"){
+    df$sequence <- tolower(df$sequence)
+  }
+  # dereplicate
+  if(dereplicate){
+    df <- df %>%
+      group_by(sequence) %>%
+      summarize(read_count=length(sequence))
+  }
+  return(df)
+}
