@@ -221,7 +221,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
     
     ### reverse complment and pool
     # get list of files demultiplexed on - strand
-    files <- list.files(path = rc_dir)
+    files <- list.files(path = rc_dir, pattern=".fasta")
     # Filter the files based on the motif using regular expressions
     # reverse complement sequences on the minus stand, and append info to the plus strand output
     files <- grep(pattern = "\\.fasta", x = files, value = TRUE)

@@ -115,6 +115,7 @@ read_fastas_from_fileinfo <- function (fileinfo_df, dir="", write_csv=F, outdir=
   read_count_df <- read_count_df[, c("asv", "plate", "marker", "sample", "replicate", "read_count")]
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "Input.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -138,6 +139,7 @@ LFN_global_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_global_read_count.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -156,6 +158,7 @@ LFN_global_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir
 LFN_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA, sep=",") {
   read_count_df <- filter(read_count_df,  (read_count >= cutoff))
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_read_count.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -190,6 +193,7 @@ LFN_sample_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outd
   read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_sample_replicate.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_sample_replicate)
@@ -223,6 +227,7 @@ LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA
   read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_variant_all.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_sample_replicate)
@@ -257,6 +262,7 @@ LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, out
   }
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_variant_replicate.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df_lnf_variant_replicate)
@@ -322,6 +328,7 @@ pool_LFN <- function (... , write_csv=F, outdir=NA, sep=",") {
   }
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_pooled.csv", sep=""),  row.names = F, sep=sep)
   }
   return(merged)
@@ -351,6 +358,7 @@ FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdi
   read_count_df$tmp <- NULL
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilterMinReplicateNumber.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -385,6 +393,7 @@ FilterIndel <- function(read_count_df, write_csv=F, outdir, sep=","){
   read_count_df$mod3 <- NULL
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilerIndel.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -492,6 +501,7 @@ FilterCodonStop <- function (read_count_df, write_csv=F, outdir=outdir, genetic_
   read_count_df <- filter(read_count_df, (asv %in% unique_asv_df$asv))
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilterCodonStop.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -666,6 +676,7 @@ FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="
     filter(!asv %in% unique_asv_df$asv)
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilterPCRerror.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -797,6 +808,7 @@ FilterChimera <- function(read_count_df, write_csv=F, outdir="", vsearch_path=""
     filter(!asv %in% unique_asv_df$asv)
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilterChimera.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)
@@ -909,6 +921,7 @@ FilerRenkonen <- function(read_count_df, write_csv=F, outdir="", renkonen_distan
   }
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "FilerRenkonen.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_df)  
@@ -934,6 +947,7 @@ PoolReplicates <- function(read_count_df, digits=0, write_csv=F, outdir="", sep=
   read_count_samples_df$mean_read_count <- round(read_count_samples_df$mean_read_count, digits =digits)
   
   if(write_csv){
+    outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "PoolReplicates.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_samples_df)

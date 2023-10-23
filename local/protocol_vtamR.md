@@ -131,3 +131,34 @@ It is possible to ron from a terminal using vsearch.exe at the beginning of the 
 
  
 
+
+
+
+
+# make vtam test data
+
+Use unzipped files
+
+
+
+~~~
+conda activate vtam_2
+cd /home/meglecz/vtamR/
+
+vtam merge --fastqinfo vtamR_test/vtam/user_input/fastqinfo_mfzr.tsv --fastqdir local/fastq --fastainfo vtamR_test/vtam/merged/fastainfo.tsv --fastadir  vtamR_test/vtam/merged
+
+vtam sortreads --fastainfo vtamR_test/vtam/merged/fastainfo.tsv --fastadir vtamR_test/vtam/merged --sorteddir vtamR_test/vtam/sorted
+~~~
+
+
+
+~~~
+vtam filter --db vtamR_test/vtam/db.sqlite --sortedinfo vtamR_test/vtam/sorted/sortedinfo.tsv --sorteddir vtamR_test/vtam/sorted --asvtable vtamR_test/vtam/filter/asvtable_default.tsv
+~~~
+
+
+
+~~~
+!!!!!!!!!!!!!!!!! TODO  vtam make_known_occurrences --asvtable asvtable filter/asvtable_default.tsv --sample_types asper1/user_input/sample_types.tsv --mock_composition asper1/user_input/mock_composition_mfzr.tsv --known_occurrences asper1/run1_mfzr/known_occurrences_mfzr.tsv --missing_occurrences asper1/run1_mfzr/missing_occurrences_mfzr.tsv -v
+~~~
+

@@ -17,9 +17,9 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
   setwd("~/vtamR")
   ###
   # run Merge using the same parameters as vtam
-  fastqinfo_df <- read.csv("vtamR_test/test_input/fastqinfo_mfzr_eu.csv", header=T, sep=sep)
+  fastqinfo_df <- read.csv("vtamR_test/test/user_input/fastqinfo_mfzr_eu_unzipped.csv", header=T, sep=sep)
   fastqdir <- "local/fastq/"
-  outdir <- "vtamR_test/test_merge/"
+  outdir <- "vtamR_test/test/merged/"
   fastq_ascii <- 33 #
   fastq_maxdiffs <- 10 #
   fastq_maxee <- 1 #
@@ -36,7 +36,7 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
   fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=outdir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
   ### compare results to precomputed files by vtam
-  vtam_out <- "vtamR_test/vtam_merged/"
+  vtam_out <- "vtamR_test/test/merged/"
   vtamfiles <- list.files(path = vtam_out, pattern = "\\.fasta$")
   vtamRfiles <- list.files(path = outdir, pattern = "\\.fasta$")
   
@@ -44,19 +44,13 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
   if(length(vtamfiles) == length(vtamRfiles)){# same number of files
     
     for(vtamf in vtamfiles){ # go through all files in vtamf
-      #      vtamf = "mfzr_1_fw.fasta"
       vtamRf <- paste(outdir, vtamf, sep="")
       vtamf <- paste(vtam_out, vtamf, sep="")
       if(file.exists(vtamRf)){ # corresponding file exists for vtamR
-        
-        #        vtamRseq <- as.matrix(read.fasta(vtamRf, seqonly = T))
-        #       vtamseq <- as.matrix(read.fasta(vtamf, seqonly = T))
+      
         vtamRseq <- read.fasta(vtamRf, seqonly = T)
         vtamseq <- read.fasta(vtamf, seqonly = T)
-        #colnames(vtamseq) <- c("asv")
-        #vtamseq <- vtamseq %>% arrange(asv)
         
-        #        if(!(identical(vtamRseq[,1], vtamseq[,1]))){# the sequences differ between the two files
         if(!(identical(vtamRseq, vtamseq))){# the sequences differ between the two files
           
           setwd(backup_wd)
@@ -75,8 +69,8 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
   
   ###
   # run Sortreads using the same parameters as vtam
-  fastainfo_df <- read.csv("vtamR_test/test_merge/fastainfo.csv", header=T, sep=sep)
-  sorted_dir <- "vtamR_test/test_sorted/"
+  fastainfo_df <- read.csv("vtamR_test/test/merged/fastainfo.csv", header=T, sep=sep)
+  sorted_dir <- "vtamR_test/test/sorted/"
   check_reverse <- T
   tag_to_end <- F
   primer_to_end <-F
@@ -88,11 +82,9 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
   fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=outdir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
-  vtam_out <-  "vtamR_test/vtam_sorted/"
-  vtam_csv <-  "vtamR_test/vtam_sorted/sortedinfo.tsv"
+  vtam_out <-  "vtamR_test/vtam/sorted/"
+  vtam_csv <-  "vtamR_test/vtam/sorted/sortedinfo.tsv"
   fastainfo_vtam_df <- read.csv(vtam_csv, header=T, sep="\t")
-  fastainfo_vtam_df$run <- "plate1"
-  fastainfo_vtam_df$sample <- sub("_run1", "", fastainfo_vtam_df$sample)
   fastainfo_vtam_df <- fastainfo_vtam_df %>% rename(plate = run)
   
   df <- full_join(fastainfo_vtam_df, fileinfo_df, by=c("plate", "marker", "sample", "replicate"))
@@ -135,3 +127,8 @@ test_merge_and_sortreads <- function(vsearch_path="", cutadapt_path=""){
     print("PASS: The results of sortreads are identical for vtam and vtamR")
   }
 }
+
+
+
+
+

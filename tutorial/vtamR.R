@@ -69,6 +69,90 @@ load_all(".")
 roxygenise() # Builds the help files
 usethis::use_roxygen_md() # rebuild the help files ?
 
+
+###
+# Test merge
+###
+test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+
+test_filters(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, sep=sep)
+
+test_filters <- function(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, sep=sep){
+  
+  sorted_dir <- "/home/meglecz/vtamR/vtamR_test/test/sorted/"
+  fileinfo_df <- read.csv("/home/meglecz/vtamR/vtamR_test/test/sorted/fileinfo.csv", sep=sep)
+  outdir <- "/home/meglecz/vtamR/vtamR_test/test/filter/"
+    
+  read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=F, outdir=outdir, sep=sep)
+  
+  global_read_count_cutoff = 2
+  read_count_df <- LFN_global_read_count(read_count_df, global_read_count_cutoff, write_csv=F, outdir=outdir, sep=sep)
+
+  ### LFN_filters
+  # LFN_read_count
+  lfn_read_count_cutoff <- 10
+  read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, write_csv=F, outdir = outdir, sep=sep)
+  # LFN_sample_replicate (by column)
+  lfn_sample_replicate_cutoff <- 0.001
+  read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, write_csv=F, outdir = outdir, sep=sep)
+  # LFN_sample_variant (by line)
+  lnf_variant_cutoff = 0.001
+  by_replicate = TRUE
+  read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, by_replicate, write_csv=F, outdir = outdir, sep=sep)
+  # pool the results of the different filterLFN to one data frame; keep only occurrences that passed all filters
+  read_count_df <- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, read_count_df_lnf_sample_replicate, write_csv=F, outdir = outdir, sep=sep)
+  # delete temporary data frames
+  read_count_df_lfn_read_count <- NULL
+  read_count_df_lnf_variant <- NULL
+  read_count_df_lnf_sample_replicate <- NULL
+  
+  
+  ### keep repeatable occurrences
+  min_replicate_number <- 2
+  read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
+ 
+  ### FilerPCRerror
+  pcr_error_var_prop <- 0.1
+  max_mismatch <- 1
+  by_sample <- T
+  sample_prop <- 1
+  read_count_df <- FilterPCRerror(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
+  ### FilterChimera
+  abskew=2
+  by_sample = T
+  sample_prop = 1
+  read_count_df <- FilterChimera(read_count_df, write_csv=F, outdir=outdir, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
+  ### FilerRenkonen
+  renkonen_distance_quantile = 0.9
+  read_count_df <- FilerRenkonen(read_count_df, write_csv=F, outdir=outdir, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
+  ### FilerIndel
+  read_count_df <- FilterIndel(read_count_df, write_csv=F, outdir=outdir, sep=sep)
+  ### FilerCodonStop
+  genetic_code = 5
+  read_count_df <- FilterCodonStop(read_count_df, write_csv=F, outdir=outdir, genetic_code=genetic_code, sep=sep)
+  
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ".", names_sort=T))
+  write.csv(file="/home/meglecz/vtamR/vtamR_test/test/user_input/test_file.csv", wide_read_count_df)
+  
+  ### PoolReplicates
+  digits = 0
+  read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+  
+  
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ".", names_sort=T))
+  
+  
+  # wide format (ASV table), samples are in columns, ASVs in lines
+  outfile=paste(outdir, "Final_asvtable.csv", sep="")
+  write_asvtable(read_count_samples_df, outfile=outfile, add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F,  sep=sep)
+  
+  read_count_samples_df <- read_count_samples_df %>%
+    select(asv, plate1.MFZR.14ben01, plate1.MFZR.14ben02, plate1.MFZR.tnegtag, plate1.MFZR.tpos1)
+  
+)
+  
+}
+
 ####
 # define input filenames
 #fastadir <- "local/small_test"
@@ -102,10 +186,7 @@ stat_df <- data.frame(parameters=character(),
                       sample_replicate_count=integer())
 
 
-###
-# Test merge
-###
-#test_merge_and_sortreads(vsearch_path=vsearch_path)
+
 
 
 ###
