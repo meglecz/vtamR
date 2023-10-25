@@ -4,13 +4,11 @@
 \alias{count_seq}
 \title{count_seq}
 \usage{
-count_seq(dir = "", file)
+count_seq(filename = filename)
 }
 \arguments{
-\item{dir}{directory that contains the input file}
-
-\item{file}{fasta file, without it's path}
+\item{file}{fasta file including path}
 }
 \description{
-Count the number of sequences in the input fasta file. Input can be uncompressed, gz, or zip file
+Count the number of sequences in the input fasta file. Input can be uncompressed of gz file, but zip file are not handled
 }

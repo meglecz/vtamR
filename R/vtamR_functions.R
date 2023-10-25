@@ -1,20 +1,3 @@
-#' Check directory
-#' 
-#' Create dir if does not exists.
-#' Add slash to the end of the directory name.
-#' 
-#' @param dir directory name
-#' @export
-check_dir <- function(dir){
-  if(!(endsWith(dir, "/"))){
-    dir <- paste(dir, '/', sep="")
-  }
-  if(!dir.exists(dir)){
-    dir.create(dir, recursive =TRUE)
-  }
-  return(dir)
-}
-
 #' Get read, variant, sample and replicate counts.
 #' Complete the stat_df with the above statistics.
 #' 
@@ -44,32 +27,6 @@ get_stat <- function(read_count_df, stat_df, stage, params=NA){
   rbind(stat_df, df)
 }
 
-#' Read a fasta file, demultiplex reads and count them
-#' 
-#' Read only sequences from input fasta file.
-#' Transform all nt to upper case.
-#' Demultiplex reads to ASVs.
-#' Count the number of reads of each ASVs.
-#' Return a tibble with asv and nb_reads.
-#' 
-#' @param file fasta file
-#' @export
-read_fasta_count_reads <- function (file) {
-  fas <- read.fasta(file, seqonly = T)
-  # transform list to matrix (1 column)
-  fas <-as.matrix(fas)
-  # all nt to upper case letters
-  fas <-toupper(fas)
-  # transform matrix to df. If I want to do it directly from list, it will put each sequence to one separate column
-  fas <- as.data.frame(fas)
-  colnames(fas) <- c("asv")
-  
-  # make unique list of sequences and count them
-  read_count_df <- fas %>%
-    group_by(asv) %>%
-    summarize(read_count=length(asv))
-  return(read_count_df)
-}
 
 #' Read all fasta files in fileinfo file to a data frame
 #' 
@@ -83,6 +40,7 @@ read_fasta_count_reads <- function (file) {
 #' @param write_csv T/F; write read_counts to csv file; default=FALSE
 #' @param outdir name of the output directory
 #' @export
+#' 
 read_fastas_from_fileinfo <- function (fileinfo_df, dir="", write_csv=F, outdir=NA, sep=",") {
   # read all fasta files in fileinfo to a read_count_df
   if(nchar(dir)>0){
@@ -102,8 +60,8 @@ read_fastas_from_fileinfo <- function (fileinfo_df, dir="", write_csv=F, outdir=
     if(file.size(fas) < 50){ #' an empty file gzipped has 42 size => skip these files, An unzipped fasta with 80 nt is bigger than 50
       next
     }
-
-    read_count_df_tmp <- read_fasta_count_reads(fas)
+    
+    read_count_df_tmp <- read_fasta_seq(filename=fas, dereplicate=T)
     read_count_df_tmp$plate <- fileinfo_df[i,"plate"]
     read_count_df_tmp$marker <- fileinfo_df[i,"marker"]
     read_count_df_tmp$sample <- fileinfo_df[i,"sample"]
@@ -948,7 +906,7 @@ PoolReplicates <- function(read_count_df, digits=0, write_csv=F, outdir="", sep=
   
   if(write_csv){
     outdir <- check_dir(outdir)
-    write.table(read_count_df, file = paste(outdir, "PoolReplicates.csv", sep=""),  row.names = F, sep=sep)
+    write.table(read_count_samples_df, file = paste(outdir, "PoolReplicates.csv", sep=""),  row.names = F, sep=sep)
   }
   return(read_count_samples_df)
 }

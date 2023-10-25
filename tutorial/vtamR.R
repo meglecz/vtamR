@@ -20,12 +20,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
   fastqdir <- "local/fastq/"
+  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  outdir <- "/home/meglecz/vtamR_large_files/out/"
+  mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
   num_threads=8
 } else if (computer == "Endoume"){
   setwd("~/vtamR")
   cutadapt_path="/home/emese/miniconda3/bin/"
   vsearch_path = "/home/emese/miniconda3/bin/"
-  blast_path="" # deactivate conda
+  blast_path= "" # deactivate conda
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
   fastqdir <- "local/fastq/"
   num_threads=8
@@ -38,6 +42,8 @@ if(computer == "Bombyx"){
   fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
   num_threads=4
 }
+sep=";"
+
 
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
@@ -155,14 +161,9 @@ test_filters <- function(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path,
 
 ####
 # define input filenames
-#fastadir <- "local/small_test"
-#fileinfo <- "local/user_input/fileinfo_small.csv"
+#fastadir <- "local/mfzr/sorted/"
+#fileinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
 
-fastqinfo <- "local/user_input/fastqinfo_mfzr_eu.csv"
-fastadir <- "local/mfzr/sorted/"
-fileinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
-mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
-sep=";"
 
 #fastadir <- "/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/"
 #fileinfo <-"/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/fileinfo_vtamr.csv"
@@ -172,21 +173,17 @@ sep=";"
 #fastadir <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/"
 #fileinfo <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/fileinfo_vtamr.csv"
 
-# create the output directory and check the the slash at the end
-outdir <- check_dir(dir="local/out")
 
+# create the output directory and check the the slash at the end
+outdir <- check_dir(dir=outdir)
 # Measure runtime using system.time()
 start_time <- Sys.time()  # Record the start time
-
 # define stat data frame that will be completed with counts after each step
 stat_df <- data.frame(parameters=character(),
                       asv_count=integer(),
                       read_count=integer(),
                       sample_count=integer(),
                       sample_replicate_count=integer())
-
-
-
 
 
 ###
@@ -203,24 +200,20 @@ fastq_maxns <- 0
 fastq_truncqual <- 10
 fastq_minovlen <- 50
 fastq_allowmergestagger <- F
-compress=0 # "gz" or "zip" for compressing output files; no comprssion by default
-merged_dir <- paste(outdir, "merged", sep="")
+compress="gz" # "gz" or "zip" for compressing output files; no comprssion by default
+merged_dir <- paste(outdir, "merged/", sep="")
 # read fastqinfo
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
 
-
-
-
-
 ###
 ### RandomSeq
 ###
-# !!!! seem a bit slow; work on it
-randomseq_dir = paste(outdir, "random_seq", sep="")
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=10000)
-
+randomseq_dir = paste(outdir, "random_seq/", sep="")
+#fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
+#fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000000, randseed=0)
 
 ###
 ### SortReads
@@ -232,7 +225,7 @@ primer_to_end <-F
 cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
-compress <- "0"
+compress <- "gz"
 fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 
@@ -244,8 +237,6 @@ fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outd
 read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=F, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
-
-
 
 ###
 ### LFN_global_read_count
