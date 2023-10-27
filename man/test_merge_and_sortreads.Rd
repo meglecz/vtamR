@@ -4,9 +4,15 @@
 \alias{test_merge_and_sortreads}
 \title{test_merge_and_sortreads}
 \usage{
-test_merge_and_sortreads(vsearch_path = "", cutadapt_path = "")
+test_merge_and_sortreads(
+  vtam_dir = "~/vtamR",
+  vsearch_path = "",
+  cutadapt_path = ""
+)
 }
 \arguments{
+\item{vtam_dir}{directory of vtamR}
+
 \item{vsearch_path}{path to vsearch executables}
 
 \item{cutadapt_path}{path to cutadapt executables}

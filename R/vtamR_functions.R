@@ -825,7 +825,7 @@ make_renkonen_df <- function(read_count_df){
   return(renkonen_df)
 }
 
-#' FilerRenkonen
+#' FilterRenkonen
 #' 
 #' Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample.
 #' Returns the filtered read_count_df data frame
@@ -836,10 +836,10 @@ make_renkonen_df <- function(read_count_df){
 #' @param outdir name of the output directory
 #' @export
 #' 
-FilerRenkonen <- function(read_count_df, write_csv=F, outdir="", renkonen_distance_quantile=0.9, sep=","){
-  # calculate Renkonen distances between all pairs of replicates of the within sample
+FilterRenkonen <- function(read_count_df, write_csv=F, outdir="", renkonen_distance_quantile=0.9, sep=","){
+  # calculate Renkonen distances between all pairs of replicates of within sample
   renkonen_df <- make_renkonen_df(read_count_df)
-  # det the cut off renkonen distance; values > cutoff are considered as high
+  # determine the cut off renkonen distance; values > cutoff are considered as high
   renkonen_df <- renkonen_df %>%
     arrange(renkonen_d)
   last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)

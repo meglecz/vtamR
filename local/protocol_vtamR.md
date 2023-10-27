@@ -145,12 +145,18 @@ Use unzipped files
 conda activate vtam_2
 cd /home/meglecz/vtamR/
 
-vtam merge --fastqinfo vtamR_test/vtam/user_input/fastqinfo_mfzr.tsv --fastqdir local/fastq --fastainfo vtamR_test/vtam/merged/fastainfo.tsv --fastadir  vtamR_test/vtam/merged
+vtam merge --fastqinfo vtamR_test/vtam/user_input/fastqinfo_mfzr.tsv --fastqdir vtamR_test/data --fastainfo vtamR_test/vtam/merged/fastainfo.tsv --fastadir  vtamR_test/vtam/merged
 
 vtam sortreads --fastainfo vtamR_test/vtam/merged/fastainfo.tsv --fastadir vtamR_test/vtam/merged --sorteddir vtamR_test/vtam/sorted
 ~~~
 
 
+
+
+
+
+
+!!!!!! not use yet
 
 ~~~
 vtam filter --db vtamR_test/vtam/db.sqlite --sortedinfo vtamR_test/vtam/sorted/sortedinfo.tsv --sorteddir vtamR_test/vtam/sorted --asvtable vtamR_test/vtam/filter/asvtable_default.tsv
