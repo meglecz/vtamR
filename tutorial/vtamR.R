@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Endoume" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -34,7 +34,10 @@ if(computer == "Bombyx"){
   vsearch_path = "/home/emese/miniconda3/bin/"
   blast_path= "" # deactivate conda
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
-  fastqdir <- "local/fastq/"
+#  fastqdir <- "local/fastq/"
+  fastqdir <- "vtamR_test/data/"
+  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
+  outdir <- "vtamR_test/out/"
   num_threads=8
   compress = T
 }else if (computer == "Windows"){
@@ -89,8 +92,37 @@ usethis::use_roxygen_md() # rebuild the help files ?
 ###
 # Test merge, SortReads and filter
 ###
-test_merge_and_sortreads(vtam_dir=vtam_dir, vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, sep=sep)
+test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
+
+test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+
+test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep){
+  
+  test_dir <- check_dir(test_dir)
+  outdir <- paste(test_dir, "out/optimize/", sep="")
+  outdir <- check_dir(outdir)
+  input_test_optimize <- paste(test_dir, "test/input_test_optimize.csv", sep="")
+  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep="")
+  fileinfo_df <- read.csv(fileinfo, sep=sep)
+  
+  read_count_df <- read.table(input_test_optimize, sep=sep, header=T)
+  
+  ### PCRerror
+  OptimizePCRError(read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, max_mismatch=1, min_read_count=10)
+  
+  
+  OptimizeLFNsampleReplicate(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
+  
+  
+  OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
+  
+  
+}
+
+
+
 
 
 ####
@@ -137,7 +169,6 @@ fastq_allowmergestagger <- F
 merged_dir <- paste(outdir, "merged/", sep="")
 compress = T
 # read fastqinfo
-fastqinfo <- "C:/Users/emese/vtamR/vtamR_test/data/fastqinfo_mfzr_gz.csv"
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
@@ -252,7 +283,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params
 # PS = summ(min(p1i, p2i))
 # p1i = number of reads for variant i in replicate 1 / number of reads in replicate 1
 renkonen_distance_quantile = 0.9
-read_count_df <- FilerRenkonen(read_count_df, write_csv=T, outdir=outdir, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
+read_count_df <- FilterRenkonen(read_count_df, write_csv=T, outdir=outdir, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=renkonen_distance_quantile)
 
 ###
@@ -289,7 +320,7 @@ write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
 # write sequence and variant counts after each step
 write.csv(stat_df, file = paste(outdir, "count_stat.csv", sep=""))
 # long format, each line corresponds to an occurrence ()
-write.csv(read_count_samples_df, file = paste(outdir, "Final_asvtable_long.csv", sep=""))
+write.csv(read_count_samples_df, file = paste(outdir, "Final_asvtable_long.csv", sep=""), row.names=F)
 # wide format (ASV table), samples are in columns, ASVs in lines
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
 write_asvtable(read_count_samples_df, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
@@ -306,7 +337,7 @@ dim(optimize_read_count_df)
 ### OptimizePCRError
 ###
 optimize_dir = paste(outdir, "optimize", sep="")
-OptimizePCRError(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, min_read_count=10)
+OptimizePCRError(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, max_mismatch=1, min_read_count=10)
 
 
 ###

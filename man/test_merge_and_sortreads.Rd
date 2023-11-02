@@ -5,18 +5,18 @@
 \title{test_merge_and_sortreads}
 \usage{
 test_merge_and_sortreads(
-  vtam_dir = vtam_dir,
+  test_dir = "~/vtamR/vtamR_test/",
   vsearch_path = "",
   cutadapt_path = ""
 )
 }
 \arguments{
-\item{vtam_dir}{directory of vtamR}
+\item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}
 
 \item{vsearch_path}{path to vsearch executables}
 
 \item{cutadapt_path}{path to cutadapt executables}
 }
 \description{
-Compare the Merge and SortReads (using default values of vtam) of vtamR to precoputed file obtained by vtam
+Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam
 }

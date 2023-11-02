@@ -4,22 +4,15 @@
 \alias{test_filters}
 \title{test_filters}
 \usage{
-test_filters(
-  test_dir = "~/vtamR/vtamR_test/",
-  vsearch_path = "",
-  cutadapt_path = "",
-  sep = ","
-)
+test_filters(test_dir = "~/vtamR/vtamR_test/", vsearch_path = "", sep = ",")
 }
 \arguments{
 \item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}
 
 \item{vsearch_path}{path to vsearch executables}
 
-\item{cutadapt_path}{path to cutadapt executables}
-
 \item{sep}{separator of the csv files}
 }
 \description{
-Compare run different fintering staps on a test input and compare results to expected (precomputed) output
+Run different filtering steps on a test input and compare results to expected (pre-computed) output
 }

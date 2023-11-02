@@ -1,24 +1,24 @@
 #' test_merge_and_sortreads
 #' 
-#' Compare the Merge and SortReads (using default values of vtam) of vtamR to precoputed file obtained by vtam
+#' Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam
 #'  
-#' @param vtam_dir directory of vtamR
+#' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executables
 #' @param cutadapt_path path to cutadapt executables
 #' @export
 #'
 
-test_merge_and_sortreads <- function(vtam_dir=vtam_dir, vsearch_path="", cutadapt_path=""){
+test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", cutadapt_path=""){
   
   merge_pass <- F
   sortreads_pass <- F
   
   backup_wd <- getwd()
-  setwd(vtam_dir)
+  setwd(test_dir)
 
-  fastqinfo_df <- read.csv("vtamR_test/data/fastqinfo_mfzr_gz.csv", header=T, sep=sep)
-  fastqdir <- "vtamR_test/data/"
-  outdir <- "vtamR_test/out/"
+  fastqinfo_df <- read.csv("data/fastqinfo_mfzr_gz.csv", header=T, sep=sep)
+  fastqdir <- "data/"
+  outdir <- "out/"
   outdir <- check_dir(outdir)
   
   ###
@@ -40,7 +40,7 @@ test_merge_and_sortreads <- function(vtam_dir=vtam_dir, vsearch_path="", cutadap
   fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
   ### compare results to precomputed files by vtam
-  vtam_out <- "vtamR_test/vtam/merged/"
+  vtam_out <- "vtam/merged/"
   vtamfiles <- list.files(path = vtam_out, pattern = "\\.fasta$")
   vtamRfiles <- list.files(path = merged_dir, pattern = "\\.fasta$")
   
@@ -87,8 +87,8 @@ test_merge_and_sortreads <- function(vtam_dir=vtam_dir, vsearch_path="", cutadap
   fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
-  vtam_out <-  "vtamR_test/vtam/sorted/"
-  vtam_csv <-  "vtamR_test/vtam/sorted/sortedinfo.tsv"
+  vtam_out <-  "vtam/sorted/"
+  vtam_csv <-  "vtam/sorted/sortedinfo.tsv"
   fastainfo_vtam_df <- read.csv(vtam_csv, header=T, sep="\t")
   fastainfo_vtam_df <- fastainfo_vtam_df %>% rename(plate = run)
   
@@ -138,17 +138,16 @@ test_merge_and_sortreads <- function(vtam_dir=vtam_dir, vsearch_path="", cutadap
 
 #' test_filters
 #' 
-#' Compare run different fintering staps on a test input and compare results to expected (precomputed) output
+#' Run different filtering steps on a test input and compare results to expected (pre-computed) output
 #'  
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executables
-#' @param cutadapt_path path to cutadapt executables
 #' @param sep separator of the csv files
 #' @export
 #'
 
 
-test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", cutadapt_path="", sep=","){
+test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", sep=","){
   
   test_dir <- check_dir(test_dir)
   outdir <- paste(test_dir, "out", sep="")
@@ -283,4 +282,59 @@ test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", cutada
   
 }
 
+#' test_make_known_occurrences
+#' 
+#' Run make_known_occurrences on a test file and compare the output to expected results
+#'  
+#' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
+#' @param sep separator in csv files
+#' @export
+#'
+
+test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=";"){
+  # input dirs and files
+  test_dir <- check_dir(test_dir)
+  mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
+  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep= "")
+  input_mock_composition <- paste(test_dir, "test/input_test_known_occurrences.csv", sep="")
+  # read data for data frame
+  read_count_samples_df <- read.csv(input_mock_composition, sep=sep)
+  
+  # output dirs and filenames
+  outdir <- paste(test_dir, "out/", sep="")
+  outdir <- check_dir(outdir)
+  known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
+  missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
+  # params
+  habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
+  # run make_known_occurrences
+  make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_composition=mock_composition, sep=sep, out=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
+  
+  # expected results
+  expected_known_occurrences <- paste(test_dir, "test/test_known_occurrences_out.csv", sep="")
+  expected_known_occurrences_df = read.csv(expected_known_occurrences, sep=sep)
+  expected_known_occurrences_df <- expected_known_occurrences_df %>%
+    arrange(plate,marker,sample,action,asv)
+  
+  expected_missing_occurrences <- paste(test_dir, "test/test_missing_occurrences_out.csv", sep="")
+  expected_missing_occurrences_df = read.csv(expected_missing_occurrences, sep=sep)
+  expected_missing_occurrences_df <- expected_missing_occurrences_df %>%
+    arrange(plate,marker,sample,action,asv)
+  
+  # read and arrange output
+  output_missing_occurrences_df = read.csv(missing_occurrences, sep=sep)
+  output_missing_occurrences_df <- output_missing_occurrences_df %>%
+    arrange(plate,marker,sample,action,asv)
+  
+  output_known_occurrences_df = read.csv(known_occurrences, sep=sep)
+  output_known_occurrences_df <- output_known_occurrences_df %>%
+    arrange(plate,marker,sample,action,asv)
+  
+  cat("\nOutput missing occurrences correspond to expected:")
+  print(identical(output_missing_occurrences_df, expected_missing_occurrences_df))
+  
+  cat("\nOutput known occurrences correspond to expected:")
+  print(identical(output_known_occurrences_df, expected_known_occurrences_df))
+  
+}
 

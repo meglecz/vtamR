@@ -178,11 +178,12 @@ make_missing_occurrences <- function(read_count_samples_df, mock_composition="",
 #' @param mock_composition csv file with columns: plate, marker, sample, action (keep/tolerate), asv
 #' @param sep separator used in mock_composition
 #' @param outdir name of the output directory
+#' @param max_mismatch maximum number of mismatches allowed between two asv where one of the asvs is considered as a PCRerror
 #' @param min_read_count occurrences under this read_count limits are ignored
 #' @export
 #'
 
-OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir="", min_read_count=2){
+OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir="", max_mismatch=1, min_read_count=2){
   
   # check outdir and make tmp dir
   outdir <- check_dir(outdir)
@@ -267,7 +268,7 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
       results_vsearch$nb_diff <- nchar(results_vsearch$aln) - results_vsearch$nb_ids
       # keep only pairs with 1 difference 
       results_vsearch <- results_vsearch %>%
-        filter(nb_diff == 1)
+        filter(nb_diff <= max_mismatch)
       # delete unnecessary columns and add plate, marker, sample
       results_vsearch <- select(results_vsearch, -c(nb_ids, aln, nb_diff))
       pms_mock <- strsplit(mock, "[.]")
