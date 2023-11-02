@@ -21,11 +21,12 @@
 #' @param fastq_minovlen minimum overlap between the merged reads; default: 50
 #' @param fastq_allowmergestagger [T/F] allow to merge staggered read pairs. Staggered pairs are pairs where the 3’ end of the reverse read has an overhang to the left of the 5’ end of the forward read; default: F
 #' @param sep separator in input and output csv files ;default: ","
-#' @param compress [gz/zip]; compress output to gz or zip files. Do not compress by default;
+#' @param compress [T/F]; Compress output file to gzip format; Default=F
 #' @export
 #'
 
-Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=0){
+Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=F){
+
 
   outdir<- check_dir(outdir)
   # get unique list of fastq file pairs
@@ -35,40 +36,49 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
   tmp$fasta <- NA
   
   for(i in 1:nrow(tmp)){# for each file pairs
-    # use the name of the fw file and replace extension by fasta
+    
+    # use the name of the fw fastq file and replace extension by fasta (uncompressed)
     outfile <- sub("\\..*", ".fasta", tmp[i,1])
     tmp$fasta[i] <- outfile
     outfile <- paste(outdir, outfile, sep="")
     # add path to input filenames
     fw_fastq <- paste(fastqdir, tmp[i,1], sep="")
     rv_fastq <- paste(fastqdir, tmp[i,2], sep="")
+
+    if(!is_linux() && endsWith(fw_fastq, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
+      fw_fastq <- decompress_file(fw_fastq, remove_input=F)
+      rv_fastq <- decompress_file(rv_fastq, remove_input=F)
+    }
     
     if(fw_fastq == outfile){ # stop the run if input and output files have the same name
       stop("ERROR: Input and output directories for fastq and fasta files are indentical. Please, give a different output directory")
     }
     
+    # vsearch can accept gz files in linux, but not on windows, the outfile is always uncompressed
     vsearch <- paste(vsearch_path, "vsearch --fastq_mergepairs ", fw_fastq, " --reverse ", rv_fastq ," --fastaout ",outfile," --quiet --fastq_ascii ",fastq_ascii," --fastq_maxdiffs ", fastq_maxdiffs, " --fastq_maxee ", fastq_maxee, " --fastq_minlen ", fastq_minlen, " --fastq_maxlen ",fastq_maxlen, " --fastq_minmergelen ",fastq_minmergelen," --fastq_maxmergelen ",fastq_maxmergelen," --fastq_maxns ", fastq_maxns, " --fastq_truncqual ", fastq_truncqual, " --fastq_minovlen ", fastq_minovlen, sep="")
     if(fastq_allowmergestagger){ # if reads are longer than the amplicon
       paste(vsearch, " --fastq_allowmergestagger", sep="")
     }
-        print(vsearch)
+    print(vsearch)
     system(vsearch)
     
-    if(compress == "gz"){
-      # Specify the path for the gzipped output file
-      outfile_gz <- paste(outfile, ".gz", sep="")
-      # Open the existing uncompressed file for reading
-      file_content <- readBin(outfile, "raw", file.info(outfile)$size)
-      # Create a gzipped copy of the file
-      gz <- gzfile(outfile_gz, "wb")
-      writeBin(file_content, gz)
-      close(gz)
-      file.remove(outfile)
-      tmp$fasta[i] <- paste(tmp$fasta[i], ".gz", sep="")
+    # vsearch produces uncompressed files even if input is compressed => compress output file
+    if(compress){ 
+      out <- compress_file(filename=outfile, remove_input=T)
+      if(!endsWith(tmp$fasta[i], ".gz")){ # correct output filename in fastainfo if necessary
+        tmp$fasta[i] <- paste(tmp$fasta[i], ".gz", sep="")
+      }
     }
-    if(compress == "zip"){
+    
+    original_fw_fastq <- paste(fastqdir, tmp[i,1], sep="")
+    if( original_fw_fastq != fw_fastq){# the input fastq has been unzipped for vsearch => rm unzipped file to free space
+      file.remove(fw_fastq)
+      file.remove(rv_fastq)
+    }
+    
+    if(F){ # compress == "zip" Keep this part as a backup, but finally it should be deleted
       # when zipping a file using a full path, the zip file will contain the embedded directory structure
-      # To avoid this, change the wd to the output dir zip, the file and change back to the orignal wd
+      # To avoid this, change the wd to the output dir, zip the file and change back to the orignal wd
       backup_dir <- getwd()
       setwd(outdir)
       fasta <- tmp$fasta[i]
@@ -78,7 +88,6 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
       setwd(backup_dir)
       tmp$fasta[i] <- fasta_zip
     }
-    
   }
   # make fastainfo file
   fastainfo_df <- left_join(fastqinfo_df, tmp, by=c("fastq_fw", "fastq_rv")) %>%
@@ -101,7 +110,7 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
 #' @export
 #'
 make_adapater_fasta <- function(fastainfo_df, fasta_file, tag_to_end, outdir){
-  # select tag combinations pour le fasta file
+  # select tag combinations pour the fasta file
   tags <- fastainfo_df %>%
     filter(fasta==fasta_file) %>%
     select(tag_fw, tag_rv)
@@ -188,24 +197,23 @@ reverse_complement <- function(sequence){
 #' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
 #' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
 #' @param sep separator in input and output csv files; default: ","
-#' @param compress [gz/zip]; compress output to gz or zip files. Do not compress by default;
+#' @param compress [T/F]; compress output to gzip format; Deault=F
 #' @export
 
-SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=0){
+SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
   #########
-  # SortReads_no_reverse dos the wole demultilexin, trimming and compress on the + strane
-  # If seqences are notorienetd, the -strand sould be checked => 
-  # run SortReads_no_reverse of plus starnd and on - starnd after swapping fw and rev tags and primers,
-  # take the reverse complement of the -stard results
+  # SortReads_no_reverse does the whole demultilexing, trimming and compress on the + strand
+  # If sequences are not orienetd, the -strand should be checked => 
+  # run SortReads_no_reverse of plus strand and on - strand after swapping fw and rev tags and primers,
+  # take the reverse complement of the -strand results (vsearch)
   # pool the results of the 2 strands
   # compress if necessary
-  #########
-  #!!!!!!!!!!!!!!! check latter the zip option for compress, especially for windows
+
   
   # run on strand +
   if(check_reverse){
     #### use +strand, output to sorted_dir, uncompressed
-    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
     
     #### use - strand
     # swap fw and rv tags and primers
@@ -217,9 +225,9 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
     rc_dir <-paste(outdir, 'rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- check_dir(rc_dir)
     # run sortreads on for reverse strand
-    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df_tmp, fastadir=fastadir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=0)
+    fileinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df_tmp, fastadir=fastadir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
     
-    ### reverse complment and pool
+    ### reverse complement and pool
     # get list of files demultiplexed on - strand
     files <- list.files(path = rc_dir, pattern=".fasta")
     # Filter the files based on the motif using regular expressions
@@ -230,7 +238,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
       minus <- paste(rc_dir, files[i], sep="")
       minus_rc <- paste(rc_dir, "rc_", files[i], sep="")
       # reverse complement sequences in minus file
-      rev_comp_cmd <- paste("vsearch --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
+      rev_comp_cmd <- paste(vsearch_path, "vsearch --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
       print(rev_comp_cmd)
       system(rev_comp_cmd)
       # append content of minus_rc to plus file
@@ -241,39 +249,25 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
     unlink(rc_dir, recursive = TRUE)
     
     ### compress
-    if(compress == "gz"){
+    if(compress){
       
       for(i in 1:nrow(fileinfo_df)){
         
         file <- fileinfo_df$filename[i]
-        
-        # Specify the path for the gzipped output file
-        file <- paste(outdir, file, sep="")
-        file_gz <- paste(file, ".gz", sep="")
+        fileinfo_df$filename[i] <- paste(file, ".gz", sep="") # correcte output filename
+        file <- paste(outdir, file, sep="") # add path
+        file_gz <- compress_file(file, remove_input=T) # compress file
+#        file_gz <- paste(file, ".gz", sep="")
         
         # Open the existing uncompressed file for reading
-        file_content <- readBin(file, "raw", file.info(file)$size)
+#        file_content <- readBin(file, "raw", file.info(file)$size)
         # Create a gzipped copy of the file
-        gz <- gzfile(file_gz, "wb")
-        writeBin(file_content, gz)
-        close(gz)
-        file.remove(file)
-        fileinfo_df$filename[i] <- paste(fileinfo_df$filename[i], ".gz", sep="")
+#        gz <- gzfile(file_gz, "wb")
+#        writeBin(file_content, gz)
+#        close(gz)
+#        file.remove(file)
+#        fileinfo_df$filename[i] <- paste(fileinfo_df$filename[i], ".gz", sep="")
       }
-      write.table(fileinfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
-    }
-    if(compress == "zip"){
-      
-      for(i in 1:nrow(fileinfo_df)){
-        
-        file <- fileinfo_df$filename[i]
-        
-        file_zip <- paste(file, ".zip", sep="")
-        zip(file_zip, file)
-        file.remove(outfile)
-        fileinfo_df$filename[i] <- paste(fileinfo_df$filename[i], ".gz", sep="")
-      }
-      # overwrite fileinfo file using zipped filenames
       write.table(fileinfo_df, file = paste(outdir, "fileinfo.csv", sep=""),  row.names = F, sep=sep) 
     }
   }
@@ -304,11 +298,10 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
 #' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
 #' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
 #' @param sep separator in input and output csv files; default: ","
-#' @param compress [gz/zip]; compress output to gz or zip files. Do not compress by default;
+#' @param compress [T/F]; compress output to gzip files.
 #' @export
 SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=0){
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
-  # !!!!! Makes gz files using cutadapt, but adapt this to windows, later
   
   # upper case for all primers and tags
   fastainfo_df$tag_fw <- toupper(fastainfo_df$tag_fw)
@@ -325,7 +318,7 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
   # get unique list of input fasta files
   fastas <- unique(fastainfo_df$fasta)
   
-  for(i in 1:length(fastas)){ # for each input fasta (each of them can be multi run or multi marker)
+  for(i in 1:length(fastas)){ # for each input fasta (each of them can be multi-run or multi-marker)
     # make temp dir for tag file and tag-trimmed files
     tmp_dir <-paste(outdir, 'tmp_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     tmp_dir <- check_dir(tmp_dir)
@@ -344,7 +337,7 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
     print(demultiplex_cmd)
     system(demultiplex_cmd)
     
-    # get marker list; different markers can have the same tag combinations, so the tagtrimmed files can contain ore than one marker
+    # get marker list; different markers can have the same tag combinations, so the tagtrimmed files can contain more than one marker
     markers <- unique(df$marker)
     for(m in 1:length(markers)){ # for each marker trim the sequences from primers
       #      m=1
@@ -357,15 +350,11 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
       primer_rvl <- df_marker[1,"primer_rv"]
       primer_rvl_rc <- reverse_complement(primer_rvl)
       
-      for(f in 1:nrow(df_marker)){# go through each demultiplexed, tagtrimmed file and trim primers
-        #        f=1
+      for(f in 1:nrow(df_marker)){# go through each de-multiplexed, tag-trimmed file and trim primers
         outfilename <- paste(df_marker[f,"plate"], df_marker[f,"marker"], df_marker[f,"sample"], df_marker[f,"replicate"], sep="-")
         outfilename <- paste(outfilename, ".fasta", sep="")
-        if(compress=="gz"){
+        if(compress){
           outfilename <- paste(outfilename, ".gz", sep="")
-        }
-        if(compress=="zip"){ # !!!! this might not be operational => work on it whan using windows
-          outfilename <- paste(outfilename, ".zip", sep="")
         }
         # complete fastainfo_df with output fasta name
         fastainfo_df$filename[which(fastainfo_df$plate==df_marker[f,"plate"] & fastainfo_df$marker==df_marker[f,"marker"] & fastainfo_df$sample==df_marker[f,"sample"] & fastainfo_df$replicate==df_marker[f,"replicate"])] <- outfilename
@@ -374,16 +363,15 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
         tag_trimmed_file <- paste(tmp_dir, "tagtrimmed-", df_marker[f,"tag_fw"], "-", df_marker[f,"tag_rv"], ".fasta", sep="")
         if(primer_to_end){
           primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
-          }
+        }
         else{
-#          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g '", primer_fwl, ";min_overlap=",nchar(primer_fwl),"...", primer_rvl_rc,  ";min_overlap=",nchar(primer_rvl_rc),"' --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
           primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fwl, ';min_overlap=',nchar(primer_fwl),'...', primer_rvl_rc,  ';min_overlap=',nchar(primer_rvl_rc),'" --output ', primer_trimmed_file, " ", tag_trimmed_file, sep="")
-          }
+        }
         print(primer_trim_cmd)
         system(primer_trim_cmd)
-      } # end tagtrimmed within marker
+      } # end tag-trimmed within marker
     }# end marker
-    # delete the tpp dir wit the tagtrimmed filese
+    # delete the tmp dir wit the tag-trimmed files
     unlink(tmp_dir, recursive = TRUE)
   }# end fasta
   
@@ -429,76 +417,55 @@ count_seq <- function(filename=filename){
 #' @param n integer; the number of randomly selected sequences 
 #' @param fasta_dir directory that contains the input fasta files
 #' @param outdir directory for the output files
+#' @param vsearch_path path to vsearch
 #' @param randseed positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result
+#' @param compress [T/F]; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;
 #' @export
 #' 
-RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed=0){
-  # zipping and unzipping is quite long. It is probably better to work on uncompressed files on windows
-  # quite fast for uncompressed ad gz files
+RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n, randseed=0, compress=F){
+  # quite fast for uncompressed and gz files
   fasta_dir<- check_dir(fasta_dir)
+  vsearch_path<- check_dir(vsearch_path)
   outdir<- check_dir(outdir)
   
   unique_fasta <- unique(fastainfo_df$fasta)
   
   for(i in 1:length(unique_fasta)){ # go through all fasta files
     input_fasta <- unique_fasta[i]
-    # Zip files should be unzipped once for sequence count and select_seq, than results re-zipped, wd is changed several times
+    
     if(endsWith(input_fasta, ".zip")){
-      # change to fasta_dir
-      backup_wd <- getwd()
-      setwd(fasta_dir)
-      unzip(input_fasta)
-      setwd(backup_wd) # get back to the original wd, so input and output filepath can be handled more easily
-      unzipped_file <- sub(".zip", ".fasta", input_fasta)
-      input_fasta_p <- paste(fasta_dir, unzipped_file, sep="")
-      output_fasta_p <- paste(outdir, unzipped_file, sep="")
-      # count the number of sequences in the input file
-      seq_n <- count_seq(filename=input_fasta_p)
-      #random sample with vsearch
-      options(scipen=100)
-      vsearch_cmd <- paste("vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
+      stop("Zip files are not supported")
+    }
+    
+    input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
+    output_fasta_p <- paste(outdir, input_fasta, sep="")
+    
+    if(!is_linux() && endsWith(input_fasta_p, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
+      input_fasta_p <- decompress_file(input_fasta_p, remove_input=F)
+    }
+    
+    seq_n <- count_seq(filename=input_fasta_p)
+    if(n > seq_n ){ # not enough seq
+      file.copy(input_fasta_p, output_fasta_p)
+      msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
+      print(msg)
+    }else{ # enough seq => resample
+      options(scipen=100) # do not transform large numbers to scentific forms, since it would lead to an error in vsearch
+      output_fasta_p <- gsub(".gz", "", output_fasta_p)
+      vsearch_cmd <- paste(vsearch_path, "vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
       print(vsearch_cmd)
       system(vsearch_cmd)
       options(scipen=0)
-      
-      # delete unzipped input file
-      setwd(fasta_dir)
-      file.remove(unzipped_file)  # remove unzipped input file
-      # zip output file
-      setwd(backup_wd)
-      setwd(outdir)
-      zip(input_fasta, unzipped_file) # zip outfile
-      file.remove(unzipped_file) # rm unzipped outfile 
-      setwd(backup_wd)
-    }else{ # uncompressed or gz
-      input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
-      output_fasta_p <- paste(outdir, input_fasta, sep="")
-      seq_n <- count_seq(filename=input_fasta_p)
-      if(n > seq_n ){ # not enough seq
-        file.copy(input_fasta_p, output_fasta_p)
-        msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
-        print(msg)
-      }else{ # enough seq => resample
-        options(scipen=100)
-        output_fasta_p <- gsub(".gz", "", output_fasta_p)
-        vsearch_cmd <- paste("vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
-        print(vsearch_cmd)
-        system(vsearch_cmd)
-        options(scipen=0)
-        # compress the output file if the input was gz
-        if(endsWith(input_fasta_p, ".gz")){
-          # Specify the path for the gzipped output file
-          outfile_gz <- paste(output_fasta_p, ".gz", sep="")
-          # Open the existing uncompressed file for reading
-          file_content <- readBin(output_fasta_p, "raw", file.info(output_fasta_p)$size)
-          # Create a gzipped copy of the file
-          gz <- gzfile(outfile_gz, "wb")
-          writeBin(file_content, gz)
-          close(gz)
-          file.remove(output_fasta_p)
-        }
-      }
-    }  # uncompressed or gz
+    }
+    
+    if(compress){ # compress the output file 
+      outfile_gz <- compress_file(filename=output_fasta_p, remove_input=T)
+    }
+    
+    if(!is_linux() && endsWith(input_fasta, ".gz")){ # delete decompressed input files
+      file.remove(input_fasta_p)
+    }
+
   }# all files
 }
 

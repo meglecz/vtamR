@@ -39,7 +39,7 @@ SortReads_no_reverse(
 
 \item{sep}{separator in input and output csv files; default: ","}
 
-\item{compress}{\link{gz/zip}; compress output to gz or zip files. Do not compress by default;}
+\item{compress}{\link{T/F}; compress output to gzip files.}
 }
 \description{
 Same as SortReads, but do not check the reverse complement of the sequences.

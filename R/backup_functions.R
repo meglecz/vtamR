@@ -337,4 +337,74 @@ RandomSeq_backup <- function(fastainfo_df, fasta_dir="", outdir="", n){
 }
 
 
+RandomSeq_with_zip <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed=0){
+  # zipping and unzipping is quite long. It is probably better to work on uncompressed files on windows
+  # quite fast for uncompressed ad gz files
+  fasta_dir<- check_dir(fasta_dir)
+  outdir<- check_dir(outdir)
+  
+  unique_fasta <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(unique_fasta)){ # go through all fasta files
+    input_fasta <- unique_fasta[i]
+    # Zip files should be unzipped once for sequence count and select_seq, than results re-zipped, wd is changed several times
+    if(F && endsWith(input_fasta, ".zip")){
+      # change to fasta_dir
+      backup_wd <- getwd()
+      setwd(fasta_dir)
+      unzip(input_fasta)
+      setwd(backup_wd) # get back to the original wd, so input and output filepath can be handled more easily
+      unzipped_file <- sub(".zip", ".fasta", input_fasta)
+      input_fasta_p <- paste(fasta_dir, unzipped_file, sep="")
+      output_fasta_p <- paste(outdir, unzipped_file, sep="")
+      # count the number of sequences in the input file
+      seq_n <- count_seq(filename=input_fasta_p)
+      #random sample with vsearch
+      options(scipen=100)
+      vsearch_cmd <- paste("vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
+      print(vsearch_cmd)
+      system(vsearch_cmd)
+      options(scipen=0)
+      
+      # delete unzipped input file
+      setwd(fasta_dir)
+      file.remove(unzipped_file)  # remove unzipped input file
+      # zip output file
+      setwd(backup_wd)
+      setwd(outdir)
+      zip(input_fasta, unzipped_file) # zip outfile
+      file.remove(unzipped_file) # rm unzipped outfile 
+      setwd(backup_wd)
+    }else{ # uncompressed or gz
+      input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
+      output_fasta_p <- paste(outdir, input_fasta, sep="")
+      seq_n <- count_seq(filename=input_fasta_p)
+      if(n > seq_n ){ # not enough seq
+        file.copy(input_fasta_p, output_fasta_p)
+        msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
+        print(msg)
+      }else{ # enough seq => resample
+        options(scipen=100)
+        output_fasta_p <- gsub(".gz", "", output_fasta_p)
+        vsearch_cmd <- paste("vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
+        print(vsearch_cmd)
+        system(vsearch_cmd)
+        options(scipen=0)
+        # compress the output file if the input was gz
+        if(endsWith(input_fasta_p, ".gz")){
+          # Specify the path for the gzipped output file
+          outfile_gz <- paste(output_fasta_p, ".gz", sep="")
+          # Open the existing uncompressed file for reading
+          file_content <- readBin(output_fasta_p, "raw", file.info(output_fasta_p)$size)
+          # Create a gzipped copy of the file
+          gz <- gzfile(outfile_gz, "wb")
+          writeBin(file_content, gz)
+          close(gz)
+          file.remove(output_fasta_p)
+        }
+      }
+    }  # uncompressed or gz
+  }# all files
+}
+
 

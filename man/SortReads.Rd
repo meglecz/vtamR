@@ -17,7 +17,7 @@ SortReads(
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
   sep = ",",
-  compress = 0
+  compress = F
 )
 }
 \arguments{
@@ -45,7 +45,7 @@ SortReads(
 
 \item{sep}{separator in input and output csv files; default: ","}
 
-\item{compress}{\link{gz/zip}; compress output to gz or zip files. Do not compress by default;}
+\item{compress}{\link{T/F}; compress output to gzip format; Deault=F}
 }
 \description{
 Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.

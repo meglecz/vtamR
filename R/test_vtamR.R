@@ -8,7 +8,7 @@
 #' @export
 #'
 
-test_merge_and_sortreads <- function(vtam_dir="~/vtamR", vsearch_path="", cutadapt_path=""){
+test_merge_and_sortreads <- function(vtam_dir=vtam_dir, vsearch_path="", cutadapt_path=""){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -16,7 +16,7 @@ test_merge_and_sortreads <- function(vtam_dir="~/vtamR", vsearch_path="", cutada
   backup_wd <- getwd()
   setwd(vtam_dir)
 
-  fastqinfo_df <- read.csv("vtamR_test/data/fastqinfo_mfzr_uncompressed.csv", header=T, sep=sep)
+  fastqinfo_df <- read.csv("vtamR_test/data/fastqinfo_mfzr_gz.csv", header=T, sep=sep)
   fastqdir <- "vtamR_test/data/"
   outdir <- "vtamR_test/out/"
   outdir <- check_dir(outdir)
@@ -35,7 +35,7 @@ test_merge_and_sortreads <- function(vtam_dir="~/vtamR", vsearch_path="", cutada
   fastq_minovlen <- 50 #
   fastq_allowmergestagger <- F #
   sep <- ";"
-  compress <- 0
+  compress <- F
   merged_dir <- paste(outdir, "merged/", sep="")
   fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
@@ -82,7 +82,7 @@ test_merge_and_sortreads <- function(vtam_dir="~/vtamR", vsearch_path="", cutada
   cutadapt_error_rate <- 0.1 # -e in cutadapt
   cutadapt_minimum_length <- 50 # -m in cutadapt
   cutadapt_maximum_length <- 500 # -M in cutadapt
-  compress <- "0"
+  compress <- F
   
   fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
@@ -276,7 +276,7 @@ test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", cutada
   
   ### PoolReplicates
   digits = 0
-  PoolReplicates_df <- PoolReplicates(input_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+  PoolReplicates_df <- PoolReplicates(input_df, digits=digits, write_csv=F, outdir=outdir, sep=sep)
   PoolReplicates_exp_df <- read_asv_table_sample(filename=paste(test_dir, "test/test_file_pool_replicate_out.csv", sep=""), sep=sep)
   comp_PoolReplicates <- compare_df_sample(PoolReplicates_df, PoolReplicates_exp_df, step="PoolReplicates")
   

@@ -149,4 +149,77 @@ compare_df_sample<- function(df1, df2, step=""){
   return(df1)
 }
 
+#' is_linux
+#' 
+#' Returns TRUE if operating system is linux or macOS, FALSE otherwise
+#'  
+#' 
+#' @export 
+#
+is_linux <- function(){
+
+  system_info <- Sys.info()
+
+  # Check the operating system
+  if (startsWith(system_info["sysname"], "Windows")) {
+    return(FALSE)
+  } else if (startsWith(system_info["sysname"], "Darwin")) {
+    return(TRUE)
+  } else if (startsWith(system_info["sysname"], "Linux")) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+#' decompress_file
+#' 
+#' Decompress the input gzipped file. Returns the output filename
+#' 
+#' @param filename name of the gzipped file, including path
+#' @param remove_input [T/F] If TRUE the input file is deleted
+#' @export 
+#
+decompress_file <- function(filename="", remove_input=F){
+  
+  # make output filename
+  outfile <- gsub(".gz", "", filename)
+  
+  if(outfile == filename){
+    stop("The input file must have .gz extention")
+  }
+  # read compressed file
+  compressed_con <- gzfile(filename, "rb")
+  text_content <- readLines(compressed_con)
+  close(compressed_con)
+  # writ uncompressed file
+  writeLines(text_content, outfile)
+  if(remove_input){
+    file.remove(filename)
+  }
+  return(outfile)
+}
+#' compress_file
+#' 
+#' Compress input file to gzip format. Returns the output (compressed) filename
+#' 
+#' @param filename name of the gzipped file, including path
+#' @param remove_input [T/F] If TRUE the input file is deleted
+#' @export 
+#
+compress_file <- function(filename="", remove_input=F){
+  
+  # Specify the path for the gzipped output file
+  outfile_gz <- paste(filename, ".gz", sep="")
+  # Open the existing uncompressed file for reading
+  file_content <- readBin(filename, "raw", file.info(filename)$size)
+  # Create a gzipped copy of the file
+  gz <- gzfile(outfile_gz, "wb")
+  writeBin(file_content, gz)
+  close(gz)
+  
+  if(remove_input){
+    file.remove(filename)
+  }
+  return(outfile_gz)
+}
 

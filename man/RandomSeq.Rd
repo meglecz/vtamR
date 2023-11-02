@@ -4,7 +4,15 @@
 \alias{RandomSeq}
 \title{RandomSeq}
 \usage{
-RandomSeq(fastainfo_df, fasta_dir = "", outdir = "", n, randseed = 0)
+RandomSeq(
+  fastainfo_df,
+  fasta_dir = "",
+  outdir = "",
+  vsearch_path = "",
+  n,
+  randseed = 0,
+  compress = F
+)
 }
 \arguments{
 \item{fastainfo_df}{data frame with a 'fasta' column containing input file names; files can be compressed in gz and zip format}
@@ -13,9 +21,13 @@ RandomSeq(fastainfo_df, fasta_dir = "", outdir = "", n, randseed = 0)
 
 \item{outdir}{directory for the output files}
 
+\item{vsearch_path}{path to vsearch}
+
 \item{n}{integer; the number of randomly selected sequences}
 
 \item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
+
+\item{compress}{\link{T/F}; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;}
 }
 \description{
 Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input

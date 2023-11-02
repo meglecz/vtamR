@@ -12,9 +12,9 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
-  setwd("~/vtamR")
+  vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
   vsearch_path = ""
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
@@ -27,24 +27,32 @@ if(computer == "Bombyx"){
 #  outdir <- "/home/meglecz/vtamR_large_files/out/"
   mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
   num_threads=8
+  compress = T
 } else if (computer == "Endoume"){
-  setwd("~/vtamR")
+  vtam_dir <- "~/vtamR"
   cutadapt_path="/home/emese/miniconda3/bin/"
   vsearch_path = "/home/emese/miniconda3/bin/"
   blast_path= "" # deactivate conda
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
   fastqdir <- "local/fastq/"
   num_threads=8
+  compress = T
 }else if (computer == "Windows"){
-  setwd("C:/Users/emese/vtamR/")
+  vtam_dir <- "C:/Users/emese/vtamR/"
   cutadapt_path="C:/Users/Public/"
   vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
-  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
+#  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
+  fastqdir <- "vtamR_test/data/"
+  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
+  outdir <- "vtamR_test/out/"
   num_threads=4
+  compress = F
 }
 sep=";"
+
+setwd(vtam_dir)
 
 
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
@@ -81,8 +89,8 @@ usethis::use_roxygen_md() # rebuild the help files ?
 ###
 # Test merge, SortReads and filter
 ###
-test_merge_and_sortreads(vtam_dir="~/vtamR", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(test_dir="~/vtamR/vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, sep=sep)
+test_merge_and_sortreads(vtam_dir=vtam_dir, vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, sep=sep)
 
 
 ####
@@ -126,9 +134,10 @@ fastq_maxns <- 0
 fastq_truncqual <- 10
 fastq_minovlen <- 50
 fastq_allowmergestagger <- F
-compress="gz" # "gz" or "zip" for compressing output files; no comprssion by default
 merged_dir <- paste(outdir, "merged/", sep="")
+compress = T
 # read fastqinfo
+fastqinfo <- "C:/Users/emese/vtamR/vtamR_test/data/fastqinfo_mfzr_gz.csv"
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
@@ -139,7 +148,8 @@ fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path
 randomseq_dir = paste(outdir, "random_seq/", sep="")
 #fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000000, randseed=0)
+compress = T
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
 
 ###
 ### SortReads
@@ -151,8 +161,8 @@ primer_to_end <-F
 cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
-compress <- "gz"
-fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+compress <- F
+fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 
 ###

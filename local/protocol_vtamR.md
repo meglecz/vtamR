@@ -168,3 +168,128 @@ vtam filter --db vtamR_test/vtam/db.sqlite --sortedinfo vtamR_test/vtam/sorted/s
 !!!!!!!!!!!!!!!!! TODO  vtam make_known_occurrences --asvtable asvtable filter/asvtable_default.tsv --sample_types asper1/user_input/sample_types.tsv --mock_composition asper1/user_input/mock_composition_mfzr.tsv --known_occurrences asper1/run1_mfzr/known_occurrences_mfzr.tsv --missing_occurrences asper1/run1_mfzr/missing_occurrences_mfzr.tsv -v
 ~~~
 
+
+
+
+
+## Windows
+
+## install miniconda => very much unix centered => give up
+
+https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html#installing-on-windows
+
+Points 1-5
+
+### install dependencies to a conda env
+
+~~~~
+conda create --name vtamR -y
+conda activate vtamR
+
+conda install -c bioconda blast -y
+conda install -c bioconda vsearch -y
+conda install cutadapt -y
+~~~~
+
+No blast available for conda in windows 
+
+No vsearch available for conda in windows
+
+No cutadapt available for vsearch in windows
+
+**Forget conda on windows**
+
+
+
+## pip
+
+~~~
+pip install blast 
+blastn
+Nucleotide-Nucleotide BLAST 2.13.0+
+
+pip install cutadapt
+Cutadapt --version 
+4.5
+
+pip install vsearch => only version 1.1 and it does not work
+~~~
+OK and easy for blast and cutadapt, but not for vsearch + python and pip should be installed
+
+## istall dependencies individually
+
+
+### vsearch
+Download binaries from https://github.com/torognes/vsearch/releases/tag/v2.23.0
+Extraire zip file => use 
+C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch to start a command
+
+### BLAST
+Detailed instructions: https://www.ncbi.nlm.nih.gov/books/NBK52637/
+Download executable (ncbi-blast-x.xx.x+-win64.exe) from https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/
+
+Double click on the exe file, accept the license agreement and specify the install location in a new prompt. Attention! Do not accept the standard location (C:/Program Files/...) since it contains a space. Chose a directory with a path without space.
+
+C:/Users/Public/blast-2.14.1+/bin/blastn
+
+### cutadapt
+
+download cutadapt.exe and save it a convenient place on your computer
+
+C:/Users/Public/cutadapt to start a command
+
+
+
+# File compression
+
+## windows
+
+### gzip files 
+
+- can be read and written in windows
+- vsearch cannot deal with them directly in windows, 
+- the output of vsearch is uncompressed
+- cutadapt can deal with gzip files directly and produces output in unzipped or gzipped format according to the file extension.
+
+### zip files
+
+-  can be read and created by R but it is a bit difficult to handle file path
+- if path is given to zip => the zip archive contains reproduce the directory structure, even it is a single file. This is annoying when dezipping
+- it is possible to overcome of this problem by changing the wd, but it is tiresome
+- wen zipping and dezipping files, the name is not always coherent. The orignal file extention is usually replaced instead of appended by .zip. this makes it more difficult to guess the name of the dezipped files
+- HTS sequencing does not come in zip format usually
+
+## linux
+
+### gzip files 
+
+- easy to handle
+- vsearch and cutadapt can use them directly
+- output is uncompressed for vsearch
+- output in unzipped or gzipped format according to the file extension
+- Check if bz2 files are handled by vsearch, cutadapt and R!!!! 
+
+### zip files
+
+- same problems as in windows
+
+## Conclusion
+ - vtamR does not support zipped files
+ - On windows an input gz files are dezipped and passed to consecutive steps. It is tested automatically if it is windows and if input is gz
+ - on linux, gzip files are handled directly by vsearch and cutadapt
+ - the compress option (T/F), handles wether output files should be compressed or not, for cutadapt output on linux, check if compression corresponds to the output, and change it if necessary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
