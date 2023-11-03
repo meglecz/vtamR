@@ -9,6 +9,7 @@ OptimizePCRError(
   mock_composition = "",
   sep = ",",
   outdir = "",
+  max_mismatch = 1,
   min_read_count = 2
 )
 }
@@ -20,6 +21,8 @@ OptimizePCRError(
 \item{sep}{separator used in mock_composition}
 
 \item{outdir}{name of the output directory}
+
+\item{max_mismatch}{maximum number of mismatches allowed between two asv where one of the asvs is considered as a PCRerror}
 
 \item{min_read_count}{occurrences under this read_count limits are ignored}
 }

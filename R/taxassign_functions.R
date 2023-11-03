@@ -113,7 +113,7 @@ get_lineage_ids <- function(taxids, tax_df){
 #'
 make_ltg <- function(taxids, lineages, phit=70){
   # taxids is a vector of taxids; there can be duplicated values
-  # mak a data frame from the vector
+  # make a data frame from the vector
   lin <- as.data.frame(taxids)
   colnames(lin) <- c("staxid")
   
@@ -125,8 +125,8 @@ make_ltg <- function(taxids, lineages, phit=70){
   if(length(unique(lin$staxid)) == 1){ # only one taxid among hits; avoid loops
     ltg <-lin$staxid[1]
   }else{
-    for(i in 2:ncol(lineages)){ # start from low resolution
-      tmp <- as.data.frame(lineages[,i])
+    for(i in 2:ncol(lin)){ # start from low resolution
+      tmp <- as.data.frame(lin[,i])
       colnames(tmp) <- c("tax_id")
       # get unique taxids, and their numbers in the i-th column
       tmp <- tmp %>%
@@ -136,10 +136,14 @@ make_ltg <- function(taxids, lineages, phit=70){
       
       # if the taxid with the highest number of sequences does not contain at least phit percent of the hits, stop
       max_hitn <- as.numeric(tmp[1,"nhit"])
-      if(max_hitn/sum(tmp[,"nhit"]) < phit/100){
+      if(is.na(tmp[1,"tax_id"])){ # the most frequent "taxid" is NA
+        break
+      }
+      if(max_hitn/sum(tmp[,"nhit"]) < phit/100){# the most frequent taxid has less than phit%
         break
       }
       ltg <- as.numeric(tmp[1,"tax_id"])
+      
     }
   }
   return(ltg)
@@ -300,7 +304,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' @param ltg_params_df data frame with a list of ercentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)
 #' @param taxonomy file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
 #' @param blast_db BLAST database
-#' @param blast_path path to BBAST executables
+#' @param blast_path path to BLAST executable
 #' @param outdir name of the output directory
 #' @export
 #'

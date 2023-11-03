@@ -338,3 +338,49 @@ test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=";")
   
 }
 
+#' test_taxassign
+#' 
+#' Run TaxAssign on a test file and compare the output to mkLTG results
+#'  
+#' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
+#' @param sep separator in csv files
+#' @param taxonomy file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @param blast_db BLAST database
+#' @param blast_path path to BLAST executable
+#' @export
+#'
+
+test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy){
+  test_dir <- check_dir(test_dir)
+  input <- paste(test_dir, "test/input_taxassign.csv", sep="")
+  expeted_output <- paste(test_dir, "test/test_taxassign_out.tsv", sep="")
+  outdir <- paste(test_dir, "out/taxassign/", sep="")
+  outdir <- check_dir(outdir)
+  outfile <- paste(outdir, "out_taxassign.csv", sep="")
+  
+  input_df <- read.csv(input) 
+  input_df <- input_df %>%
+    select(asv=sequence)
+  
+  asv_tax <- TaxAssign(df=input_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
+  
+  expected_asv_tax <- read.table(expeted_output, sep="\t", header=T)
+  expected_asv_tax <- expected_asv_tax %>%
+    select(pid_exp=pid,ltg_taxid_exp=ltg_taxid, ltg_name_exp=ltg_name, ltg_rank_exp=ltg_rank, superkingdom_exp=superkingdom, kingdom_exp=kingdom, phylum_exp=phylum, class_exp=class, order_exp=order, family_exp=family, genus_exp=genus, species_exp=species, asv=sequence)
+  
+  asv_taxassign <- left_join(asv_tax, expected_asv_tax, by="asv")
+  
+  asv_taxassign$ltg_taxid[is.na(asv_taxassign$ltg_taxid)] <- 0
+  asv_taxassign$ltg_taxid_exp[is.na(asv_taxassign$ltg_taxid_exp)] <- 0
+  
+  tmp_KO <- asv_taxassign %>%
+    filter(ltg_taxid!=ltg_taxid_exp)
+  
+  if(nrow(tmp_KO)==0){
+    cat("Taxxassign: PASS")
+  }else{
+    cat("Taxxassign: FAIL")
+  }
+  return(asv_taxassign)
+}
+

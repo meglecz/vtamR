@@ -407,4 +407,129 @@ RandomSeq_with_zip <- function(fastainfo_df, fasta_dir="", outdir="", n, randsee
   }# all files
 }
 
+#' LFN_sample_replicate
+#' 
+#' Eliminate occurrences where the readcount/sum(reacount of the sample-replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param cutoff minimum proportion for an occurrence within a sample-replicate; default=0.001
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @export
+LFN_sample_replicate_backup <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
+  
+  #Make wide format from de df
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
+  # when using sweep non-numeric values make a problem => keep asv for later
+  asv_list <- wide_read_count_df$asv
+  wide_read_count_df$asv <- NULL
+  # divide all values by the sum of the columns
+  wide_read_count_df_prop <- sweep(wide_read_count_df, MARGIN = 2, STATS = colSums(wide_read_count_df), FUN = "/")
+  # 0 to values under cutoff
+  wide_read_count_df_prop[wide_read_count_df_prop < cutoff] <- 0
+  # NA to values of the df with counts, where the prop has been put to zero
+  wide_read_count_df[wide_read_count_df_prop == 0] <- NA
+  # add asv column
+  wide_read_count_df$asv <- asv_list
+  # re-transform to long format; avoid lines with O values
+  read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    write.table(read_count_df, file = paste(outdir, "LFN_sample_replicate.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(read_count_df_lnf_sample_replicate)
+}
 
+#' LFN_variant_all
+#' 
+#' Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param cutoff minimum proportion for an occurrence within an asv; default=0.001
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @export
+LFN_variant_all_backup <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
+  
+  #Make wide format from de df
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
+  # when using sweep non-numeric values make a problem => keep asv for later
+  asv_list <- wide_read_count_df$asv
+  wide_read_count_df$asv <- NULL
+  # divide all values by the sum of the columns
+  wide_read_count_df_prop <- sweep(wide_read_count_df, MARGIN = 1, STATS = rowSums(wide_read_count_df), FUN = "/")
+  # 0 to values under cutoff
+  wide_read_count_df_prop[wide_read_count_df_prop < cutoff] <- 0
+  # NA to values of the df with counts, where the prop has been put to zero
+  wide_read_count_df[wide_read_count_df_prop == 0] <- NA
+  # add asv column
+  wide_read_count_df$asv <- asv_list
+  # retransform to long format; avoid lines with 0 values
+  read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    write.table(read_count_df, file = paste(outdir, "LFN_variant_all.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(read_count_df_lnf_sample_replicate)
+}
+#' LFN_variant_replicate
+#' 
+#' Eliminate occurrences where the read_count/sum(read_count of all asvs in replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param cutoff minimum proportion for an occurrence within a asv-replicate; default=0.001
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory 
+#' @export
+#' 
+LFN_variant_replicate_backup <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
+  
+  #get the list of replicates
+  replicate_list <- unique(read_count_df$replicate)
+  # defile an empty dataframe
+  read_count_df_lnf_variant_replicate  <- data.frame(asv=character(),
+                                                     read_count=integer(),
+                                                     plate=character(),
+                                                     marker=character(),
+                                                     sample=character(),
+                                                     replicate=character())
+  # make one data frame for each replicate and filter them as in filter_lnf_variant
+  for(i in replicate_list){
+    replicate_df <- filter(read_count_df,  (replicate == i))
+    replicate_df_filtered <- LFN_variant_all(replicate_df, cutoff, write_csv, outdir, sep=",")
+    read_count_df_lnf_variant_replicate <- rbind(read_count_df_lnf_variant_replicate, replicate_df_filtered)
+  }
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    write.table(read_count_df, file = paste(outdir, "LFN_variant_replicate.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(read_count_df_lnf_variant_replicate)
+}
+
+#' LFN_variant
+#' 
+#' If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
+#' If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv with its replicate) is less than cutoff.
+#' Returns the filtered read_count_df data frame.
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param cutoff minimum proportion for an occurrence within an asv or an asv-replicate; default=0.001
+#' @param by_replicate T/F; default=FALSE
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outdir name of the output directory
+#' @export
+LFN_variant_backup <- function (read_count_df, cutoff=0.001, by_replicate=FALSE, write_csv=F, outdir=NA, sep=",") {
+  if(by_replicate == T){
+    read_count_df_lnf_variant <- LFN_variant_replicate(read_count_df, cutoff, write_csv, outdir, sep=",")
+  }
+  else{
+    read_count_df_lnf_variant <- LFN_variant_all(read_count_df, cutoff, write_csv, outdir, sep=",")
+  }
+  return(read_count_df_lnf_variant)
+}

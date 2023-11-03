@@ -134,96 +134,19 @@ LFN_read_count <- function (read_count_df, cutoff=10, write_csv=F, outdir=NA, se
 #' @export
 LFN_sample_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
   
-  #Make wide format from de df
-  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
-  # when using sweep non-numeric values make a problem => keep asv for later
-  asv_list <- wide_read_count_df$asv
-  wide_read_count_df$asv <- NULL
-  # divide all values by the sum of the columns
-  wide_read_count_df_prop <- sweep(wide_read_count_df, MARGIN = 2, STATS = colSums(wide_read_count_df), FUN = "/")
-  # 0 to values under cutoff
-  wide_read_count_df_prop[wide_read_count_df_prop < cutoff] <- 0
-  # NA to values of the df with counts, where the prop has been put to zero
-  wide_read_count_df[wide_read_count_df_prop == 0] <- NA
-  # add asv column
-  wide_read_count_df$asv <- asv_list
-  # re-transform to long format; avoid lines with O values
-  read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
+  sum_by_column_df <- read_count_df %>%
+    group_by(plate,marker,sample,replicate) %>%
+    summarize(sr_sum = sum(read_count), .groups="drop_last")
   
+  read_count_df <- left_join(read_count_df, sum_by_column_df, by=c("plate","marker","sample","replicate")) %>%
+    filter(read_count/sr_sum >= cutoff) %>%
+    select(-sr_sum)
+
   if(write_csv){
     outdir <- check_dir(outdir)
     write.table(read_count_df, file = paste(outdir, "LFN_sample_replicate.csv", sep=""),  row.names = F, sep=sep)
   }
-  return(read_count_df_lnf_sample_replicate)
-}
-#' LFN_variant_all
-#' 
-#' Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
-#' Returns the filtered read_count_df data frame.
-#' 
-#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
-#' @param cutoff minimum proportion for an occurrence within an asv; default=0.001
-#' @param write_csv T/F; write read_counts to csv file; default=FALSE
-#' @param outdir name of the output directory
-#' @export
-LFN_variant_all <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
-  
-  #Make wide format from de df
-  wide_read_count_df <- as.data.frame(pivot_wider(read_count_df, names_from = c(plate, marker, sample, replicate), values_from = read_count, values_fill=0, names_sep = ";"))
-  # when using sweep non-numeric values make a problem => keep asv for later
-  asv_list <- wide_read_count_df$asv
-  wide_read_count_df$asv <- NULL
-  # divide all values by the sum of the columns
-  wide_read_count_df_prop <- sweep(wide_read_count_df, MARGIN = 1, STATS = rowSums(wide_read_count_df), FUN = "/")
-  # 0 to values under cutoff
-  wide_read_count_df_prop[wide_read_count_df_prop < cutoff] <- 0
-  # NA to values of the df with counts, where the prop has been put to zero
-  wide_read_count_df[wide_read_count_df_prop == 0] <- NA
-  # add asv column
-  wide_read_count_df$asv <- asv_list
-  # retransform to long format; avoid lines with 0 values
-  read_count_df_lnf_sample_replicate <- pivot_longer(wide_read_count_df, cols = -asv, names_to = c("plate", "marker", "sample", "replicate"), values_to = "read_count", names_sep = ";", values_drop_na = TRUE)
-  
-  if(write_csv){
-    outdir <- check_dir(outdir)
-    write.table(read_count_df, file = paste(outdir, "LFN_variant_all.csv", sep=""),  row.names = F, sep=sep)
-  }
-  return(read_count_df_lnf_sample_replicate)
-}
-#' LFN_variant_replicate
-#' 
-#' Eliminate occurrences where the read_count/sum(read_count of all asvs in replicate) is less than cutoff.
-#' Returns the filtered read_count_df data frame.
-#' 
-#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
-#' @param cutoff minimum proportion for an occurrence within a asv-replicate; default=0.001
-#' @param write_csv T/F; write read_counts to csv file; default=FALSE
-#' @param outdir name of the output directory 
-#' @export
-#' 
-LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, outdir=NA, sep=",") {
-  
-  #get the list of replicates
-  replicate_list <- unique(read_count_df$replicate)
-  # defile an empty dataframe
-  read_count_df_lnf_variant_replicate  <- data.frame(asv=character(),
-                                                     read_count=integer(),
-                                                     plate=character(),
-                                                     marker=character(),
-                                                     sample=character(),
-                                                     replicate=character())
-  # make one data frame for each replicate and filter them as in filter_lnf_variant
-  for(i in replicate_list){
-    replicate_df <- filter(read_count_df,  (replicate == i))
-    replicate_df_filtered <- LFN_variant_all(replicate_df, cutoff, write_csv, outdir, sep=",")
-    read_count_df_lnf_variant_replicate <- rbind(read_count_df_lnf_variant_replicate, replicate_df_filtered)
-  }
-  
-  if(write_csv){
-    outdir <- check_dir(outdir)
-    write.table(read_count_df, file = paste(outdir, "LFN_variant_replicate.csv", sep=""),  row.names = F, sep=sep)
-  }
-  return(read_count_df_lnf_variant_replicate)
+  return(read_count_df)
 }
 
 #' LFN_variant
@@ -239,13 +162,34 @@ LFN_variant_replicate <- function (read_count_df, cutoff=0.001, write_csv=F, out
 #' @param outdir name of the output directory
 #' @export
 LFN_variant <- function (read_count_df, cutoff=0.001, by_replicate=FALSE, write_csv=F, outdir=NA, sep=",") {
-  if(by_replicate == T){
-    read_count_df_lnf_variant <- LFN_variant_replicate(read_count_df, cutoff, write_csv, outdir, sep=",")
+  
+  if(by_replicate){
+    sum_by_asv <- read_count_df %>%
+      group_by(plate,marker,asv,replicate) %>%
+      summarize(asv_sum = sum(read_count), .groups="drop_last")
+    read_count_df <- left_join(read_count_df, sum_by_asv, by=c("plate","marker","asv", "replicate")) %>%
+      filter(read_count/asv_sum >= cutoff) %>%
+      select(-asv_sum)
+    
+  }else{
+    sum_by_asv <- read_count_df %>%
+      group_by(plate,marker,asv) %>%
+      summarize(asv_sum = sum(read_count), .groups="drop_last")
+    read_count_df <- left_join(read_count_df, sum_by_asv, by=c("plate","marker","asv")) %>%
+      filter(read_count/asv_sum >= cutoff) %>%
+      select(-asv_sum)
   }
-  else{
-    read_count_df_lnf_variant <- LFN_variant_all(read_count_df, cutoff, write_csv, outdir, sep=",")
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    if(by_replicate){
+      outfile <- paste(outdir, "LFN_variant_replicate.csv", sep="")
+    }else{
+      outfile <- paste(outdir, "LFN_variant.csv", sep="")
+    }
+    write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
-  return(read_count_df_lnf_variant)
+  return(read_count_df)
 }
 
 #' pool_2df
@@ -654,7 +598,7 @@ FilterPCRerror <- function(read_count_df, write_csv=F, outdir="", vsearch_path="
 
 flagChimera <- function(unique_asv_df, outdir="", vsearch_path="", abskew=2){
   
-  # no ASV in the unique_asv_df => return a dataframe with 0 for all ASVs in Chimera column
+  # no ASV in the unique_asv_df => return a data frame with 0 for all ASVs in Chimera column
   if(length(unique_asv_df$asv) == 0){ 
     unique_asv_df$chimera <- rep(0, length(unique_asv_df$asv))
     return(unique_asv_df)
@@ -682,6 +626,7 @@ flagChimera <- function(unique_asv_df, outdir="", vsearch_path="", abskew=2){
   
   # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs
   if(file.size(vsearch_out) == 0){
+#  if(!file.exists(vsearch_out) | file.size(vsearch_out) == 0){
     unique_asv_df$chimera <- rep(0, length(unique_asv_df$asv))
     # Delete the temp directory
     unlink(outdir_tmp, recursive = TRUE)
@@ -929,7 +874,7 @@ PoolReplicates <- function(read_count_df, digits=0, write_csv=F, outdir="", sep=
 #'
 write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
   
-  # make a wide dataframe with samples in columns, ASVs in lines
+  # make a wide data frame with samples in columns, ASVs in lines
   wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(plate, marker, sample), values_from = mean_read_count, values_fill=0, names_sep = ".", names_sort=T))
   
   # read the fileinfo to a data frame 

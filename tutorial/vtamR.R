@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Endoume" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -95,6 +95,12 @@ usethis::use_roxygen_md() # rebuild the help files ?
 test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
 test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
+# check run time for bgger files; it is 1 min for 40 asv
+taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
+
+
+
+
 
 test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 
@@ -117,8 +123,6 @@ test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep
   
   
   OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
-  
-  
 }
 
 
@@ -201,6 +205,7 @@ fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=
 ###
 # read fileinfo file to fileinfo_df if starting directly with demultiplexed, trimmed reads
 # fileinfo_df <- read.csv(file, header=T, sep=sep)
+fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
 read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=F, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
@@ -268,7 +273,6 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params
 ###
 ### FilterChimera
 ###
-vsearch_path = ""
 abskew=2
 by_sample = T
 sample_prop = 0.8
