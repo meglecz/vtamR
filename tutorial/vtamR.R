@@ -90,41 +90,14 @@ usethis::use_roxygen_md() # rebuild the help files ?
 
 
 ###
-# Test merge, SortReads and filter
+# Test major functions
 ###
 test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
 test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
 # check run time for bgger files; it is 1 min for 40 asv
 taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
-
-
-
-
-
 test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
-
-test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep){
-  
-  test_dir <- check_dir(test_dir)
-  outdir <- paste(test_dir, "out/optimize/", sep="")
-  outdir <- check_dir(outdir)
-  input_test_optimize <- paste(test_dir, "test/input_test_optimize.csv", sep="")
-  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep="")
-  fileinfo_df <- read.csv(fileinfo, sep=sep)
-  
-  read_count_df <- read.table(input_test_optimize, sep=sep, header=T)
-  
-  ### PCRerror
-  OptimizePCRError(read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, max_mismatch=1, min_read_count=10)
-  
-  
-  OptimizeLFNsampleReplicate(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
-  
-  
-  OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
-}
-
 
 
 
@@ -199,7 +172,6 @@ cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- F
 fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
-
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each plate-marker-sample-replicate
 ###
@@ -209,6 +181,62 @@ fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
 read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=F, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
+
+swarm_dir <- paste(outdir, "swarm", sep="")
+swarm_dir <- check_dir(swarm_dir)
+swarm_path <- ""
+
+swarm <- function(read_count_df, outdir=swarm_dir, swarm_path="", num_threads=1){
+  
+  swarm_path <- check_dir(swarm_path)
+  ### make df with unique asv and read_count
+  df <- read_count_df %>%
+    group_by(asv) %>%
+    summarize(sum_read_count = sum(read_count))
+  df$id <- rownames(df)
+  ### make a fasta with dereplicated sequences  
+  input_swarm <- paste(outdir, "swarm_input.fasta", sep="")
+  writeLines(paste(">", df$id, "_", df$sum_read_count, "\n", df$asv, sep="" ), input_swarm)
+  
+  ### run swarm
+#  representatives <- paste(outdir, "representatives.fasta", sep="")
+  clusters <- paste(outdir, "clusters.txt", sep="")
+#  swarm <- paste(swarm_path, "swarm -f -t", num_threads, "-w", representatives, "-o", clusters, fasta, sep=" ")
+  swarm <- paste(swarm_path, "swarm -f -t", num_threads, "-o", clusters, fasta, sep=" ")
+  print(swarm)
+  system(swarm)
+  
+  ### pool clusters in read_count_df
+  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE)
+  cluster_df <- data.frame(representative = rep(cluster_df$V1, each = ncol(cluster_df)),
+                            clustered = as.vector(t(cluster_df[,])))
+  # delete line with no values in clustered
+  cluster_df <- cluster_df %>%
+    filter(clustered != "")
+  # delete read counts from id
+  cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
+  cluster_df$clustered <- sub("_[0-9]+", "", cluster_df$clustered )
+  
+  cluster_df <- left_join(cluster_df, df, by= c("representative" = "id")) %>%
+    select(-representative, -sum_read_count, asv_representative=asv)
+    
+    cluster_df <- left_join(cluster_df, df, by= c("clustered" = "id"))%>%
+      select(-clustered, -sum_read_count, asv_clustered=asv)
+    
+    
+    read_count_df1 <- left_join(read_count_df, cluster_df,  by= c("asv" = "asv_clustered"))
+    read_count_df1 <- read_count_df1 %>%
+      select(-asv) %>%
+      select(asv=asv_representative,plate,marker,sample,replicate,read_count) %>%
+      group_by(asv,plate,marker,sample,replicate) %>%
+      summarize(read_count_cluster=sum(read_count))
+    
+    tmp <- unique(read_count_df1$asv)
+  length(tmp)
+                 
+
+}
+
 
 ###
 ### LFN_global_read_count

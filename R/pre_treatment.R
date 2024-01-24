@@ -28,6 +28,7 @@
 Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=F){
 
 
+  vsearch_path<- check_dir(vsearch_path)
   outdir<- check_dir(outdir)
   # get unique list of fastq file pairs
   tmp <- fastqinfo_df %>%

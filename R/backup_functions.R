@@ -1,3 +1,77 @@
+#' make_known_occurrences_backup
+#' 
+#' Prepare a file that list all occurrences that are clearly a TP (expected variants in mock) or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv, plate, marker, sample, read_count
+#' @param fileinfo csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)
+#' @param mock_composition csv file with columns: plate, marker, sample, action (keep/tolerate), asv
+#' @param sep separator used in fileinfo and mock_composition
+#' @param out name of the output file containing known occurrences (TP in mock, and FP)
+#' @param missing_occurrences name of the output file containing the missing occurrences (FN); file is written only the name has been specified
+#' @param habitat_proportion for each asv, if the proportion of reads in a habitat is below this cutoff, it is considered as an artifact in all samples of the habitat
+#' @export
+#' 
+
+make_known_occurrences_backup <- function(read_count_samples_df, fileinfo="", mock_composition="", sep=",", out="", missing_occurrences="", habitat_proportion=0.5){
+  
+  # read info on samples types and keep only relevant info
+  fileinfo_df <- read.csv(fileinfo, header=T, sep=sep) %>%
+    select(plate, marker, sample, sample_type, habitat)
+  # get unique lines to avoid replicates
+  fileinfo_df <- unique(fileinfo_df)
+  
+  # define data frame for known occurrences
+  occurrence_df <- read_count_samples_df
+  # add habitat and sample_type to occurrence_df
+  occurrence_df <- left_join(occurrence_df, fileinfo_df, by=c("plate", "marker", "sample"))
+  # add action column
+  occurrence_df$action <- rep(NA, nrow(occurrence_df))
+  
+  # flag occurrences in negative control samples as delete
+  occurrence_df <- flag_from_negative_controls(occurrence_df, fileinfo_df)
+  # flag all expected occurrences in mock samples as "keep", NA for tolerate, and delete for all others
+  occurrence_df <- flag_from_mock(occurrence_df, mock_composition, fileinfo_df, sep=sep)
+  # flag occurrences as keep with low read count in habitat, compared to the others habitats
+  occurrence_df <- flag_from_habitat(occurrence_df, fileinfo_df, habitat_proportion=habitat_proportion) 
+  
+  # keep only relevant columns and lines, sort data
+  occurrence_df <- occurrence_df %>%
+    select(plate,marker,sample,action,asv) %>%
+    filter(!is.na(action)) %>%
+    arrange(plate, marker, sample, action)
+  # write to outfile
+  write.table(occurrence_df, file=out, row.names = F, sep=sep)
+  
+  if(missing_occurrences != ""){
+    make_missing_occurrences(read_count_samples_df, mock_composition=mock_composition, sep=sep, out=missing_occurrences)
+  }
+  
+}
+
+#' make_missing_occurrences_backup
+#' 
+#' Prepare a file that list all expected occurrences that are missing (False negatives)
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv, plate, marker, sample, read_count
+#' @param mock_composition csv file with columns: plate, marker, sample, action (keep/tolerate), asv
+#' @param sep separator used in fileinfo and mock_composition
+#' @param out name of the output file
+#' @export
+#'
+make_missing_occurrences_backup <- function(read_count_samples_df, mock_composition="", sep=",", out=""){
+  
+  # read mock composition to a df
+  mock_comp <- read.csv(mock_composition, header=T, sep=sep) %>%
+    filter(action=="keep")
+  # add mean_read_count to df from read_count_samples_df, and keep only if value is NA
+  df <- left_join(mock_comp, read_count_samples_df,  by=c("plate", "marker", "sample", "asv")) %>%
+    filter(is.na(mean_read_count)) %>%
+    select(-"mean_read_count")
+  
+  # write to outfile
+  write.table(df, file=out, row.names = F, sep=sep)
+}
+
 #' FilerPCRerror_NW
 #' 
 #' Filter out all ASVs if they very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop)

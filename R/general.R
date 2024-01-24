@@ -6,13 +6,18 @@
 #' @param dir directory name
 #' @export
 check_dir <- function(dir){
-  if(!(endsWith(dir, "/"))){
-    dir <- paste(dir, '/', sep="")
+  
+  if(dir == ""){# present dir => do not add /
+    return(dir)
+  }else{
+    if(!(endsWith(dir, "/"))){
+      dir <- paste(dir, '/', sep="")
+    }
+    if(!dir.exists(dir)){
+      dir.create(dir, recursive =TRUE)
+    }
+    return(dir)
   }
-  if(!dir.exists(dir)){
-    dir.create(dir, recursive =TRUE)
-  }
-  return(dir)
 }
 
 #' read_fasta_seq

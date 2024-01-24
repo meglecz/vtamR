@@ -13,6 +13,7 @@
 #' 
 
 make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_composition="", sep=",", out="", missing_occurrences="", habitat_proportion=0.5){
+  # differs from original make_known_occurrences: return a DF with FP, FN, TP
   
   # read info on samples types and keep only relevant info
   fileinfo_df <- read.csv(fileinfo, header=T, sep=sep) %>%
@@ -31,7 +32,7 @@ make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_comp
   occurrence_df <- flag_from_negative_controls(occurrence_df, fileinfo_df)
   # flag all expected occurrences in mock samples as "keep", NA for tolerate, and delete for all others
   occurrence_df <- flag_from_mock(occurrence_df, mock_composition, fileinfo_df, sep=sep)
-  # flag occurrences as keep with low read count in habitat, compared to the others habitats
+  # flag occurrences as delete with low read count in habitat, compared to the others habitats
   occurrence_df <- flag_from_habitat(occurrence_df, fileinfo_df, habitat_proportion=habitat_proportion) 
   
   # keep only relevant columns and lines, sort data
@@ -42,10 +43,20 @@ make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_comp
   # write to outfile
   write.table(occurrence_df, file=out, row.names = F, sep=sep)
   
-  if(missing_occurrences != ""){
-    make_missing_occurrences(read_count_samples_df, mock_composition=mock_composition, sep=sep, out=missing_occurrences)
-  }
+  # count the number of FP and expected TP
+  FP <- nrow(occurrence_df %>%
+               filter(action=="delete"))
+  TP <- nrow(occurrence_df %>%
+               filter(action=="keep"))
   
+  # count the number of FN and write missing_occurrences, if filename is defined
+  FN <-make_missing_occurrences(read_count_samples_df, mock_composition=mock_composition, sep=sep, out=missing_occurrences)
+  # real TP is the expected occurrences - FN
+  TP <- TP - FN
+  count_df <- data.frame("TP" = c(TP),
+                         "FP" = c(FP),
+                         "FN" = c(FN))
+  return(count_df)
 }
 
 #' flag_from_mock
@@ -166,7 +177,13 @@ make_missing_occurrences <- function(read_count_samples_df, mock_composition="",
     select(-"mean_read_count")
   
   # write to outfile
-  write.table(df, file=out, row.names = F, sep=sep)
+  if(out != ""){
+    write.table(df, file=out, row.names = F, sep=sep)
+  }
+  
+  FN <- nrow(df %>%
+               filter(action=="keep"))
+  return(FN)
 }
 
 #' OptimizePCRError
@@ -376,8 +393,12 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
 #' @param known_occurrences file produced by make_known_occurrences function, with known FP and TP
 #' @param sep separator used in fileinfo and mock_composition
 #' @param outdir name of the output directory
-#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function to start from (10 by default). Values from this value to 100 by increments of 5 and tested
-#' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function to start from (0.001 by default). Values from this value to 0.05 by increments of 0.001 and tested
+#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function (10 by default). 
+#' @param max_lfn_read_count_cutoff the highest cutoff value for LFN_read_count function (100 by default). 
+#' @param increment_lfn_read_count_cutoff values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default). 
+#' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function (0.001 by default). 
+#' @param max_lnf_variant_cutoff the lowest highest value for LFN_variant function (0.005 by default).
+#' @param increment_lnf_variant_cutoff values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default). 
 #' @param by_replicate T/F (False by default); see LFN_variant function
 #' @param lfn_sample_replicate_cutoff cutoff value for LFN_sample_replicate (see LFN_sample_replicate function; default 0.001)
 #' @param pcr_error_var_prop cutoff value for FilterPCRerror (see FilterPCRerror function; default 0.1)
@@ -389,7 +410,7 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
 #' @export
 #'
 
-OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=sep, outdir="", min_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2){
+OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=sep, outdir="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.05, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2){
 #  read_count_df = optimize_read_count_df
 #  min_lfn_read_count_cutoff = 10
 #  min_lnf_variant_cutoff = 0.001
@@ -412,9 +433,9 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
   df <- FilterMinReplicateNumber(df, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
   
   # make a series of cutoff values for LFN_read_count
-  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=100, by=5)
+  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=max_lfn_read_count_cutoff, by=increment_lfn_read_count_cutoff)
   # make a series of cutoff values for LFN_read_count
-  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=0.05, by=0.001)
+  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=max_lnf_variant_cutoff, by=increment_lnf_variant_cutoff)
   
   out_df <- data.frame( 
     lfn_sample_replicate_cutoff =numeric(),
@@ -437,7 +458,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
       # FilterMinReplicateNumber
       df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number, write_csv=F, outdir = outdir, sep=sep)
       # PoolReplicates
-      df_tmp_sample <- PoolReplicates(df_tmp, digits=digits, write_csv=F, outdir=outdir, sep=sep)
+      df_tmp_sample <- PoolReplicates(df_tmp, digits=0, write_csv=F, outdir=outdir, sep=sep)
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("plate", "marker", "sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences

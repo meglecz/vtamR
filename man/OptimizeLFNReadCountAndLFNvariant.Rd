@@ -10,7 +10,11 @@ OptimizeLFNReadCountAndLFNvariant(
   sep = sep,
   outdir = "",
   min_lfn_read_count_cutoff = 10,
+  max_lfn_read_count_cutoff = 100,
+  increment_lfn_read_count_cutoff = 5,
   min_lnf_variant_cutoff = 0.001,
+  max_lnf_variant_cutoff = 0.05,
+  increment_lnf_variant_cutoff = 0.001,
   by_replicate = FALSE,
   lfn_sample_replicate_cutoff = 0.001,
   pcr_error_var_prop = 0.1,
@@ -30,9 +34,17 @@ OptimizeLFNReadCountAndLFNvariant(
 
 \item{outdir}{name of the output directory}
 
-\item{min_lfn_read_count_cutoff}{the lowest cutoff value for LFN_read_count function to start from (10 by default). Values from this value to 100 by increments of 5 and tested}
+\item{min_lfn_read_count_cutoff}{the lowest cutoff value for LFN_read_count function (10 by default).}
 
-\item{min_lnf_variant_cutoff}{the lowest cutoff value for LFN_variant function to start from (0.001 by default). Values from this value to 0.05 by increments of 0.001 and tested}
+\item{max_lfn_read_count_cutoff}{the highest cutoff value for LFN_read_count function (100 by default).}
+
+\item{increment_lfn_read_count_cutoff}{values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default).}
+
+\item{min_lnf_variant_cutoff}{the lowest cutoff value for LFN_variant function (0.001 by default).}
+
+\item{max_lnf_variant_cutoff}{the lowest highest value for LFN_variant function (0.005 by default).}
+
+\item{increment_lnf_variant_cutoff}{values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default).}
 
 \item{by_replicate}{T/F (False by default); see LFN_variant function}
 
