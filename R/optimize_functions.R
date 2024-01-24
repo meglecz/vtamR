@@ -238,7 +238,7 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
       filter(action=="tolerate")
     asv_list_tolerate <- unique(tmp_mock$asv)
     
-    # get list of ASVs present in the mock sample in read_count_df that they and neither keep nor tolerate 
+    # get list of ASVs present in the mock sample in read_count_df that they are neither keep nor tolerate 
     tmp <- df %>%
       filter(pms==mock) %>%
       filter(!(asv %in% asv_list_keep)) %>%
@@ -271,6 +271,9 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
         filter(nb_diff <= max_mismatch)
       # delete unnecessary columns and add plate, marker, sample
       results_vsearch <- select(results_vsearch, -c(nb_ids, aln, nb_diff))
+      if(nrow(results_vsearch) == 0){
+        break
+      }
       pms_mock <- strsplit(mock, "[.]")
       results_vsearch$plate <- pms_mock[[1]][1]
       results_vsearch$marker <- pms_mock[[1]][2]
@@ -360,13 +363,13 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
 }
 
 
-#' OptimizeLFNReaCountAndLFNvariant
+#' OptimizeLFNReadCountAndLFNvariant
 #' 
 #' Suggest optimal parametres for lfn_read_count_cutoff and lfn_read_count_cutoff. 
 #' This script will run LFN_sample_replicate, FilterPCRerror and FilterMinReplicateNumber on the input 
 #' read_count_df using parameters set by the user (ideally optimized ones), to eliminate part of the noise. 
 #' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations, end after each the number of FN, TP, and FP is reported. 
-#' The results are written to the OptimizeLFNReaCountAndLFNvariant.csv.
+#' The results are written to the OptimizeLFNReadCountAndLFNvariant.csv.
 #' Users should chose the parameter setting that minimizes, FN and FP.
 #'  
 #' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
@@ -386,7 +389,7 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
 #' @export
 #'
 
-OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=sep, outdir="", min_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2){
+OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=sep, outdir="", min_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2){
 #  read_count_df = optimize_read_count_df
 #  min_lfn_read_count_cutoff = 10
 #  min_lnf_variant_cutoff = 0.001
@@ -396,7 +399,7 @@ OptimizeLFNReaCountAndLFNvariant <- function(read_count_df, known_occurrences=""
   
   
   outdir <- check_dir(outdir)
-  out = paste(outdir, "OptimizeLFNReaCountAndLFNvariant.csv", sep="")
+  out = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
   
   # read known occurrences
   known_occurrences_df <- read.csv(known_occurrences, header=T, sep=sep)

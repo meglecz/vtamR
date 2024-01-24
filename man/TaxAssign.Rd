@@ -23,7 +23,7 @@ TaxAssign(
 
 \item{blast_db}{BLAST database}
 
-\item{blast_path}{path to BBAST executables}
+\item{blast_path}{path to BLAST executable}
 
 \item{outdir}{name of the output directory}
 

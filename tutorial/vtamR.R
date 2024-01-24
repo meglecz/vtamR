@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
