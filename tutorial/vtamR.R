@@ -18,14 +18,17 @@ if(computer == "Bombyx"){
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
   vsearch_path = ""
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
+  swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-  fastqdir <- "vtamR_test/data/"
-  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
-  outdir <- "vtamR_test/out/"
-#  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-#  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-#  outdir <- "/home/meglecz/vtamR_large_files/out/"
-  mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
+  #  fastqdir <- "vtamR_test/data/"
+  #  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
+  #  outdir <- "vtamR_test/out/"
+  #  mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
+  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  outdir <- "/home/meglecz/vtamR_large_files/out/"
+  mock_composition <- "local/user_input/mock_composition_mfzr_prerun.csv"
+
   num_threads=8
   compress = T
 } else if (computer == "Endoume"){
@@ -33,6 +36,7 @@ if(computer == "Bombyx"){
   cutadapt_path="/home/emese/miniconda3/bin/"
   vsearch_path = "/home/emese/miniconda3/bin/"
   blast_path= "" # deactivate conda
+  swarm_path <- ""
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastqdir <- "local/fastq/"
   fastqdir <- "vtamR_test/data/"
@@ -45,6 +49,7 @@ if(computer == "Bombyx"){
   cutadapt_path="C:/Users/Public/"
   vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
+  swarm_path <- ""
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
   fastqdir <- "vtamR_test/data/"
@@ -157,7 +162,7 @@ randomseq_dir = paste(outdir, "random_seq/", sep="")
 #fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
 compress = T
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=100000, randseed=0, compress=compress)
 
 ###
 ### SortReads
@@ -172,82 +177,41 @@ cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- F
 fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
+
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each plate-marker-sample-replicate
 ###
 # read fileinfo file to fileinfo_df if starting directly with demultiplexed, trimmed reads
 # fileinfo_df <- read.csv(file, header=T, sep=sep)
-fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
-read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=F, outdir=outdir, sep=sep)
+fileinfo <- "/home/meglecz/vtamR_large_files/out/sorted/fileinfo.csv"
+fileinfo_df <- read.csv(fileinfo, header=T, sep=sep)
+#fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
+read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=T, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
+read_count_df_backup <- read_count_df
 
-swarm_dir <- paste(outdir, "swarm", sep="")
-swarm_dir <- check_dir(swarm_dir)
-swarm_path <- ""
+read_count_df <- read_count_df_backup
+swarm_d <- 1
+fastidious <- TRUE
+by_sample <- TRUE
+read_count_df_swarm_all <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=F)
+stat_df <- get_stat(read_count_df_swarm_all, stat_df, stage="swarm_all", params=NA)
 
-swarm <- function(read_count_df, outdir=swarm_dir, swarm_path="", num_threads=1){
-  
-  swarm_path <- check_dir(swarm_path)
-  ### make df with unique asv and read_count
-  df <- read_count_df %>%
-    group_by(asv) %>%
-    summarize(sum_read_count = sum(read_count))
-  df$id <- rownames(df)
-  ### make a fasta with dereplicated sequences  
-  input_swarm <- paste(outdir, "swarm_input.fasta", sep="")
-  writeLines(paste(">", df$id, "_", df$sum_read_count, "\n", df$asv, sep="" ), input_swarm)
-  
-  ### run swarm
-#  representatives <- paste(outdir, "representatives.fasta", sep="")
-  clusters <- paste(outdir, "clusters.txt", sep="")
-#  swarm <- paste(swarm_path, "swarm -f -t", num_threads, "-w", representatives, "-o", clusters, fasta, sep=" ")
-  swarm <- paste(swarm_path, "swarm -f -t", num_threads, "-o", clusters, fasta, sep=" ")
-  print(swarm)
-  system(swarm)
-  
-  ### pool clusters in read_count_df
-  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE)
-  cluster_df <- data.frame(representative = rep(cluster_df$V1, each = ncol(cluster_df)),
-                            clustered = as.vector(t(cluster_df[,])))
-  # delete line with no values in clustered
-  cluster_df <- cluster_df %>%
-    filter(clustered != "")
-  # delete read counts from id
-  cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
-  cluster_df$clustered <- sub("_[0-9]+", "", cluster_df$clustered )
-  
-  cluster_df <- left_join(cluster_df, df, by= c("representative" = "id")) %>%
-    select(-representative, -sum_read_count, asv_representative=asv)
-    
-    cluster_df <- left_join(cluster_df, df, by= c("clustered" = "id"))%>%
-      select(-clustered, -sum_read_count, asv_clustered=asv)
-    
-    
-    read_count_df1 <- left_join(read_count_df, cluster_df,  by= c("asv" = "asv_clustered"))
-    read_count_df1 <- read_count_df1 %>%
-      select(-asv) %>%
-      select(asv=asv_representative,plate,marker,sample,replicate,read_count) %>%
-      group_by(asv,plate,marker,sample,replicate) %>%
-      summarize(read_count_cluster=sum(read_count))
-    
-    tmp <- unique(read_count_df1$asv)
-  length(tmp)
-                 
-
-}
+read_count_df <- read_count_df_backup
+read_count_df_swarm_by_sample <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=T)
+stat_df <- get_stat(read_count_df_swarm_by_sample, stat_df, stage="swarm_by_sample", params=NA)
 
 
+outdir <- "/home/meglecz/vtamR_large_files/out/swarm_by_sample/"
+read_count_df <- read_count_df_swarm_by_sample
 ###
 ### LFN_global_read_count
 ###
 # Eliminate variants with less than global_read_count_cutoff reads in the dataset
 global_read_count_cutoff = 2
-read_count_df <- LFN_global_read_count(read_count_df, global_read_count_cutoff, write_csv=T, outdir=outdir, sep=sep)
+read_count_df_wo_swarm <- LFN_global_read_count(read_count_df, global_read_count_cutoff, write_csv=T, outdir=outdir, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", params=global_read_count_cutoff)
-
-
-
 
 ###
 ### LFN_filters
@@ -362,20 +326,21 @@ write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, fileinfo
 
 
 # start optimize from almost unfiltered data (after eliminating ASV with low global reads count)
-LFN_global_read_count_out <- paste(outdir, "LFN_global_read_count.csv", sep="")
-optimize_read_count_df <- read.csv(LFN_global_read_count_out, sep=sep)
+#LFN_global_read_count_out <- paste(outdir, "LFN_global_read_count.csv", sep="")
+optimize_read_count_df <- read_count_df_swarm_by_sample %>%
+  ungroup()
+#optimize_read_count_df <- read.csv(LFN_global_read_count_out, sep=sep)
 dim(optimize_read_count_df)
 ###
 ### OptimizePCRError
 ###
 optimize_dir = paste(outdir, "optimize", sep="")
+max_mismatch=2
 OptimizePCRError(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, max_mismatch=1, min_read_count=10)
-
 
 ###
 ### OptimizeLFNsampleReplicate
 ###
-optimize_dir = paste(outdir, "optimize", sep="")
 OptimizeLFNsampleReplicate(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
 
 ###
@@ -390,20 +355,23 @@ make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_compositio
 ###
 ### OptimizeLFNReaCountAndLFNvariant
 ###
-lfn_read_count_cutoff=10
-lnf_variant_cutoff=0.001
-by_replicate=T
-
-lfn_sample_replicate_cutoff=0.003
-
-pcr_error_var_prop=0.1
-max_mismatch=1
-sample_prop=0.8
-by_sample=T
-
 min_replicate_number=2
-OptimizeLFNReaCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, min_lnf_variant_cutoff=lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
+lfn_sample_replicate_cutoff=0.004
+pcr_error_var_prop=0.1
 
+min_lfn_read_count_cutoff=10
+max_lfn_read_count_cutoff=100
+increment_lfn_read_count_cutoff=5
+min_lnf_variant_cutoff=0.001
+max_lnf_variant_cutoff=0.05
+increment_lnf_variant_cutoff=0.001
+by_replicate=FALSE
+vsearch_path=""
+max_mismatch=1
+by_sample=T
+sample_prop=0.8
+min_replicate_number=2
+OptimizeLFNReadCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, max_lfn_read_count_cutoff=max_lfn_read_count_cutoff, increment_lfn_read_count_cutoff=increment_lfn_read_count_cutoff, min_lnf_variant_cutoff=min_lnf_variant_cutoff, max_lnf_variant_cutoff=max_lnf_variant_cutoff, increment_lnf_variant_cutoff=increment_lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
 
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time

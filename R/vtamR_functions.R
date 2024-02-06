@@ -79,6 +79,132 @@ read_fastas_from_fileinfo <- function (fileinfo_df, dir="", write_csv=F, outdir=
   return(read_count_df)
 }
 
+#' swarm
+#' 
+#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
+#' Return a data frame with the same structure as the input
+#' Swarm can be run sample by sample (by_sample=T) or for the whole data set in ine go
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param outdir name of the output directory
+#' @param swarm_path Path to th swarm executable (Default: TRUE)
+#' @param by_sample [T/F], if TRUE, swarm run separately for each sample
+#' @param num_threads Number of CPUs
+#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
+#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @param write_csv [T/F]; write read_counts to csv file; default=FALSE
+#' @param sep separator for the output file
+#' @export
+#' 
+
+swarm <- function(read_count_df, outdir=NA, swarm_path="", num_threads=1, swarm_d=1, fastidious=T, write_csv=F, sep=",", by_sample=T){
+  
+  if(by_sample){
+    # make an empty output df, with the same columns and variable types as read_count_df
+    out_df <- read_count_df %>%
+      filter(asv=="")
+    
+    # get list of samples 
+    read_count_df$pms <- paste(read_count_df$plate, read_count_df$marker, read_count_df$sample, sep=".")
+    sample_list <- unique(read_count_df$pms)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      print(s)
+      # select occurrences for sample
+      df_sample <- read_count_df %>%
+        filter(pms==s) %>%
+        select(-pms)
+      # run swarm
+      df_sample <- run_swarm(df_sample, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+      # add output of the sample to the total data frame
+      out_df <- rbind(out_df, df_sample)
+    }
+  }else{ # run swarm for all samples together
+    out_df <- run_swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+  }
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    write.table(out_df, file = paste(outdir, "swarm.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(out_df)
+  
+}
+
+#' run_swarm
+#' 
+#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
+#' Return a data frame with the same structure as the input
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param outdir name of the output directory
+#' @param swarm_path Path to th swarm executable (Default: TRUE)
+#' @param num_threads Number of CPUs
+#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
+#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @export
+#' 
+
+run_swarm <- function(read_count_df, outdir=NA, swarm_path="", num_threads=1, swarm_d=1, fastidious=T){
+  
+  swarm_path <- check_dir(swarm_path)
+  outdir <- check_dir(outdir)
+  ### make df with unique asv and read_count
+  df_unique <- read_count_df %>%
+    group_by(asv) %>%
+    summarize(sum_read_count = sum(read_count))
+  df_unique$id <- rownames(df_unique)
+  ### make a fasta with dereplicated sequences  
+  input_swarm <- paste(outdir, "swarm_input.fasta", sep="")
+  writeLines(paste(">", df_unique$id, "_", df_unique$sum_read_count, "\n", df_unique$asv, sep="" ), input_swarm)
+  
+  ### run swarm
+  #  representatives <- paste(outdir, "representatives.fasta", sep="")
+  clusters <- paste(outdir, "clusters.txt", sep="")
+  swarm <- paste(swarm_path, "swarm -d",swarm_d,"-t", num_threads, "-o", clusters, sep=" ")
+  if(fastidious){
+    swarm <- paste(swarm, "-f", sep=" ")
+  }
+  swarm <- paste(swarm, input_swarm, sep=" ")
+  print(swarm)
+  system(swarm)
+  
+  ###
+  # pool clusters in read_count_df
+  ###
+  # make a data frame with representative and clustered columns, where clustered has all swarm input sequences id, and  representative is the name of the cluster they belong to
+  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
+  cluster_df <- data.frame(representative = rep(cluster_df$V1, each = ncol(cluster_df)),
+                           clustered = as.vector(t(cluster_df[,])))
+  # delete line with no values in clustered
+  cluster_df <- cluster_df %>%
+    filter(clustered != "")
+  # delete read counts from id
+  cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
+  cluster_df$clustered <- sub("_[0-9]+", "", cluster_df$clustered )
+  # replace temporary representative ids by sequences
+  cluster_df <- left_join(cluster_df, df_unique, by= c("representative" = "id")) %>%
+    select(-representative, -sum_read_count, asv_representative=asv)
+  # replace temporary ids by sequences for the clustered sequences
+  cluster_df <- left_join(cluster_df, df_unique, by= c("clustered" = "id"))%>%
+    select(-clustered, -sum_read_count, asv_clustered=asv)
+  
+  # free space
+  remove(df_unique)
+  unlink(input_swarm)
+  unlink(clusters)
+  
+  # replace asv by representative sequences in read_count_df
+  read_count_df <- left_join(read_count_df, cluster_df,  by= c("asv" = "asv_clustered"))
+  read_count_df <- read_count_df %>%
+    select(-asv) %>%
+    group_by(asv_representative,plate,marker,sample,replicate) %>%
+    summarize(read_count_cluster=sum(read_count), .groups="drop_last") %>%
+    rename("asv" = asv_representative, "read_count"=read_count_cluster)
+  
+  return(read_count_df)
+}
 #' LFN_global_read_count
 #' 
 #' Eliminate ASVs with less than cutoff reads in the dataset.
@@ -248,6 +374,7 @@ pool_LFN <- function (... , write_csv=F, outdir=NA, sep=",") {
 #' @export
 #'
 FilterMinReplicateNumber <- function(read_count_df, cutoff=2, write_csv=F, outdir=NA, sep=","){
+  # read_count_df <- df
   # add a temporary column with asv and sample concatenated
   read_count_df$tmp <- paste(read_count_df$asv,  read_count_df$sample, sep="-")
   # make a df_tmp containing the number of replicates for each asv-sample combination

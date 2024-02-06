@@ -9,7 +9,8 @@ test_taxassign(
   sep = sep,
   blast_path = blast_path,
   blast_db = blast_db,
-  taxonomy = taxonomy
+  taxonomy = taxonomy,
+  num_threads = 1
 )
 }
 \arguments{

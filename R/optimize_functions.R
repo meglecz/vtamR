@@ -305,6 +305,10 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
       results_vsearch <- left_join(results_vsearch, df, by=c("plate", "marker", "sample", "asv"))
       results_vsearch <- rename(results_vsearch, unexpected_asv = asv)
       results_vsearch <- rename(results_vsearch, unexpected_read_count = read_count_sample)
+      # delete row if the expected variant is non in sample
+      results_vsearch <- results_vsearch %>%
+        filter(!is.na(expected_read_count))
+      
       results_vsearch$pcr_error_var_prop <- results_vsearch$unexpected_read_count / results_vsearch$expected_read_count
       results_vsearch <- results_vsearch %>%
         arrange(desc(pcr_error_var_prop)) %>%
@@ -340,8 +344,8 @@ OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outdir
 #'
 
 OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep=",", outdir=""){
-  
-  # check outdir and make tmp dir
+
+    # check outdir and make tmp dir
   outdir <- check_dir(outdir)
   out = paste(outdir, "OptimizeLFNsampleReplicate.csv", sep="")
   
@@ -351,11 +355,12 @@ OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep="
   
   # get a complete and unique list of plate, marker, sample, replicate
   sample_replicate_list <- read_count_df %>%
+    ungroup() %>%
     select(plate, marker, sample, replicate) %>%
     unique
-  
+
+  # add replicate to mock_composition
   mock_composition_df <- left_join(mock_composition_df, sample_replicate_list, by=c("plate", "marker", "sample"), relationship = "many-to-many")
-  
   unique_asv_keep <-  unique(mock_composition_df$asv)
   
   
@@ -418,7 +423,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
 #  var_cutoff = 0.05
 #  by_replicate = T
   
-  
+#  read_count_df <- optimize_read_count_df
   outdir <- check_dir(outdir)
   out = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
   
