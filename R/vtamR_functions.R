@@ -1018,7 +1018,7 @@ write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, fileinf
     # make a vector with all unique samples in the fileinfo
     all_samples <-unique(paste(fileinfo_df$plate, fileinfo_df$marker, fileinfo_df$sample, sep="."))
     
-    # add a column for each samples tht are not yet in the data frame, with 0 read counts for all variants
+    # add a column for each samples that are not yet in the data frame, with 0 read counts for all variants
     for(sample in all_samples){
       if(!(sample %in% samples)){
         wide_read_count_df[[sample]] <- rep(0, n)

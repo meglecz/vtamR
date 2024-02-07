@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -20,14 +20,14 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-  #  fastqdir <- "vtamR_test/data/"
-  #  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
-  #  outdir <- "vtamR_test/out/"
-  #  mock_composition <- "local/user_input/mock_composition_mfzr_eu.csv"
-  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-  outdir <- "/home/meglecz/vtamR_large_files/out/"
-  mock_composition <- "local/user_input/mock_composition_mfzr_prerun.csv"
+    fastqdir <- "vtamR_test/data/"
+    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr_gz.csv"
+    outdir <- "vtamR_test/out_zfzr/"
+    mock_composition <- "vtamR_test/data/mock_composition_zfzr_eu.csv"
+  #fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  #fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  #outdir <- "/home/meglecz/vtamR_large_files/out/"
+  #mock_composition <- "local/user_input/mock_composition_mfzr_prerun.csv"
 
   num_threads=8
   compress = T
@@ -97,12 +97,11 @@ usethis::use_roxygen_md() # rebuild the help files ?
 ###
 # Test major functions
 ###
-test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
-test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
-# check run time for bgger files; it is 1 min for 40 asv
-taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
-test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+#test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+#test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+#test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
+#taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
+#test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 
 
 
@@ -162,7 +161,7 @@ randomseq_dir = paste(outdir, "random_seq/", sep="")
 #fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
 compress = T
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=100000, randseed=0, compress=compress)
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
 
 ###
 ### SortReads
@@ -181,31 +180,101 @@ fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each plate-marker-sample-replicate
 ###
-# read fileinfo file to fileinfo_df if starting directly with demultiplexed, trimmed reads
-# fileinfo_df <- read.csv(file, header=T, sep=sep)
-fileinfo <- "C:/Users/emese/vtamR/vtamR_test/out/sorted/fileinfo.csv"
-fileinfo_df <- read.csv(fileinfo, header=T, sep=sep)
-#fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
 read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=T, outdir=outdir, sep=sep)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 read_count_df_backup <- read_count_df
 
-read_count_df <- read_count_df_backup
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
-read_count_df_swarm_all <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
-stat_df <- get_stat(read_count_df_swarm_all, stat_df, stage="swarm_all", params=NA)
+read_count_df <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
+params <- paste(swarm_d, fastidious, by_sample, sep=";")
+stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
 
-read_count_df <- read_count_df_backup
-by_sample <- FALSE
-read_count_df_swarm_by_sample <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
-stat_df <- get_stat(read_count_df_swarm_by_sample, stat_df, stage="swarm_by_sample", params=NA)
+digits = 0
+read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+# taxassign
+asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
+# write the list of ASV and their taxonomic assignment
+write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
+fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/fileinfo.csv"
+write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+
+files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv", "vtamR_test/out_zfzr/PoolReplicates.csv"),
+                    marker=c("MFZR", "ZFZR"))
+
+pool_datasets <- function(files, outdir="", sep=","){
+  
+  # TODO
+  # test, if the same sample name is not present in more than one file with the same marker
+  ###
+  # pool all data into one data frame
+  ###
+  df <- data.frame("asv" = list(), "sample" = list(), "mean_read_count" = list(), "marker"== list())
+  for(i in 1:nrow(files)){
+    file <- files[i, "file"]
+    marker <- files[i, "marker"]
+    print(file)
+    tmp <- read.csv(file, sep=sep) %>%
+      select(asv, sample, mean_read_count)
+    tmp$marker <- rep(marker, nrow(tmp))
+    df <- rbind(df, tmp)
+  }
+  
+  marker_list <- unique(files$marker)
+  if(length(marker_lis > 1)){ # more than one marker => pool sequences identical in their corresponding region
+    asvs <- df %>%
+      group_by(asv) %>%
+      summarize("rc" = sum(mean_read_count)) 
+    
+    asvs$id <- rownames(asvs)
+    asvs$length <- nchar(asvs$asv)
+    asvs <- asvs %>%
+      arrange(desc(length), desc(rc))
+    # make a fasta file with decreasing abundances
+    fasta <- paste(outdir, "vsearch_input.fasta", sep="")
+    writeLines(paste(">", asvs$id, "\n", asvs$asv, sep="" ), fasta)
+    
+    centroids_file <- paste(outdir, "consout.txt", sep="")
+    blastout_file <- paste(outdir, "blastout.tsv", sep="")
+    vsearch_cmd <- paste(vsearch_path, "vsearch --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
+    print(vsearch_cmd)
+    system(vsearch_cmd)
+    
+    # read the ids of centoids
+    cons <- read.table(centroids_file)
+    colnames(cons) <- c("centroid")
+    cons <- cons %>%
+      filter(grepl(">centroid=", centroid))
+    cons$centroid <- gsub(">centroid=", "", cons$centroid)
+    cons$nbseq <-   gsub(".+;seqs=", "", cons$centroid)
+    cons$centroid <- gsub(";.+", "", cons$centroid)
+
+    # add to centroid the seqid that are in the same cluster
+    blastout <- read.table(blastout_file) %>%
+      select(1,2)
+    colnames(blastout) <- c("query", "subject")
+    blastout$query <- as.character(blastout$query)
+    blastout$subject <- as.character(blastout$subject)
+    cons <- left_join(cons, blastout, by= c("centroid"="subject"))
+    
+    cons <- cons %>%
+      mutate(query = ifelse(is.na(query), centroid, query))
+    
+    added_lines <- cons %>%
+      filter(nbseq>1) %>%
+      mutate(query=centroid)
+      
+      cons<- rbind(cons, added_lines)
+    
+
+    }
+  
+}
 
 
-outdir <- "/home/meglecz/vtamR_large_files/out/swarm_by_sample/"
-read_count_df <- read_count_df_swarm_by_sample
+
 ###
 ### LFN_global_read_count
 ###
