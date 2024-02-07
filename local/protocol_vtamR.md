@@ -240,6 +240,18 @@ C:/Users/Public/cutadapt to start a command
 
 
 
+## swarm
+
+download binaries from https://github.com/torognes/swarm/releases
+
+unzip
+
+The executable is in the C:\swarm-3.1.4-win-x86_64\bin directory
+
+
+
+
+
 # File compression
 
 ## windows

@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -49,7 +49,7 @@ if(computer == "Bombyx"){
   cutadapt_path="C:/Users/Public/"
   vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
-  swarm_path <- ""
+  swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
   fastqdir <- "vtamR_test/data/"
@@ -183,7 +183,7 @@ fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=
 ###
 # read fileinfo file to fileinfo_df if starting directly with demultiplexed, trimmed reads
 # fileinfo_df <- read.csv(file, header=T, sep=sep)
-fileinfo <- "/home/meglecz/vtamR_large_files/out/sorted/fileinfo.csv"
+fileinfo <- "C:/Users/emese/vtamR/vtamR_test/out/sorted/fileinfo.csv"
 fileinfo_df <- read.csv(fileinfo, header=T, sep=sep)
 #fileinfo_df <- read.csv("vtamR_test/out/sorted/fileinfo.csv", header=T, sep=sep)
 read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=T, outdir=outdir, sep=sep)
@@ -195,11 +195,12 @@ read_count_df <- read_count_df_backup
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
-read_count_df_swarm_all <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=F)
+read_count_df_swarm_all <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
 stat_df <- get_stat(read_count_df_swarm_all, stat_df, stage="swarm_all", params=NA)
 
 read_count_df <- read_count_df_backup
-read_count_df_swarm_by_sample <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=T)
+by_sample <- FALSE
+read_count_df_swarm_by_sample <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
 stat_df <- get_stat(read_count_df_swarm_by_sample, stat_df, stage="swarm_by_sample", params=NA)
 
 

@@ -385,9 +385,9 @@ test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=b
     filter(ltg_taxid!=ltg_taxid_exp)
   
   if(nrow(tmp_KO)==0){
-    cat("Taxxassign: PASS")
+    cat("TaxAssign: PASS")
   }else{
-    cat("Taxxassign: FAIL")
+    cat("TaxAssign: FAIL")
   }
   return(asv_taxassign)
 }

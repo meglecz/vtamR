@@ -162,7 +162,7 @@ run_swarm <- function(read_count_df, outdir=NA, swarm_path="", num_threads=1, sw
   ### run swarm
   #  representatives <- paste(outdir, "representatives.fasta", sep="")
   clusters <- paste(outdir, "clusters.txt", sep="")
-  swarm <- paste(swarm_path, "swarm -d",swarm_d,"-t", num_threads, "-o", clusters, sep=" ")
+  swarm <- paste(swarm_path, "swarm -d ",swarm_d," -t ", num_threads, " -o ", clusters, sep="")
   if(fastidious){
     swarm <- paste(swarm, "-f", sep=" ")
   }
