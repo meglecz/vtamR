@@ -1,7 +1,0 @@
-plate	marker	sample	replicate	filename
-small1	COI	sample1	1	small_test1_1.fas
-small1	COI	sample1	2	small_test1_2.fas
-small1	COI	sample1	3	small_test1_3.fas
-small1	COI	sample2	1	small_test2_1.fas
-small1	COI	sample2	2	small_test2_2.fas
-small1	COI	sample2	3	small_test2_3.fas

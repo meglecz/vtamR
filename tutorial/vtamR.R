@@ -5,14 +5,14 @@ install.packages("tidyr")
 
 library("devtools")
 library("roxygen2")
-library("seqinr")
+#library("seqinr")
 library("dplyr")
-library("tidyr")
+#library("tidyr")
 library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -21,9 +21,10 @@ if(computer == "Bombyx"){
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
     fastqdir <- "vtamR_test/data/"
-    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr_gz.csv"
+    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
     outdir <- "vtamR_test/out_zfzr/"
-    mock_composition <- "vtamR_test/data/mock_composition_zfzr_eu.csv"
+    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+    asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
   #fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
   #fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
   #outdir <- "/home/meglecz/vtamR_large_files/out/"
@@ -59,8 +60,7 @@ if(computer == "Bombyx"){
   num_threads=4
   compress = F
 }
-sep=";"
-
+sep=","
 setwd(vtam_dir)
 
 
@@ -92,7 +92,7 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
 # load local packages
 load_all(".")
 roxygenise() # Builds the help files
-usethis::use_roxygen_md() # rebuild the help files ?
+usethis::use_roxygen_md() # rebuild the help files
 
 
 ###
@@ -103,8 +103,6 @@ usethis::use_roxygen_md() # rebuild the help files ?
 #test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
 #taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
 #test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
-
-
 
 
 ####
@@ -167,7 +165,7 @@ RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path
 ###
 ### SortReads
 ###
-sorted_dir <- paste(outdir, "sorted", sep="")
+sorted_dir <- paste(outdir, "sorted/", sep="")
 check_reverse <- T
 tag_to_end <- F
 primer_to_end <-F
@@ -175,13 +173,15 @@ cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- F
-fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each plate-marker-sample-replicate
 ###
-read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_csv=T, outdir=outdir, sep=sep)
+outfile <- paste(outdir, "1_before_filter.csv", sep="")
+sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
+read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list)
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 read_count_df_backup <- read_count_df
