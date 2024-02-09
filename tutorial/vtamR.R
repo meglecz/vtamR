@@ -12,7 +12,7 @@ library("utils") # to handle zipped files
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -53,8 +53,9 @@ if(computer == "Bombyx"){
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
   fastqdir <- "vtamR_test/data/"
-  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
-  outdir <- "vtamR_test/out/"
+  fastqinfo <- "vtamR_test/data/fastqinfo_zfzr_gz.csv"
+  outdir <- "vtamR_test/out_zfzr/"
+  mock_composition <- "vtamR_test/data/mock_composition_zfzr_eu.csv"
   num_threads=4
   compress = F
 }
@@ -185,6 +186,9 @@ read_count_df <- read_fastas_from_fileinfo(fileinfo_df, dir=sorted_dir, write_cs
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 read_count_df_backup <- read_count_df
 
+###
+# Run swarm
+###
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
@@ -192,86 +196,32 @@ read_count_df <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
 
+###
+# PoolReplicates
+###
 digits = 0
 read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
-# taxassign
+###
+# TaxAssign
+###
 asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
 # write the list of ASV and their taxonomic assignment
 write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
 fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/fileinfo.csv"
 write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
+
+###
+# Pool different datasets
+###
 files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv", "vtamR_test/out_zfzr/PoolReplicates.csv"),
                     marker=c("MFZR", "ZFZR"))
 
-pool_datasets <- function(files, outdir="", sep=","){
-  
-  # TODO
-  # test, if the same sample name is not present in more than one file with the same marker
-  ###
-  # pool all data into one data frame
-  ###
-  df <- data.frame("asv" = list(), "sample" = list(), "mean_read_count" = list(), "marker"== list())
-  for(i in 1:nrow(files)){
-    file <- files[i, "file"]
-    marker <- files[i, "marker"]
-    print(file)
-    tmp <- read.csv(file, sep=sep) %>%
-      select(asv, sample, mean_read_count)
-    tmp$marker <- rep(marker, nrow(tmp))
-    df <- rbind(df, tmp)
-  }
-  
-  marker_list <- unique(files$marker)
-  if(length(marker_lis > 1)){ # more than one marker => pool sequences identical in their corresponding region
-    asvs <- df %>%
-      group_by(asv) %>%
-      summarize("rc" = sum(mean_read_count)) 
-    
-    asvs$id <- rownames(asvs)
-    asvs$length <- nchar(asvs$asv)
-    asvs <- asvs %>%
-      arrange(desc(length), desc(rc))
-    # make a fasta file with decreasing abundances
-    fasta <- paste(outdir, "vsearch_input.fasta", sep="")
-    writeLines(paste(">", asvs$id, "\n", asvs$asv, sep="" ), fasta)
-    
-    centroids_file <- paste(outdir, "consout.txt", sep="")
-    blastout_file <- paste(outdir, "blastout.tsv", sep="")
-    vsearch_cmd <- paste(vsearch_path, "vsearch --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
-    print(vsearch_cmd)
-    system(vsearch_cmd)
-    
-    # read the ids of centoids
-    cons <- read.table(centroids_file)
-    colnames(cons) <- c("centroid")
-    cons <- cons %>%
-      filter(grepl(">centroid=", centroid))
-    cons$centroid <- gsub(">centroid=", "", cons$centroid)
-    cons$nbseq <-   gsub(".+;seqs=", "", cons$centroid)
-    cons$centroid <- gsub(";.+", "", cons$centroid)
+files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
+                    marker=c("MFZR"))
 
-    # add to centroid the seqid that are in the same cluster
-    blastout <- read.table(blastout_file) %>%
-      select(1,2)
-    colnames(blastout) <- c("query", "subject")
-    blastout$query <- as.character(blastout$query)
-    blastout$subject <- as.character(blastout$subject)
-    cons <- left_join(cons, blastout, by= c("centroid"="subject"))
-    
-    cons <- cons %>%
-      mutate(query = ifelse(is.na(query), centroid, query))
-    
-    added_lines <- cons %>%
-      filter(nbseq>1) %>%
-      mutate(query=centroid)
-      
-      cons<- rbind(cons, added_lines)
-    
+read_count_pool <- pool_datasets(files, outdir=outdir, sep=sep, mean_over_markers=T, write_csv=T)
 
-    }
-  
-}
 
 
 
