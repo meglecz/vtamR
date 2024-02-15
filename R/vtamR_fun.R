@@ -20,6 +20,36 @@ check_dir <- function(dir){
   }
 }
 
+
+#' Get read, variant, sample and replicate counts.
+#' Complete the stat_df with the above statistics.
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param stat_df data frame with the following variables: parameters, asv_count, read_count, read_count, sample_count, sample_replicate_count
+#' @param stage name of the filtering step; it is used for labeling the line in the stat_df
+#' @param params parameter value (or their concatenation if more than one) used for the filtering step
+#' @export
+#' 
+get_stat <- function(read_count_df, stat_df, stage, params=NA){
+  #define a temporary data frame
+  df <- data.frame(parameters=character(),
+                   asv_count=integer(),
+                   read_count=integer(),
+                   sample_count=integer(),
+                   sample_replicate_count=integer())
+  # get 4 different counts and place then into a data fram
+  sample_repl <- paste(read_count_df$sample, read_count_df$replicate, sep="-")
+  df[1,"parameters"] <-params
+  df[1,"asv_count"] <-length(unique(read_count_df$asv))
+  df[1,"read_count"] <-  sum(read_count_df$read_count)
+  df[1,"sample_count"] <-length(unique(read_count_df$sample))
+  df[1,"sample_replicate_count"] <-length(unique(sample_repl))
+  # add rowname
+  rownames(df) <- c(stage)
+  # add new data to stat_df
+  rbind(stat_df, df)
+}
+
 #' Merge
 #' 
 #' Merge forward are reverse fastq read pairs to fasta.
@@ -579,7 +609,7 @@ read_fastas_from_fileinfo <- function (sortedinfo_df, dir="", outfile="", sep=",
       next
     }
     
-    read_count_df_tmp <- read_fasta_seq(filename=fas, dereplicate=T)
+    read_count_df_tmp <- read_fasta_seq(filename=fas, dereplicate=T) # returns data frame with asv and read_cunt columns
     read_count_df_tmp$sample <- sortedinfo_df[i,"sample"]
     read_count_df_tmp$replicate <- sortedinfo_df[i,"replicate"]
     read_count_df <- rbind(read_count_df, read_count_df_tmp)
@@ -685,3 +715,225 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
   return(data)
 }
 
+
+#' swarm
+#' 
+#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
+#' Return a data frame with the same structure as the input
+#' Swarm can be run sample by sample (by_sample=T) or for the whole data set in ine go
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param outfile name of the output file with asv_id, sample, replicate, read_count and asv columns; Optional; If empty the results are not written to a file
+#' @param swarm_path Path to th swarm executable (Default: TRUE)
+#' @param by_sample [T/F], if TRUE, swarm run separately for each sample
+#' @param num_threads Number of CPUs
+#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
+#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @param write_csv [T/F]; write read_counts to csv file; default=FALSE
+#' @param sep separator for the output file
+#' @export
+#' 
+
+swarm <- function(read_count_df, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, write_csv=F, sep=",", by_sample=T){
+  
+  if(by_sample){
+    # make an empty output df, with the same columns and variable types as read_count_df
+    out_df <- read_count_df %>%
+      filter(asv=="")
+    
+    # get list of samples 
+    sample_list <- unique(read_count_df$sample)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      print(s)
+      # select occurrences for sample
+      df_sample <- read_count_df %>%
+        filter(sample==s)
+      # run swarm
+      df_sample <- run_swarm(df_sample, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+      # add output of the sample to the total data frame
+      out_df <- rbind(out_df, df_sample)
+    }
+  }else{ # run swarm for all samples together
+    out_df <- run_swarm(read_count_df, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+  }
+  
+  if(outfile != ""){
+    write.table(out_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(out_df)
+  
+}
+
+#' run_swarm
+#' 
+#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
+#' Return a data frame with the same structure as the input
+#' 
+#' @param read_count_df data frame with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param swarm_path Path to th swarm executable (Default: TRUE)
+#' @param num_threads Number of CPUs
+#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
+#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @export
+#' 
+
+run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fastidious=T){
+  
+  tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  tmp_dir <- check_dir(tmp_dir)
+  swarm_path <- check_dir(swarm_path)
+  
+  ### make df with unique asv and read_count
+  df_unique <- read_count_df %>%
+    group_by(asv, asv_id) %>%
+    summarize(sum_read_count = sum(read_count), .groups="drop_last") %>%
+    ungroup() 
+
+  ### make a fasta with dereplicated sequences  
+  input_swarm <- paste(tmp_dir, "swarm_input.fasta", sep="")
+  writeLines(paste(">", df_unique$asv_id, "_", df_unique$sum_read_count, "\n", df_unique$asv, sep="" ), input_swarm)
+  
+  df_unique <- df_unique %>%
+    select(-sum_read_count)
+  ### run swarm
+  #  representatives <- paste(tmp_dir, "representatives.fasta", sep="")
+  clusters <- paste(tmp_dir, "clusters.txt", sep="")
+  swarm <- paste(swarm_path, "swarm -d ",swarm_d," -t ", num_threads, " -o ", clusters, sep="")
+  if(fastidious){
+    swarm <- paste(swarm, "-f", sep=" ")
+  }
+  swarm <- paste(swarm, input_swarm, sep=" ")
+  print(swarm)
+  system(swarm)
+  
+  ###
+  # pool clusters in read_count_df
+  ###
+  # make a data frame with representative and clustered columns, where clustered has all swarm input sequences id, and  representative is the name of the cluster they belong to
+  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
+  cluster_df <- data.frame(representative = rep(cluster_df$V1, each = ncol(cluster_df)),
+                           clustered = as.vector(t(cluster_df[,])))
+  # delete line with no values in clustered
+  cluster_df <- cluster_df %>%
+    filter(clustered != "")
+  # delete read counts from id
+  cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
+  cluster_df$representative <- as.numeric(cluster_df$representative)
+  cluster_df$clustered <- sub("_[0-9]+", "", cluster_df$clustered )
+  cluster_df$clustered <- as.numeric(cluster_df$clustered)
+  # add representative asv
+  cluster_df <- left_join(cluster_df, df_unique, by= c("representative" = "asv_id")) %>%
+    select("representative_id"=representative, representative_asv=asv, "clustered_id"=clustered)
+
+  # free space
+  remove(df_unique)
+  unlink(input_swarm)
+  unlink(clusters)
+  tmp_dir <- sub('/$', "", tmp_dir)
+  print(tmp_dir)
+  unlink(tmp_dir, recursive=FALSE)
+  
+  # replace asv by representative sequences in read_count_df
+  read_count_df <- left_join(read_count_df, cluster_df,  by= c("asv_id" = "clustered_id"))
+  read_count_df <- read_count_df %>%
+    select(-asv, -asv_id) %>%
+    group_by(representative_asv, representative_id, sample, replicate) %>%
+    summarize(read_count_cluster=sum(read_count), .groups="drop_last") %>%
+    rename("asv" = representative_asv, "read_count"=read_count_cluster, "asv_id"=representative_id) %>%
+    ungroup()
+  
+  
+  return(read_count_df)
+}
+
+#' check_one_to_one_relationship
+#' 
+#' Check if in th input data frame there is a one to one relationship between unique asvs and unisq asv_ids. If yes, returns TRUE, otherwise quit the run
+#' The same asv - asv_id combination can appear more than once in the data frame
+#' 
+#' @param df data frame with the following variables: asv_id, asv (can have other columns as well)
+#' @export
+#' 
+check_one_to_one_relationship <- function(df){
+  
+  # make unique asv-asv_id combinations
+  df <- df %>%
+    select(asv_id, asv) %>%
+    distinct()
+  
+  # check if more then one asv per asv_id
+  unique_asv_id <- df %>%
+    group_by(asv_id) %>%
+    summarize(count= length(asv)) %>%
+    filter(count>1)
+  if(nrow(unique_asv_id) > 0 ){
+    print(unique_asv_id)
+    stop("Some of the the asv_ids belong to multile asv")
+  }
+  
+  # check if more then one asv_id per asv
+  unique_asv <- df %>%
+    group_by(asv) %>%
+    summarize(count= length(asv_id)) %>%
+    filter(count>1)
+  if(nrow(unique_asv) > 0 ){
+    print(unique_asv)
+    stop("Some of the asv has multiple asv_ids")
+  }
+  
+  return(TRUE)
+}
+
+#' update_asv_list
+#' 
+#' Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file
+#' The input file is typically a csv file containing asv seen in earlier runs with their asv_id.
+#' If there is a conflict within or between the input data quits with a error message. Otherwise write the updated asv list with their asv_id to the outfile
+#' 
+#' @param read_count_df data frame with columns:  asv, sample,  replicate, read_count
+#' @param asv_list name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets
+#' @param outfile Name of the output file; if empty, write a new file using the name asv_list, completed by the number of seconds from 01/01/1970
+#' @param sep separator in csv files; default: ","
+#' @export
+#' 
+update_asv_list <- function(read_count_df, asv_list=asv_list, outfile="", sep=","){
+  
+  # read earlier ASV list
+  if(asv_list != ""){  # read already existing asvs, if the file is given
+    asv_df <- read.csv(asv_list, sep=sep, header=TRUE)
+  }else{
+    asv_df <- data.frame("asv_id"=integer(),
+                         "asv"=as.character()
+    )
+  }
+  
+  #  asv_df[2,1] <- 1
+  if(check_one_to_one_relationship(asv_df)){
+    print("One to one relationship between asv_id and asv in input asv_list")
+  }
+  # make a dataframe with the unique combinations of asv_id-asv
+  new_df <- read_count_df %>%
+    select(asv_id, asv) %>%
+    distinct()
+  if(check_one_to_one_relationship(new_df)){
+    print("One to one relationship between asv_id and asv in input read_count_df")
+  }
+  # pool earlier asvs and new ones ad avoid redundancy
+  asv_df <- rbind(asv_df, new_df) %>%
+    distinct() %>%
+    arrange(asv_id)
+  if(check_one_to_one_relationship(asv_df)){
+    print("One to one relationship between asv_id and asv in output asv_list")
+  }
+  
+  if(outfile == ""){
+    str <- paste("_", trunc(as.numeric(trunc(Sys.time()))), ".", sep="")
+    outfile <- sub("\\.", str, asv_list)
+    
+  }
+  write.table(asv_df, file=outfile, row.names = FALSE, sep=sep)
+  
+  
+}

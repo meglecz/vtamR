@@ -177,14 +177,16 @@ sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, ou
 
 
 ###
-### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each plate-marker-sample-replicate
+### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each sample-replicate, add a unique id for ASVs, can take into account ASVs from earlier analyses
 ###
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
 read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list)
+read_count_df_backup <- read_count_df
+read_count_df <- read_count_df_backup
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
-read_count_df_backup <- read_count_df
+
 
 ###
 # Run swarm
@@ -192,35 +194,17 @@ read_count_df_backup <- read_count_df
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
-read_count_df <- swarm(read_count_df, outdir=outdir, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
+outfile <- paste(outdir, "2_swarm.csv", sep="")
+read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
 
-###
-# PoolReplicates
-###
-digits = 0
-read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
-###
-# TaxAssign
-###
-asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
-# write the list of ASV and their taxonomic assignment
-write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
-fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/fileinfo.csv"
-write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
-
 
 ###
-# Pool different datasets
+# Add ASVs that passed Swarm to the asv_list file, it can be used latter to homogenize later runs with asv_ids of this
 ###
-files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv", "vtamR_test/out_zfzr/PoolReplicates.csv"),
-                    marker=c("MFZR", "ZFZR"))
+update_asv_list(read_count_df, asv_list=asv_list)
 
-files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
-                    marker=c("MFZR"))
-
-read_count_pool <- pool_datasets(files, outdir=outdir, sep=sep, mean_over_markers=T, write_csv=T)
 
 
 
@@ -396,3 +380,34 @@ OptimizeLFNReadCountAndLFNvariant(optimize_read_count_df, known_occurrences=know
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
+
+
+
+###
+# PoolReplicates
+###
+digits = 0
+read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+###
+# TaxAssign
+###
+asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
+# write the list of ASV and their taxonomic assignment
+write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
+fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/fileinfo.csv"
+write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+
+
+###
+# Pool different datasets
+###
+files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv", "vtamR_test/out_zfzr/PoolReplicates.csv"),
+                    marker=c("MFZR", "ZFZR"))
+
+files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
+                    marker=c("MFZR"))
+
+read_count_pool <- pool_datasets(files, outdir=outdir, sep=sep, mean_over_markers=T, write_csv=T)
+
+
+

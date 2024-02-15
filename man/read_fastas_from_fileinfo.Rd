@@ -9,20 +9,25 @@ read_fastas_from_fileinfo(
   dir = "",
   outfile = "",
   sep = ",",
-  asv_list = ""
+  asv_list = "",
+  update_asv_list = F
 )
 }
 \arguments{
-\item{sortedinfo_df}{data frame with columns:  sample,  replicate, filename, (optional: sample_type(mock/negative/real), habitat)}
+\item{sortedinfo_df}{data frame with columns:  sample,  replicate, file name, (optional: sample_type(mock/negative/real), habitat)}
 
 \item{dir}{name of the directory with fasta files}
 
-\item{outfile}{Name of the output csv file with "asv", "sample", "replicate", "read_count" as columns; if NULL, only a data frame is returned}
+\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if NULL, only a data frame is returned}
 
 \item{sep}{separator in csv files; default: ","}
+
+\item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
+
+\item{update_asv_list}{\link{T/F}; If TRUE, write a new file (columns:asv_id, asv) completed with new ASVs}
 }
 \description{
-Read all fasta file in sortedinfo_df data frame (sample	replicate	filename).
+Read all fasta file in sortedinfo_df data frame (sample	replicate	file name).
 Dereplicate reads to ASVs.
 Count the number of reads of each ASVs in each sample-replicate.
 Returns a df ("asv", "sample", "replicate", "read_count")
