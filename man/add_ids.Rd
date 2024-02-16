@@ -4,16 +4,16 @@
 \alias{add_ids}
 \title{add_ids}
 \usage{
-add_ids(read_count_df, asv_list = asv_list, sep = sep, update_asv_list = T)
+add_ids(read_count_df, asv_list = asv_list, updated_asv_list = "", sep = ",")
 }
 \arguments{
 \item{read_count_df}{data frame with columns:  asv, sample,  replicate, read_count}
 
 \item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
 
-\item{sep}{separator in csv files; default: ","}
+\item{updated_asv_list}{name of the output file, containing the updated ASVs. Optional.}
 
-\item{update_asv_list}{\link{T/F}; If TRUE, write a new file (columns:asv_id, asv) completed with new ASVs}
+\item{sep}{separator in csv files; default: ","}
 }
 \description{
 Add asv_ids to a data frame that have an asv column. Can take into account already existing asv and asv_id (from earlier dataset)

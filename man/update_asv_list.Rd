@@ -7,7 +7,7 @@
 update_asv_list(read_count_df, asv_list = asv_list, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with columns:  asv, sample,  replicate, read_count}
+\item{read_count_df}{data frame with columns:  asv_id, sample,  replicate, read_count, asv}
 
 \item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
 

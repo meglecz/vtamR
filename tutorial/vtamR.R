@@ -5,9 +5,9 @@ install.packages("tidyr")
 
 library("devtools")
 library("roxygen2")
-#library("seqinr")
+library("seqinr") # splitseq for FilterCodonStop
 library("dplyr")
-#library("tidyr")
+library("tidyr") # gather for read_asv_table
 library("utils") # to handle zipped files
 #library("Biostrings")
 
@@ -181,7 +181,8 @@ sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, ou
 ###
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
-read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list)
+updated_asv_list <- sub("\\.", "_updated_2024_02_15.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list, updated_asv_list=updated_asv_list)
 read_count_df_backup <- read_count_df
 read_count_df <- read_count_df_backup
 # make stat counts
@@ -201,12 +202,13 @@ stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
 
 
 ###
-# Add ASVs that passed Swarm to the asv_list file, it can be used latter to homogenize later runs with asv_ids of this
+# The safest way to homogenize ASVs and asv_ids among different datasets is updating the asv_list sytematically at the read_fastas_from_fileinfo step.
+# This will keep all ASVs ever seen in any of the data sets you have analysed.
+# However, if you have many large data sets, the file will grow quickly that can cause memory issues. 
+# A quite safe solution is to updates the asv_list after swarm, since swarm has eliminated the majority of the rare ASVs that will be unlikely to be seen among validates ASVs in further runs.
 ###
-update_asv_list(read_count_df, asv_list=asv_list)
-
-
-
+#updated_asv_list <- sub("\\.", "_updated_2024_02_15.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+#update_asv_list(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 
 
 ###
@@ -214,7 +216,8 @@ update_asv_list(read_count_df, asv_list=asv_list)
 ###
 # Eliminate variants with less than global_read_count_cutoff reads in the dataset
 global_read_count_cutoff = 2
-read_count_df_wo_swarm <- LFN_global_read_count(read_count_df, global_read_count_cutoff, write_csv=T, outdir=outdir, sep=sep)
+outfile <- paste(outdir, "3_LFN_global_read_count.csv", sep="")
+read_count_df <- LFN_global_read_count(read_count_df, global_read_count_cutoff, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", params=global_read_count_cutoff)
 
 ###
@@ -222,47 +225,70 @@ stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", param
 ###
 # LFN_read_count
 lfn_read_count_cutoff <- 10
-read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, write_csv=T, outdir = outdir, sep=sep)
+outfile <- paste(outdir, "4_LFN_read_count.csv", sep="")
+read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
 
 
 # LFN_sample_replicate (by column)
 lfn_sample_replicate_cutoff <- 0.001
-read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, write_csv=T, outdir = outdir, sep=sep)
+outfile <- paste(outdir, "5_LFN_sample_replicate.csv", sep="")
+read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 
 
 # LFN_sample_variant (by line)
 lnf_variant_cutoff = 0.001
 by_replicate = TRUE
-read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, by_replicate, write_csv=T, outdir = outdir, sep=sep)
+outfile <- paste(outdir, "6_LFN_variant_replicate.csv", sep="")
+read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, by_replicate, outfile=outfile, sep=sep)
 param_values <- paste(lnf_variant_cutoff, by_replicate, sep=";")
 stat_df <- get_stat(read_count_df_lnf_variant, stat_df, stage="LFN_variant", params=param_values)
 
 
 # pool the results of the different filterLFN to one data frame; keep only occurrences that passed all filters
-read_count_df <- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, read_count_df_lnf_sample_replicate, write_csv=T, outdir = outdir, sep=sep)
+outfile <- paste(outdir, "7_pool_LFN.csv", sep="")
+read_count_df <- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, read_count_df_lnf_sample_replicate, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterLFN")
 # delete temporary data frames
 read_count_df_lfn_read_count <- NULL
 read_count_df_lnf_variant <- NULL
 read_count_df_lnf_sample_replicate <- NULL
 
+
 ###
 ### keep repeatable occurrences
 ###
 min_replicate_number <- 2
-read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, write_csv=T, outdir = outdir, sep=sep)
+outfile <- paste(outdir, "8_FilterMinReplicateNumber.csv", sep="")
+read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
+
+###
+### FilerIndel
+###
+outfile <- paste(outdir, "9_FilterIndel.csv", sep="")
+read_count_df <- FilterIndel(read_count_df, outfile=outfile, sep=sep)
+stat_df <- get_stat(read_count_df, stat_df, stage="FilterIndel")
+
+###
+### FilerCodonStop
+###
+outfile <- paste(outdir, "10_FilterCodonStop.csv", sep="")
+genetic_code = 5
+read_count_df <- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code, sep=sep)
+stat_df <- get_stat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
+
 
 ###
 ### FilerPCRerror
 ###
 pcr_error_var_prop <- 0.1
-max_mismatch <- 1
+max_mismatch <- 2
 by_sample <- T
 sample_prop <- 0.8
-read_count_df <- FilterPCRerror(read_count_df, write_csv=T, outdir=outdir, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
+outfile <- paste(outdir, "11_FilterPCRerror.csv", sep="")
+read_count_df <- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
 params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sample_prop, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
 
@@ -272,7 +298,8 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params
 abskew=2
 by_sample = T
 sample_prop = 0.8
-read_count_df <- FilterChimera(read_count_df, write_csv=T, outdir=outdir, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
+outfile <- paste(outdir, "12_FilterChimera.csv", sep="")
+read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
 params <- paste(abskew, by_sample, sample_prop, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
 
@@ -283,27 +310,16 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params
 # PS = summ(min(p1i, p2i))
 # p1i = number of reads for variant i in replicate 1 / number of reads in replicate 1
 renkonen_distance_quantile = 0.9
-read_count_df <- FilterRenkonen(read_count_df, write_csv=T, outdir=outdir, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
+outfile <- paste(outdir, "13_FilterRenkonen.csv", sep="")
+read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=renkonen_distance_quantile)
-
-###
-### FilerIndel
-###
-read_count_df <- FilterIndel(read_count_df, write_csv=T, outdir=outdir, sep=sep)
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterIndel")
-
-###
-### FilerCodonStop
-###
-genetic_code = 5
-read_count_df <- FilterCodonStop(read_count_df, write_csv=T, outdir=outdir, genetic_code=genetic_code, sep=sep)
-stat_df <- get_stat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
 
 ###
 ### PoolReplicates
 ###
 digits = 0
-read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
+outfile <- paste(outdir, "14_PoolReplicates.csv", sep="")
+read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, outfile=outfile, sep=sep)
 
 
 ###

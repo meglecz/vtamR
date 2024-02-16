@@ -10,7 +10,7 @@ read_fastas_from_fileinfo(
   outfile = "",
   sep = ",",
   asv_list = "",
-  update_asv_list = F
+  updated_asv_list = ""
 )
 }
 \arguments{
@@ -18,13 +18,13 @@ read_fastas_from_fileinfo(
 
 \item{dir}{name of the directory with fasta files}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if NULL, only a data frame is returned}
+\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 
 \item{sep}{separator in csv files; default: ","}
 
 \item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
 
-\item{update_asv_list}{\link{T/F}; If TRUE, write a new file (columns:asv_id, asv) completed with new ASVs}
+\item{updated_asv_list}{name of the output file, containing the updated ASVs. Optional.}
 }
 \description{
 Read all fasta file in sortedinfo_df data frame (sample	replicate	file name).

@@ -8,7 +8,7 @@ Complete the stat_df with the above statistics.}
 get_stat(read_count_df, stat_df, stage, params = NA)
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
+\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{stat_df}{data frame with the following variables: parameters, asv_count, read_count, read_count, sample_count, sample_replicate_count}
 

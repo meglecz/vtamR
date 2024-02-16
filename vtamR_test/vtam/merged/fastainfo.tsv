@@ -1,0 +1,13 @@
+run	marker	sample	replicate	tagfwd	primerfwd	tagrev	primerrev	mergedfasta
+plate1	MFZR	tpos1	1	tcgatcacgatgt	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_1_fw.fasta
+plate1	MFZR	tnegtag	1	agatcgtactagct	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_1_fw.fasta
+plate1	MFZR	14ben01	1	gtcgatcatgtca	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_1_fw.fasta
+plate1	MFZR	14ben02	1	catcgagtagag	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_1_fw.fasta
+plate1	MFZR	tpos1	2	tcgatcacgatgt	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_2_fw.fasta
+plate1	MFZR	tnegtag	2	agatcgtactagct	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_2_fw.fasta
+plate1	MFZR	14ben01	2	gtcgatcatgtca	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_2_fw.fasta
+plate1	MFZR	14ben02	2	catcgagtagag	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_2_fw.fasta
+plate1	MFZR	tpos1	3	tcgatcacgatgt	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_3_fw.fasta
+plate1	MFZR	tnegtag	3	agatcgtactagct	TCCACTAATCACAARGATATTGGTAC	tgtcgatctacagc	WACTAATCAATTWCCAAATCCTCC	mfzr_3_fw.fasta
+plate1	MFZR	14ben01	3	gtcgatcatgtca	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_3_fw.fasta
+plate1	MFZR	14ben02	3	catcgagtagag	TCCACTAATCACAARGATATTGGTAC	acatcgacgtacg	WACTAATCAATTWCCAAATCCTCC	mfzr_3_fw.fasta
