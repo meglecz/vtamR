@@ -7,7 +7,7 @@ library("devtools")
 library("roxygen2")
 library("seqinr") # splitseq for FilterCodonStop
 library("dplyr")
-library("tidyr") # gather for read_asv_table
+library("tidyr") # gather for read_asv_table; pivot_wider in write_asvtable
 library("utils") # to handle zipped files
 #library("Biostrings")
 
@@ -42,7 +42,7 @@ if(computer == "Bombyx"){
 #  fastqdir <- "local/fastq/"
   fastqdir <- "vtamR_test/data/"
   fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
-  outdir <- "vtamR_test/out/"
+  outdir <- "vtamR_test/out_zfzr/"
   num_threads=8
   compress = T
 }else if (computer == "Windows"){
@@ -101,7 +101,7 @@ usethis::use_roxygen_md() # rebuild the help files
 #test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
 #test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 #test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
-#taxassign_comaraison <- test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy)
+#test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
 #test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 
 
@@ -181,7 +181,7 @@ sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, ou
 ###
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
-updated_asv_list <- sub("\\.", "_updated_2024_02_15.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+updated_asv_list <- sub("\\.", "_updated_2024_02_19.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
 read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list, updated_asv_list=updated_asv_list)
 read_count_df_backup <- read_count_df
 read_count_df <- read_count_df_backup
@@ -195,7 +195,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
-outfile <- paste(outdir, "2_swarm.csv", sep="")
+outfile <- paste(outdir, "2_Swarm.csv", sep="")
 read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
@@ -207,7 +207,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
 # However, if you have many large data sets, the file will grow quickly that can cause memory issues. 
 # A quite safe solution is to updates the asv_list after swarm, since swarm has eliminated the majority of the rare ASVs that will be unlikely to be seen among validates ASVs in further runs.
 ###
-#updated_asv_list <- sub("\\.", "_updated_2024_02_15.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+#updated_asv_list <- sub("\\.", "_updated_2024_02_19_after_swarm.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
 #update_asv_list(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 
 
@@ -325,51 +325,53 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, outfile=ou
 ###
 ### TaxAssign
 ###
-asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
-# write the list of ASV and their taxonomic assignment
-write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
+outfile <- paste(outdir, "15_TaxAssign.csv", sep="")
+asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
 
 
 ###
 ### print output files
 ###
 # write sequence and variant counts after each step
-write.csv(stat_df, file = paste(outdir, "count_stat.csv", sep=""))
-# long format, each line corresponds to an occurrence ()
-write.csv(read_count_samples_df, file = paste(outdir, "Final_asvtable_long.csv", sep=""), row.names=F)
+write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
+# long format, each line corresponds to an occurrence (); if csv files are written at each step, this is not usefull
+#write.csv(read_count_samples_df, file = paste(outdir, "16_Final_asvtable_long.csv", sep=""), row.names=F)
 # wide format (ASV table), samples are in columns, ASVs in lines
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
+fileinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
 write_asvtable(read_count_samples_df, outfile=outfile, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 # write ASV table completed by taxonomic assignments
 outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
 write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, fileinfo=fileinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 
+
 # start optimize from almost unfiltered data (after eliminating ASV with low global reads count)
-#LFN_global_read_count_out <- paste(outdir, "LFN_global_read_count.csv", sep="")
-optimize_read_count_df <- read_count_df_swarm_by_sample %>%
-  ungroup()
-#optimize_read_count_df <- read.csv(LFN_global_read_count_out, sep=sep)
-dim(optimize_read_count_df)
+file <- paste(outdir, "2_Swarm.csv", sep="")
+read_count_df <- read.csv(file, sep=sep)
+dim(read_count_df)
 ###
 ### OptimizePCRError
 ###
-optimize_dir = paste(outdir, "optimize", sep="")
-max_mismatch=2
-OptimizePCRError(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir, max_mismatch=1, min_read_count=10)
+outfile <- paste(outdir, "OptimizePCRError.csv", sep="")
+OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile, max_mismatch=1, min_read_count=10)
 
 ###
 ### OptimizeLFNsampleReplicate
 ###
-OptimizeLFNsampleReplicate(optimize_read_count_df, mock_composition=mock_composition, sep=sep, outdir=optimize_dir)
+outfile = paste(outdir, "OptimizeLFNsampleReplicate.csv", sep="")
+OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile)
 
 ###
 ### Make known occurrences
 ###
+file <- paste(outdir, "14_PoolReplicates.csv", sep="")
+read_count_samples_df <- read.csv(file, sep=sep)
+fileinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
 known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
 missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
 habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
-make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_composition=mock_composition, sep=sep, out=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
+TP_df <- make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
 
 
 ###
@@ -410,7 +412,7 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=
 asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
 # write the list of ASV and their taxonomic assignment
 write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
-fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/fileinfo.csv"
+fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/sortedinfo.csv"
 write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 

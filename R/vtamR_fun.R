@@ -1668,3 +1668,947 @@ PoolReplicates <- function(read_count_df, digits=0, outfile="", sep=","){
   }
   return(read_count_samples_df)
 }
+
+
+#' TaxAssign
+#' 
+#' Find LTG for each asv in the input dataframe
+#'  
+#' @param df a data frame containing and asv column
+#' @param ltg_params_df data frame with a list of ercentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)
+#' @param taxonomy file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @param blast_db BLAST database
+#' @param blast_path path to BLAST executable
+#' @param outdir name of the output directory
+#' @param num_threads Number of CPUs
+#' @param outfile Name of the output csv file with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres; if no file name provided, only a data frame is returned
+#' @export
+#'
+TaxAssign <- function(df, ltg_params_df="", taxonomy="", blast_db="", blast_path="", outfile="", num_threads=1){
+#  df <- read_count_samples_df
+  # default value for ltg_params_df
+  if(nrow(ltg_params_df)==0){
+    ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
+                                pcov=c(70,70,70,70,70,70),
+                                phit=c(70,70,70,70,70,70),
+                                taxn=c(1,1,2,3,4,4),
+                                seqn=c(1,1,2,3,4,4),
+                                refres=c(8,8,8,7,6,6),
+                                ltgres=c(8,8,8,8,7,7)
+    )
+  }
+  
+  #### Read taxonomy info 
+  # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
+  tax_df <- read.delim(taxonomy, header=T, sep="\t", fill=T, quote="")
+  # make data frame with old taxids as line numbers and taxids in a columns
+  old_taxid <- tax_df %>%
+    filter(!is.na(old_tax_id)) %>%
+    select(tax_id, old_tax_id)
+  # delete old_tax_ids from tax_df and make taxids unique
+  tax_df <- tax_df %>%
+    select(-old_tax_id)
+  tax_df <- unique(tax_df)
+  
+  ####
+  # create a tmp directory for temporary files using time and a random number
+  outdir_tmp <- paste('tmp_TaxAssign_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  ### run blast and clean/complete results
+  # run blast and read read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
+  blast_res <- run_blast(df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=num_threads)
+  # add update old taxids to valid ones
+  blast_res <- update_taxids(blast_res, old_taxid)
+  # add taxlevel
+  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
+    select(-parent_tax_id, -rank, -name_txt)
+  
+  ### make a lineage for each taxid in blastres
+  lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
+  # initialize data frame with asv and NA for all other cells
+  unique_asv_df <- df %>%
+    ungroup() %>%
+    select(asv_id, asv) %>%
+    unique()
+  taxres_df <- data.frame(asv_id = unique_asv_df$asv_id, ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA, asv = unique_asv_df$asv)
+  for(i in 1:nrow(taxres_df)){ # go through all sequences 
+    for(p in 1:nrow(ltg_params_df)){ # for each pid
+      pidl <- ltg_params_df[p,"pid"]
+      pcovl <- ltg_params_df[p,"pcov"]
+      phitl <- ltg_params_df[p,"phit"]
+      taxnl <- ltg_params_df[p,"taxn"]
+      seqnl <- ltg_params_df[p,"seqn"]
+      refresl <- ltg_params_df[p,"refres"]
+      ltgresl <- ltg_params_df[p,"ltgres"]
+      
+      # filter the blastres according to  pid, pcov, refres
+      df_intern <- blast_res %>%
+        filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
+      
+      # check if enough taxa and seq among validated hits
+      tn <- length(unique(df_intern$staxids))
+      if(tn >= taxnl & nrow(df_intern) >= seqnl ){
+        # make ltg if all conditions are met
+        ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
+        # fill out line with the ltg and the parmeters that were used to get it
+        taxres_df[i,2:(ncol(taxres_df)-1)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
+        break
+      } # end if
+    } # end p (pids)
+  } # end i (asvs)
+  
+  # get the ranked lineage for each taxid in taxres_df
+  ranked_lineages <- get_ranked_lineages(unique(taxres_df$ltg_taxid), tax_df)
+  # add lineage to taxres_df
+  taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
+    select(asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
+  # adjust resolution if it is higher than ltgres
+  taxres_df <- adjust_ltgres(taxres_df, tax_df)
+  # taxres_df data frame with the following columns: asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
+  # superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
+  # pcov,phit,taxn,seqn,refres,ltgres,asv
+  
+  # delete temporary  dir
+  unlink(outdir_tmp, recursive = TRUE)
+  
+  if(outfile != ""){
+    write.table(taxres_df, file = outfile,  row.names = F, sep=sep)
+  }
+  
+  return(taxres_df)
+}
+
+
+#' run_blast
+#' 
+#' Run BLAST
+#'  
+#' @param df a data frame containing and asv column
+#' @param blast_db BLAST DB incuding path
+#' @param blast_path path to BLAST executables
+#' @param outdir output directory
+#' @param qcov_hsp_perc minimum query coverage
+#' @param perc_identity minimum percentage of identity
+#' @param num_threads number of threads
+#' @export
+#'
+run_blast <- function(df, blast_db="", blast_path="", outdir="", qcov_hsp_perc=70, perc_identity=70, num_threads=8){
+  # outdir <- "tmp_TaxAssign_170833221377/"
+  # make fasta file with unique reads; use numbers as ids  
+  seqs <- unique(df$asv)
+  fas <- paste(outdir, 'unique.fas', sep="")
+  write_fasta(seqs, fas, seq_as_id=F)
+  # define the name of the output file
+  blast_out <- paste(outdir, 'blast.out', sep="")
+  
+  task = "megablast"
+  e = 1e-20
+  dust = "yes"
+  max_target_seqs=500
+  
+  #  blast <- paste(blast_path, "blastn -task ", task, " -db ",blast_db ," -query ",fas," -evalue ",e," -out ",blast_out," -outfmt '6 qseqid pident qcovhsp staxids' -dust ",dust," -qcov_hsp_perc ",qcov_hsp_perc," -perc_identity ",perc_identity," -num_threads ",num_threads," -max_target_seqs ",max_target_seqs, sep="")
+  blast <- paste(blast_path, "blastn -task ", task, " -db ",blast_db ," -query ",fas," -evalue ",e," -out ",blast_out,' -outfmt "6 qseqid pident qcovhsp staxids" -dust ',dust," -qcov_hsp_perc ",qcov_hsp_perc," -perc_identity ",perc_identity," -num_threads ",num_threads," -max_target_seqs ",max_target_seqs, sep="")
+  system(blast)
+  
+  # read BLAST results; take care of lines where there is several taxids in the staxids column (happens in ncbi nt)
+  blast_res <- read_blast_res(file=blast_out)
+  return(blast_res)
+}
+
+#' read_blast_res
+#' 
+#' Read BLAST result to a data frame; If more than one taxid for a hit, make a separate line for each taxid
+#' Return a data frame with the following columns: "qseqid","pident","qcovhsp","staxids"
+#'  
+#' @param file name of the output of BLAST; tab separated colums: qseqid,pident,qcovhsp,staxids
+#' @export
+#'
+read_blast_res <- function(file){
+  
+  blast_res <- read.delim(file, header=F, sep="\t", fill=T, quote="")
+  colnames(blast_res) <- c("qseqid","pident","qcovhsp","staxids") 
+  
+  # if BLAST against NCBI nt, the staxids can contain more than one taxids, separated by ";" => make a separate line for each
+  # This is a relatively rare case, so to avoid a long loop over each line, first select lined with multiple taxids, expand them and then pool the results with the other lines
+  # select lines with multiple taxids
+  blast_res$staxids <- as.character(blast_res$staxids)
+  df_multiple_taxids <- blast_res[grepl(";", blast_res$staxids),]
+  # select lines with single taxids
+  blast_res <- blast_res[!grepl(";", blast_res$staxids),]
+
+  # make as many lines as different taxids for each input line
+  df_multiple_taxids <- df_multiple_taxids %>%
+    rowwise() %>%
+    do(expand_rows(.))
+  # change tibble to data frame
+  df_multiple_taxids <- as.data.frame(df_multiple_taxids)
+  
+  # pool expanded and single taxid results
+  blast_res <- rbind(df_multiple_taxids, blast_res) %>%
+    arrange(qseqid, desc(pident))
+  
+  blast_res$staxids <- as.integer(blast_res$staxids)
+  return(blast_res)
+}
+
+#' expand_rows
+#' 
+#' split he taxid column to different taxids in the input dataframe
+#' Make one line for each taxid
+#' Return a data frame with the following columns: "qseqid","pident","qcovhsp","staxids"
+#'  
+#' @param row a row of a data frame with the following columns: qseqid,pident,qcovhsp,staxids
+#' @export
+#'
+expand_rows <- function(row){
+  staxids <- as.character(row$staxids)
+  taxids_list <- unlist(strsplit(staxids, ";"))
+  new_rows <- data.frame(
+    qseqid = rep(row$qseqid, length(taxids_list)),
+    pident = rep(row$pident, length(taxids_list)),
+    qcovhsp = rep(row$qcovhsp, length(taxids_list)),
+    staxids = as.integer(taxids_list)
+  )
+  return(new_rows)
+}
+
+
+#' update_taxids
+#' 
+#' Replaces old taxids by valid ones
+#'  
+#' @param df data frame with the following columns: qseqid,pident,qcovhsp,staxids
+#' @param old_taxid data frame with the following columns:  tax_id,old_tax_id
+#' @export
+#'
+
+update_taxids <- function(df, old_taxid){
+  # df is a data frame with the following columns: qseqid,pident,qcovhsp,staxids
+  # old_taxid is a data frame with the following columns:  tax_id,old_tax_id
+  
+  # replace old taxids (if any) in df by up to date ones 
+  df <- left_join(df, old_taxid, by=c("staxids" = "old_tax_id"))
+  df$staxids[which(!is.na(df$tax_id))] <- df$tax_id[which(!is.na(df$tax_id))]
+  # delete tax_id column since the values (if non NA were used to replace staxids)
+  df <- df %>%
+    select(-tax_id)
+  return(df)
+}
+
+#' get_lineage_ids
+#' 
+#' Get the complete taxonomic lineage of each taxID in the input vector; return taxIDs of each taxa in the lineage
+#'  
+#' @param taxids vector taxIDs (taxonomic IDs)
+#' @param tax_df data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @export
+#'
+get_lineage_ids <- function(taxids, tax_df){
+  
+  # taxids is a vector of taxids; there can be duplicated values
+  lineages <- as.data.frame(taxids)
+  colnames(lineages) <- c("tax_id")
+  
+  i <- 1 # i is the number of itaration. µIt should stop, if all lineages arrived to the root
+  while(i < 100){
+    # use i as name instead of tax_id
+    new_colname <- as.character(i)
+    # add parent_tax_id and rename columns
+    lineages <- left_join(lineages, tax_df, by="tax_id")%>%
+      select(-rank, -name_txt, -taxlevel) %>%
+      # !! = interpret the variable
+      rename(!!new_colname :=tax_id, "tax_id"=parent_tax_id)
+    
+    i <- i+1
+    # stop if all lines has the same value (usually 1)
+    tid_list <- unique(lineages$tax_id)
+    if(length(tid_list) == 1 && tid_list[1] ==1){
+      break
+    }
+  }
+  # delete the last column, where all values are 1
+  lineages <- lineages %>%
+    select(-tax_id)
+  # reverse order of columns
+  lineages <- lineages[, ncol(lineages):1]
+  # Apply the function to each row of the lineages data frame: 
+  # delete all 1, shift the remaining elements of each row to the beginning, 
+  # and replace missing values at the end of the row by NA
+  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row)))
+  # add as a first column the taxid, so they can be easily accessed
+  lineages <- cbind(taxids, lineages)
+  
+  return(lineages)
+}
+
+#' delete_1_by_row
+#' 
+#' Delete all 1 from the beginning of a raw , shift the other values and replace de missing ones at the end by NA
+#'  
+#' @param row vector
+#'
+delete_1_by_row <- function(row) {
+  
+  n <- length(row) 
+  # Remove all occurrences of 1
+  row <- row[row != 1]
+  
+  # Create a new row with NA at the end
+  new_row <- c(row, rep(NA, n - length(row)))
+  
+  return(new_row)
+}
+
+#' make_ltg
+#' 
+#' Determine the Lowest Taxonomic Group (LTG) that contains phit percentage of the input taxids
+#'  
+#' @param taxids vector taxIDs (taxonomic IDs); there can be duplicated values
+#' @param lineages data frame: taxids in the first column followed by their lineages represented by taxids (starting at the lowest resolution)
+#' @param phit Percentage of hit that should be included to the LTG; 70 by default
+#' @export
+#'
+make_ltg <- function(taxids, lineages, phit=70){
+  # taxids is a vector of taxids; there can be duplicated values
+  # make a data frame from the vector
+  lin <- as.data.frame(taxids)
+  colnames(lin) <- c("staxid")
+  
+  # add lineage to each taxid
+  lin <- left_join(lin, lineages, by=c("staxid" = "taxids")) %>%
+    select(-where(~all(is.na(.)))) # delete columns if all elements are NA
+  
+  ltg <- NA
+  if(length(unique(lin$staxid)) == 1){ # only one taxid among hits; avoid loops
+    ltg <-lin$staxid[1]
+  }else{
+    for(i in 2:ncol(lin)){ # start from low resolution
+      tmp <- as.data.frame(lin[,i])
+      colnames(tmp) <- c("tax_id")
+      # get unique taxids, and their numbers in the i-th column
+      tmp <- tmp %>%
+        group_by(tax_id) %>%
+        summarize(nhit=length(tax_id)) %>%
+        arrange(desc(nhit))
+      
+      # if the taxid with the highest number of sequences does not contain at least phit percent of the hits, stop
+      max_hitn <- as.numeric(tmp[1,"nhit"])
+      if(is.na(tmp[1,"tax_id"])){ # the most frequent "taxid" is NA
+        break
+      }
+      if(max_hitn/sum(tmp[,"nhit"]) < phit/100){# the most frequent taxid has less than phit%
+        break
+      }
+      ltg <- as.numeric(tmp[1,"tax_id"])
+      
+    }
+  }
+  return(ltg)
+}
+
+#' get_ranked_lineages
+#' 
+#' Returns  a data frame with the ranked lineages of taxids (columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
+#' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,
+#' family_taxid,family,genus_taxid,genus,species_taxid,species,)
+#'  
+#' @param taxids vector of taxIDs
+#' @param tax_df data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @export
+#'
+get_ranked_lineages <- function(taxids, tax_df){
+  
+  # taxids is a vector of taxids; there can be duplicated values
+  ranked_lineages <- as.data.frame(taxids)%>%
+    filter(!is.na(taxids)) %>%
+    rename(tax_id=taxids)
+  # make tmp data frame to keep a list of taxids
+  tmp <- ranked_lineages
+  # make tmp_lin data frame to keep a list of taxids and the lineage of each taxid (including, names, taxid, taxlevel)
+  tmp_lin <- ranked_lineages
+  
+  # define first colums, with taxid, name, taxlevel
+  ranked_lineages <- left_join(ranked_lineages, tax_df, by="tax_id")%>%
+    select(-parent_tax_id)%>%
+    rename(ltg_taxid=tax_id, ltg_name=name_txt, ltg_rank=rank, ltg_rank_index=taxlevel) %>%
+    select(ltg_taxid, ltg_name, ltg_rank, ltg_rank_index)
+  # add columns for each major taxlevel (taxid and name)
+  now_cols <- c(
+    "superkingdom_taxid", "superkingdom",
+    "kingdom_taxid", "kingdom",
+    "phylum_taxid", "phylum",
+    "class_taxid", "class",
+    "order_taxid", "order",
+    "family_taxid", "family",
+    "genus_taxid", "genus",
+    "species_taxid", "species"
+  )
+  ranked_lineages[now_cols] <- NA
+  
+  # get linegaes of each taxid
+  i <- 1
+  while(i < 100){
+    # get the tax name, and tax rank for each taxid
+    tmp <- left_join(tmp, tax_df, by="tax_id")
+    # tock info in tmp_lin
+    tmp_lin <- cbind(tmp_lin, tmp$tax_id, tmp$name_txt, tmp$rank )
+    # re-initilize tmp
+    tmp <- tmp %>%
+      select(parent_tax_id)%>%
+      rename(tax_id=parent_tax_id)
+    # stop if all linage ends with root
+    if(all(tmp$tax_id ==1)){
+      break
+    }
+    i<- i+1
+  }
+  
+  # select only major taxonomic ranks from each line of tmp_lin; keep the results in ranked_lineages
+  for (c in seq(from=6, to=ncol(ranked_lineages), by=2)) {# go though all major taxlevel
+    taxrank <- colnames(ranked_lineages[c])
+    for (i in 1:nrow(tmp_lin)) {
+      row <- tmp_lin[i, ]  # Extract the current row
+      col_index <- which(row == taxrank)  # Find the column index containing "species"
+      
+      if (length(col_index) > 0) {
+        # Add taxon name and taxid to ranked_lineages
+        ranked_lineages[i,c-1] <- tmp_lin[i,col_index-2]
+        ranked_lineages[i,c] <- tmp_lin[i,col_index-1]
+      }
+    }
+  }
+  return(ranked_lineages)
+}
+
+#' adjust_ltgres
+#' 
+#' If the ltg has a higher resolution than the ltgres parameter, adjust the ltg and stop lineage at ltgres level; Returns the adjusted data frame
+#'  
+#' @param taxres_df data frame with the following columns: asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
+#' superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
+#' pcov,phit,taxn,seqn,refres,ltgres,asv
+#' @param tax_df data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
+#' @export
+#'
+adjust_ltgres <- function(taxres_df, tax_df){
+  
+  # link taxlevel index and tax rank
+  taxlevel_index = data.frame(taxlevel_index=c(1,2,3,4,5,6,7,8),
+                              taxrank=c("superkingdom","kingdom","phylum","class","order","family","genus","species")
+  )
+  
+  # add the name of the tax rank equivalent to the index in ltgref
+  taxres_df <- left_join(taxres_df, taxlevel_index, by=c("ltgres" = "taxlevel_index"))
+  
+  for(i in 1:nrow(taxres_df)){ # all rows
+    
+    if(!is.na(taxres_df[i,"ltg_taxid"]) & taxres_df[i,"ltg_rank_index"] > taxres_df[i,"ltgres"]){ # if resolution of ltg is higher then ltgres
+      # get the taxrank that corresponds to ltgres 
+      tl <- taxres_df[i,"taxrank"]
+      # get the index of the column that corresponds to the ltgres
+      col_index <- which(colnames(taxres_df) == tl)
+      # make a data frame with taxid, and get taxinfo from tax_df
+      new_taxid <- as.data.frame(taxres_df[i, col_index-1]) 
+      colnames(new_taxid) <- c("tax_id")
+      new_taxid <- left_join(new_taxid, tax_df, by="tax_id") %>%
+        select(tax_id, name_txt, rank, taxlevel)
+      
+      # replace ltg taxid and associated info
+      taxres_df[i, 2:5] <- new_taxid[1,]
+      # replace tax lineage over the ltgref by NA
+      taxres_df[i, (col_index+1):(ncol(taxres_df)-9)] <- NA
+    }# end if
+  }# end for i
+  
+  taxres_df <- taxres_df %>%
+    select(-taxrank)
+  
+  return(taxres_df)
+}
+
+#' Write ASV table
+#' 
+#' Samples in columns, ASVs in lines
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv_id, sample, read_count, asv
+#' @param outfile name of the output csv file including path
+#' @param asv_tax optional: data frame with taxonomic assignments
+#' @param fileinfo tsv file with columns: sample, sample_type, habitat, replicate, file; only necessary if add_empty_samples==T or add_expected_asv==T
+#' @param add_empty_samples [T/F] add a column for each samples in the original data set, even if they do not have reads after filtering
+#' @param add_sums_by_sample [T/F] add a line with the total number of reads in each sample, and another with the number of ASVs in each sample
+#' @param add_sums_by_asv [T/F] add a column with the total number of reads for each ASV, and another with the number of samples, where the ASV is present
+#' @param add_expected_asv [T/F] add a column for each mock sample where keep and tolerate ASVs are marked
+#' @param mock_composition csv file with the following columns: sample,action,asv; action can take the following values: keep/tolerate; only necessary if add_expected_asv==T
+#' @param sep separator used in the I/O csv files
+#' @export
+#'
+write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
+  
+  # make a wide data frame with samples in columns, ASVs in lines
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(sample), values_from = mean_read_count, values_fill=0, names_sep = ".", names_sort=T))
+  # put the asv column at the end
+#  wide_read_count_df <- wide_read_count_df[, c(colnames(wide_read_count_df)[-2], colnames(wide_read_count_df)[2])]
+  
+  # read the fileinfo to a data frame 
+  if(add_empty_samples | add_expected_asv){
+    fileinfo_df <- read.csv(fileinfo, header=T, sep=sep)
+  }
+  
+  
+  if(add_empty_samples){
+    # make vector with samples already in the data frame (asv_id and asv is also on the list, but it is not a pb)
+    samples <- colnames(wide_read_count_df)
+    # number of ASVs
+    n <- nrow(wide_read_count_df)
+    
+    # make a vector with all unique samples in the fileinfo
+    all_samples <-unique(fileinfo_df$sample)
+    
+    # add a column for each samples that are not yet in the data frame, with 0 read counts for all variants
+    for(sample in all_samples){
+      if(!(sample %in% samples)){
+        wide_read_count_df[[sample]] <- rep(0, n)
+      }
+    }
+  }
+  
+  # add a line with the total number of reads of each sample and another with the number of ASVs in the sample
+  if(add_sums_by_sample){
+    
+    # make a data frame with same columns as wide_read_count_df
+    sum_rc <- data.frame(matrix(0, nrow=2, ncol= ncol(wide_read_count_df)))
+    colnames(sum_rc) <- colnames(wide_read_count_df)
+    #  and total number of reads in line 1 
+    sum_rc[1,1] <- "Total number of reads" # asv_id col
+    sum_rc[1,2] <- NA # asv col
+    # total number of reads for each sample (ignore cols 1 and 2, since it is asv_id ans asv)
+    sum_rc[1,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)])
+    # Number of ASVs in each sample in line 2
+    sum_rc[2,1] <- "Number of ASVs"
+    sum_rc[2,2] <- NA # asv col
+    sum_rc[2,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)] != 0)
+    wide_read_count_df <- rbind(sum_rc, wide_read_count_df)
+  }
+  
+  # add sum of read count and the number of occurrences for each asv
+  if(add_sums_by_asv){
+    # count the total number of reads for each asv and add a column
+    wide_read_count_df$Total_number_of_reads <- rowSums(wide_read_count_df[,-c(1,2)])
+    wide_read_count_df$Total_number_of_reads[2] <- NA # This is the sum of number of ASVs per sample, Does not make much sens
+    
+    # count the number of samples where the ASV is present
+    tmp <- read_count_samples_df %>%
+      group_by(asv) %>%
+      summarize(Number_of_samples=length(sample))
+    # add sample count to wide_read_count_df
+    wide_read_count_df <- full_join(wide_read_count_df, tmp, by="asv")
+  }
+  
+  if(add_expected_asv){
+    
+    # keep only mock samples in fileinfo_df
+    fileinfo_df <- fileinfo_df %>%
+      filter(sample_type=="mock")
+    # make a vector with all unique samples in the fileinfo
+    mock_samples <-unique(fileinfo_df$sample)
+    
+    # keep only keep and tolerate action, in case the file contains other lines 
+    mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
+      filter(action=="keep" || action=="tolerate")
+
+    # add a column for each mock samples with keep or tolerate if relevent for each ASV 
+    for(mock in mock_samples){
+      # make a df containing only data for a given mock sample
+      df <- mock_asv %>%
+        filter(sample==mock) %>%
+        select(action,asv)
+      
+      # add action to wide_read_count_df
+      new_colname <- paste("action", mock,  sep=".")
+      wide_read_count_df <- left_join(wide_read_count_df, df, by="asv") %>%
+        rename_with(~new_colname, action)
+    }
+  }
+  
+  if(!is.null(asv_tax)){ # df with taxonomic assignation is given
+    asv_tax$asv_id <- as.character(asv_tax$asv_id)
+    wide_read_count_df$asv_id <- as.character(wide_read_count_df$asv_id)
+    wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by=c("asv", "asv_id"))
+  }
+  
+  # put the asv column at the end
+  wide_read_count_df <- wide_read_count_df %>%
+    select(-asv, everything(), asv)
+#  wide_read_count_df <- wide_read_count_df[, c(colnames(wide_read_count_df)[-2], colnames(wide_read_count_df)[length(colnames(wide_read_count_df))])]
+  write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
+  
+}
+
+
+#' OptimizePCRError
+#' 
+#' Prepare a data frame that lists pairs of expected and unexpected ASVs in mock samples maximum max_mismatch difference between them.
+#' The pcr_error_var_prop parameter should be above the highest pcr_error_var_prop  (unexpected_read_count/expected_read_count) value in the table.
+#'  
+#' @param read_count_df data frame with the following variables: asv_id, sample, replicate, read_count, asv
+#' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
+#' @param sep separator used in mock_composition
+#' @param outfile name of the output file; Optional; If empty the results are not written to a file
+#' @param max_mismatch maximum number of mismatches allowed between two asv where one of the asvs is considered as a PCRerror
+#' @param min_read_count occurrences under this read_count limits are ignored
+#' @export
+#'
+
+OptimizePCRError <- function(read_count_df, mock_composition="", sep=",", outfile="", max_mismatch=1, min_read_count=2){
+
+  outdir_tmp <- paste('tmp_OptimizePCRError_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  # read the mock composition file and keep only lines with keep and tolerate
+  mock_composition_df <- read.csv(mock_composition, header=T, sep=sep) %>%
+    filter(action=="keep" | action=="tolerate")
+  unique_mock_list <- unique(mock_composition_df$sample)
+  
+  # sum read_counts over replicates 
+  df <- read_count_df %>%
+    group_by(sample, asv, asv_id) %>%
+    summarize(read_count_sample=sum(read_count), .groups="drop_last") %>%
+    filter(read_count_sample >=min_read_count) %>%
+    filter(sample %in% unique_mock_list)
+  
+  # define an empty data frame for the output
+  asv_pairs <- data.frame(
+    sample= character(),
+    expected_read_count= numeric(),
+    unexpected_read_count= numeric(),
+    pcr_error_var_prop= numeric(),
+    expected_asv_id= numeric(),
+    unexpected_asv_id= numeric(),
+    expected_asv= character(),
+    unexpected_asv= character())
+  ###
+  # loop over all mock samples
+  ###
+  for(mock in unique_mock_list){
+    # get the list of keep ASV in the given mock sample from mock_composition
+    tmp_mock <- mock_composition_df %>%
+      filter(sample==mock) %>%
+      filter(action=="keep")
+    asv_list_keep <- unique(tmp_mock$asv)
+    # make fasta file with unique mock variants; use sequences as ids
+    fas_keep <- paste(outdir_tmp, mock, "_keepASV.fas", sep="")
+    write_fasta(asv_list_keep, fas_keep, seq_as_id=T)
+    
+    # get the list of tolerate ASV in the given mock sample from mock_composition
+    tmp_mock <- mock_composition_df %>%
+      filter(sample==mock) %>%
+      filter(action=="tolerate")
+    asv_list_tolerate <- unique(tmp_mock$asv)
+    
+    # get list of ASVs present in the mock sample in read_count_df that they are neither keep nor tolerate 
+    tmp <- df %>%
+      filter(sample==mock) %>%
+      filter(!(asv %in% asv_list_keep)) %>%
+      filter(!(asv %in% asv_list_tolerate))
+    asv_list_delete <- unique(tmp$asv)   
+    # make fasta file with unique variants that are neither keep nor tolerate in mock; use sequences as ids
+    fas_delete <- paste(outdir_tmp, mock, "_deleteASV.fas", sep="")
+    write_fasta(asv_list_delete, fas_delete, seq_as_id=T)
+    
+    # vsearch --usearch_global to find highly similar sequence pairs
+    vsearch_out <- paste(outdir_tmp, mock, '_vsearch_out.out', sep="")
+    #    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
+    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
+    #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
+    system(vsearch)
+    
+    
+    if(file.size(vsearch_out) == 0){
+      # Delete the temp directory
+      unlink(outdir_tmp, recursive = TRUE)
+    }else{
+      # read vsearch results
+      results_vsearch<- read.csv(vsearch_out, header = FALSE, sep="\t")
+      colnames(results_vsearch) <- c("query","target","nb_ids","aln")
+      # none of the values easily outputted by vsearch take into the external gaps as a diff => correct this, based on the alnlen and the number of identities
+      results_vsearch$nb_diff <- nchar(results_vsearch$aln) - results_vsearch$nb_ids
+      # keep only pairs with 1 difference 
+      results_vsearch <- results_vsearch %>%
+        filter(nb_diff <= max_mismatch)
+      # delete unnecessary columns and add plate, marker, sample
+      results_vsearch <- select(results_vsearch, -c(nb_ids, aln, nb_diff))
+      if(nrow(results_vsearch) == 0){
+        break
+      }
+      
+      results_vsearch$sample <- rep(mock, nrow(results_vsearch))
+      # add read_counts to results_vsearch
+      results_vsearch <- rename(results_vsearch, asv = target)
+      results_vsearch <- left_join(results_vsearch, df, by=c("sample", "asv")) 
+      results_vsearch <- results_vsearch %>%
+        select(sample, expected_read_count = read_count_sample, expected_asv = asv, expected_asv_id = asv_id, query)
+      
+      results_vsearch <- rename(results_vsearch, asv = query)
+      results_vsearch <- left_join(results_vsearch, df, by=c("sample", "asv"))
+      results_vsearch <- results_vsearch %>%
+        select(sample, expected_read_count, unexpected_read_count = read_count_sample, expected_asv_id,  unexpected_asv_id = asv_id, expected_asv, unexpected_asv = asv)      
+      
+      # delete row if the expected variant is non in sample
+      results_vsearch <- results_vsearch %>%
+        filter(!is.na(expected_read_count))
+      
+      results_vsearch$pcr_error_var_prop <- results_vsearch$unexpected_read_count / results_vsearch$expected_read_count
+      results_vsearch <- results_vsearch %>%
+        arrange(desc(pcr_error_var_prop)) %>%
+        select(sample, expected_read_count, unexpected_read_count, pcr_error_var_prop, expected_asv_id, unexpected_asv_id, expected_asv, unexpected_asv)
+      # append results to existing asv_pairs
+      asv_pairs <- rbind(asv_pairs, results_vsearch)
+    }
+  }
+  ###
+  # end loop 
+  ### 
+  
+  asv_pairs <- asv_pairs %>%
+    arrange(desc(pcr_error_var_prop))
+  
+  # Delete the temp directory
+  unlink(outdir_tmp, recursive = TRUE)
+  
+  if(outfile != "")
+  {
+    write.table(asv_pairs, file=outfile, sep=sep, row.names = F)
+  }
+  return(asv_pairs)
+}
+
+#' OptimizeLFNsampleReplicate
+#' 
+#' Prepare a data frame that lists all expected occurrences in all mock sample replicates their read_counts and the proportion of 
+#' read_counts to the total number of reads in the sample-replicate. 
+#' The lfn_variant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
+#'  
+#' @param read_count_df data frame with the following variables: asv_id, plate, marker, sample, replicate, read_count, asv
+#' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
+#' @param sep separator used csv files
+#' @param outfile name of the output file; Optional; If empty the results are not written to a file
+#' @export
+#'
+
+OptimizeLFNsampleReplicate <- function(read_count_df, mock_composition="", sep=",", outfile=""){
+  
+  # read the mock composition file and keep only lines with keep
+  mock_composition_df <- read.csv(mock_composition, header=T, sep=sep) %>%
+    filter(action=="keep")
+  if("asv_id" %in% colnames(mock_composition_df )){ # there is a asv_id column in mock_composition => delete it
+    mock_composition_df <- mock_composition_df %>%
+    select(-asv_id)
+  }
+
+  
+  # get a complete and unique list of sample, replicate
+  sample_replicate_list <- read_count_df %>%
+    ungroup() %>%
+    select(sample, replicate) %>%
+    unique
+  
+  # add replicate to mock_composition
+  mock_composition_df <- left_join(mock_composition_df, sample_replicate_list, by=c("sample"), relationship = "many-to-many")
+  unique_asv_keep <-  unique(mock_composition_df$asv)
+  
+  # get the total number of reads for each sample replicate for the mocks
+  sample_replicate_rc <- read_count_df %>%
+    group_by(sample, replicate) %>%
+    summarize(read_count_sample_replicate= sum(read_count), .groups="drop_last") %>%
+    filter(sample %in% mock_composition_df$sample)
+  
+  # sum read_counts over replicates 
+  asv_keep_df <- left_join(mock_composition_df, read_count_df, by=c("sample", "replicate", "asv"))
+  asv_keep_df <- left_join(asv_keep_df, sample_replicate_rc, by=c("sample", "replicate"))
+  asv_keep_df$lfn_sample_replicate_cutoff <- asv_keep_df$read_count/asv_keep_df$read_count_sample_replicate
+  asv_keep_df$lfn_sample_replicate_cutoff <- round(asv_keep_df$lfn_sample_replicate_cutoff-0.00005, digits=4)
+  
+  asv_keep_df <- asv_keep_df %>%
+    arrange(lfn_sample_replicate_cutoff) %>%
+    select(sample, replicate, action, asv_id, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff, asv, everything())
+  
+  if(outfile != ""){
+    write.table(asv_keep_df, file=outfile, sep=sep, row.names = F)
+  }
+  return(asv_keep_df)
+}
+
+
+#' make_known_occurrences
+#' 
+#' Prepare a file that list all occurrences that are clearly a TP (expected variants in mock) or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
+#' returns a data frame with the number of False Positives, False Negatives, True Positives
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv_id, plate, marker, sample, read_count, asv
+#' @param fileinfo csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)
+#' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
+#' @param sep separator used in csv files
+#' @param known_occurrences name of the output file containing known occurrences (TP in mock, and FP)
+#' @param missing_occurrences name of the output file containing the missing occurrences (FN); file is written if only the name has been specified
+#' @param habitat_proportion for each asv, if the proportion of reads in a habitat is below this cutoff, it is considered as an artifact in all samples of the habitat
+#' @export
+#' 
+
+make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_composition="", sep=",", known_occurrences="", missing_occurrences="", habitat_proportion=0.5){
+  # differs from original make_known_occurrences: return a DF with FP, FN, TP
+  
+  # read info on samples types and keep only relevant info
+  fileinfo_df <- read.csv(fileinfo, header=T, sep=sep) %>%
+    select(sample, sample_type, habitat)
+  # get unique lines to avoid replicates
+  fileinfo_df <- unique(fileinfo_df)
+  
+  # define data frame for known occurrences
+  occurrence_df <- read_count_samples_df
+  # add habitat and sample_type to occurrence_df
+  occurrence_df <- left_join(occurrence_df, fileinfo_df, by="sample")
+  # add action column
+  occurrence_df$action <- rep(NA, nrow(occurrence_df))
+  
+  # flag occurrences in negative control samples as delete
+  occurrence_df$action[which(occurrence_df$sample_type=="negative")] <- "delete"
+  # flag all expected occurrences in mock samples as "keep", NA for tolerate, and delete for all others
+  occurrence_df <- flag_from_mock(occurrence_df, mock_composition, fileinfo_df, sep=sep)
+  # flag occurrences as delete with low read count in habitat, compared to the other habitats
+  occurrence_df <- flag_from_habitat(occurrence_df, fileinfo_df, habitat_proportion=habitat_proportion) 
+  
+  # keep only relevant columns and lines, sort data
+  occurrence_df <- occurrence_df %>%
+    select(sample,action,asv_id,asv) %>%
+    filter(!is.na(action)) %>%
+    arrange(sample, action)
+  # write to outfile
+  write.table(occurrence_df, file=known_occurrences, row.names = F, sep=sep)
+  
+  # count the number of FP and expected TP
+  FP <- nrow(occurrence_df %>%
+               filter(action=="delete"))
+  TP <- nrow(occurrence_df %>%
+               filter(action=="keep"))
+  
+  # count the number of FN and write missing_occurrences, if filename is defined
+  FN <-make_missing_occurrences(read_count_samples_df, mock_composition=mock_composition, sep=sep, out=missing_occurrences)
+  # real TP is the expected occurrences - FN
+  TP <- TP - FN
+  count_df <- data.frame("TP" = c(TP),
+                         "FP" = c(FP),
+                         "FN" = c(FN))
+  return(count_df)
+}
+
+#' flag_from_mock
+#' 
+#' Flag all occurrences in mock samples. 
+#' Expected variants as 'keep', unexpected ASVs as 'delete', tolerate ASVs as NA. 
+#' Tolerate ASVs are ASVs that can be in the mock, but the filtering should not be optimized to keep them. (e.g. badly amplified species present in the mock)
+#'  
+#' @param occurrence_df data frame with the following variables: asv_id, sample, mean_read_count, asv, sample_type, habitat, action  
+#' @param fileinfo_df csv file with columns: sample, sample_type(mock/negative/real), habitat
+#' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
+#' @param sep separator used in csv files
+#' @export
+#' 
+flag_from_mock <- function(occurrence_df, mock_composition="", fileinfo_df, sep=","){
+  # read mock composition
+  mock_composition_df <- read.csv(mock_composition, header=T, sep=sep) %>%
+    rename(action_mock=action) %>%
+    select(-asv_id)
+  # add action_mock to occurrence_df; use full join, so expected ASV missing from occurrence_df will be added
+  occurrence_df <- full_join(occurrence_df, mock_composition_df, by=c("sample", "asv"))
+  # if expected ASV was missing from occurrence_df, complete the sample_type as mock
+  occurrence_df$sample_type[which(is.na(occurrence_df$sample_type) & occurrence_df$action_mock=="keep")] <- "mock"
+  # set the action to delete, keep or tolerate in function of the mock composition
+  occurrence_df$action[which((is.na(occurrence_df$action)) & occurrence_df$sample_type == "mock")] <- "delete"
+  occurrence_df$action[which(occurrence_df$action_mock =="keep")] <- "keep"
+  occurrence_df$action[which(occurrence_df$action_mock =="tolerate")] <- NA
+  # select original columns
+  occurrence_df <- occurrence_df %>%
+    select(asv_id, sample, mean_read_count, asv, sample_type, habitat, action)
+  
+  return(occurrence_df)
+}
+
+#' flag_from_habitat
+#' 
+#' Flag FP occurrences in samples based on the habitat the samples are from.
+#' All ASVs present in more than one habitat are checked. 
+#' For each of these ASVs, if the proportion of reads in a habitat is below a cutoff (habitat_proportion), 
+#' it is considered as an artifact in all samples of the habitat.
+#'  
+#' @param occurrence_df data frame with the following variables: asv, plate, marker, sample, mean_read_count, sample_type, habitat, action  
+#' @param fileinfo_df csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat
+#' @param habitat_proportion For each of ASVs, if the proportion of reads in a habitat is below this cutoff it is considered as an artifact in all samples of the habitat.
+#' @export
+#' 
+flag_from_habitat <- function(occurrence_df, fileinfo_df, habitat_proportion=0.5){
+  
+  # group by asv and habitat and count the total number of reads for each habitat-asv combination
+  tmp <- occurrence_df %>%
+    group_by(habitat, asv) %>%
+    summarize(habitat_read_count=sum(mean_read_count), .groups="drop_last") %>%
+    filter(!is.na(habitat))
+  
+  # count the number of habitats for each asv and keep only the ones present in at least two different habitats
+  tmp2 <- tmp %>%
+    group_by(asv) %>%
+    summarize(nb_habitat=length(asv)) %>%
+    filter(nb_habitat>1)
+  # keep only selected asvs in tmp
+  tmp <- tmp[tmp$asv %in% tmp2$asv, ]
+  # get the total readcount for each asv in tmp
+  tmp3 <- tmp %>%
+    group_by(asv) %>%
+    summarize(sum_read_count = sum(habitat_read_count))
+  # add total readcount of asv to tmp and keep only lines where the asv in a given habitat is less frequent than in the other habitats
+  tmp <- left_join(tmp, tmp3, by="asv")
+  tmp <- tmp[tmp$habitat_read_count/tmp$sum_read_count < 0.5, ]
+  # keep only pertinent columns in tmp and add hab_action column with "delete"
+  tmp <- tmp %>%
+    select(habitat, asv)
+  tmp$hab_action <- rep("delete", nrow(tmp))
+  
+  occurrence_df <- left_join(occurrence_df, tmp, by=c("habitat", "asv"))
+  occurrence_df$action[which(occurrence_df$hab_action=="delete")] <- "delete"
+  
+  occurrence_df <- occurrence_df %>%
+    select(-hab_action)
+  
+  return(occurrence_df)
+}
+
+#' make_missing_occurrences
+#' 
+#' Prepare a file that list all expected occurrences that are missing (False negatives)
+#'  
+#' @param read_count_samples_df data frame with the following variables: asv, plate, marker, sample, read_count
+#' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
+#' @param sep separator used in csv files
+#' @param out name of the output file
+#' @export
+#'
+make_missing_occurrences <- function(read_count_samples_df, mock_composition="", sep=",", out=""){
+  
+  # read mock composition to a df
+  mock_comp <- read.csv(mock_composition, header=T, sep=sep) %>%
+    filter(action=="keep") %>%
+    select(-asv_id)
+  # add mean_read_count to df from read_count_samples_df, and keep only if value is NA
+  df <- left_join(mock_comp, read_count_samples_df,  by=c("sample", "asv")) %>%
+    filter(is.na(mean_read_count)) %>%
+    select(-"mean_read_count")
+  
+  # write to outfile
+  if(out != ""){
+    write.table(df, file=out, row.names = F, sep=sep)
+  }
+  
+  FN <- nrow(df %>%
+               filter(action=="keep"))
+  return(FN)
+}
