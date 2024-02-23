@@ -21,10 +21,10 @@ if(computer == "Bombyx"){
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
     fastqdir <- "vtamR_test/data/"
-    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-    outdir <- "vtamR_test/out_zfzr/"
-    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-    asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+    fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
+    outdir <- "vtamR_test/out_mfzr/"
+    mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
+    asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
   #fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
   #fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
   #outdir <- "/home/meglecz/vtamR_large_files/out/"
@@ -102,7 +102,7 @@ usethis::use_roxygen_md() # rebuild the help files
 #test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 #test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
 #test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
-#test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+#test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
 
 
 ####
@@ -181,7 +181,7 @@ sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, ou
 ###
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
-updated_asv_list <- sub("\\.", "_updated_2024_02_19.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+updated_asv_list <- sub("\\.", "_updated_2024_02_23.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
 read_count_df <- read_fastas_from_fileinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list, updated_asv_list=updated_asv_list)
 read_count_df_backup <- read_count_df
 read_count_df <- read_count_df_backup
@@ -378,7 +378,7 @@ TP_df <- make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_c
 ### OptimizeLFNReaCountAndLFNvariant
 ###
 min_replicate_number=2
-lfn_sample_replicate_cutoff=0.004
+lfn_sample_replicate_cutoff=0.002
 pcr_error_var_prop=0.1
 
 min_lfn_read_count_cutoff=10
@@ -393,39 +393,23 @@ max_mismatch=1
 by_sample=T
 sample_prop=0.8
 min_replicate_number=2
-OptimizeLFNReadCountAndLFNvariant(optimize_read_count_df, known_occurrences=known_occurrences, sep=sep, outdir=optimize_dir, min_lfn_read_count_cutoff=lfn_read_count_cutoff, max_lfn_read_count_cutoff=max_lfn_read_count_cutoff, increment_lfn_read_count_cutoff=increment_lfn_read_count_cutoff, min_lnf_variant_cutoff=min_lnf_variant_cutoff, max_lnf_variant_cutoff=max_lnf_variant_cutoff, increment_lnf_variant_cutoff=increment_lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
-
-end_time <- Sys.time()  # Record the end time
-runtime <- end_time - start_time  # Calculate the run time
-print(runtime)
-
+outfile = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
+OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, sep=sep, outfile= outfile, min_lfn_read_count_cutoff=lfn_read_count_cutoff, max_lfn_read_count_cutoff=max_lfn_read_count_cutoff, increment_lfn_read_count_cutoff=increment_lfn_read_count_cutoff, min_lnf_variant_cutoff=min_lnf_variant_cutoff, max_lnf_variant_cutoff=max_lnf_variant_cutoff, increment_lnf_variant_cutoff=increment_lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
 
 
 ###
-# PoolReplicates
+# Pool different data sets
 ###
-digits = 0
-read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, write_csv=T, outdir=outdir, sep=sep)
-###
-# TaxAssign
-###
-asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outdir=outdir, num_threads=num_threads)
-# write the list of ASV and their taxonomic assignment
-write.csv(asv_tax, file = paste(outdir, "taxa.csv", sep=""), row.names = F)
-fileinfo <- "/home/meglecz/vtamR/vtamR_test/out_zfzr/sorted/sortedinfo.csv"
-write_asvtable(read_count_samples_df, outfile="vtamR_test/out_zfzr/asvtable_swarm_zfzr.csv", fileinfo=fileinfo, asv_tax=asv_tax, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
-
-
-###
-# Pool different datasets
-###
-files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv", "vtamR_test/out_zfzr/PoolReplicates.csv"),
+# to be updated!!!!!!!!!!!!!
+files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
                     marker=c("MFZR", "ZFZR"))
 
-files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
-                    marker=c("MFZR"))
+#files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
+#                    marker=c("MFZR"))
 
 read_count_pool <- pool_datasets(files, outdir=outdir, sep=sep, mean_over_markers=T, write_csv=T)
 
 
-
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)

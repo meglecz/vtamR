@@ -415,3 +415,165 @@ test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=b
     cat("TaxAssign: FAIL")
   }
 }
+
+#' test_make_known_occurrences
+#' 
+#' Run make_known_occurrences on a test file and compare the output to expected results
+#'  
+#' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
+#' @param sep separator in csv files
+#' @export
+#'
+
+test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=","){
+  # input dirs and files
+  test_dir <- check_dir(test_dir)
+  mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
+  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep= "")
+  input_mock_composition <- paste(test_dir, "test/input_test_known_occurrences.csv", sep="")
+  # read data for data frame
+  read_count_samples_df <- read.csv(input_mock_composition, sep=sep)
+  ### Add asv_id to read_count_samples_df
+  asv_unique <- read_count_samples_df %>%
+    select(asv) %>%
+    unique
+  asv_unique$asv_id <- rownames(asv_unique)
+  read_count_samples_df <- left_join(read_count_samples_df, asv_unique, by="asv")
+  ###
+  
+  # output dirs and filenames
+  outdir <- paste(test_dir, "out/", sep="")
+  outdir <- check_dir(outdir)
+  known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
+  missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
+  # params
+  habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
+  # run make_known_occurrences
+  TP_df <- make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
+  
+  # expected results
+  expected_known_occurrences <- paste(test_dir, "test/test_known_occurrences_out.csv", sep="")
+  expected_known_occurrences_df = read.csv(expected_known_occurrences, sep=sep)
+  expected_known_occurrences_df <- expected_known_occurrences_df %>%
+    arrange(sample,action,asv)
+  
+  expected_missing_occurrences <- paste(test_dir, "test/test_missing_occurrences_out.csv", sep="")
+  expected_missing_occurrences_df = read.csv(expected_missing_occurrences, sep=sep)
+  expected_missing_occurrences_df <- expected_missing_occurrences_df %>%
+    arrange(sample,action,asv)
+  
+  # read and arrange output
+  output_missing_occurrences_df = read.csv(missing_occurrences, sep=sep)
+  output_missing_occurrences_df <- output_missing_occurrences_df %>%
+    select(-asv_id) %>%
+    arrange(sample,action,asv)
+  
+  output_known_occurrences_df = read.csv(known_occurrences, sep=sep)
+  output_known_occurrences_df <- output_known_occurrences_df %>%
+    select(-asv_id) %>%
+    arrange(sample,action,asv)
+  
+  
+  missing <- identical(output_missing_occurrences_df, expected_missing_occurrences_df)
+  #   cat("\nOutput missing occurrences correspond to expected:")
+  #  print(identical(output_missing_occurrences_df, expected_missing_occurrences_df))
+  
+  known <- identical(output_known_occurrences_df, expected_known_occurrences_df)
+  #  cat("\nOutput known occurrences correspond to expected:")
+  #  print(identical(output_known_occurrences_df, expected_known_occurrences_df))
+  
+  if(missing & known){
+    print("make_known_occurrences: PASS")
+  }else{
+    print("make_known_occurrences: FAIL")
+  }
+}
+
+#' test_optimize
+#' 
+#' Run OptimizePCRError, OptimizeLFNsampleReplicate and OptimizeLFNReadCountAndLFNvariant on a test file and compare the output to expected results
+#'  
+#' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
+#' @param vsearch_path path to vsearch executable
+#' @export
+#'
+test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
+  
+  test_dir <- check_dir(test_dir)
+  outdir <- paste(test_dir, "out/", sep="")
+  outdir <- check_dir(outdir)
+  # Attention, if optimize function is modified seriously, the expected output should be checked
+  expected_OptimizePCRError <- paste(test_dir, "test/OptimizePCRError.csv", sep="")
+  expected_OptimizePCRError_df <- read.csv(expected_OptimizePCRError, sep=",", header=TRUE) %>%
+    arrange(expected_asv, unexpected_asv)
+  
+  expected_OptimizeLFNsampleReplicate <- paste(test_dir, "test/OptimizeLFNsampleReplicate.csv", sep="")
+  expected_OptimizeLFNsampleReplicate_df <- read.csv(expected_OptimizeLFNsampleReplicate, sep=",", header=TRUE) %>%
+    select(sample, replicate, action, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff, asv, taxon) %>%
+    arrange(asv, sample, replicate)
+  
+  expected_OptimizeLFNReadCountAndLFNvariant <- paste(test_dir, "test/OptimizeLFNReadCountAndLFNvariant.csv", sep="")
+  expected_OptimizeLFNReadCountAndLFNvariant_df <- read.csv(expected_OptimizeLFNReadCountAndLFNvariant, sep=",", header=TRUE) %>%
+    select(lfn_sample_replicate_cutoff,pcr_error_var_prop,lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
+    arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
+  
+  # read input info
+  input_test_optimize <- paste(test_dir, "test/input_test_optimize.csv", sep="")
+  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep="")
+  fileinfo_df <- read.csv(fileinfo, sep=sep)
+  mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
+  known_occurrences <- paste(test_dir, "test/known_occurrences.csv", sep="")
+  read_count_df <- read.table(input_test_optimize, sep=sep, header=T)
+  ### Add asv_id to read_count_df
+  asv_unique <- read_count_df %>%
+    select(asv) %>%
+    unique
+  asv_unique$asv_id <- rownames(asv_unique)
+  read_count_df <- left_join(read_count_df, asv_unique, by="asv")
+  ###
+  
+  ### PCRerror
+  OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, max_mismatch=1, min_read_count=10)
+  OptimizePCRError_df <- OptimizePCRError_df %>%
+    select(-expected_asv_id, -unexpected_asv_id) %>%
+    arrange(expected_asv, unexpected_asv)
+  # compare expected and observed results 
+  diff_df <- full_join(OptimizePCRError_df, expected_OptimizePCRError_df, by = names(OptimizePCRError_df), suffix=c("_obs", "_exp")) %>%
+    filter(rowSums(is.na(.))>0)
+  
+  if(nrow(diff_df)==0){
+    print("OptimizePCRError: PASS")
+  }else{
+    print("OptimizePCRError: FAIL")
+    print(diff_df)
+  }
+  
+  ### OptimizeLFNsampleReplicate
+  OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition)
+  OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate_df %>%
+    select(sample, replicate, action, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff, asv, taxon)  %>%
+    arrange(asv, sample, replicate)
+  # cannot use the full_join then filter for NA, since sme of the read_count can be NA in each of the input df => use identical
+  if(identical(OptimizeLFNsampleReplicate_df, expected_OptimizeLFNsampleReplicate_df)){
+    print("OptimizeLFNsampleReplicate: PASS")
+  }else{
+    print("OptimizeLFNsampleReplicate: FAIL")
+  }
+  
+  ### OptimizeLFNReadCountAndLFNvariant
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path=vsearch_path, max_mismatch=1, by_sample=TRUE, sample_prop=0.8, min_replicate_number=2, verbose=F)
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant_df %>%
+    select(lfn_sample_replicate_cutoff,pcr_error_var_prop,lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
+    arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
+  
+  # compare expected and observed results 
+  diff_df <- full_join(OptimizeLFNReadCountAndLFNvariant_df, expected_OptimizeLFNReadCountAndLFNvariant_df, by = names(OptimizeLFNReadCountAndLFNvariant_df), suffix=c("_obs", "_exp")) %>%
+    filter(rowSums(is.na(.))>0)
+  
+  if(nrow(diff_df)==0){
+    print("OptimizeLFNReadCountAndLFNvariant: PASS")
+  }else{
+    print("OptimizeLFNReadCountAndLFNvariant: FAIL")
+    print(diff_df)
+  }
+}

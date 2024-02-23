@@ -2517,8 +2517,14 @@ make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_comp
 flag_from_mock <- function(occurrence_df, mock_composition="", fileinfo_df, sep=","){
   # read mock composition
   mock_composition_df <- read.csv(mock_composition, header=T, sep=sep) %>%
-    rename(action_mock=action) %>%
-    select(-asv_id)
+    rename(action_mock=action)
+  
+  if("asv_id" %in% colnames(mock_composition_df)){
+    mock_composition_df <- mock_composition_df %>%
+      select(-asv_id)
+  }
+
+   
   # add action_mock to occurrence_df; use full join, so expected ASV missing from occurrence_df will be added
   occurrence_df <- full_join(occurrence_df, mock_composition_df, by=c("sample", "asv"))
   # if expected ASV was missing from occurrence_df, complete the sample_type as mock
@@ -2596,8 +2602,12 @@ make_missing_occurrences <- function(read_count_samples_df, mock_composition="",
   
   # read mock composition to a df
   mock_comp <- read.csv(mock_composition, header=T, sep=sep) %>%
-    filter(action=="keep") %>%
-    select(-asv_id)
+    filter(action=="keep")
+    if("asv_id" %in% colnames(mock_comp)){
+      mock_comp <- mock_comp %>%
+        select(-asv_id)
+    }
+  
   # add mean_read_count to df from read_count_samples_df, and keep only if value is NA
   df <- left_join(mock_comp, read_count_samples_df,  by=c("sample", "asv")) %>%
     filter(is.na(mean_read_count)) %>%
@@ -2611,4 +2621,249 @@ make_missing_occurrences <- function(read_count_samples_df, mock_composition="",
   FN <- nrow(df %>%
                filter(action=="keep"))
   return(FN)
+}
+
+
+#' OptimizeLFNReadCountAndLFNvariant
+#' 
+#' Suggest optimal parametres for lfn_read_count_cutoff and lnf_variant_cutoff 
+#' This script will run LFN_sample_replicate, FilterPCRerror and FilterMinReplicateNumber on the input using parameters set by the user (ideally optimized ones), to eliminate part of the noise. 
+#' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations, for each of them the number of FN, TP, and FP is reported. 
+#' The results are written to data frame and to an outfile if the filename is given.
+#' Users should chose the parameter setting that minimizes, FN and FP.
+#'  
+#' @param read_count_df data frame with the following variables: asv_id, sample, replicate, read_count, asv
+#' @param known_occurrences file produced by make_known_occurrences function, with known FP and TP
+#' @param sep separator used in csv files
+#' @param outfile name of the output file; Optional; If empty the results are not written to a file
+#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function (10 by default). 
+#' @param max_lfn_read_count_cutoff the highest cutoff value for LFN_read_count function (100 by default). 
+#' @param increment_lfn_read_count_cutoff values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default). 
+#' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function (0.001 by default). 
+#' @param max_lnf_variant_cutoff the highest value for LFN_variant function (0.05 by default).
+#' @param increment_lnf_variant_cutoff values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default). 
+#' @param by_replicate T/F (False by default); see LFN_variant function
+#' @param lfn_sample_replicate_cutoff cutoff value for LFN_sample_replicate (see LFN_sample_replicate function; default 0.001)
+#' @param pcr_error_var_prop cutoff value for FilterPCRerror (see FilterPCRerror function; default 0.1)
+#' @param vsearch_path path to vsearch executables
+#' @param max_mismatch parameter for FilterPCRerror (see FilterPCRerror function; default 1)
+#' @param by_sample parameter for FilterPCRerror (see FilterPCRerror function; default T)
+#' @param sample_prop for FilterPCRerror (see FilterPCRerror function; default 0.8)
+#' @param min_replicate_number for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 2)
+#' @param verbose [T/F]  if TRUE print out progress; T by default
+#' @export
+#'
+
+OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.05, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2, verbose=T){
+  #  read_count_df = optimize_read_count_df
+  #  min_lfn_read_count_cutoff = 10
+  #  min_lnf_variant_cutoff = 0.001
+  #  rc_cutoff = 55
+  #  var_cutoff = 0.05
+  #  by_replicate = T
+  
+  # read known occurrences
+  known_occurrences_df <- read.csv(known_occurrences, header=T, sep=sep)
+  
+  # filter by sample-replicate
+  df <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, sep=sep)
+  # FilterPCRerror
+  df <- FilterPCRerror(df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
+  # FilterMinReplicateNumber
+  df <- FilterMinReplicateNumber(df, cutoff=min_replicate_number, sep=sep)
+  
+  # make a series of cutoff values for LFN_read_count
+  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=max_lfn_read_count_cutoff, by=increment_lfn_read_count_cutoff)
+  # make a series of cutoff values for LFN_read_count
+  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=max_lnf_variant_cutoff, by=increment_lnf_variant_cutoff)
+  
+  out_df <- data.frame( 
+    lfn_sample_replicate_cutoff =numeric(),
+    pcr_error_var_prop =numeric(),
+    lfn_read_count_cutoff=numeric(),
+    lnf_variant_cutoff=numeric(),
+    FN=numeric(),
+    TP=numeric(),
+    FP=numeric()
+  )
+  # go through all parameter combination and count the number of TP and FN
+  
+  for(rc_cutoff in rc_cutoff_list){
+    df_tmp <- df
+    #LFN_read_count
+    df_tmp <- LFN_read_count(df_tmp, rc_cutoff)
+    for(var_cutoff in var_cutoff_list){
+      # LFN_variant
+      df_tmp <- LFN_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      # FilterMinReplicateNumber
+      df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number)
+      # PoolReplicates
+      df_tmp_sample <- PoolReplicates(df_tmp, digits=0)
+      # pool readcount info and known occurrences info
+      ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
+        filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
+        filter(!(is.na(mean_read_count) & action=="delete")) # delete lines if asv is not present (mean_read_count==NA) and the action is delete
+      # get the number of FN (misssing expected occurrences) 
+      missing <- ko %>%
+        filter(is.na(mean_read_count) & action=="keep")
+      FN_count <- nrow(missing)
+      # get the number of TP and FP
+      ko <- ko %>%
+        filter(!(is.na(mean_read_count) & action=="keep")) %>%
+        group_by(action) %>%
+        summarise(TPFP=length(action))
+      
+      TP_count <- 0
+      if ("keep" %in% ko$action) {
+        TP_count <- subset(ko, action == "keep")$TPFP
+      }
+      FP_count <- 0
+      if ("delete" %in% ko$action) {
+        FP_count <- subset(ko, action == "delete")$TPFP
+      }
+      new_line <- data.frame(lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
+      if(verbose){
+        print(new_line)
+      }
+      out_df <- bind_rows(out_df, new_line )
+    }
+  }
+  
+  out_df <- out_df %>%
+    arrange(FN, FP, lnf_variant_cutoff, lfn_read_count_cutoff)
+  
+  if(outfile != ""){
+    write.table(out_df, file=outfile, sep=sep, row.names = F)
+  }
+  return(out_df)
+}
+
+
+#' pool_datasets
+#' 
+#' Take several output files, each has long format, ASVs and mean_read_count over replicates
+#' Pool the different dataset, if all have the sale marker
+#' If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster aye pooled under the centroid (longest ASV).
+#' Pooling can take the mean of the read counts of the ASV (default) or their sum.
+#'  
+#' @param files data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and mean_read_count columns
+#' @param outdir name of the output directory
+#' @param sep separaton used in csv files
+#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param mean_over_markers [T/F] If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE
+#' @export
+#'
+pool_datasets <- function(files, outdir="", sep=",", mean_over_markers=T, write_csv=F){
+  
+  ###
+  # pool all data into one data frame (df), check if the all marker.sample combinations are unique among different datasets
+  ###
+  df <- data.frame("asv" = list(), "sample" = list(), "mean_read_count" = list(), "marker"== list())
+  samples <- c()
+  for(i in 1:nrow(files)){
+    file <- files[i, "file"]
+    marker <- files[i, "marker"]
+    #    print(file)
+    tmp <- read.csv(file, sep=sep) %>%
+      select(asv, sample, mean_read_count)
+    tmp$marker <- rep(marker, nrow(tmp)) # add maker
+    
+    # make a list of marker.sample of the data set that just have been read
+    local_samples <- unique(paste(tmp$marker, tmp$sample, sep="."))
+    shared_samples <- intersect(local_samples, samples) # see if they matche earlier read marker.sample combnations
+    if(length(shared_samples) > 0){
+      print("The following samples are in at least 2 different datasets of the same marker. Their read_counts will be summed. Use unique names if you want to keep them separate:")
+      print(shared_samples)
+    }
+    samples <- c(samples, local_samples) 
+    
+    # add data set to df
+    df <- rbind(df, tmp)
+  }
+  
+  ###
+  # Pool ASVs identical on their overlapping region, if more than one marker
+  ###
+  marker_list <- unique(df$marker)
+  if(length(marker_list) > 1){ # more than one marker => pool sequences identical in their corresponding region
+    # get full list of ASVs
+    asvs <- df %>%
+      group_by(asv) %>%
+      summarize("rc" = sum(mean_read_count)) 
+    
+    # arrange ASVs by decreasing sequence order and add ids
+    asvs$length <- nchar(asvs$asv)
+    asvs <- asvs %>%
+      arrange(desc(length), desc(rc))
+    asvs$id <- rownames(asvs)
+    
+    # make a fasta file
+    fasta <- paste(outdir, "vsearch_input.fasta", sep="")
+    writeLines(paste(">", asvs$id, "\n", asvs$asv, sep="" ), fasta)
+    
+    # cluster using cluster_smallmem and 1 as identity limit
+    centroids_file <- paste(outdir, "consout.txt", sep="")
+    blastout_file <- paste(outdir, "blastout.tsv", sep="")  #query sequences are shorter than subjects => centroids are in the subjects column
+    vsearch_cmd <- paste(vsearch_path, "vsearch --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
+    print(vsearch_cmd)
+    system(vsearch_cmd)
+    
+    ###
+    # Make  cent data frame with a complete list of ASVs and the centroid for each of them.
+    ###
+    # read the ids of centoids, and get the list of centroids
+    cent <- read.table(centroids_file)
+    colnames(cent) <- c("centroid")
+    cent <- cent %>%
+      filter(grepl(">centroid=", centroid))
+    cent$centroid <- gsub(">centroid=", "", cent$centroid)
+    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid)
+    cent$centroid <- gsub(";.+", "", cent$centroid)
+    
+    # add to centroid the seqid that are in the same cluster
+    blastout <- read.table(blastout_file) %>%
+      select(1,2)
+    colnames(blastout) <- c("query", "subject")
+    blastout$query <- as.character(blastout$query)
+    blastout$subject <- as.character(blastout$subject)
+    cent <- left_join(cent, blastout, by= c("centroid"="subject"))
+    # add centroid to query comlum for singletons
+    cent <- cent %>%
+      mutate(query = ifelse(is.na(query), centroid, query))
+    # add a line for each non-singleton centoid, wth cetoide in centroid and in query columns
+    added_lines <- cent %>%
+      filter(nbseq>1) %>%
+      mutate(query=centroid) %>%
+      unique # add just one lime per centoide, not several if many sequneces in cluster
+    cent<- rbind(cent, added_lines) %>%
+      arrange(centroid)
+    ## replace ids by ASVs
+    cent <- left_join(cent, asvs, by=c("centroid"="id")) %>%
+      select(query, "centroid_seq"=asv)
+    cent <- left_join(cent, asvs, by=c("query"="id")) %>%
+      select(centroid_seq, asv)
+    
+    ###
+    # Pool asv o the same cluster
+    ###
+    df <- left_join(df, cent, by=c("asv"))
+    if(mean_over_markers){
+      df <- df %>%
+        group_by(centroid_seq, sample) %>%
+        summarize(mean_read_count=round(mean(mean_read_count), digits=0), .groups =  "keep")
+    }else{
+      df <- df %>%
+        group_by(centroid_seq, sample) %>%
+        summarize("sum_read_count"=sum(mean_read_count), .groups =  "keep" )      
+    }
+  }else{# one marker
+    df <- df %>%
+      select(asv, sample, mean_read_count)
+  } 
+  
+  if(write_csv){
+    outdir <- check_dir(outdir)
+    write.table(df, file = paste(outdir, "Pooled_dataset.csv", sep=""),  row.names = F, sep=sep)
+  }
+  return(df)
 }
