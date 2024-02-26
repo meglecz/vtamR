@@ -21,9 +21,9 @@ if(computer == "Bombyx"){
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
     fastqdir <- "vtamR_test/data/"
-    fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
-    outdir <- "vtamR_test/out_mfzr/"
-    mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
+    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+    outdir <- "vtamR_test/out_zfzr/"
+    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
     asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
   #fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
   #fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
@@ -400,14 +400,11 @@ OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_c
 ###
 # Pool different data sets
 ###
-# to be updated!!!!!!!!!!!!!
 files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
                     marker=c("MFZR", "ZFZR"))
-
-#files <- data.frame(file=c("vtamR_test/out_mfzr/PoolReplicates.csv"),
-#                    marker=c("MFZR"))
-
-read_count_pool <- pool_datasets(files, outdir=outdir, sep=sep, mean_over_markers=T, write_csv=T)
+outfile <- paste(outdir, "Pooled_datasets.csv", sep="")
+centroid_file <- paste(outdir, "Pooled_datasets_with_centroids.csv", sep="")
+read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_file, sep=sep, mean_over_markers=T)
 
 
 end_time <- Sys.time()  # Record the end time

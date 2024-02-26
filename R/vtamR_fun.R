@@ -2741,38 +2741,42 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
 
 #' pool_datasets
 #' 
-#' Take several output files, each has long format, ASVs and mean_read_count over replicates
-#' Pool the different dataset, if all have the sale marker
-#' If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster aye pooled under the centroid (longest ASV).
+#' Take several output files, each in long format containing asv_id, sample, mean_read_count and asv columns
+#' Pool the different data sets, if all have the same marker
+#' If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster are pooled under the centroîd (longest ASV).
 #' Pooling can take the mean of the read counts of the ASV (default) or their sum.
+#' Return a pooled data frame.
 #'  
 #' @param files data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and mean_read_count columns
-#' @param outdir name of the output directory
-#' @param sep separaton used in csv files
-#' @param write_csv T/F; write read_counts to csv file; default=FALSE
+#' @param outfile name of the output file with asv_id, sample, read_count and asv columns, after pooling ASV identical on their corresponding regions together; Optional; If empty the results are not written to a file
+#' @param centroid_file name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns. Optional; If empty the results are not written to a file
+#' @param sep separator used in csv files
 #' @param mean_over_markers [T/F] If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE
 #' @export
 #'
-pool_datasets <- function(files, outdir="", sep=",", mean_over_markers=T, write_csv=F){
+pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_over_markers=T){
+  
+  tmp_dir <-paste('tmp_pool_datasets_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  tmp_dir <- check_dir(tmp_dir)
   
   ###
-  # pool all data into one data frame (df), check if the all marker.sample combinations are unique among different datasets
+  # pool all data into one data frame (df), check if the all marker.sample combinations are unique among different data sets
   ###
-  df <- data.frame("asv" = list(), "sample" = list(), "mean_read_count" = list(), "marker"== list())
+  df <- data.frame("asv_id" = list(), "sample" = list(), "mean_read_count" = list(), "asv"=list(), "marker"== list())
   samples <- c()
   for(i in 1:nrow(files)){
     file <- files[i, "file"]
     marker <- files[i, "marker"]
     #    print(file)
     tmp <- read.csv(file, sep=sep) %>%
-      select(asv, sample, mean_read_count)
+      select(asv_id, sample, mean_read_count, asv)
     tmp$marker <- rep(marker, nrow(tmp)) # add maker
     
     # make a list of marker.sample of the data set that just have been read
     local_samples <- unique(paste(tmp$marker, tmp$sample, sep="."))
-    shared_samples <- intersect(local_samples, samples) # see if they matche earlier read marker.sample combnations
+    shared_samples <- intersect(local_samples, samples) # see if they match earlier read marker.sample combinations
     if(length(shared_samples) > 0){
-      print("The following samples are in at least 2 different datasets of the same marker. Their read_counts will be summed. Use unique names if you want to keep them separate:")
+      print("The following samples are in at least 2 different data sets of the same marker. Their read_counts will be summed. Use unique names if you want to keep them separate:")
       print(shared_samples)
     }
     samples <- c(samples, local_samples) 
@@ -2788,82 +2792,96 @@ pool_datasets <- function(files, outdir="", sep=",", mean_over_markers=T, write_
   if(length(marker_list) > 1){ # more than one marker => pool sequences identical in their corresponding region
     # get full list of ASVs
     asvs <- df %>%
-      group_by(asv) %>%
-      summarize("rc" = sum(mean_read_count)) 
+      group_by(asv_id, asv) %>%
+      summarize("rc" = sum(mean_read_count), .groups="drop_last") 
     
     # arrange ASVs by decreasing sequence order and add ids
-    asvs$length <- nchar(asvs$asv)
+    asvs$length <- as.numeric(nchar(asvs$asv))
     asvs <- asvs %>%
       arrange(desc(length), desc(rc))
-    asvs$id <- rownames(asvs)
     
     # make a fasta file
-    fasta <- paste(outdir, "vsearch_input.fasta", sep="")
-    writeLines(paste(">", asvs$id, "\n", asvs$asv, sep="" ), fasta)
+    fasta <- paste(tmp_dir, "vsearch_input.fasta", sep="")
+    writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
     
     # cluster using cluster_smallmem and 1 as identity limit
-    centroids_file <- paste(outdir, "consout.txt", sep="")
-    blastout_file <- paste(outdir, "blastout.tsv", sep="")  #query sequences are shorter than subjects => centroids are in the subjects column
+    centroids_file <- paste(tmp_dir, "consout.txt", sep="")
+    blastout_file <- paste(tmp_dir, "blastout.tsv", sep="")  #query sequences are shorter than subjects => centroids are in the subjects column
     vsearch_cmd <- paste(vsearch_path, "vsearch --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
     print(vsearch_cmd)
     system(vsearch_cmd)
     
     ###
-    # Make  cent data frame with a complete list of ASVs and the centroid for each of them.
+    # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
     ###
     # read the ids of centoids, and get the list of centroids
     cent <- read.table(centroids_file)
-    colnames(cent) <- c("centroid")
+    colnames(cent) <- c("centroid_id")
     cent <- cent %>%
-      filter(grepl(">centroid=", centroid))
-    cent$centroid <- gsub(">centroid=", "", cent$centroid)
-    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid)
-    cent$centroid <- gsub(";.+", "", cent$centroid)
+      filter(grepl(">centroid=", centroid_id))
+    cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
+    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
+    cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
+    cent$centroid_id <- as.numeric(cent$centroid_id)
+    cent$nbseq <- as.numeric(cent$nbseq)
     
-    # add to centroid the seqid that are in the same cluster
+    # add to centroid the asv_id that are in the same cluster
     blastout <- read.table(blastout_file) %>%
       select(1,2)
-    colnames(blastout) <- c("query", "subject")
-    blastout$query <- as.character(blastout$query)
-    blastout$subject <- as.character(blastout$subject)
-    cent <- left_join(cent, blastout, by= c("centroid"="subject"))
-    # add centroid to query comlum for singletons
+    colnames(blastout) <- c("asv_id", "centroid_id")
+    cent <- left_join(cent, blastout, by= c("centroid_id"))
+    # add centroid_id to asv_id column for singletons
     cent <- cent %>%
-      mutate(query = ifelse(is.na(query), centroid, query))
-    # add a line for each non-singleton centoid, wth cetoide in centroid and in query columns
+      mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
+    # add a line for each non-singleton centroid, with centroid id in both the centroid and in query columns
     added_lines <- cent %>%
       filter(nbseq>1) %>%
-      mutate(query=centroid) %>%
-      unique # add just one lime per centoide, not several if many sequneces in cluster
+      mutate(asv_id=centroid_id) %>%
+      unique # add just one line per centroid, not several if many sequences in cluster
     cent<- rbind(cent, added_lines) %>%
-      arrange(centroid)
-    ## replace ids by ASVs
-    cent <- left_join(cent, asvs, by=c("centroid"="id")) %>%
-      select(query, "centroid_seq"=asv)
-    cent <- left_join(cent, asvs, by=c("query"="id")) %>%
-      select(centroid_seq, asv)
+      arrange(centroid_id)
     
+    # make a data frame with unique centroid_ids and the list of asv_ids pooles into them
+#    cent_asv <- cent %>%
+#      group_by(centroid_id) %>%
+#      summarize(asv_ids = toString(unique(query)))
+
     ###
-    # Pool asv o the same cluster
+    # Pool ASVs of the same cluster
     ###
-    df <- left_join(df, cent, by=c("asv"))
+    # add the centroid_id to each asv if df
+    df <- left_join(df, cent, by=c("asv_id")) %>%
+      select(-nbseq)
+    # add the centroid to each centroid_id in df
+    df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
+      select(-length, -rc) %>%
+      rename("asv"=asv.x, "centroid"=asv.y)
+    
     if(mean_over_markers){
-      df <- df %>%
-        group_by(centroid_seq, sample) %>%
-        summarize(mean_read_count=round(mean(mean_read_count), digits=0), .groups =  "keep")
+      df_pool <- df %>%
+        group_by(centroid_id, sample) %>%
+        summarize("read_count"=round(mean(mean_read_count), digits=0), .groups =  "keep")
     }else{
-      df <- df %>%
-        group_by(centroid_seq, sample) %>%
-        summarize("sum_read_count"=sum(mean_read_count), .groups =  "keep" )      
+        df_pool <- df %>%
+          group_by(centroid_id, sample) %>%
+          summarize("read_count"=sum(mean_read_count), .groups =  "keep" ) 
     }
+    # add asv column and select columns
+    # df_pool is a simple output with the format identical to the read_count_sample dfs, but no info on the as that has been pooled together
+    df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id")) %>%
+      select("asv_id"=centroid_id, sample, read_count, asv)
   }else{# one marker
     df <- df %>%
-      select(asv, sample, mean_read_count)
-  } 
-  
-  if(write_csv){
-    outdir <- check_dir(outdir)
-    write.table(df, file = paste(outdir, "Pooled_dataset.csv", sep=""),  row.names = F, sep=sep)
+      select(asv_id, sample, mean_read_count, asv)
   }
-  return(df)
+  
+  unlink(tmp_dir, recursive = TRUE)
+  
+  if(outfile != ""){
+    write.table(df_pool, file=outfile, sep=sep, row.names = F)
+  }
+  if(centroid_file != ""){
+    write.table(df, file=centroid_file, sep=sep, row.names = F)
+  }
+  return(df_pool)
 }
