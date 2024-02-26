@@ -7,7 +7,7 @@
 flag_from_mock(occurrence_df, mock_composition = "", fileinfo_df, sep = ",")
 }
 \arguments{
-\item{occurrence_df}{data frame with the following variables: asv_id, sample, mean_read_count, asv, sample_type, habitat, action}
+\item{occurrence_df}{data frame with the following variables: asv_id, sample, read_count, asv, sample_type, habitat, action}
 
 \item{mock_composition}{csv file with columns: sample, action (keep/tolerate), asv}
 

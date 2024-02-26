@@ -1647,7 +1647,7 @@ FilterRenkonen <- function(read_count_df, outfile="", renkonen_distance_quantile
 #' Pool replicates sample by sample
 #' 
 #' Take the mean non-zero read counts over replicates for each sample and asv.
-#' Returns a data frame with the following columns: asv, plate, marker, sample, mean_read_count (over replicates)
+#' Returns a data frame with the following columns: asv, plate, marker, sample, read_count (over replicates)
 #'  
 #' @param read_count_df data frame with the following variables: asv_id, sample, replicate, read_count, asv
 #' @param digits round the mean read counts to digits
@@ -1658,10 +1658,10 @@ PoolReplicates <- function(read_count_df, digits=0, outfile="", sep=","){
   
   read_count_samples_df <- read_count_df %>%
     group_by(asv_id,sample,asv) %>%
-    summarize(mean_read_count = mean(read_count), .groups="drop_last") %>%
-    select(asv_id, sample, mean_read_count, asv)
+    summarize(read_count = mean(read_count), .groups="drop_last") %>%
+    select(asv_id, sample, read_count, asv)
   
-  read_count_samples_df$mean_read_count <- round(read_count_samples_df$mean_read_count, digits =digits)
+  read_count_samples_df$read_count <- round(read_count_samples_df$read_count, digits =digits)
   
   if(outfile !=""){
     write.table(read_count_samples_df, file = outfile,  row.names = F, sep=sep)
@@ -2146,7 +2146,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, fileinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
   
   # make a wide data frame with samples in columns, ASVs in lines
-  wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(sample), values_from = mean_read_count, values_fill=0, names_sep = ".", names_sort=T))
+  wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(sample), values_from = read_count, values_fill=0, names_sep = ".", names_sort=T))
   # put the asv column at the end
 #  wide_read_count_df <- wide_read_count_df[, c(colnames(wide_read_count_df)[-2], colnames(wide_read_count_df)[2])]
   
@@ -2508,7 +2508,7 @@ make_known_occurrences <- function(read_count_samples_df, fileinfo="", mock_comp
 #' Expected variants as 'keep', unexpected ASVs as 'delete', tolerate ASVs as NA. 
 #' Tolerate ASVs are ASVs that can be in the mock, but the filtering should not be optimized to keep them. (e.g. badly amplified species present in the mock)
 #'  
-#' @param occurrence_df data frame with the following variables: asv_id, sample, mean_read_count, asv, sample_type, habitat, action  
+#' @param occurrence_df data frame with the following variables: asv_id, sample, read_count, asv, sample_type, habitat, action  
 #' @param fileinfo_df csv file with columns: sample, sample_type(mock/negative/real), habitat
 #' @param mock_composition csv file with columns: sample, action (keep/tolerate), asv
 #' @param sep separator used in csv files
@@ -2535,7 +2535,7 @@ flag_from_mock <- function(occurrence_df, mock_composition="", fileinfo_df, sep=
   occurrence_df$action[which(occurrence_df$action_mock =="tolerate")] <- NA
   # select original columns
   occurrence_df <- occurrence_df %>%
-    select(asv_id, sample, mean_read_count, asv, sample_type, habitat, action)
+    select(asv_id, sample, read_count, asv, sample_type, habitat, action)
   
   return(occurrence_df)
 }
@@ -2547,7 +2547,7 @@ flag_from_mock <- function(occurrence_df, mock_composition="", fileinfo_df, sep=
 #' For each of these ASVs, if the proportion of reads in a habitat is below a cutoff (habitat_proportion), 
 #' it is considered as an artifact in all samples of the habitat.
 #'  
-#' @param occurrence_df data frame with the following variables: asv, plate, marker, sample, mean_read_count, sample_type, habitat, action  
+#' @param occurrence_df data frame with the following variables: asv, plate, marker, sample, read_count, sample_type, habitat, action  
 #' @param fileinfo_df csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat
 #' @param habitat_proportion For each of ASVs, if the proportion of reads in a habitat is below this cutoff it is considered as an artifact in all samples of the habitat.
 #' @export
@@ -2557,7 +2557,7 @@ flag_from_habitat <- function(occurrence_df, fileinfo_df, habitat_proportion=0.5
   # group by asv and habitat and count the total number of reads for each habitat-asv combination
   tmp <- occurrence_df %>%
     group_by(habitat, asv) %>%
-    summarize(habitat_read_count=sum(mean_read_count), .groups="drop_last") %>%
+    summarize(habitat_read_count=sum(read_count), .groups="drop_last") %>%
     filter(!is.na(habitat))
   
   # count the number of habitats for each asv and keep only the ones present in at least two different habitats
@@ -2608,10 +2608,10 @@ make_missing_occurrences <- function(read_count_samples_df, mock_composition="",
         select(-asv_id)
     }
   
-  # add mean_read_count to df from read_count_samples_df, and keep only if value is NA
+  # add read_count to df from read_count_samples_df, and keep only if value is NA
   df <- left_join(mock_comp, read_count_samples_df,  by=c("sample", "asv")) %>%
-    filter(is.na(mean_read_count)) %>%
-    select(-"mean_read_count")
+    filter(is.na(read_count)) %>%
+    select(-"read_count")
   
   # write to outfile
   if(out != ""){
@@ -2702,14 +2702,14 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
-        filter(!(is.na(mean_read_count) & action=="delete")) # delete lines if asv is not present (mean_read_count==NA) and the action is delete
+        filter(!(is.na(read_count) & action=="delete")) # delete lines if asv is not present (read_count==NA) and the action is delete
       # get the number of FN (misssing expected occurrences) 
       missing <- ko %>%
-        filter(is.na(mean_read_count) & action=="keep")
+        filter(is.na(read_count) & action=="keep")
       FN_count <- nrow(missing)
       # get the number of TP and FP
       ko <- ko %>%
-        filter(!(is.na(mean_read_count) & action=="keep")) %>%
+        filter(!(is.na(read_count) & action=="keep")) %>%
         group_by(action) %>%
         summarise(TPFP=length(action))
       
@@ -2741,13 +2741,13 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count_df, known_occurrences="
 
 #' pool_datasets
 #' 
-#' Take several output files, each in long format containing asv_id, sample, mean_read_count and asv columns
+#' Take several output files, each in long format containing asv_id, sample, read_count and asv columns
 #' Pool the different data sets, if all have the same marker
 #' If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster are pooled under the centroîd (longest ASV).
 #' Pooling can take the mean of the read counts of the ASV (default) or their sum.
 #' Return a pooled data frame.
 #'  
-#' @param files data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and mean_read_count columns
+#' @param files data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and read_count columns
 #' @param outfile name of the output file with asv_id, sample, read_count and asv columns, after pooling ASV identical on their corresponding regions together; Optional; If empty the results are not written to a file
 #' @param centroid_file name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns. Optional; If empty the results are not written to a file
 #' @param sep separator used in csv files
@@ -2762,14 +2762,14 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
   ###
   # pool all data into one data frame (df), check if the all marker.sample combinations are unique among different data sets
   ###
-  df <- data.frame("asv_id" = list(), "sample" = list(), "mean_read_count" = list(), "asv"=list(), "marker"== list())
+  df <- data.frame("asv_id" = list(), "sample" = list(), "read_count" = list(), "asv"=list(), "marker"== list())
   samples <- c()
   for(i in 1:nrow(files)){
     file <- files[i, "file"]
     marker <- files[i, "marker"]
     #    print(file)
     tmp <- read.csv(file, sep=sep) %>%
-      select(asv_id, sample, mean_read_count, asv)
+      select(asv_id, sample, read_count, asv)
     tmp$marker <- rep(marker, nrow(tmp)) # add maker
     
     # make a list of marker.sample of the data set that just have been read
@@ -2793,7 +2793,7 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
     # get full list of ASVs
     asvs <- df %>%
       group_by(asv_id, asv) %>%
-      summarize("rc" = sum(mean_read_count), .groups="drop_last") 
+      summarize("rc" = sum(read_count), .groups="drop_last") 
     
     # arrange ASVs by decreasing sequence order and add ids
     asvs$length <- as.numeric(nchar(asvs$asv))
@@ -2860,11 +2860,11 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
     if(mean_over_markers){
       df_pool <- df %>%
         group_by(centroid_id, sample) %>%
-        summarize("read_count"=round(mean(mean_read_count), digits=0), .groups =  "keep")
+        summarize("read_count"=round(mean(read_count), digits=0), .groups =  "keep")
     }else{
         df_pool <- df %>%
           group_by(centroid_id, sample) %>%
-          summarize("read_count"=sum(mean_read_count), .groups =  "keep" ) 
+          summarize("read_count"=sum(read_count), .groups =  "keep" ) 
     }
     # add asv column and select columns
     # df_pool is a simple output with the format identical to the read_count_sample dfs, but no info on the as that has been pooled together
@@ -2872,7 +2872,7 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
       select("asv_id"=centroid_id, sample, read_count, asv)
   }else{# one marker
     df <- df %>%
-      select(asv_id, sample, mean_read_count, asv)
+      select(asv_id, sample, read_count, asv)
   }
   
   unlink(tmp_dir, recursive = TRUE)

@@ -4,20 +4,29 @@
 \alias{pool_datasets}
 \title{pool_datasets}
 \usage{
-pool_datasets(files, outfile = "", sep = ",", fun = "mean")
+pool_datasets(
+  files,
+  outfile = "",
+  centroid_file = "",
+  sep = ",",
+  mean_over_markers = T
+)
 }
 \arguments{
-\item{files}{data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and mean_read_count columns}
+\item{files}{data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and read_count columns}
 
-\item{outfile}{name of the output file; Optional; If empty the results are not written to a file}
+\item{outfile}{name of the output file with asv_id, sample, read_count and asv columns, after pooling ASV identical on their corresponding regions together; Optional; If empty the results are not written to a file}
+
+\item{centroid_file}{name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns. Optional; If empty the results are not written to a file}
 
 \item{sep}{separator used in csv files}
 
-\item{fun}{\link{mean/sum} ; For each cluster either the mean of the sum of the read counts and calculated over the underlying ASVs Default: "mean"}
+\item{mean_over_markers}{\link{T/F} If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE}
 }
 \description{
-Take several output files, each in long format containing asv_id, sample, mean_read_count and asv columns
+Take several output files, each in long format containing asv_id, sample, read_count and asv columns
 Pool the different data sets, if all have the same marker
 If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster are pooled under the centroîd (longest ASV).
 Pooling can take the mean of the read counts of the ASV (default) or their sum.
+Return a pooled data frame.
 }

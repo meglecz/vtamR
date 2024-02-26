@@ -15,5 +15,5 @@ PoolReplicates(read_count_df, digits = 0, outfile = "", sep = ",")
 }
 \description{
 Take the mean non-zero read counts over replicates for each sample and asv.
-Returns a data frame with the following columns: asv, plate, marker, sample, mean_read_count (over replicates)
+Returns a data frame with the following columns: asv, plate, marker, sample, read_count (over replicates)
 }

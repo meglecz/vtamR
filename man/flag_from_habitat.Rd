@@ -7,7 +7,7 @@
 flag_from_habitat(occurrence_df, fileinfo_df, habitat_proportion = 0.5)
 }
 \arguments{
-\item{occurrence_df}{data frame with the following variables: asv, plate, marker, sample, mean_read_count, sample_type, habitat, action}
+\item{occurrence_df}{data frame with the following variables: asv, plate, marker, sample, read_count, sample_type, habitat, action}
 
 \item{fileinfo_df}{csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat}
 
