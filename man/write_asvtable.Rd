@@ -8,7 +8,7 @@ write_asvtable(
   read_count_samples_df,
   outfile,
   asv_tax = NULL,
-  fileinfo = "",
+  sortedinfo = "",
   add_empty_samples = F,
   add_sums_by_sample = F,
   add_sums_by_asv = F,
@@ -24,7 +24,7 @@ write_asvtable(
 
 \item{asv_tax}{optional: data frame with taxonomic assignments}
 
-\item{fileinfo}{tsv file with columns: sample, sample_type, habitat, replicate, file; only necessary if add_empty_samples==T or add_expected_asv==T}
+\item{sortedinfo}{tsv file with columns: sample, sample_type, habitat, replicate, file; only necessary if add_empty_samples==T or add_expected_asv==T}
 
 \item{add_empty_samples}{\link{T/F} add a column for each samples in the original data set, even if they do not have reads after filtering}
 

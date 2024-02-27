@@ -6,7 +6,7 @@
 \usage{
 make_known_occurrences(
   read_count_samples_df,
-  fileinfo = "",
+  sortedinfo = "",
   mock_composition = "",
   sep = ",",
   known_occurrences = "",
@@ -17,7 +17,7 @@ make_known_occurrences(
 \arguments{
 \item{read_count_samples_df}{data frame with the following variables: asv_id, plate, marker, sample, read_count, asv}
 
-\item{fileinfo}{csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)}
+\item{sortedinfo}{csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)}
 
 \item{mock_composition}{csv file with columns: sample, action (keep/tolerate), asv}
 

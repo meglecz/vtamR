@@ -16,7 +16,7 @@ update_asv_list(read_count_df, asv_list = asv_list, outfile = "", sep = ",")
 \item{sep}{separator in csv files; default: ","}
 }
 \description{
-Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file
+Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file (asv_list)
 The input file is typically a csv file containing asv seen in earlier runs with their asv_id.
 If there is a conflict within or between the input data quits with a error message. Otherwise write the updated asv list with their asv_id to the outfile
 }

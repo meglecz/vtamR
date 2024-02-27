@@ -4,12 +4,12 @@
 \alias{flag_from_habitat}
 \title{flag_from_habitat}
 \usage{
-flag_from_habitat(occurrence_df, fileinfo_df, habitat_proportion = 0.5)
+flag_from_habitat(occurrence_df, sortedinfo_df, habitat_proportion = 0.5)
 }
 \arguments{
 \item{occurrence_df}{data frame with the following variables: asv, plate, marker, sample, read_count, sample_type, habitat, action}
 
-\item{fileinfo_df}{csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat}
+\item{sortedinfo_df}{csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat}
 
 \item{habitat_proportion}{For each of ASVs, if the proportion of reads in a habitat is below this cutoff it is considered as an artifact in all samples of the habitat.}
 }

@@ -84,7 +84,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   cutadapt_maximum_length <- 500 # -M in cutadapt
   compress <- F
   
-  fileinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+  sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
   vtam_out <-  "vtam/sorted/"
@@ -92,7 +92,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   fastainfo_vtam_df <- read.csv(vtam_csv, header=T, sep="\t")
   fastainfo_vtam_df <- fastainfo_vtam_df %>% select(-run, -marker)
   
-  df <- full_join(fastainfo_vtam_df, fileinfo_df, by=c("sample", "replicate"))
+  df <- full_join(fastainfo_vtam_df, sortedinfo_df, by=c("sample", "replicate"))
   
   # check if all output files are present
   if(any(is.na(df$sortedfasta)) | any(is.na(df$filename))){
@@ -182,14 +182,14 @@ test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", sep=",
   # LFN_variant_replicate (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = TRUE
-  lnf_variant_replicate_df <- LFN_variant(input_df_tmp, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep)
+  lnf_variant_replicate_df <- LFN_variant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
   lnf_variant_replicate_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant_replicate002_out.csv", sep=""), sep=sep)
   comp_LFN_variant_replicate <- compare_df(lnf_variant_replicate_df, lnf_variant_replicate_exp_df, step="LFN_variant_replicate")
   
   # LFN_variant (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = FALSE
-  lnf_variant_df <- LFN_variant(input_df_tmp, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep)
+  lnf_variant_df <- LFN_variant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
   lnf_variant_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant002_out.csv", sep=""), sep=sep)
   comp_LFN_variant <- compare_df(lnf_variant_df, lnf_variant_exp_df, step="LFN_variant")
   
@@ -340,8 +340,8 @@ compare_df<- function(df1, df2, step=""){
 read_asv_table_sample <- function(filename, sep=","){
   
   df <- read.csv(filename, sep=sep)
-  long_df <- gather(df, key="sample", value ="mean_read_count", -asv, -seq_id)  %>% 
-    filter(mean_read_count > 0)
+  long_df <- gather(df, key="sample", value ="read_count", -asv, -seq_id)  %>% 
+    filter(read_count > 0)
 
   return(long_df)
 }
@@ -358,10 +358,10 @@ read_asv_table_sample <- function(filename, sep=","){
 compare_df_sample<- function(df1, df2, step=""){
   
   df1 <- df1 %>%
-    select("asv", "sample","mean_read_count_vtamR"="mean_read_count", "asv_id")
+    select("asv", "sample","read_count_vtamR"="read_count", "asv_id")
   
   df1 <- full_join(df1, df2, by=c("sample", "asv", "asv_id"))
-  comp <- df1$mean_read_count == df1$mean_read_count_vtamR
+  comp <- df1$read_count == df1$read_count_vtamR
   comp[(is.na(comp))] <- FALSE
   
   if(any(!comp)){
@@ -429,7 +429,7 @@ test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=",")
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
-  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep= "")
+  sortedinfo <- paste(test_dir, "test/sortedinfo.csv", sep= "")
   input_mock_composition <- paste(test_dir, "test/input_test_known_occurrences.csv", sep="")
   # read data for data frame
   read_count_samples_df <- read.csv(input_mock_composition, sep=sep)
@@ -449,7 +449,7 @@ test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=",")
   # params
   habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
   # run make_known_occurrences
-  TP_df <- make_known_occurrences(read_count_samples_df, fileinfo=fileinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
+  TP_df <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
   
   # expected results
   expected_known_occurrences <- paste(test_dir, "test/test_known_occurrences_out.csv", sep="")
@@ -519,8 +519,8 @@ test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
   
   # read input info
   input_test_optimize <- paste(test_dir, "test/input_test_optimize.csv", sep="")
-  fileinfo <- paste(test_dir, "test/fileinfo.csv", sep="")
-  fileinfo_df <- read.csv(fileinfo, sep=sep)
+  sortedinfo <- paste(test_dir, "test/sortedinfo.csv", sep="")
+  sortedinfo_df <- read.csv(sortedinfo, sep=sep)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
   known_occurrences <- paste(test_dir, "test/known_occurrences.csv", sep="")
   read_count_df <- read.table(input_test_optimize, sep=sep, header=T)

@@ -9,7 +9,8 @@ LFN_variant(
   cutoff = 0.001,
   by_replicate = FALSE,
   outfile = "",
-  sep = ","
+  sep = ",",
+  min_read_count_prop = 0.7
 )
 }
 \arguments{
@@ -22,9 +23,12 @@ LFN_variant(
 \item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 
 \item{sep}{separator in csv files; default: ","}
+
+\item{min_read_count_prop}{If the proportion of the read count of a variant in the output compared to the input is less then min_read_count_prop, print out a warning, since it suggest a to high cutoff value; default: 0.7}
 }
 \description{
 If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
 If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv in its replicate) is less than cutoff.
 Returns the filtered read_count_df data frame.
+Issues a warning if the total read count of an ASV has been reduced bellow min_read_count_prop, since it can indicate a to high cutoff value
 }

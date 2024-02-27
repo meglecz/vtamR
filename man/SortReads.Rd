@@ -51,6 +51,6 @@ SortReads(
 Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.
 Trim primers from demultiplexed reads.
 Output fasta files can be compressed if compress option is used.
-The output fileinfo.csv file is similar to the fastainfo file, but the but do not have tag and primer columns.
+The output sortedinfo.csv file is similar to the fastainfo file, but the but do not have tag and primer columns.
 Returns data frame of corresponding to the output csv file.
 }

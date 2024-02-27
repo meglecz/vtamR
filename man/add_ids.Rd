@@ -16,7 +16,7 @@ add_ids(read_count_df, asv_list = asv_list, updated_asv_list = "", sep = ",")
 \item{sep}{separator in csv files; default: ","}
 }
 \description{
-Add asv_ids to a data frame that have an asv column. Can take into account already existing asv and asv_id (from earlier dataset)
-If update_asv_list, the input asv_list id completed by new asvs and asv_ids
-Returns a data frame with as asv_id column on top of the input.
+Add asv_ids to a data frame that have an asv column. Can take into account already existing asv and asv_id (from earlier data set) present in asv_list file
+If updated_asv_list file name is given, the input asv_list is completed by new asvs and asv_ids
+Returns a data frame with asv_id column added to the input data frame.
 }
