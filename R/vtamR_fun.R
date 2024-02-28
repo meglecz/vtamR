@@ -1612,18 +1612,7 @@ make_renkonen_df <- function(read_count_df){
       for(j in ((i+1):length(replicate_list))){
         # data frame for samp replicate j
         dfj <- filter(sample_df, replicate == replicate_list[[j]])
-        # make a data frame with all ASVs in at least one of the 2 replicates
-        df <- full_join(dfi, dfj, by="asv")
-        # replace NA by 0
-        df <- df %>%
-          mutate(read_count.x = ifelse(is.na(read_count.x), 0, read_count.x)) %>%
-          mutate(read_count.y = ifelse(is.na(read_count.y), 0, read_count.y))
-        # calculate  number of reads for variant x in replicate i / number of reads in replicate i
-        df$read_count.x <- df$read_count.x/ sum(df$read_count.x)
-        df$read_count.y <- df$read_count.y/ sum(df$read_count.y)
-        # minimum of the above proportion between the 2 replicates
-        df$min <- pmin(df$read_count.x, df$read_count.y)
-        rdist <- 1- sum(df$min)
+        rdist <- calculate_renkonen_dist(dfi, dfj)
         # add line to renkonen_df
         new_line <- data.frame(sample = samp, replicate1 = as.character(replicate_list[[i]]), replicate2 = as.character(replicate_list[[j]]), renkonen_d = rdist)
         renkonen_df <- rbind(renkonen_df, new_line)
@@ -1631,6 +1620,33 @@ make_renkonen_df <- function(read_count_df){
     }
   }
   return(renkonen_df)
+}
+
+#' calculate_renkonen_dist
+#' 
+#' Calculate renkonen distance between two sample-replicate
+#'  
+#' @param df1 data frame with asv and read_count columns
+#' @param df2 data frame with asv and read_count columns
+#' @export
+#'
+calculate_renkonen_dist <- function(df1, df2){
+  df1 <- df1 %>%
+    select(asv, "read_count1"=read_count)
+  df2 <- df2 %>%
+    select(asv, "read_count2"=read_count)
+  
+  df <- full_join(df1, df2, by="asv")
+  # replace NA by 0
+  df <- df %>%
+    mutate(read_count1 = ifelse(is.na(read_count1), 0, read_count1)) %>%
+    mutate(read_count2 = ifelse(is.na(read_count2), 0, read_count2))
+  # calculate  number of reads for variant x in replicate i / number of reads in replicate i
+  df$read_count1 <- df$read_count1/ sum(df$read_count1)
+  df$read_count2 <- df$read_count2/ sum(df$read_count2)
+  # minimum of the above proportion between the 2 replicates
+  df$min <- pmin(df$read_count1, df$read_count2)
+  rdist <- 1- sum(df$min)
 }
 
 #' FilterRenkonen

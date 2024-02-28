@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Endoume" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -41,10 +41,16 @@ if(computer == "Bombyx"){
   blast_path= "" # deactivate conda
   swarm_path <- ""
   db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
-#  fastqdir <- "local/fastq/"
-  fastqdir <- "vtamR_test/data/"
-  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_gz.csv"
-  outdir <- "vtamR_test/out_zfzr/"
+      fastqdir <- "vtamR_test/data/"
+       fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+       outdir <- "vtamR_test/out_zfzr/"
+       mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+       asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+  #    fastqdir <- "~/vtamR_large_data"
+  #    fastqinfo <- "~/vtamR_large_data/metadata/fastqinfo_Sea18_IIICBR_vtamR.csv"
+  #    outdir <- "/home/emese/vtamR_out_large_dataset/"
+  #    mock_composition <- "~/vtamR_large_data/metadata/mock_composition_Sea18_IIICBR_vtamR.csv"
+  #    asv_list <- "~/vtamR_large_data/metadata/asv_list.csv"
   num_threads=8
   compress = T
 }else if (computer == "Windows"){
@@ -124,6 +130,7 @@ test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
 
 # create the output directory and check the the slash at the end
 outdir <- check_dir(dir=outdir)
+fastqdir <- check_dir(dir=fastqdir)
 # Measure runtime using system.time()
 start_time <- Sys.time()  # Record the start time
 # define stat data frame that will be completed with counts after each step
@@ -162,7 +169,7 @@ randomseq_dir = paste(outdir, "random_seq/", sep="")
 #fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
 compress = T
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=1000000, randseed=0, compress=compress)
 
 ###
 ### SortReads
@@ -400,7 +407,7 @@ OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_c
 ###
 # check the a particular value of a feature (asv, asv_id, sample, replicate) in all intermediate output files
 ###
-tmp <- history_by(dir=outdir, feature="asv_id", value="3906", sep=sep)
+tmp <- history_by(dir=outdir, feature="asv_id", value="1", sep=sep)
 
 
 ###
@@ -429,6 +436,36 @@ read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_
 #https://r-graph-gallery.com/218-basic-barplots-with-ggplot2.html#color
 #https://www.data-to-viz.com/graph/barplot.html
 
+###
+# graph_read_count_by_sample
+###
+sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
+graph <- graph_read_count_by_sample(read_count_df=read_count_df, sample_replicate=T, sample_types=sortedinfo, sep=sep )
+graph <- graph_read_count_by_sample(read_count_df=read_count_df, sample_replicate=T, sep=sep )
+print(graph)
+
+###
+# graph_read_count_by_variant
+###
+graph <- graph_read_count_by_variant(read_count_df, min_read_count=10, binwidth=100)
+print(graph)
+
+###
+# graph_renkonen_distances
+###
+
+
+full_renkonen <- make_renkonen_df_all(read_count_df)
+
+ggplot(full_renkonen, aes(x = renkonen_d, fill = comparaison)) +
+  geom_density(alpha = 0.5) +  # Add transparency to the density plot
+    labs(title = "Density of Renkonen distances",
+         x = "Renkonen Distance of replicates pairs within and between samples",
+         y = "Density") +
+    theme_minimal()
+
+
+ 
 
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
