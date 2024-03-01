@@ -1,4 +1,4 @@
-#' graph_read_count_by_sample
+#' barplot_read_count_by_sample
 #' 
 #' Create barplot with the number of reads in each sample or sample-replicate;
 #' If information is given on sample types, bars are colored in function of them
@@ -7,9 +7,11 @@
 #' @param sample_types file with sample and sample_type (real/mock/negative) columns
 #' @param sep separator used in csv files
 #' @param sample_replicate [T/F] if true barplot is made by sample-replicates, by sample otherwise
+#' @param x_axis_label_size size of labels in x axis
 #' @export
 #' 
-graph_read_count_by_sample <- function(read_count_df, sample_types="", sample_replicate=T, sep=","){
+#' 
+barplot_read_count_by_sample <- function(read_count_df, sample_types="", sample_replicate=T, sep=",", x_axis_label_size=6){
   
   if(sample_types != ""){
     sample_types_df <- read.csv(sample_types, sep=sep)
@@ -41,8 +43,9 @@ graph_read_count_by_sample <- function(read_count_df, sample_types="", sample_re
            x = "Sample-Replicate",
            y = "Read Count",
            fill = "Sample Type") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels by 45 degrees
-            plot.title = element_text(hjust = 0.5))  # Center the title
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+            plot.title = element_text(hjust = 0.5)) + # Center the title
+            scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
     
   }else{ # make a graph for each sample
     
@@ -60,13 +63,14 @@ graph_read_count_by_sample <- function(read_count_df, sample_types="", sample_re
            x = "Sample",
            y = "Read Count",
            fill = "Sample Type") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels by 45 degrees
-            plot.title = element_text(hjust = 0.5))  # Center the title
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+            plot.title = element_text(hjust = 0.5)) + # Center the title
+      scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
   }
   return(p)
 }
 
-#' graph_read_count_by_variant
+#' histogram_read_count_by_variant
 #' 
 #' Create histogram with the number of reads in each sample or sample-replicate;
 #' If information is given on sample types, bars are colored in function of them
@@ -77,7 +81,7 @@ graph_read_count_by_sample <- function(read_count_df, sample_types="", sample_re
 #' @export
 #' 
 
-graph_read_count_by_variant <- function(read_count_df, min_read_count=0, binwidth=100){
+histogram_read_count_by_variant <- function(read_count_df, min_read_count=0, binwidth=100){
   
   # get read_count for each asv
   df <- read_count_df %>%
@@ -96,50 +100,66 @@ graph_read_count_by_variant <- function(read_count_df, min_read_count=0, binwidt
   return(p)
 }
 
-#' make_renkonen_df_all
+#' barplot_renkonen_distance
 #' 
-#' Calculate the Renkonen distance among all pairs of sample-replicates
-#' Returns a data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp (within, if sample1 and sample2 are identical, between otherwise)
+#' Create barplot with renkonen distances between pairs of sample-replicates
+#' If information is given on sample types, bars are colored in function of them
 #' 
-#' @param read_count_df data frame with asv, sample, replicate, and read_count columns
+#' @param df data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by make_renkonen_distance_matrix)
+#' @param sample_types file with sample and sample_type (real/mock/negative) columns
+#' @param sep separator used in csv files
+#' @param x_axis_label_size size of labels in x axis
 #' @export
 #' 
-
-make_renkonen_df_all <- function(read_count_df){
+barplot_renkonen_distance <- function(df, sample_types="", sep=",", x_axis_label_size=6){
+  #  df <- renkonen_within_df
   
-  df <- read_count_df %>%
-    select(asv, sample, replicate, read_count)
-  df$sr <- paste(df$sample, df$replicate, sep="-")
-  # list of samples
-  sample_replicate_df <- df %>%
-    select(sample, replicate, sr) %>%
-    unique()
-  
-  # fine empty dataframe
-  renkonen_df <- data.frame("sample1" = character(),
-                            "sample2" = character(),
-                            "sr1"  = character(),
-                            "sr2"  = character(),
-                            "renkonen_d" = numeric())
-  
-  # loop over all pairs of sample-replicates within sample
-  for(i in 1:(nrow(sample_replicate_df)-1)){
-    sri <- sample_replicate_df$sr[i]
-    sampi <- sample_replicate_df$sample[i]
-    repli <- sample_replicate_df$replicate[i]
-    dfi <- filter(df, sr == sri)
-    for(j in ((i+1):nrow(sample_replicate_df))){
-      srj <- sample_replicate_df$sr[j]
-      sampj <- sample_replicate_df$sample[j]
-      replj <- sample_replicate_df$replicate[j]
-      dfj <- filter(df, sr == srj)
-      rdist <- calculate_renkonen_dist(dfi, dfj)
-      # add line to renkonen_df
-      new_line <- data.frame(sample1 = sampi, sample2 = sampj, replicate1 = sri, replicate2 = srj, renkonen_d = rdist)
-      renkonen_df <- rbind(renkonen_df, new_line)
-    }
+  if(sample_types != ""){
+    sample_types_df <- read.csv(sample_types, sep=sep)
+    # get sample type for each sample
+    sample_types_df <- sample_types_df %>%
+      select(sample, sample_type) %>%
+      unique()
+  }else{
+    sample_types_df <- data.frame(sample=unique(read_count_df$sample),
+                                  sample_type=rep("sample_type", length(unique(read_count_df$sample)))
+    )
   }
   
-  renkonen_df$comparaison <- ifelse(renkonen_df$sample1 == renkonen_df$sample2, "within", "between")
-  return(renkonen_df)
+  df <- left_join(df, sample_types_df, by=c("sample1"="sample")) %>%
+    arrange(renkonen_d)
+  # make replicate pairs (replicate is a concatenation of sample and replicate)
+  df$replicate_pair <- paste(df$sample1, df$replicate1, df$replicate2, sep = ":")
+  # Convert 'replicate_pair' to a factor with the desired order
+  df$replicate_pair <- factor(df$replicate_pair, levels = df$replicate_pair)
+  
+  p <- ggplot(df, aes(x = replicate_pair, y = renkonen_d, fill = sample_type)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Renkonen distances between pairs of replicates of the same sample",
+         x = "Replicate pair",
+         y = "Renkonen distance",
+         fill = "Sample Type") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+          plot.title = element_text(hjust = 0.5)) +  # Center the title
+    scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
+  return(p)
+}
+
+#' density_plot_renkonen_distance
+#' 
+#' Create density plot with renkonen distances between pairs of sample-replicates
+#' 
+#' @param df data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by make_renkonen_distances)
+#' @export
+#' 
+density_plot_renkonen_distance <- function(df){
+  
+  df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
+  
+  ggplot(df, aes(x = renkonen_d, fill = comparison)) +
+    geom_density(alpha = 0.5) +  # Add transparency to the density plot
+    labs(title = "Density of Renkonen distances",
+         x = "Distribution of Renkonen Distances between pairs of replicates",
+         y = "Density") +
+    theme_minimal()
 }

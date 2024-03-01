@@ -1580,48 +1580,6 @@ FilterChimera <- function(read_count_df, outfile="", vsearch_path="", by_sample=
   return(read_count_df)
 }
 
-#' make_renkonen_df
-#' 
-#' Calculate renkonen distances between all pairs of replicates within samples.
-#' Return a data frame with the following columns: sample, replicate1, replicate2, renkonen_d
-#'  
-#' @param read_count_df data frame with the following variables: asv_id, sample, replicate, read_count, asv
-#' @export
-#'
-make_renkonen_df <- function(read_count_df){
-  
-  # list of samples
-  sample_list <- unique(read_count_df$sample)
-  # fine empty dataframe
-  renkonen_df <- data.frame("sample" = character(),
-                            "replicate1"  = character(),
-                            "replicate2"  = character(),
-                            "renkonen_d" = numeric())
-  # loop over samples
-  for(samp in sample_list){
-    # get data for a given samples
-    sample_df <- read_count_df %>%
-      filter(sample == samp)
-    # list of replicates for the sample
-    replicate_list <- unique(sample_df$replicate)
-    
-    # loop over all pairs of replicates within sample
-    for(i in 1:(length(replicate_list)-1)){
-      # data frame for samp replicate i
-      dfi <- filter(sample_df, replicate == replicate_list[[i]])
-      for(j in ((i+1):length(replicate_list))){
-        # data frame for samp replicate j
-        dfj <- filter(sample_df, replicate == replicate_list[[j]])
-        rdist <- calculate_renkonen_dist(dfi, dfj)
-        # add line to renkonen_df
-        new_line <- data.frame(sample = samp, replicate1 = as.character(replicate_list[[i]]), replicate2 = as.character(replicate_list[[j]]), renkonen_d = rdist)
-        renkonen_df <- rbind(renkonen_df, new_line)
-      }
-    }
-  }
-  return(renkonen_df)
-}
-
 #' calculate_renkonen_dist
 #' 
 #' Calculate renkonen distance between two sample-replicate
@@ -1649,28 +1607,93 @@ calculate_renkonen_dist <- function(df1, df2){
   rdist <- 1- sum(df$min)
 }
 
+#' make_renkonen_distances
+#' 
+#' Calculate the Renkonen distance between pairs of sample-replicates
+#' Returns a data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp (within, if sample1 and sample2 are identical, between otherwise)
+#' 
+#' @param read_count_df data frame with asv, sample, replicate, and read_count columns
+#' @param compare [all/within] calculate the Renkonen distance among all pairs of sample-replicates (all), only between replicates of the same sample (within)
+#' @export
+#' 
+make_renkonen_distances <- function(read_count_df, compare="all"){
+  
+  df <- read_count_df %>%
+    select(asv, sample, replicate, read_count)
+  df$sr <- paste(df$sample, df$replicate, sep="-")
+  # list of samples
+  sample_replicate_df <- df %>%
+    select(sample, replicate, sr) %>%
+    unique()
+  
+  # make empty data frame
+  renkonen_df <- data.frame("sample1" = character(),
+                            "sample2" = character(),
+                            "sr1"  = character(),
+                            "sr2"  = character(),
+                            "renkonen_d" = numeric())
+  
+  # loop over all pairs of sample-replicates within sample
+  for(i in 1:(nrow(sample_replicate_df)-1)){
+    sri <- sample_replicate_df$sr[i]
+    sampi <- sample_replicate_df$sample[i]
+    repli <- sample_replicate_df$replicate[i]
+    
+    for(j in ((i+1):nrow(sample_replicate_df))){
+      srj <- sample_replicate_df$sr[j]
+      sampj <- sample_replicate_df$sample[j]
+      replj <- sample_replicate_df$replicate[j]
+      
+      
+      if(sampi == sampj){ # same sample
+        dfi <- filter(df, sr == sri)
+        dfj <- filter(df, sr == srj)
+        rdist <- calculate_renkonen_dist(dfi, dfj)
+        # add line to renkonen_df
+        new_line <- data.frame(sample1 = sampi, sample2 = sampj, replicate1 = repli, replicate2 = replj, renkonen_d = rdist)
+        renkonen_df <- rbind(renkonen_df, new_line)
+      }else{ # different sample
+        if(compare == "all"){ # calculate only if within and between sample comparison is necessary
+          dfi <- filter(df, sr == sri)
+          dfj <- filter(df, sr == srj)
+          rdist <- calculate_renkonen_dist(dfi, dfj)
+          # add line to renkonen_df
+          new_line <- data.frame(sample1 = sampi, sample2 = sampj, replicate1 = repli, replicate2 = replj, renkonen_d = rdist)
+          renkonen_df <- rbind(renkonen_df, new_line)
+        }
+      }
+    }
+  }
+  return(renkonen_df)
+}
+
 #' FilterRenkonen
 #' 
 #' Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample.
 #' Returns the filtered read_count_df data frame
 #'  
 #' @param read_count_df data frame with the following variables: asv_id, sample, replicate, read_count, asv
-#' @param renkonen_distance_quantile quantile renkonen distance to determine cutoff value (among all distances, the lowest renkonen_distance_quantile proportion of values are considered as bellow cutoff)
+#' @param cutoff [0-1]  Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample
+#' @param renkonen_distance_quantile If cutoff value is not given, use the renkonen_distance_quantile to determine cutoff value (e.g. with 0.9 as renkonen_distance_quantile, 90% of the distances are bellow cutoff)
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @export
 #' 
-FilterRenkonen <- function(read_count_df, outfile="", renkonen_distance_quantile=0.9, sep=","){
-  # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- make_renkonen_df(read_count_df)
-  # determine the cut off renkonen distance; values > cutoff are considered as high
-  renkonen_df <- renkonen_df %>%
-    arrange(renkonen_d)
-  last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)
-  cutoff <- renkonen_df$renkonen_d[last_row]
+FilterRenkonen <- function(read_count_df, outfile="", cutoff = NA, renkonen_distance_quantile=0.9, sep=","){
   
+  # calculate Renkonen distances between all pairs of replicates of within sample
+  renkonen_df <- make_renkonen_distances(read_count_df, compare="within") %>%
+    select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
+    arrange(renkonen_d)
+ 
+  if(is.na(cutoff)){  # determine the cut off renkonen distance; values > cutoff are considered as high
+    last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)
+    cutoff <- renkonen_df$renkonen_d[last_row]
+  }
+  print("The cutoff value is ")
+  print(cutoff)
   # get list of samples
   sample_list <- unique(renkonen_df$sample)
-  # filter out replicates sample by smaple
+  # filter out replicates sample by sample
   for(samp in sample_list){
     sample_df <- renkonen_df %>%
       filter(sample == samp)

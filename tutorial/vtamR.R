@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Endoume" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -22,15 +22,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-    fastqdir <- "vtamR_test/data/"
-    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-    outdir <- "vtamR_test/out_zfzr/"
-    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-    asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
-  #fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-  #fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-  #outdir <- "/home/meglecz/vtamR_large_files/out/"
-  #mock_composition <- "local/user_input/mock_composition_mfzr_prerun.csv"
+  #    fastqdir <- "vtamR_test/data/"
+  #    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+  #    outdir <- "vtamR_test/out_zfzr/"
+  #    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+  #    asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
+  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  outdir <- "/home/meglecz/vtamR_large_files/out/"
+  mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
+  asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
 
   num_threads=8
   compress = T
@@ -190,10 +191,10 @@ sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, ou
 ###
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
-updated_asv_list <- sub("\\.", "_updated_2024_02_23.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+updated_asv_list <- sub("\\.", "_updated_2024_02_29.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
 read_count_df <- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list, updated_asv_list=updated_asv_list)
-read_count_df_backup <- read_count_df
-read_count_df <- read_count_df_backup
+#read_count_df_backup <- read_count_df
+#read_count_df <- read_count_df_backup
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 
@@ -232,7 +233,7 @@ stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count
 
 
 # LFN_sample_replicate (by column)
-lfn_sample_replicate_cutoff <- 0.011
+lfn_sample_replicate_cutoff <- 0.001
 outfile <- paste(outdir, "5_LFN_sample_replicate.csv", sep="")
 read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
@@ -303,6 +304,16 @@ sample_prop = 0.8
 outfile <- paste(outdir, "12_FilterChimera.csv", sep="")
 read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
 params <- paste(abskew, by_sample, sample_prop, sep=";")
+stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
+
+
+
+###
+# Avoid rerunning the longest step
+###
+read_count_df <- read.csv(paste(outdir, "12_FilterChimera.csv", sep =""), sep=sep)
+sorted_dir <- paste(outdir, "sorted/", sep="")
+sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep="")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
 
 ###
@@ -380,14 +391,14 @@ TP_df <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mo
 ### OptimizeLFNReaCountAndLFNvariant
 ###
 min_replicate_number=2
-lfn_sample_replicate_cutoff=0.002
+lfn_sample_replicate_cutoff=0.003
 pcr_error_var_prop=0.1
 
 min_lfn_read_count_cutoff=10
 max_lfn_read_count_cutoff=100
 increment_lfn_read_count_cutoff=5
 min_lnf_variant_cutoff=0.001
-max_lnf_variant_cutoff=0.05
+max_lnf_variant_cutoff=0.01
 increment_lnf_variant_cutoff=0.001
 by_replicate=FALSE
 vsearch_path=""
@@ -433,39 +444,38 @@ read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_
 # Graphs
 ###
 
-#https://r-graph-gallery.com/218-basic-barplots-with-ggplot2.html#color
+#https://r-graph-gallery.com
 #https://www.data-to-viz.com/graph/barplot.html
 
+
+file <- paste(outdir, "12_FilterChimera.csv", sep="")
+read_count_df <- read.csv(file, sep=sep)
 ###
-# graph_read_count_by_sample
+# barplot_read_count_by_sample
 ###
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
-graph <- graph_read_count_by_sample(read_count_df=read_count_df, sample_replicate=T, sample_types=sortedinfo, sep=sep )
-graph <- graph_read_count_by_sample(read_count_df=read_count_df, sample_replicate=T, sep=sep )
-print(graph)
+p <- barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo, sep=sep, x_axis_label_size=8 )
+print(p)
+p <- barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=T, sep=sep, x_axis_label_size=4 )
+print(p)
 
 ###
-# graph_read_count_by_variant
+# histogram_read_count_by_variant
 ###
-graph <- graph_read_count_by_variant(read_count_df, min_read_count=10, binwidth=100)
-print(graph)
+p <- histogram_read_count_by_variant(read_count_df, min_read_count=10, binwidth=1000)
+print(p)
 
 ###
 # graph_renkonen_distances
 ###
+renkonen_within_df <- make_renkonen_distances(read_count_df, compare="within")
+renkonen_all_df <- make_renkonen_distances(read_count_df, compare="all")
+p <- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, sep=sep, x_axis_label_size=6)
+print(p)
+p <- density_plot_renkonen_distance(renkonen_within_df)
+print(p)
 
 
-full_renkonen <- make_renkonen_df_all(read_count_df)
-
-ggplot(full_renkonen, aes(x = renkonen_d, fill = comparaison)) +
-  geom_density(alpha = 0.5) +  # Add transparency to the density plot
-    labs(title = "Density of Renkonen distances",
-         x = "Renkonen Distance of replicates pairs within and between samples",
-         y = "Density") +
-    theme_minimal()
-
-
- 
 
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
