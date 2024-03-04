@@ -7,6 +7,7 @@
 FilterRenkonen(
   read_count_df,
   outfile = "",
+  cutoff = NA,
   renkonen_distance_quantile = 0.9,
   sep = ","
 )
@@ -16,7 +17,9 @@ FilterRenkonen(
 
 \item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 
-\item{renkonen_distance_quantile}{quantile renkonen distance to determine cutoff value (among all distances, the lowest renkonen_distance_quantile proportion of values are considered as bellow cutoff)}
+\item{cutoff}{\link{0-1}  Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample}
+
+\item{renkonen_distance_quantile}{If cutoff value is not given, use the renkonen_distance_quantile to determine cutoff value (e.g. with 0.9 as renkonen_distance_quantile, 90\% of the distances are bellow cutoff)}
 }
 \description{
 Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample.

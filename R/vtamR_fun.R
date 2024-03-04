@@ -87,6 +87,7 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
     select(fastq_fw, fastq_rv)
   tmp <- unique(tmp)
   tmp$fasta <- NA
+  tmp$read_count <- NA
   
   for(i in 1:nrow(tmp)){# for each file pairs
     
@@ -114,6 +115,8 @@ Merge <- function(fastqinfo_df, fastqdir, vsearch_path="", outdir="", fastq_asci
     }
     print(vsearch)
     system(vsearch)
+    seq_n <- count_seq(outfile)
+    tmp$read_count[i] <- seq_n
     
     # vsearch produces uncompressed files even if input is compressed => compress output file
     if(compress){ 
@@ -245,59 +248,95 @@ RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n,
   vsearch_path<- check_dir(vsearch_path)
   outdir<- check_dir(outdir)
   
+  fastainfo_df$new_file <- NA
+  fastainfo_df$read_count <- NA
+  
   unique_fasta <- unique(fastainfo_df$fasta)
   
   for(i in 1:length(unique_fasta)){ # go through all fasta files
     input_fasta <- unique_fasta[i]
+    # adjust output filename in function of the compression
+    output_fasta <- input_fasta
+    if(compress && !endsWith(output_fasta, ".gz")){
+      output_fasta <- paste(output_fasta, ".gz", sep="")
+    }
+    if(!compress && endsWith(output_fasta, ".gz")){
+      output_fasta <- sub(".gz$", "", output_fasta)
+    }
     
     if(endsWith(input_fasta, ".zip")){
       stop("Zip files are not supported")
     }
-    
-    input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
-    output_fasta_p <- paste(outdir, input_fasta, sep="")
-    
-    if(!is_linux() && endsWith(input_fasta_p, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
+    original_input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
+    input_fasta_p <- paste(fasta_dir, input_fasta, sep="") # name can change if file de/recompressed
+
+    if(!is_linux() && endsWith(original_input_fasta_p, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
       input_fasta_p <- decompress_file(input_fasta_p, remove_input=F)
     }
+    output_fasta_p <- paste(outdir, input_fasta, sep="")
     
-    seq_n <- count_seq(filename=input_fasta_p)
+    seq_n <- count_seq(file=input_fasta_p)
     if(n > seq_n ){ # not enough seq
-      file.copy(input_fasta_p, output_fasta_p)
+      file.copy(original_input_fasta_p, output_fasta_p)
       msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
       print(msg)
-    }else{ # enough seq => resample
-      options(scipen=100) # do not transform large numbers to scentific forms, since it would lead to an error in vsearch
-      output_fasta_p <- gsub(".gz", "", output_fasta_p)
-      vsearch_cmd <- paste(vsearch_path, "vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
-      print(vsearch_cmd)
-      system(vsearch_cmd)
-      options(scipen=0)
+      # the original file has been decompressed  => remove the decompressed file
+      if(input_fasta_p != original_input_fasta_p){ 
+        file.remove(input_fasta_p)
+      }
+      # the outfile is not yet compressed
+      if(compress && !endsWith(output_fasta_p, ".gz")){ 
+        output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
+      }
+      fastainfo_df$new_file[which(fastainfo_df$fasta==input_fasta)] <- output_fasta
+      fastainfo_df$read_count[which(fastainfo_df$fasta==input_fasta)] <- seq_n
+      next()
+      
     }
+    
+    # enough seq => resample
+    options(scipen=100) # do not transform large numbers to scentific forms, since it would lead to an error in vsearch
+    output_fasta_p <- gsub(".gz", "", output_fasta_p) # vsearch makes decompressed files
+    vsearch_cmd <- paste(vsearch_path, "vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
+    print(vsearch_cmd)
+    system(vsearch_cmd)
+    options(scipen=0)
     
     if(compress){ # compress the output file 
-      outfile_gz <- compress_file(filename=output_fasta_p, remove_input=T)
+      output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
     }
     
-    if(!is_linux() && endsWith(input_fasta, ".gz")){ # delete decompressed input files
+    if(!is_linux() && endsWith(original_input_fasta_p, ".gz")){ # delete decompressed input files
       file.remove(input_fasta_p)
     }
+
+    fastainfo_df$new_file[which(fastainfo_df$fasta==input_fasta)] <- output_fasta
+    fastainfo_df$read_count[which(fastainfo_df$fasta==input_fasta)] <- n
     
   }# all files
+  fastainfo_df <- fastainfo_df %>%
+    select(tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate, fasta=new_file, read_count)
+  new_fastainfo <- paste(outdir, "fastainfo.csv", sep="")
+  write.table(fastainfo_df, file = new_fastainfo,  row.names = F, sep=sep)
 }
 
-#' count_seq
+#' count_seq_bis
 #' 
 #' Count the number of sequences in the input fasta file. Input can be uncompressed of gz file, but zip file are not handled
 #'  
 #' @param file fasta file including path
 #' @export
-count_seq <- function(filename=filename){
+count_seq_bis <- function(file){
+  
+  if(endsWith(file, '.zip') || endsWith(file, '.bz2') || endsWith(file, '.xz')){
+    stop("File compression type is not supported")
+  }
+  
   # work on uncompressed and gz files
-  if(endsWith(filename, "gz")){
-    file_connection <- gzfile(filename, "rb")
+  if(endsWith(file, "gz")){
+    file_connection <- gzfile(file, "rb")
   }else{
-    file_connection <- file(filename, "r")
+    file_connection <- file(file, "r")
   }
   data <- as.data.frame(readLines(file_connection, n = -1))
   close(file_connection)
@@ -312,6 +351,46 @@ count_seq <- function(filename=filename){
   return(count)
 }
 
+#' count_seq
+#' 
+#' Count the number of sequences in the input fasta file. Input can be uncompressed of gz file, but zip and other compression types are not supported
+#' For linux system, uses bash commands grep and wc and it is quick, for others it uses count.fields, and it is slower
+#'  
+#' @param file fasta file including path
+#' @export
+count_seq <- function(file) {
+  
+  if(endsWith(file, '.zip') || endsWith(file, '.bz2') || endsWith(file, '.xz')){
+    stop("File compression type is not supported")
+  }
+  
+  if(is_linux()){
+    if(endsWith(file, '.gz')){
+      cmd <- paste("zcat", file, "| grep '>' | wc -l", sep=" ")
+    }else{
+      cmd <- paste("grep '>' ",file, "| wc -l", sep=" ")
+    }
+    seq_count <- as.integer(system(cmd, intern=TRUE))
+    return(seq_count)
+  }else{ # non-linux
+  
+    if(endsWith(file, '.gz')){
+      con <- gzfile(file, "rb")
+    }else{
+      con <- file(file, "r")
+    }
+    field_count <- as.data.frame(count.fields(con, sep = ">")) # get the number of fields per line, using '>' as separator
+    close(con)
+    colnames(field_count) <- c("field_n")
+    
+    field_count <- field_count %>%
+      filter(field_n > 1)
+    
+    seq_count <- nrow(field_count)
+    
+    return(seq_count)
+  }
+}
 
 #' SortReads
 #' 
@@ -393,15 +472,29 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
         file <- paste(outdir, file, sep="") # add path
         file_gz <- compress_file(file, remove_input=T) # compress file
       }
-      write.table(sortedinfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep) 
     }
   }
   else{
     # check only + strand
     sortedinfo_df <- SortReads_no_reverse(fastainfo_df=fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   }
-  return(sortedinfo_df)
   
+  sortedinfo_df <- get_read_counts(sortedinfo_df, dir=outdir)
+  write.table(sortedinfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep) 
+  
+  return(sortedinfo_df)
+}
+
+get_read_counts <- function(df, dir){
+  
+  df$read_count <- NA
+  for(file in df$filename){
+    file_path <- paste(dir, file, sep="")
+    read_n <- count_seq(file_path)
+    df$read_count[which(df$filename==file)] <- read_n
+  }
+
+return(df)
 }
 
 #' SortReads_no_reverse
@@ -425,7 +518,7 @@ SortReads <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="" ,vsear
 #' @param sep separator in input and output csv files; default: ","
 #' @param compress [T/F]; compress output to gzip files.
 #' @export
-SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=0){
+SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
   
   # upper case for all primers and tags
@@ -494,7 +587,7 @@ SortReads_no_reverse <- function(fastainfo_df, fastadir, outdir="", cutadapt_pat
   # make sortedinfo file
   fastainfo_df <- fastainfo_df %>%
     select(-tag_fw, -primer_fw, -tag_rv, -primer_rv, -fasta)
-  write.table(fastainfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep) 
+#  write.table(fastainfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep) 
   return(fastainfo_df)
 }
 

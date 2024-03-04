@@ -4,11 +4,12 @@
 \alias{count_seq}
 \title{count_seq}
 \usage{
-count_seq(filename = filename)
+count_seq(file)
 }
 \arguments{
 \item{file}{fasta file including path}
 }
 \description{
-Count the number of sequences in the input fasta file. Input can be uncompressed of gz file, but zip file are not handled
+Count the number of sequences in the input fasta file. Input can be uncompressed of gz file, but zip and other compression types are not supported
+For linux system, uses bash commands grep and wc and it is quick, for others it uses count.fields, and it is slower
 }

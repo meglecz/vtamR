@@ -22,16 +22,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-  #    fastqdir <- "vtamR_test/data/"
-  #    fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-  #    outdir <- "vtamR_test/out_zfzr/"
-  #    mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-  #    asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
-  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-  outdir <- "/home/meglecz/vtamR_large_files/out/"
-  mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
-  asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
+      fastqdir <- "vtamR_test/data/"
+      fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+      outdir <- "vtamR_test/out_zfzr/"
+      mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+      asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
+  #  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  #  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  #  outdir <- "/home/meglecz/vtamR_large_files/out/"
+  #  mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
+  #  asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
 
   num_threads=8
   compress = T
@@ -162,7 +162,6 @@ compress = T
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
 fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
-
 ###
 ### RandomSeq
 ###
@@ -170,7 +169,7 @@ randomseq_dir = paste(outdir, "random_seq/", sep="")
 #fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
 compress = T
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=1000000, randseed=0, compress=compress)
+RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
 
 ###
 ### SortReads
