@@ -7,7 +7,7 @@ library("devtools")
 library("roxygen2")
 library("seqinr") # splitseq for FilterCodonStop
 library("dplyr")
-library("tidyr") # gather for read_asv_table; pivot_wider in write_asvtable
+library("tidyr") # gather for read_asv_table; pivot_wider in write_asvtable and stat_sample !!sym
 library("utils") # to handle zipped files
 library("ggplot2") 
 
@@ -274,7 +274,7 @@ read_count_df <- FilterIndel(read_count_df, outfile=outfile, sep=sep)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterIndel")
 
 ###
-### FilerCodonStop
+### FilterCodonStop
 ###
 outfile <- paste(outdir, "10_FilterCodonStop.csv", sep="")
 genetic_code = 5
@@ -417,7 +417,14 @@ OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_c
 ###
 # check the a particular value of a feature (asv, asv_id, sample, replicate) in all intermediate output files
 ###
-tmp <- history_by(dir=outdir, feature="asv_id", value="1", sep=sep)
+tmp <- history_by(dir=outdir, feature="asv_id", value="915", sep=sep)
+
+###
+# group lines by grouped_by (asv, asv_id, sample, replicate) variable and summarize a feature (asv, asv_id, sample, replicate, read_count) for each group
+###
+outfile <- paste(outdir, "read_count_by_sample.csv", sep="")
+read_count_by_asv_id <- summarize_by(dir=outdir, sep=sep, outfile=outfile, feature="read_count", grouped_by="sample")
+
 
 
 ###

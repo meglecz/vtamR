@@ -9,7 +9,7 @@ history_by(dir, feature = "", value = "", sep = ",")
 \arguments{
 \item{dir}{directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFN_sample_replicate.csv)}
 
-\item{feature}{\link{asv_id/asv/sample/replicate}}
+\item{feature}{\link{asv_id/asv/sample/replicate/asv_id}}
 
 \item{value}{values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files}
 

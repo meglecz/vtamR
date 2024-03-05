@@ -15,7 +15,7 @@ SortReads_no_reverse(
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
   sep = ",",
-  compress = 0
+  compress = F
 )
 }
 \arguments{

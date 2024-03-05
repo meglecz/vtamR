@@ -1782,8 +1782,8 @@ FilterRenkonen <- function(read_count_df, outfile="", cutoff = NA, renkonen_dist
     last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)
     cutoff <- renkonen_df$renkonen_d[last_row]
   }
-  print("The cutoff value is ")
-  print(cutoff)
+#  print("The cutoff value is ")
+#  print(cutoff)
   # get list of samples
   sample_list <- unique(renkonen_df$sample)
   # filter out replicates sample by sample
@@ -3084,7 +3084,7 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
 #' Filters a feature (asv_id/asv/sample/replicate), in all output files of intermediate filtering steps to retain only lines corresponding a value
 #'  
 #' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFN_sample_replicate.csv)
-#' @param feature [asv_id/asv/sample/replicate]
+#' @param feature [asv_id/asv/sample/replicate/asv_id]
 #' @param value values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files
 #' @param sep separator used in csv files
 #' @export
@@ -3133,4 +3133,80 @@ history_by <- function(dir, feature="", value='', sep=","){
     }
   }
   return(selected_lines)
+}
+
+#' summarize_by
+#' 
+#' Summarizes the output of each intermediate filtering steps. 
+#' Takes all files in the dir, that start with a number.
+#' For each file, groups the lines by grouped_by variable, and gets the number of distinct values of feature for each group, or if feature is read_count, gets the total number of reads of each group
+#'  
+#' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFN_sample_replicate.csv)
+#' @param feature [asv_id/asv/sample/replicate/read_count] if read_count, get the total number of reads for each of the grouped values, otherwise get the number of distinct values of feature 
+#' @param grouped_by [asv_id/asv/sample/replicate] group data by this variable
+#' @param value values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files
+#' @param sep separator used in csv files
+#' @param outfile name of the output file; optional, it is not given results are returned in a data frame, but no file is written 
+#' @export
+#'
+summarize_by <- function(dir, sep=",", outfile="", feature="asv", grouped_by="sample"){
+  
+  # read file names in dir
+  dir <- check_dir(dir)
+  files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
+  
+  # get filenames to file_df and arrange the according to the number at the beginning of the file name
+  file_df <- data.frame("files"= files)
+  file_df$order <- gsub("_.*$", "", file_df$files)
+  file_df$order <- as.numeric(file_df$order)
+  file_df <- file_df %>%
+    arrange(order)
+  
+  # define empty data frame
+  df <- data.frame(
+    "grouped_by"=character(),
+    "count"=character(),
+    "step"=character()
+  )
+  
+  for(i in 1:length(files)){ # for each file
+    # read file
+    file <- paste(dir, file_df$files[i], sep="")
+    filename <- file_df$files[i]
+    filename <- gsub("\\..*$", "", filename)
+    tmp <- read.csv(file, sep=sep)
+    
+    if(grouped_by %in% colnames(tmp)){ # grouping variable is present in the file
+      # feature variable is in the file
+      if(feature %in% colnames(tmp)){
+        if(feature == "read_count"){ # if feature is read_count, it should be summed instead of get the number of distinct values
+          tmp <- tmp %>%
+            group_by(!!sym(grouped_by)) %>%
+            summarize(count = sum(!!sym(feature)))
+        }else{ #  get the number of distinct values
+          tmp <- tmp %>%
+            group_by(!!sym(grouped_by)) %>%
+            summarize(count = n_distinct(!!sym(feature)))
+        }
+      } else{ # feature variable is NOT in the file
+        tmp <- tmp %>%
+          select(!!sym(grouped_by)) %>%
+          distinct()
+        tmp$count <- NA
+      }
+      tmp$step <- rep(filename, nrow(tmp)) # add filename
+      df <- rbind(df, tmp)
+    }else{ # grouping variable is not present => go to next file
+      msg <- paste("WARNING:",grouped_by, "variable is not present in", file, sep=" ")
+      print(msg)
+      next()
+    }
+  }
+  # mkae wide format
+  wide_df <- as.data.frame(pivot_wider(df, names_from = c(step), values_from = count, values_fill=0, names_sep = ".", names_sort=F))
+  # print outfile
+  if(outfile != ""){
+    write.table(wide_df, file=outfile, row.names = F, sep=sep)
+  }
+  return(wide_df)
 }
