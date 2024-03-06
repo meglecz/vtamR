@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -63,9 +63,10 @@ if(computer == "Bombyx"){
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
   fastqdir <- "vtamR_test/data/"
-  fastqinfo <- "vtamR_test/data/fastqinfo_zfzr_gz.csv"
+  fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
   outdir <- "vtamR_test/out_zfzr/"
-  mock_composition <- "vtamR_test/data/mock_composition_zfzr_eu.csv"
+  mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+  asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
   num_threads=4
   compress = F
 }
@@ -166,10 +167,23 @@ fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path
 ### RandomSeq
 ###
 randomseq_dir = paste(outdir, "random_seq/", sep="")
-#fastainfo <- paste(merged_dir, "fastainfo_gz.csv", sep="")
-#fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
-compress = T
+fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
+fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
+compress = F
 RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
+
+RandomSeq_windows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=10000, randseed=0, compress=compress)
+
+
+
+file = "vtamR_test/out_zfzr/merged/zfzr_1_fw.fasta.gz"
+df <- select_sequences(file, n=100)
+df_uncomp <- read_fasta_to_df(file)
+
+
+
+
+
 
 ###
 ### SortReads

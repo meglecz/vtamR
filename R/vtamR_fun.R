@@ -3210,3 +3210,140 @@ summarize_by <- function(dir, sep=",", outfile="", feature="asv", grouped_by="sa
   }
   return(wide_df)
 }
+
+#' write_df_to_fasta
+#' 
+#' Writes input data frame to a fasta file. Can produce gz compressed file or uncompressed files.
+#' The output filename extention is corrected according to the compression
+#'  
+#' @param df input data frame with the following columns: header, sequence
+#' @param out out fasta filename; modified according to compress
+#' @param compress [T/F] is TRUE, the output file will be compressed
+#' @export
+#'
+write_df_to_fasta <- function(df, out, compress=F){
+  
+  if(compress){
+    if(!endsWith(out, ".gz")){
+      out <- paste(out, ".gz", sep="")
+    }
+    file_connection <- gzfile(out, "w")
+  }else{
+    if(endsWith(out, ".gz")){
+      out <- sub(".gz", "", out)
+    }
+    file_connection <- file(out, "w")
+  }
+  
+  df$header <- paste('>', df$header, sep="")
+  writeLines(paste(df$header, df$sequence, sep="\n"), con=file_connection, sep="\n")
+  close(file_connection)
+  
+  return(out)
+}
+
+
+#' select_sequences
+#' 
+#' Select n random sequences from the input file and returns a data frame with two columns, headers and sequences.
+#'  
+#' @param file input fasta file; can be  uncompressed or compressed in gz format (zip files are not supported)
+#' @param n number of sequences to be selected
+#' @param randseed positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result
+#' @export
+#'
+select_sequences <- function(file, n=100, randseed=0){
+  
+  # read file to a df, with headers in one column and sequences in another
+  seq_df <- read_fasta_to_df(file)
+  seq_n <- nrow(seq_df)
+  if(seq_n > n){ # enough sequences
+    if(randseed == 0){
+      set.seed(Sys.time())
+    }else{
+      set.seed(randseed)
+    }
+    random_integers <- as.data.frame(sample(1:seq_n, size = n, replace = FALSE))
+    colnames(random_integers) <- c("random_ind")
+    seq_df$ind <- as.numeric(rownames(seq_df))
+    # select lines that correspond to random numbers
+    seq_df <- left_join(random_integers, seq_df, by=c("random_ind"= "ind")) %>%
+      select(-random_ind)
+    
+  }else{
+    msg <- paste("Only", seq_n, "sequences in ",file, "All sequences will used in subsequent steps", sep=" ")
+    print(msg)
+  }
+  
+  return(seq_df)
+}
+
+
+#' read_fasta_to_df
+#' 
+#' Read a fasta file to a data frame with two columns: headers and sequences
+#'  
+#' @param file input fasta file; can be  uncompressed or compressed in gz format (zip files are not supported)
+#' @export
+#'
+read_fasta_to_df <- function(file){
+  
+  ### can deal with uncompressed files and gz compressed files. Zip files should be decompressed previously
+  if(endsWith(file, ".gz")){
+    file_connection <- gzfile(file, "rb") 
+  }else{
+    file_connection <- file(file, "r")
+  }
+  
+  # rea file to a vector. Ech element is a line
+  file_contents <- readLines(file_connection, warn = FALSE)
+  close(file_connection)
+  
+  # Identify lines starting with '>'
+  header_indices <- grepl("^>", file_contents)
+  # Use cumulative sum to create groups for each header
+  group_indices <- cumsum(header_indices)
+  # Split the file_contents into groups based on header indices
+  grouped_lines <- split(file_contents, group_indices)
+  rm(group_indices)
+  
+  # Create a data frame
+  df <- data.frame(
+    header = gsub("^>", "", file_contents[header_indices]), # Remove '>' from headers
+    sequence = sapply(grouped_lines, function(x) if(length(x) > 1) paste(x[-1], collapse = "") else ""),
+    stringsAsFactors = FALSE
+  )
+  
+  return(df)
+}
+
+#' RandomSeq_windows
+#' 
+#' Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
+#'  
+#' @param fastainfo_df data frame with a 'fasta' column containing input file names; files can be compressed in gz and zip format
+#' @param fasta_dir directory that contains the input fasta files
+#' @param n integer; the number of randomly selected sequences 
+#' @param outdir directory for the output files
+#' @param randseed positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result
+#' @param compress [T/F] is TRUE, the output file will be compressed
+#' @export
+#' 
+RandomSeq_windows <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed=0, compress=T){
+  
+  fasta_dir<- check_dir(fasta_dir)
+  outdir<- check_dir(outdir)
+  
+  unique_fasta <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(unique_fasta)){ # go through all fasta files
+    input_fasta <- unique_fasta[i]
+    input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
+    
+    selected_seq_df <- select_sequences(file=input_fasta_p, n, randseed=randseed)
+    outfile <- paste(outdir, input_fasta, sep="")
+    outfile <- write_df_to_fasta(selected_seq_df, out=outfile, compress=compress) # the extension of the outfile will be adjusted according to compress
+    
+  } # end for
+  
+}
