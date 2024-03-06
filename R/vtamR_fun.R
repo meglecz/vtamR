@@ -231,7 +231,8 @@ compress_file <- function(filename="", remove_input=F){
 
 #' RandomSeq
 #' 
-#' Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
+#' Random select n sequences from each input fasta file. 
+#' Do not work on Windows! If using Windows, please, use RandomSeqWindows
 #'  
 #' @param fastainfo_df data frame with a 'fasta' column containing input file names; files can be compressed in gz and zip format
 #' @param n integer; the number of randomly selected sequences 
@@ -240,9 +241,11 @@ compress_file <- function(filename="", remove_input=F){
 #' @param vsearch_path path to vsearch
 #' @param randseed positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result
 #' @param compress [T/F]; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;
+#' @param separator used un csv files; "," by default
 #' @export
 #' 
-RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n, randseed=0, compress=F){
+RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n, randseed=0, compress=F, sep=","){
+  
   # quite fast for uncompressed and gz files
   fasta_dir<- check_dir(fasta_dir)
   vsearch_path<- check_dir(vsearch_path)
@@ -255,6 +258,11 @@ RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n,
   
   for(i in 1:length(unique_fasta)){ # go through all fasta files
     input_fasta <- unique_fasta[i]
+    print(input_fasta)
+    # stop if zip file
+    if(endsWith(input_fasta, ".zip")){
+      stop("Zip files are not supported")
+    }
     # adjust output filename in function of the compression
     output_fasta <- input_fasta
     if(compress && !endsWith(output_fasta, ".gz")){
@@ -263,36 +271,30 @@ RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n,
     if(!compress && endsWith(output_fasta, ".gz")){
       output_fasta <- sub(".gz$", "", output_fasta)
     }
-    
-    if(endsWith(input_fasta, ".zip")){
-      stop("Zip files are not supported")
-    }
-    original_input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
-    input_fasta_p <- paste(fasta_dir, input_fasta, sep="") # name can change if file de/recompressed
-
-    if(!is_linux() && endsWith(original_input_fasta_p, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
-      input_fasta_p <- decompress_file(input_fasta_p, remove_input=F)
-    }
+    input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
     output_fasta_p <- paste(outdir, input_fasta, sep="")
     
     seq_n <- count_seq(file=input_fasta_p)
     if(n > seq_n ){ # not enough seq
-      file.copy(original_input_fasta_p, output_fasta_p)
+      # print msg
       msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
       print(msg)
-      # the original file has been decompressed  => remove the decompressed file
-      if(input_fasta_p != original_input_fasta_p){ 
-        file.remove(input_fasta_p)
-      }
-      # the outfile is not yet compressed
-      if(compress && !endsWith(output_fasta_p, ".gz")){ 
-        output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
+      # copy and compress/decompress input file according to the need
+      if(compress && !endsWith(input_fasta_p, ".gz")){ # input uncompressed, and compress = T
+        output <- compress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+        file.rename(output, output_fasta_p) # move compressed file to the target location
+      }else{
+        if(!compress && endsWith(input_fasta_p, ".gz")){ # input compressed, and compress = F
+          output <- decompress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+          file.rename(output, output_fasta_p) # move compressed file to the target location
+        }else{ # output, input same compression
+          file.copy(input_fasta_p, output_fasta_p)
+        }
       }
       fastainfo_df$new_file[which(fastainfo_df$fasta==input_fasta)] <- output_fasta
       fastainfo_df$read_count[which(fastainfo_df$fasta==input_fasta)] <- seq_n
       next()
-      
-    }
+    } # not enough seq
     
     # enough seq => resample
     options(scipen=100) # do not transform large numbers to scentific forms, since it would lead to an error in vsearch
@@ -306,18 +308,15 @@ RandomSeq <- function(fastainfo_df, fasta_dir="", outdir="", vsearch_path="", n,
       output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
     }
     
-    if(!is_linux() && endsWith(original_input_fasta_p, ".gz")){ # delete decompressed input files
-      file.remove(input_fasta_p)
-    }
-
     fastainfo_df$new_file[which(fastainfo_df$fasta==input_fasta)] <- output_fasta
     fastainfo_df$read_count[which(fastainfo_df$fasta==input_fasta)] <- n
-    
   }# all files
+  
   fastainfo_df <- fastainfo_df %>%
     select(tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate, fasta=new_file, read_count)
   new_fastainfo <- paste(outdir, "fastainfo.csv", sep="")
   write.table(fastainfo_df, file = new_fastainfo,  row.names = F, sep=sep)
+  return(new_fastainfo)
 }
 
 #' count_seq_bis
@@ -3295,7 +3294,7 @@ read_fasta_to_df <- function(file){
     file_connection <- file(file, "r")
   }
   
-  # rea file to a vector. Ech element is a line
+  # read file to a vector. Ech element is a line
   file_contents <- readLines(file_connection, warn = FALSE)
   close(file_connection)
   
@@ -3317,7 +3316,7 @@ read_fasta_to_df <- function(file){
   return(df)
 }
 
-#' RandomSeq_windows
+#' RandomSeqWindows
 #' 
 #' Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
 #'  
@@ -3327,9 +3326,10 @@ read_fasta_to_df <- function(file){
 #' @param outdir directory for the output files
 #' @param randseed positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result
 #' @param compress [T/F] is TRUE, the output file will be compressed
+#' @param sep separator used in csv files; default: ","
 #' @export
 #' 
-RandomSeq_windows <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed=0, compress=T){
+RandomSeqWindows <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed=0, compress=T, sep=","){
   
   fasta_dir<- check_dir(fasta_dir)
   outdir<- check_dir(outdir)
@@ -3341,9 +3341,14 @@ RandomSeq_windows <- function(fastainfo_df, fasta_dir="", outdir="", n, randseed
     input_fasta_p <- paste(fasta_dir, input_fasta, sep="")
     
     selected_seq_df <- select_sequences(file=input_fasta_p, n, randseed=randseed)
+    fastainfo_df$read_count[which(fastainfo_df$fasta == input_fasta)] <- nrow(selected_seq_df)
+    
     outfile <- paste(outdir, input_fasta, sep="")
     outfile <- write_df_to_fasta(selected_seq_df, out=outfile, compress=compress) # the extension of the outfile will be adjusted according to compress
-    
+    outfile <- sub(outdir, "", outfile)
+    fastainfo_df$fasta[which(fastainfo_df$fasta == input_fasta)] <- outfile
+    fastainfo_df$read_count[which(fastainfo_df$fasta == input_fasta)] <- nrow(selected_seq_df)
   } # end for
-  
+  write.table(fastainfo_df, file = paste(outdir, "fastainfo.csv", sep=""),  row.names = F, sep=sep)
+  return(fastainfo_df)
 }

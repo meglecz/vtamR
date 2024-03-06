@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -22,16 +22,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-      fastqdir <- "vtamR_test/data/"
-      fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-      outdir <- "vtamR_test/out_zfzr/"
-      mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+     fastqdir <- "vtamR_test/data/"
+     fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+     outdir <- "vtamR_test/out_zfzr/"
+     mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
       asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
-  #  fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-  #  fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-  #  outdir <- "/home/meglecz/vtamR_large_files/out/"
-  #  mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
-  #  asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
+  #    fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+  #    fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+  #   outdir <- "/home/meglecz/vtamR_large_files/out/"
+  #   mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
+  #   asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
 
   num_threads=8
   compress = T
@@ -165,20 +165,31 @@ fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path
 
 ###
 ### RandomSeq
+# RandomSeq is about 5 times quicker than RandomSeq_windows, and it is more memory efficient.
+# However, RandomSeq does not work on Windows
 ###
 randomseq_dir = paste(outdir, "random_seq/", sep="")
 fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
 fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
-compress = F
-RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress)
+compress = T
+#FF OK
+#FT file OK, seqn no
+#TF OK
+#TT OK
 
-RandomSeq_windows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=10000, randseed=0, compress=compress)
+start_time <- Sys.time()  # Record the start time
+fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=1000, randseed=0, compress=compress, sep=sep)
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)
+
+start_time <- Sys.time()  # Record the start time
+fastainfo_df <- RandomSeqWindows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000, randseed=0, compress=compress, sep=sep)
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)
 
 
-
-file = "vtamR_test/out_zfzr/merged/zfzr_1_fw.fasta.gz"
-df <- select_sequences(file, n=100)
-df_uncomp <- read_fasta_to_df(file)
 
 
 

@@ -11,7 +11,8 @@ RandomSeq(
   vsearch_path = "",
   n,
   randseed = 0,
-  compress = F
+  compress = F,
+  sep = ","
 )
 }
 \arguments{
@@ -28,7 +29,10 @@ RandomSeq(
 \item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
 
 \item{compress}{\link{T/F}; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;}
+
+\item{separator}{used un csv files; "," by default}
 }
 \description{
-Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
+Random select n sequences from each input fasta file.
+Do not work on Windows! If using Windows, please, use RandomSeqWindows
 }
