@@ -5,7 +5,7 @@
 \title{OptimizePCRError}
 \usage{
 OptimizePCRError(
-  read_count_df,
+  read_count,
   mock_composition = "",
   sep = ",",
   outfile = "",
@@ -14,9 +14,9 @@ OptimizePCRError(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
-\item{mock_composition}{csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
 
 \item{sep}{separator used in mock_composition}
 

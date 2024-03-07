@@ -2,21 +2,25 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{get_stat}
 \alias{get_stat}
-\title{Get read, variant, sample and replicate counts.
+\title{get_stat
+Get read, variant, sample and replicate counts.
 Complete the stat_df with the above statistics.}
 \usage{
-get_stat(read_count_df, stat_df, stage, params = NA)
+get_stat(read_count, stat_df, stage = "", params = NA, out = "")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{stat_df}{data frame with the following variables: parameters, asv_count, read_count, read_count, sample_count, sample_replicate_count}
 
 \item{stage}{name of the filtering step; it is used for labeling the line in the stat_df}
 
 \item{params}{parameter value (or their concatenation if more than one) used for the filtering step}
+
+\item{out}{name of the output file}
 }
 \description{
+get_stat
 Get read, variant, sample and replicate counts.
 Complete the stat_df with the above statistics.
 }

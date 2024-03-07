@@ -4,10 +4,10 @@
 \alias{PoolReplicates}
 \title{Pool replicates sample by sample}
 \usage{
-PoolReplicates(read_count_df, digits = 0, outfile = "", sep = ",")
+PoolReplicates(read_count, digits = 0, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{digits}{round the mean read counts to digits}
 

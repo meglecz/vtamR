@@ -4,10 +4,10 @@
 \alias{FilterMinReplicateNumber}
 \title{FilterMinReplicateNumber}
 \usage{
-FilterMinReplicateNumber(read_count_df, cutoff = 2, outfile = "", sep = ",")
+FilterMinReplicateNumber(read_count, cutoff = 2, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{cutoff}{Minimum number of replicates; default=2}
 

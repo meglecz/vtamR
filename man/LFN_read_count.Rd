@@ -4,10 +4,10 @@
 \alias{LFN_read_count}
 \title{LFN_read_count}
 \usage{
-LFN_read_count(read_count_df, cutoff = 10, outfile = "", sep = ",")
+LFN_read_count(read_count, cutoff = 10, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{cutoff}{minimum number of reads for an occurrence; default=10}
 

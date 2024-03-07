@@ -5,7 +5,7 @@
 \title{SortReads}
 \usage{
 SortReads(
-  fastainfo_df,
+  fastainfo,
   fastadir,
   outdir = "",
   cutadapt_path = "",
@@ -21,7 +21,7 @@ SortReads(
 )
 }
 \arguments{
-\item{fastainfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
+\item{fastainfo}{data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
 
 \item{fastadir}{directory with input fasta files (listed in fastainfo_df$fasta)}
 

@@ -5,7 +5,7 @@
 \title{OptimizeLFNReadCountAndLFNvariant}
 \usage{
 OptimizeLFNReadCountAndLFNvariant(
-  read_count_df,
+  read_count,
   known_occurrences = "",
   sep = ",",
   outfile = "",
@@ -27,9 +27,9 @@ OptimizeLFNReadCountAndLFNvariant(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
-\item{known_occurrences}{file produced by make_known_occurrences function, with known FP and TP}
+\item{known_occurrences}{data frame or file produced by make_known_occurrences function, with known FP and TP}
 
 \item{sep}{separator used in csv files}
 

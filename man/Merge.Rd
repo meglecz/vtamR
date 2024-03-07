@@ -5,7 +5,7 @@
 \title{Merge}
 \usage{
 Merge(
-  fastqinfo_df,
+  fastqinfo,
   fastqdir,
   vsearch_path = "",
   outdir = "",
@@ -25,7 +25,7 @@ Merge(
 )
 }
 \arguments{
-\item{fastqinfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv}
+\item{fastqinfo}{data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv}
 
 \item{fastqdir}{directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)}
 

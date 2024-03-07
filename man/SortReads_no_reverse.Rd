@@ -5,7 +5,7 @@
 \title{SortReads_no_reverse}
 \usage{
 SortReads_no_reverse(
-  fastainfo_df,
+  fastainfo,
   fastadir,
   outdir = "",
   cutadapt_path = "",
@@ -19,8 +19,6 @@ SortReads_no_reverse(
 )
 }
 \arguments{
-\item{fastainfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
-
 \item{fastadir}{directory with input fasta files (listed in fastainfo_df$fasta)}
 
 \item{outdir}{output directory}
@@ -40,6 +38,8 @@ SortReads_no_reverse(
 \item{sep}{separator in input and output csv files; default: ","}
 
 \item{compress}{\link{T/F}; compress output to gzip files.}
+
+\item{fastainfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
 }
 \description{
 Same as SortReads, but do not check the reverse complement of the sequences.

@@ -5,7 +5,7 @@
 \title{LFN_variant}
 \usage{
 LFN_variant(
-  read_count_df,
+  read_count,
   cutoff = 0.001,
   by_replicate = FALSE,
   outfile = "",
@@ -14,7 +14,7 @@ LFN_variant(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{cutoff}{minimum proportion for an occurrence within an asv or an asv-replicate; default=0.001}
 

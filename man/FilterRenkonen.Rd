@@ -5,7 +5,7 @@
 \title{FilterRenkonen}
 \usage{
 FilterRenkonen(
-  read_count_df,
+  read_count,
   outfile = "",
   cutoff = NA,
   renkonen_distance_quantile = 0.9,
@@ -13,7 +13,7 @@ FilterRenkonen(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 

@@ -5,7 +5,7 @@
 \title{FilerPCRerror}
 \usage{
 FilterPCRerror(
-  read_count_df,
+  read_count,
   outfile = "",
   vsearch_path = "",
   pcr_error_var_prop = 0.1,
@@ -16,7 +16,7 @@ FilterPCRerror(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 

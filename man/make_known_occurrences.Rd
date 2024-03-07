@@ -5,31 +5,38 @@
 \title{make_known_occurrences}
 \usage{
 make_known_occurrences(
-  read_count_samples_df,
+  read_count_samples,
   sortedinfo = "",
   mock_composition = "",
   sep = ",",
   known_occurrences = "",
   missing_occurrences = "",
+  performance_metrics = "",
   habitat_proportion = 0.5
 )
 }
 \arguments{
-\item{read_count_samples_df}{data frame with the following variables: asv_id, plate, marker, sample, read_count, asv}
+\item{read_count_samples}{data frame or csv file with the following variables: asv_id, plate, marker, sample, read_count, asv}
 
-\item{sortedinfo}{csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)}
+\item{sortedinfo}{data frame or csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)}
 
-\item{mock_composition}{csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
 
 \item{sep}{separator used in csv files}
 
-\item{known_occurrences}{name of the output file containing known occurrences (TP in mock, and FP)}
+\item{known_occurrences}{name of the output file containing known occurrences (expected occurrences in mock, and FP)}
 
 \item{missing_occurrences}{name of the output file containing the missing occurrences (FN); file is written if only the name has been specified}
+
+\item{performance_metrics}{name of the output file containing performance metrics}
 
 \item{habitat_proportion}{for each asv, if the proportion of reads in a habitat is below this cutoff, it is considered as an artifact in all samples of the habitat}
 }
 \description{
-Prepare a file that list all occurrences that are clearly a TP (expected variants in mock) or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
-returns a data frame with the number of False Positives, False Negatives, True Positives
+Prepare three data frames and if file names are given they are also write to files
+\itemize{
+\item known_occurrences list all occurrences that are expected in mock or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
+\item missing_occurrences list all FN (expected occurrences in mock samples that are missing)
+\item performance_metrics Number of TP (expected in mock and present), FP (unexpected but present), FN  (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN))
+}
 }

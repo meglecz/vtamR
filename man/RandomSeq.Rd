@@ -5,7 +5,7 @@
 \title{RandomSeq}
 \usage{
 RandomSeq(
-  fastainfo_df,
+  fastainfo,
   fasta_dir = "",
   outdir = "",
   vsearch_path = "",
@@ -16,7 +16,7 @@ RandomSeq(
 )
 }
 \arguments{
-\item{fastainfo_df}{data frame with a 'fasta' column containing input file names; files can be compressed in gz and zip format}
+\item{fastainfo}{data frame or csv file with a 'fasta' column containing input file names; files can be compressed in gz and zip format}
 
 \item{fasta_dir}{directory that contains the input fasta files}
 

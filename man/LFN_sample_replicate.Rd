@@ -4,10 +4,10 @@
 \alias{LFN_sample_replicate}
 \title{LFN_sample_replicate}
 \usage{
-LFN_sample_replicate(read_count_df, cutoff = 0.001, outfile = "", sep = ",")
+LFN_sample_replicate(read_count, cutoff = 0.001, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{cutoff}{minimum proportion for an occurrence within a sample-replicate; default=0.001}
 

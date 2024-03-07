@@ -37,7 +37,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   sep <- ","
   compress <- F
   merged_dir <- paste(outdir, "merged/", sep="")
-  fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+  fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
   ### compare results to precomputed files by vtam
   vtam_out <- "vtam/merged/"
@@ -84,7 +84,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   cutadapt_maximum_length <- 500 # -M in cutadapt
   compress <- F
   
-  sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+  sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
   vtam_out <-  "vtam/sorted/"
@@ -395,7 +395,7 @@ test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=b
   input_df <- input_df %>%
     select(asv_id, asv)
   
-  asv_tax <- TaxAssign(df=input_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
+  asv_tax <- TaxAssign(input_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
   
   expected_asv_tax <- read.table(expeted_output, sep="\t", header=T)
   expected_asv_tax <- expected_asv_tax %>%

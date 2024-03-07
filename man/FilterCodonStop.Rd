@@ -4,10 +4,10 @@
 \alias{FilterCodonStop}
 \title{FilterCodonStop}
 \usage{
-FilterCodonStop(read_count_df, outfile = "", genetic_code = 5, sep = ",")
+FilterCodonStop(read_count, outfile = "", genetic_code = 5, sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
 
 \item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
 

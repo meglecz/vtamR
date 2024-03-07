@@ -5,16 +5,16 @@
 \title{make_missing_occurrences}
 \usage{
 make_missing_occurrences(
-  read_count_samples_df,
+  read_count_samples,
   mock_composition = "",
   sep = ",",
   out = ""
 )
 }
 \arguments{
-\item{read_count_samples_df}{data frame with the following variables: asv, plate, marker, sample, read_count}
+\item{read_count_samples}{data frame or csv file with the following variables: asv, plate, marker, sample, read_count}
 
-\item{mock_composition}{csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
 
 \item{sep}{separator used in csv files}
 

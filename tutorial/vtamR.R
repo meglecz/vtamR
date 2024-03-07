@@ -26,7 +26,7 @@ if(computer == "Bombyx"){
      fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
      outdir <- "vtamR_test/out_zfzr/"
      mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-      asv_list <- "vtamR_test/data/asv_list_updated_2024_02_19_after_swarm.csv"
+      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
   #    fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
   #    fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
   #   outdir <- "/home/meglecz/vtamR_large_files/out/"
@@ -161,7 +161,7 @@ merged_dir <- paste(outdir, "merged/", sep="")
 compress = T
 # read fastqinfo
 fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
-fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+fastainfo_df <- Merge(fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
 ###
 ### RandomSeq
@@ -169,31 +169,11 @@ fastainfo_df <- Merge(fastqinfo_df=fastqinfo_df, fastqdir=fastqdir, vsearch_path
 # However, RandomSeq does not work on Windows
 ###
 randomseq_dir = paste(outdir, "random_seq/", sep="")
-fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
-fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
+#fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
+#fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
 compress = T
-#FF OK
-#FT file OK, seqn no
-#TF OK
-#TT OK
-
-start_time <- Sys.time()  # Record the start time
-fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=1000, randseed=0, compress=compress, sep=sep)
-end_time <- Sys.time()  # Record the end time
-runtime <- end_time - start_time  # Calculate the run time
-print(runtime)
-
-start_time <- Sys.time()  # Record the start time
-fastainfo_df <- RandomSeqWindows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000, randseed=0, compress=compress, sep=sep)
-end_time <- Sys.time()  # Record the end time
-runtime <- end_time - start_time  # Calculate the run time
-print(runtime)
-
-
-
-
-
-
+fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress, sep=sep)
+#fastainfo_df <- RandomSeqWindows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000, randseed=0, compress=compress, sep=sep)
 
 
 ###
@@ -207,8 +187,8 @@ cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- F
-sortedinfo_df <- SortReads(fastainfo_df=fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
-
+#fastainfo <- paste(randomseq_dir, "fastainfo.csv", sep="")
+sortedinfo_df <- SortReads(fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each sample-replicate, add a unique id for ASVs, can take into account ASVs from earlier analyses
@@ -222,7 +202,6 @@ read_count_df <- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outf
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 
-
 ###
 # Run swarm
 ###
@@ -233,7 +212,6 @@ outfile <- paste(outdir, "2_Swarm.csv", sep="")
 read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
-
 
 
 
@@ -341,7 +319,7 @@ sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep="")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
 
 ###
-### FilerRenkonen
+### FilterRenkonen
 ###
 # Renkonen index:
 # PS = summ(min(p1i, p2i))
@@ -363,7 +341,7 @@ read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, outfile=ou
 ### TaxAssign
 ###
 outfile <- paste(outdir, "TaxAssign.csv", sep="")
-asv_tax <- TaxAssign(df=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
+asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
 
 
 ###
@@ -391,13 +369,13 @@ dim(read_count_df)
 ### OptimizePCRError
 ###
 outfile <- paste(outdir, "OptimizePCRError.csv", sep="")
-OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile, max_mismatch=1, min_read_count=10)
+OptimizePCRError_df <- OptimizePCRError(read_count=read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile, max_mismatch=1, min_read_count=10)
 
 ###
 ### OptimizeLFNsampleReplicate
 ###
 outfile = paste(outdir, "OptimizeLFNsampleReplicate.csv", sep="")
-OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile)
+OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count=read_count_df, mock_composition=mock_composition, sep=sep, outfile=outfile)
 
 ###
 ### Make known occurrences
@@ -407,9 +385,12 @@ read_count_samples_df <- read.csv(file, sep=sep)
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
 known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
 missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
+performance_metrics <- paste(outdir, "performance_metrics.csv", sep= "")
 habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
-TP_df <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
-
+results <- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics, habitat_proportion=habitat_proportion)
+known_occurrences_df <- results[[1]]
+missing_occurrences <- results[[2]]
+performance_metrics <- results[[3]]
 
 ###
 ### OptimizeLFNReaCountAndLFNvariant
@@ -420,10 +401,10 @@ pcr_error_var_prop=0.1
 
 min_lfn_read_count_cutoff=10
 max_lfn_read_count_cutoff=100
-increment_lfn_read_count_cutoff=5
+increment_lfn_read_count_cutoff=10
 min_lnf_variant_cutoff=0.001
 max_lnf_variant_cutoff=0.01
-increment_lnf_variant_cutoff=0.001
+increment_lnf_variant_cutoff=0.01
 by_replicate=FALSE
 vsearch_path=""
 max_mismatch=1
@@ -431,8 +412,7 @@ by_sample=T
 sample_prop=0.8
 min_replicate_number=2
 outfile = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
-OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, sep=sep, outfile= outfile, min_lfn_read_count_cutoff=lfn_read_count_cutoff, max_lfn_read_count_cutoff=max_lfn_read_count_cutoff, increment_lfn_read_count_cutoff=increment_lfn_read_count_cutoff, min_lnf_variant_cutoff=min_lnf_variant_cutoff, max_lnf_variant_cutoff=max_lnf_variant_cutoff, increment_lnf_variant_cutoff=increment_lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
-
+OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count=read_count_df, known_occurrences=known_occurrences_df, sep=sep, outfile= outfile, min_lfn_read_count_cutoff=lfn_read_count_cutoff, max_lfn_read_count_cutoff=max_lfn_read_count_cutoff, increment_lfn_read_count_cutoff=increment_lfn_read_count_cutoff, min_lnf_variant_cutoff=min_lnf_variant_cutoff, max_lnf_variant_cutoff=max_lnf_variant_cutoff, increment_lnf_variant_cutoff=increment_lnf_variant_cutoff, by_replicate=by_replicate, lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, vsearch_path=vsearch_path, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, min_replicate_number=min_replicate_number)
 
 
 ##################
