@@ -4,10 +4,12 @@
 \alias{read_fasta_to_df}
 \title{read_fasta_to_df}
 \usage{
-read_fasta_to_df(file)
+read_fasta_to_df(file, dereplicate = F)
 }
 \arguments{
 \item{file}{input fasta file; can be  uncompressed or compressed in gz format (zip files are not supported)}
+
+\item{dereplicate}{\link{T/F} if TRUE returns a data frame with asv and read_count columns, if FALSE (default) data frame with header and sequence columns}
 }
 \description{
 Read a fasta file to a data frame with two columns: headers and sequences

@@ -11,7 +11,6 @@ swarm(
   num_threads = 1,
   swarm_d = 1,
   fastidious = T,
-  write_csv = F,
   sep = ",",
   by_sample = T
 )
@@ -28,8 +27,6 @@ swarm(
 \item{swarm_d}{positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.}
 
 \item{fastidious}{\link{T/F} when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)}
-
-\item{write_csv}{\link{T/F}; write read_counts to csv file; default=FALSE}
 
 \item{sep}{separator for the output file}
 

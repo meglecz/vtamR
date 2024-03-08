@@ -286,3 +286,94 @@ colnames( results ) <- c( "QueryID",  "SubjectID", "Perc.Ident",
                           "Alignment.Length", "Mismatches", "Gap.Openings", "Q.start", "Q.end",
                           "S.start", "S.end", "E", "Bits" )
 
+
+#' swarm_from_sortreads
+#' 
+#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
+#' Return a data frame with the same structure as the input
+#' Swarm can be run sample by sample (by_sample=T) or for the whole data set in ine go
+#' 
+#' @param read_count data frame or csv file with the following variables: asv, plate, marker, sample, replicate, read_count
+#' @param outfile name of the output file with asv_id, sample, replicate, read_count and asv columns; Optional; If empty the results are not written to a file
+#' @param swarm_path Path to th swarm executable (Default: TRUE)
+#' @param by_sample [T/F], if TRUE, swarm run separately for each sample
+#' @param num_threads Number of CPUs
+#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
+#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @param sep separator for the output file
+#' @export
+#' 
+
+swarm_from_sortreads <- function(sortedinfo, dir="", outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T){
+  # !!!!!!!!!!!!!!!!!!!!!!! not yet finished
+  # can accept df or file as an input
+  if(is.character(sortedinfo)){
+    # read known occurrences
+    sortedinfo_df <- read.csv(sortedinfo, header=T, sep=sep)
+  }else{
+    sortedinfo_df <- sortedinfo
+  }
+  
+  if(by_sample){
+    # get list of samples 
+    sample_list <- unique(sortedinfo_df$sample)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      print(s)
+      # select occurrences for sample
+      files <- sortedinfo_df %>%
+        filter(sample==s) %>%
+        select(filename) %>%
+        distinct()
+      files$filename <- paste(dir, files$filename, sep="")
+      df_sample <- dereplicate_reads(files$filename)
+      # run swarm
+      df_sample <- run_swarm(df_sample, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+      # add output of the sample to the total data frame
+      out_df <- rbind(out_df, df_sample)
+    }
+  }else{ # run swarm for all samples together
+    files <- sortedinfo_df %>%
+      select(filename) %>%
+      distinct()
+    files$filename <- paste(dir, files$filename, sep="")
+    df <- dereplicate_reads(files$filename)
+    out_df <- run_swarm(df, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+  }
+  
+  if(outfile != ""){
+    write.table(out_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(out_df)
+  
+}
+
+#' dereplicate_reads
+#' 
+#' reads all input file in the input vector containing file names
+#' demultiplex reads and count them
+#' returns a data frame with asv, asv_id (arbitrary, valid only within the data frame) and read_count columns
+#' 
+#' @param files vector with file names
+#' @export
+#' 
+dereplicate_reads <- function(files){
+  
+  df <- data.frame("asv"=as.character(),
+                   "read_count"=as.integer())
+  
+  for(file in files){
+    tmp <- read_fasta_to_df(file) %>%
+      group_by(sequence) %>%
+      summarize(read_count=n()) %>%
+      select(asv=sequence, read_count)
+    
+    df <- rbind(df, tmp) %>%
+      group_by(asv) %>%
+      summarize(read_count=sum(read_count))
+  }
+  
+  df$asv_id <- rownames(df)
+  return(df)
+}

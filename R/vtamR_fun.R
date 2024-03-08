@@ -144,9 +144,16 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
     tmp$read_count[i] <- seq_n
     
     # vsearch produces uncompressed files even if input is compressed => compress output file
-    if(compress){ 
-      out <- compress_file(filename=outfile, remove_input=T)
-      if(!endsWith(tmp$fasta[i], ".gz")){ # correct output filename in fastainfo if necessary
+    if(compress){
+      if(is.linux()){
+        cmd <- paste("gzip", outfile, sep=" ")
+        system(cmd)
+      }else{ # this version of compression can work in all systems, but might not work with very large files
+        out <- compress_file(filename=outfile, remove_input=T)
+      }
+      
+      # correct output filename in fastainfo if necessary
+      if(!endsWith(tmp$fasta[i], ".gz")){ 
         tmp$fasta[i] <- paste(tmp$fasta[i], ".gz", sep="")
       }
     }
@@ -189,13 +196,20 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
 is_linux <- function(){
   
   system_info <- Sys.info()
+  os <- tolower(system_info["sysname"])
   
   # Check the operating system
-  if (startsWith(system_info["sysname"], "Windows")) {
+  if (startsWith(os, "windows")) {
     return(FALSE)
-  } else if (startsWith(system_info["sysname"], "Darwin")) {
+  } else if (startsWith(os, "linux")) {
     return(TRUE)
-  } else if (startsWith(system_info["sysname"], "Linux")) {
+  } else if (startsWith(os, "sunos")) {
+    return(TRUE)
+  } else if (startsWith(os, "darwin")) {
+    return(TRUE)
+  } else if (startsWith(system_info["sysname"], "gnu")) {
+    return(TRUE)
+  } else if (startsWith(system_info["sysname"], "unix")) {
     return(TRUE)
   } else {
     return(FALSE)
@@ -211,6 +225,7 @@ is_linux <- function(){
 #' @export 
 #
 decompress_file <- function(filename="", remove_input=F){
+  # this version of compression can work in all systems, but might not work with very large files, since it reads the file
   
   # make output filename
   outfile <- gsub(".gz", "", filename)
@@ -238,6 +253,7 @@ decompress_file <- function(filename="", remove_input=F){
 #' @export 
 #
 compress_file <- function(filename="", remove_input=F){
+  # this version of compression can work in all systems, but might not work with very large files, since it reads the file
   
   # Specify the path for the gzipped output file
   outfile_gz <- paste(filename, ".gz", sep="")
@@ -308,6 +324,8 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
     output_fasta_p <- paste(outdir, input_fasta, sep="")
     
     seq_n <- count_seq(file=input_fasta_p)
+    msg <- paste("Number of sequences in:", seq_n)
+    print(msg)
     if(n > seq_n ){ # not enough seq
       # print msg
       msg <- paste("WARNING:", input_fasta_p,"has",seq_n,"sequences, which is lower than", n,". The file is copied to the",outdir,"directory without subsampling", sep=" ")
@@ -763,7 +781,7 @@ read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=","
       next
     }
     
-    read_count_df_tmp <- read_fasta_seq(filename=fas, dereplicate=T) # returns data frame with asv and read_cunt columns
+    read_count_df_tmp <- read_fasta_to_df(fas, dereplicate=T) # returns data frame with asv and read_count columns
     read_count_df_tmp$sample <- sortedinfo_df[i,"sample"]
     read_count_df_tmp$replicate <- sortedinfo_df[i,"replicate"]
     read_count_df <- rbind(read_count_df, read_count_df_tmp)
@@ -885,12 +903,11 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' @param num_threads Number of CPUs
 #' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
 #' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
-#' @param write_csv [T/F]; write read_counts to csv file; default=FALSE
 #' @param sep separator for the output file
 #' @export
 #' 
 
-swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, write_csv=F, sep=",", by_sample=T){
+swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -928,99 +945,6 @@ swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=
   return(out_df)
   
 }
-
-
-#' swarm_from_sortreads
-#' 
-#' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
-#' Return a data frame with the same structure as the input
-#' Swarm can be run sample by sample (by_sample=T) or for the whole data set in ine go
-#' 
-#' @param read_count data frame or csv file with the following variables: asv, plate, marker, sample, replicate, read_count
-#' @param outfile name of the output file with asv_id, sample, replicate, read_count and asv columns; Optional; If empty the results are not written to a file
-#' @param swarm_path Path to th swarm executable (Default: TRUE)
-#' @param by_sample [T/F], if TRUE, swarm run separately for each sample
-#' @param num_threads Number of CPUs
-#' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
-#' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
-#' @param sep separator for the output file
-#' @export
-#' 
-
-swarm_from_sortreads <- function(sortedinfo, dir="", outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T){
-  
-  # can accept df or file as an input
-  if(is.character(sortedinfo)){
-    # read known occurrences
-    sortedinfo_df <- read.csv(sortedinfo, header=T, sep=sep)
-  }else{
-    sortedinfo_df <- sortedinfo
-  }
-  
-  if(by_sample){
-    # get list of samples 
-    sample_list <- unique(sortedinfo_df$sample)
-    
-    # run swarm for each sample
-    for(s in sample_list){
-      print(s)
-      # select occurrences for sample
-      files <- sortedinfo_df %>%
-        filter(sample==s) %>%
-        select(filename) %>%
-        distinct()
-      files$filename <- paste(dir, files$filename, sep="")
-      df_sample <- dereplicate_reads(files$filename)
-      # run swarm
-      df_sample <- run_swarm(df_sample, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
-      # add output of the sample to the total data frame
-      out_df <- rbind(out_df, df_sample)
-    }
-  }else{ # run swarm for all samples together
-    files <- sortedinfo_df %>%
-      select(filename) %>%
-      distinct()
-    files$filename <- paste(dir, files$filename, sep="")
-    df <- dereplicate_reads(files$filename)
-    out_df <- run_swarm(df, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
-  }
-  
-  if(outfile != ""){
-    write.table(out_df, file = outfile,  row.names = F, sep=sep)
-  }
-  return(out_df)
-  
-}
-
-#' dereplicate_reads
-#' 
-#' reads all input file in the input vector containing file names
-#' demultiplex reads and count them
-#' returns a data frame with asv, asv_id (arbitrary, valid only within the data frame) and read_count columns
-#' 
-#' @param files vector with file names
-#' @export
-#' 
-dereplicate_reads <- function(files){
-  
-  df <- data.frame("asv"=as.character(),
-                   "read_count"=as.integer())
-  
-  for(file in files){
-    tmp <- read_fasta_to_df(file) %>%
-      group_by(sequence) %>%
-      summarize(read_count=n()) %>%
-      select(asv=sequence, read_count)
-    
-    df <- rbind(df, tmp) %>%
-      group_by(asv) %>%
-      summarize(read_count=sum(read_count))
-  }
-  
-  df$asv_id <- rownames(df)
-  return(df)
-}
-
 
 #' run_swarm
 #' 
@@ -1068,6 +992,7 @@ run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fa
   # pool clusters in read_count_df
   ###
   # make a data frame with representative and clustered columns, where clustered has all swarm input sequences id, and  representative is the name of the cluster they belong to
+  print("Pooling ASVs to clusters")
   cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
   cluster_df <- data.frame(representative = rep(cluster_df$V1, each = ncol(cluster_df)),
                            clustered = as.vector(t(cluster_df[,])))
@@ -1089,6 +1014,7 @@ run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fa
   unlink(clusters)
   unlink(tmp_dir, recursive=TRUE)
   
+  print("Replace asv by representative sequences")
   # replace asv by representative sequences in read_count_df
   read_count_df <- left_join(read_count_df, cluster_df,  by= c("asv_id" = "clustered_id"))
   read_count_df <- read_count_df %>%
@@ -3600,7 +3526,7 @@ write_df_to_fasta <- function(df, out, compress=F){
 select_sequences <- function(file, n=100, randseed=0){
   
   # read file to a df, with headers in one column and sequences in another
-  seq_df <- read_fasta_to_df(file)
+  seq_df <- read_fasta_to_df(file, dereplicte=FALSE)
   seq_n <- nrow(seq_df)
   if(seq_n > n){ # enough sequences
     if(randseed == 0){
@@ -3629,9 +3555,10 @@ select_sequences <- function(file, n=100, randseed=0){
 #' Read a fasta file to a data frame with two columns: headers and sequences
 #'  
 #' @param file input fasta file; can be  uncompressed or compressed in gz format (zip files are not supported)
+#' @param dereplicate [T/F] if TRUE returns a data frame with asv and read_count columns, if FALSE (default) data frame with header and sequence columns
 #' @export
 #'
-read_fasta_to_df <- function(file){
+read_fasta_to_df <- function(file, dereplicate=F){
   
   ### can deal with uncompressed files and gz compressed files. Zip files should be decompressed previously
   if(endsWith(file, ".gz")){
@@ -3652,12 +3579,19 @@ read_fasta_to_df <- function(file){
   grouped_lines <- split(file_contents, group_indices)
   rm(group_indices)
   
-  # Create a data frame
+  # Create a data frame (columns: header, sequence)
   df <- data.frame(
     header = gsub("^>", "", file_contents[header_indices]), # Remove '>' from headers
     sequence = sapply(grouped_lines, function(x) if(length(x) > 1) paste(x[-1], collapse = "") else ""),
     stringsAsFactors = FALSE
   )
+  
+  if(dereplicate){ #(columns: asv, read_count)
+    df <- df %>%
+      group_by(sequence) %>%
+      summarize(read_count=n()) %>%
+      select("asv"=sequence, read_count)
+  }
   
   return(df)
 }

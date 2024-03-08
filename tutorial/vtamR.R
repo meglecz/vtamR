@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Endoume" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -22,16 +22,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-     fastqdir <- "vtamR_test/data/"
-     fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-     outdir <- "vtamR_test/out_zfzr/"
-     mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
-  #    fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
-  #    fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-  #   outdir <- "/home/meglecz/vtamR_large_files/out/"
-  #   mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
-  #   asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
+  #     fastqdir <- "vtamR_test/data/"
+  #     fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+  #    outdir <- "vtamR_test/out_zfzr/"
+  #     mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+  #      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+      fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+      fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+     outdir <- "/home/meglecz/vtamR_large_files/out/"
+     mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
+     asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
 
   num_threads=8
   compress = T
@@ -41,17 +41,17 @@ if(computer == "Bombyx"){
   vsearch_path = "/home/emese/miniconda3/bin/"
   blast_path= "" # deactivate conda
   swarm_path <- ""
-  db_path= "/home/emese/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
-      fastqdir <- "vtamR_test/data/"
-       fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-       outdir <- "vtamR_test/out_zfzr/"
-       mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-       asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
-  #    fastqdir <- "~/vtamR_large_data"
-  #    fastqinfo <- "~/vtamR_large_data/metadata/fastqinfo_Sea18_IIICBR_vtamR.csv"
-  #    outdir <- "/home/emese/vtamR_out_large_dataset/"
-  #    mock_composition <- "~/vtamR_large_data/metadata/mock_composition_Sea18_IIICBR_vtamR.csv"
-  #    asv_list <- "~/vtamR_large_data/metadata/asv_list.csv"
+  db_path= "~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
+  #    fastqdir <- "vtamR_test/data/"
+  #     fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
+  #     outdir <- "vtamR_test/out_mfzr/"
+  #     mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
+  #     asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+      fastqdir <- "~/vtamR_large_data"
+      fastqinfo <- "~/vtamR_large_data/metadata/fastqinfo_Sea18_IIICBR_vtamR.csv"
+      outdir <- "/home/emese/vtamR_large_data/out/"
+     mock_composition <- "~/vtamR_large_data/metadata/mock_composition_Sea18_IIICBR_vtamR.csv"
+      asv_list <- "~/vtamR_large_data/metadata/asv_list.csv"
   num_threads=8
   compress = T
 }else if (computer == "Windows"){
@@ -158,21 +158,23 @@ fastq_truncqual <- 10
 fastq_minovlen <- 50
 fastq_allowmergestagger <- F
 merged_dir <- paste(outdir, "merged/", sep="")
-compress = T
+compress = F
 # read fastqinfo
-fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
-fastainfo_df <- Merge(fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+fastainfo_df <- Merge(fastqinfo, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
+#test_file <- '/home/emese/vtamR_large_data/out/merged/Sea18_COI_R1_S8_R1_001.fasta' 
+#cmd <- paste("gzip -k", test_file, sep=" ")
+#system(cmd)
 ###
 ### RandomSeq
 # RandomSeq is about 5 times quicker than RandomSeq_windows, and it is more memory efficient.
 # However, RandomSeq does not work on Windows
 ###
 randomseq_dir = paste(outdir, "random_seq/", sep="")
-#fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
+fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
 #fastainfo_df <- read.csv(file=fastainfo, header=T, sep=sep)
-compress = T
-fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000, randseed=0, compress=compress, sep=sep)
+compress = F
+fastainfo_df <- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000000, randseed=0, compress=compress, sep=sep)
 #fastainfo_df <- RandomSeqWindows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000, randseed=0, compress=compress, sep=sep)
 
 
@@ -180,14 +182,14 @@ fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_d
 ### SortReads
 ###
 sorted_dir <- paste(outdir, "sorted/", sep="")
-check_reverse <- T
+check_reverse <- F
 tag_to_end <- F
 primer_to_end <-F
 cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- F
-#fastainfo <- paste(randomseq_dir, "fastainfo.csv", sep="")
+fastainfo <- paste(randomseq_dir, "fastainfo.csv", sep="")
 sortedinfo_df <- SortReads(fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 ###
@@ -197,23 +199,21 @@ outfile <- paste(outdir, "1_before_filter.csv", sep="")
 sortedinfo_df <- read.csv(paste(sorted_dir, "sortedinfo.csv", sep =""), sep=sep)
 updated_asv_list <- sub("\\.", "_updated_2024_02_29.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
 read_count_df <- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, sep=sep, asv_list=asv_list, updated_asv_list=updated_asv_list)
-#read_count_df_backup <- read_count_df
-#read_count_df <- read_count_df_backup
 # make stat counts
 stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
 
 ###
 # Run swarm
 ###
+read_count_df <- read.csv(paste(outdir, "1_before_filter.csv", sep=""), sep=sep)
+
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
-outfile <- paste(outdir, "2_Swarm.csv", sep="")
-read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, write_csv=T, sep=sep, by_sample=by_sample)
+outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
+read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
-stat_df <- get_stat(read_count_df, stat_df, stage="swarm", params=params)
-
-
+stat_df <- get_stat(read_count_df, stat_df, stage="swarm_by_sample", params=params)
 
 ###
 ### LFN_global_read_count
@@ -335,14 +335,17 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=renkon
 digits = 0
 outfile <- paste(outdir, "14_PoolReplicates.csv", sep="")
 read_count_samples_df <- PoolReplicates(read_count_df, digits=digits, outfile=outfile, sep=sep)
-
+stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
 
 ###
 ### TaxAssign
 ###
 outfile <- paste(outdir, "TaxAssign.csv", sep="")
+start_time <- Sys.time()  # Record the start time
 asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
-
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)
 
 ###
 ### print output files
@@ -428,7 +431,7 @@ tmp <- history_by(dir=outdir, feature="asv_id", value="915", sep=sep)
 # group lines by grouped_by (asv, asv_id, sample, replicate) variable and summarize a feature (asv, asv_id, sample, replicate, read_count) for each group
 ###
 outfile <- paste(outdir, "read_count_by_sample.csv", sep="")
-read_count_by_asv_id <- summarize_by(dir=outdir, sep=sep, outfile=outfile, feature="read_count", grouped_by="sample")
+read_count_by_sample <- summarize_by(dir=outdir, sep=sep, outfile=outfile, feature="read_count", grouped_by="sample")
 
 
 
@@ -439,8 +442,8 @@ read_count_by_asv_id <- summarize_by(dir=outdir, sep=sep, outfile=outfile, featu
 # A quite safe solution is to update the asv_list after swarm, since swarm has eliminated the majority of the rare ASVs that will be unlikely to be seen among validated ASVs in further runs.
 ###
 
-#updated_asv_list <- sub("\\.", "_updated_2024_02_19_after_swarm.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
-#update_asv_list(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
+updated_asv_list <- sub("\\.", "_updated_2024_02_19_after_swarm.", asv_list) # add date to the name of the input asv_list to get a file name for the updated_file
+update_asv_list(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 
 ###
 # Pool different data sets
@@ -451,6 +454,56 @@ outfile <- paste(outdir, "Pooled_datasets.csv", sep="")
 centroid_file <- paste(outdir, "Pooled_datasets_with_centroids.csv", sep="")
 read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_file, sep=sep, mean_over_markers=T)
 
+###
+# count reads in fastq
+###
+
+file <- "~/vtamR_large_data/Sea18_COI_R1_S8_R1_001.fastq.gz"
+count_reads_fastq_linux(file)
+count_reads_fastq_linux <- function(file){
+  
+  if(endsWith(file, ".zip")){
+    msg <- "File compression type is not supported"
+    print(msg)
+    return(0)
+  }
+    
+  if(is_linux()){
+    if(endsWith(file, ".gz")){
+      cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+    }else{
+      cmd <- paste("wc -l", line, sep=" ")
+    }
+    seq_count <- as.integer(system(cmd, intern=TRUE))
+    seq_count <- seq_count/4
+    return(seq_count)
+  }else{
+    print("This command works only on linux-like systems")
+    return(0)
+  }
+}
+
+dir <- "~/vtamR_large_data/"
+df <- count_reads_fastq_linux_dir(dir)
+count_reads_fastq_linux_dir<- function(dir, pattern=".fastq"){
+  
+  dir <- check_dir(dir)
+  files <- list.files(path = dir, pattern=pattern)
+  df <- data.frame(
+    "filename"=files,
+    "read_count"=rep(NA, length(files))
+  )
+  
+  for(i in 1:length(files)){
+    file_p <- paste(dir, files[i], sep="")
+    print(file_p)
+    n <- count_reads_fastq_linux(file)
+    df[i, "read_count"] <- n
+  }
+  return(df)
+}
+  
+  
 ###
 # Graphs
 ###
