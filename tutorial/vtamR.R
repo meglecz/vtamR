@@ -459,7 +459,12 @@ read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_
 ###
 
 file <- "~/vtamR_large_data/Sea18_COI_R1_S8_R1_001.fastq.gz"
+start_time <- Sys.time() 
 count_reads_fastq_linux(file)
+end_time <- Sys.time()  # Record the end time
+runtime <- end_time - start_time  # Calculate the run time
+print(runtime)
+
 count_reads_fastq_linux <- function(file){
   
   if(endsWith(file, ".zip")){
@@ -480,11 +485,25 @@ count_reads_fastq_linux <- function(file){
   }else{
     print("This command works only on linux-like systems")
     return(0)
+    
+    # Define the PowerShell command to count lines in the file
+    ps_command <- paste0("Get-Content '", file_path, "' | Measure-Object -Line | Select-Object -ExpandProperty Lines")
+    
+    # Execute the PowerShell command and capture the output
+    line_count <- system(ps_command, intern = TRUE, ignore.stderr = TRUE)
+    
+    # Convert the output to numeric
+    line_count <- as.integer(line_count)
+    
+    # Print the number of lines
+    print(line_count)
+    
   }
 }
 
 dir <- "~/vtamR_large_data/"
 df <- count_reads_fastq_linux_dir(dir)
+
 count_reads_fastq_linux_dir<- function(dir, pattern=".fastq"){
   
   dir <- check_dir(dir)
@@ -540,7 +559,7 @@ p <- density_plot_renkonen_distance(renkonen_within_df)
 print(p)
 
 
-
+start_time <- Sys.time() 
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
