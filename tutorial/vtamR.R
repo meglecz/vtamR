@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Endoume" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -458,14 +458,14 @@ read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_
 # count reads in fasta of fastq
 ###
 
-dir <- "vtamR_test/out/sorted"
+dir <- "~/vtamR_large_data/out/random_seq"
 start_time <- Sys.time() 
-df <- count_reads_dir(dir, pattern="", file_type="", outfile="", sep=",")
+df <- count_reads_dir(dir, pattern="Sea18_COI_R1_S8_R1_001.fasta", file_type="fasta", outfile="Sea18_fasta_seq_count.csv", sep=",")
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
 
-
+files <- list.files(path = dir, pattern=pattern)
   
 ###
 # Graphs
@@ -501,6 +501,7 @@ p <- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, sep=
 print(p)
 p <- density_plot_renkonen_distance(renkonen_within_df)
 print(p)
+
 
 
 start_time <- Sys.time() 
