@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Endoume" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -455,73 +455,17 @@ centroid_file <- paste(outdir, "Pooled_datasets_with_centroids.csv", sep="")
 read_count_pool <- pool_datasets(files, outfile=outfile, centroid_file=centroid_file, sep=sep, mean_over_markers=T)
 
 ###
-# count reads in fastq
+# count reads in fasta of fastq
 ###
 
-file <- "~/vtamR_large_data/Sea18_COI_R1_S8_R1_001.fastq.gz"
+dir <- "vtamR_test/out/sorted"
 start_time <- Sys.time() 
-count_reads_fastq_linux(file)
+df <- count_reads_dir(dir, pattern="", file_type="", outfile="", sep=",")
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
 
-count_reads_fastq_linux <- function(file){
-  
-  if(endsWith(file, ".zip")){
-    msg <- "File compression type is not supported"
-    print(msg)
-    return(0)
-  }
-    
-  if(is_linux()){
-    if(endsWith(file, ".gz")){
-      cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
-    }else{
-      cmd <- paste("wc -l", line, sep=" ")
-    }
-    seq_count <- as.integer(system(cmd, intern=TRUE))
-    seq_count <- seq_count/4
-    return(seq_count)
-  }else{
-    print("This command works only on linux-like systems")
-    return(0)
-    
-    # Define the PowerShell command to count lines in the file
-    ps_command <- paste0("Get-Content '", file_path, "' | Measure-Object -Line | Select-Object -ExpandProperty Lines")
-    
-    # Execute the PowerShell command and capture the output
-    line_count <- system(ps_command, intern = TRUE, ignore.stderr = TRUE)
-    
-    # Convert the output to numeric
-    line_count <- as.integer(line_count)
-    
-    # Print the number of lines
-    print(line_count)
-    
-  }
-}
 
-dir <- "~/vtamR_large_data/"
-df <- count_reads_fastq_linux_dir(dir)
-
-count_reads_fastq_linux_dir<- function(dir, pattern=".fastq"){
-  
-  dir <- check_dir(dir)
-  files <- list.files(path = dir, pattern=pattern)
-  df <- data.frame(
-    "filename"=files,
-    "read_count"=rep(NA, length(files))
-  )
-  
-  for(i in 1:length(files)){
-    file_p <- paste(dir, files[i], sep="")
-    print(file_p)
-    n <- count_reads_fastq_linux(file)
-    df[i, "read_count"] <- n
-  }
-  return(df)
-}
-  
   
 ###
 # Graphs

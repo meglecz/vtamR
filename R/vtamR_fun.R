@@ -3640,3 +3640,120 @@ RandomSeqWindows <- function(fastainfo, fasta_dir="", outdir="", n, randseed=0, 
   write.table(fastainfo_df, file = paste(outdir, "fastainfo.csv", sep=""),  row.names = F, sep=sep)
   return(fastainfo_df)
 }
+
+
+#' count_reads_file
+#' 
+#' Count the number of sequences in a fasta or fastq file, or  he number of line in other files
+#' Efficient in linux-like systems, but slow on Windows for large files
+#' Can handle gz compressed and uncompressed files, but not zipped files 
+#'  
+#' @param file filename including path
+#' @param file_type [fasta/fastq] if not specified, the number of lines is returned
+#' @export
+#' 
+
+count_reads_file <- function(file, file_type=""){
+  
+  if(endsWith(file, ".zip")){
+    msg <- "File compression type is not supported"
+    print(msg)
+    return(0)
+  }
+  
+  if(is_linux()){
+    # compressed files
+    if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
+      if(file_type == "fastq"){
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("zcat ", file, "| grep '^>' -P | wc -l", sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. The number of liens in file will be returned for", file)
+        print(msg)
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+      }
+    }else{
+      #uncompressed files
+      if(file_type == "fastq"){
+        cmd <- paste("wc -l", line, sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("grep '^>' -P", file, "| wc -l", sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. The number of lines in file will be returned for", file)
+        print(msg)
+        cmd <- paste("wc -l", line, sep=" ")
+        seq_count <- as.integer(system(cmd, intern=TRUE))
+      }
+    }
+    return(seq_count)
+  }else{
+    print("WARNING: This command on non linux-like systems is slow and might not work with very large files.")
+    
+    if(file_type == "fasta"){ # can deal with compressed and uncompressed files
+      df <- read_fasta_to_df(file, dereplicate=F)
+      seq_count <- nrow(df)
+    }else { # fastq and others
+      if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
+        file_connection <- gzfile(file, "rb")
+      }else{
+        file_connection <- file(file, "r")
+      }
+      data <- readLines(file_connection, n = -1)
+      close(file_connection)
+      seq_count <- length(data)
+      if(file_type == "fastq"){
+        seq_count <- seq_count / 4
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. The number of lines in file will be returned for", file)
+        print(msg)
+      }
+      
+    }
+    return(seq_count)
+  } # end non-linux-like
+  return(0)
+}
+
+#' count_reads_dir
+#' 
+#' For all files in input directory, where the file name contains pattern, 
+#' count the number of sequences in a fasta or fastq file, or  he number of line in other files
+#' Efficient in linux-like systems, but slow on Windows for large files
+#' Can handle gz compressed and uncompressed files, but not zipped files 
+#'  
+#' @param dir name of the input directory
+#' @param pattern take files from input dir, if patter (regular expression) is present in the file name
+#' @param file_type [fasta/fastq] if not specified, the number of lines is returned, otherwise the nulber of sequences
+#' @param sep separator used in csv files
+#' @param outfile name of the output file; optional, it is not given results are returned in a data frame, but no file is written 
+#' @export
+#' 
+count_reads_dir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=","){
+  
+  dir <- check_dir(dir)
+  files <- list.files(path = dir, pattern=pattern)
+  df <- data.frame(
+    "filename"=files,
+    "read_count"=rep(NA, length(files))
+  )
+  
+  for(i in 1:length(files)){
+    file_p <- paste(dir, files[i], sep="")
+    print(file_p)
+    n <- count_reads_file(file_p, file_type=file_type)
+    df[i, "read_count"] <- n
+  }
+  
+  if(outfile != ""){
+    write.table(df, file=outfile, sep=sep, row.names = F)
+  }
+  return(df)
+}
