@@ -9,7 +9,8 @@ pool_datasets(
   outfile = "",
   centroid_file = "",
   sep = ",",
-  mean_over_markers = T
+  mean_over_markers = T,
+  vsearch_path = ""
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ pool_datasets(
 \item{sep}{separator used in csv files}
 
 \item{mean_over_markers}{\link{T/F} If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE}
+
+\item{vsearch_path}{path to vsearch executables}
 }
 \description{
 Take several output files, each in long format containing asv_id, sample, read_count and asv columns

@@ -145,7 +145,7 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
     
     # vsearch produces uncompressed files even if input is compressed => compress output file
     if(compress){
-      if(is.linux()){
+      if(is_linux()){
         cmd <- paste("gzip", outfile, sep=" ")
         system(cmd)
       }else{ # this version of compression can work in all systems, but might not work with very large files
@@ -162,19 +162,6 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
     if( original_fw_fastq != fw_fastq){# the input fastq has been unzipped for vsearch => rm unzipped file to free space
       file.remove(fw_fastq)
       file.remove(rv_fastq)
-    }
-    
-    if(F){ # compress == "zip" Keep this part as a backup, but finally it should be deleted
-      # when zipping a file using a full path, the zip file will contain the embedded directory structure
-      # To avoid this, change the wd to the output dir, zip the file and change back to the orignal wd
-      backup_dir <- getwd()
-      setwd(outdir)
-      fasta <- tmp$fasta[i]
-      fasta_zip <- paste(fasta, ".zip", sep="")
-      zip(fasta_zip, fasta)
-      file.remove(fasta)
-      setwd(backup_dir)
-      tmp$fasta[i] <- fasta_zip
     }
   }
   # make fastainfo file
@@ -286,6 +273,12 @@ compress_file <- function(filename="", remove_input=F){
 #' @export
 #' 
 RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, randseed=0, compress=F, sep=","){
+  
+  # if run on non linux-like system, use RandomSeqWindows
+  if(!is_linux()){
+    fastainfo_df <- RandomSeqWindows(fastainfo, fasta_dir=fasta_dir, outdir=outdir, n, randseed=randseed, compress=compress, sep=sep)
+    return(fastainfo_df)
+  }
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -649,7 +642,7 @@ SortReads_no_reverse <- function(fastainfo, fastadir, outdir="", cutadapt_path="
         print(primer_trim_cmd)
         system(primer_trim_cmd)
       } # end tag-trimmed 
-    # delete the tmp dir wit the tag-trimmed files
+    # delete the tmp dir with the tag-trimmed files
     unlink(tmp_dir, recursive = TRUE)
   }# end fasta
   
@@ -1563,7 +1556,7 @@ flagPCRerror_vsearch <- function(unique_asv_df, vsearch_path="", pcr_error_var_p
   system(vsearch)
   
   # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs
-  if(file.size(vsearch_out) == 0){
+  if(!file.exists(vsearch_out) || file.size(vsearch_out) == 0){
     unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
     # Delete the temp directory
     unlink(outdir_tmp, recursive = TRUE)
@@ -2532,12 +2525,12 @@ write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, sortedi
     sum_rc <- data.frame(matrix(0, nrow=2, ncol= ncol(wide_read_count_df)))
     colnames(sum_rc) <- colnames(wide_read_count_df)
     #  and total number of reads in line 1 
-    sum_rc[1,1] <- "Total number of reads" # asv_id col
+    sum_rc[1,1] <- "NA" # asv_id col
     sum_rc[1,2] <- NA # asv col
     # total number of reads for each sample (ignore cols 1 and 2, since it is asv_id ans asv)
     sum_rc[1,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)])
     # Number of ASVs in each sample in line 2
-    sum_rc[2,1] <- "Number of ASVs"
+    sum_rc[2,1] <- "NA"
     sum_rc[2,2] <- NA # asv col
     sum_rc[2,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)] != 0)
     wide_read_count_df <- rbind(sum_rc, wide_read_count_df)
@@ -2568,7 +2561,8 @@ write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, sortedi
     
     # keep only keep and tolerate action, in case the file contains other lines 
     mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
-      filter(action=="keep" || action=="tolerate")
+      filter(action=="keep" | action=="tolerate")
+
 
     # add a column for each mock samples with keep or tolerate if relevent for each ASV 
     for(mock in mock_samples){
@@ -3203,19 +3197,21 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
 #' 
 #' Take several output files, each in long format containing asv_id, sample, read_count and asv columns
 #' Pool the different data sets, if all have the same marker
-#' If more than one marker, ASVs identical on their overlapping regions are pooled into clusters, and different asvs of the same cluster are pooled under the centroîd (longest ASV).
+#' If more than one markers, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are pooled under the centroid (longest ASV of the group).
 #' Pooling can take the mean of the read counts of the ASV (default) or their sum.
 #' Return a pooled data frame.
 #'  
 #' @param files data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and read_count columns
-#' @param outfile name of the output file with asv_id, sample, read_count and asv columns, after pooling ASV identical on their corresponding regions together; Optional; If empty the results are not written to a file
-#' @param centroid_file name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns. Optional; If empty the results are not written to a file
+#' @param outfile name of the output file with asv_id, sample, read_count and asv columns, after pooling ASVs identical on their corresponding regions together; Optional
+#' @param asv_with_centroids name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns; Optional
 #' @param sep separator used in csv files
 #' @param mean_over_markers [T/F] If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE
+#' @param vsearch_path path to vsearch executables
 #' @export
 #'
-pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_over_markers=T){
+pool_datasets <- function(files, outfile="", asv_with_centroids= "", sep=",", mean_over_markers=T, vsearch_path=""){
   
+  vsearch_path <- check_dir(vsearch_path)
   tmp_dir <-paste('tmp_pool_datasets_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   tmp_dir <- check_dir(tmp_dir)
   
@@ -3256,7 +3252,7 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
       summarize("rc" = sum(read_count), .groups="drop_last")  %>%
       ungroup()
     
-    # arrange ASVs by decreasing sequence order and add ids
+    # arrange ASVs by decreasing sequence length and then by read_count
     asvs$length <- as.numeric(nchar(asvs$asv))
     asvs <- asvs %>%
       arrange(desc(length), desc(rc))
@@ -3302,11 +3298,6 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
     cent<- rbind(cent, added_lines) %>%
       arrange(centroid_id)
     
-    # make a data frame with unique centroid_ids and the list of asv_ids pooles into them
-#    cent_asv <- cent %>%
-#      group_by(centroid_id) %>%
-#      summarize(asv_ids = toString(unique(query)))
-
     ###
     # Pool ASVs of the same cluster
     ###
@@ -3316,7 +3307,9 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
     # add the centroid to each centroid_id in df
     df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
       select(-length, -rc) %>%
-      rename("asv"=asv.x, "centroid"=asv.y)
+      rename("asv"=asv.x, "centroid"=asv.y) %>%
+      select(centroid_id,asv_id,marker,sample,read_count,asv,centroid) %>%
+      arrange(centroid_id, marker)
     
     if(mean_over_markers){
       df_pool <- df %>%
@@ -3333,8 +3326,12 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
     # df_pool is a simple output with the format identical to the read_count_sample dfs, but no info on the as that has been pooled together
     df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id")) %>%
       select("asv_id"=centroid_id, sample, read_count, asv)
+    
+    if(centroid_file != ""){
+      write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
+    }
   }else{# one marker
-    df <- df %>%
+    df_pool <- df %>%
       select(asv_id, sample, read_count, asv)
   }
   
@@ -3343,12 +3340,9 @@ pool_datasets <- function(files, outfile="", centroid_file= "", sep=",", mean_ov
   if(outfile != ""){
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
-  if(centroid_file != ""){
-    write.table(df, file=centroid_file, sep=sep, row.names = F)
-  }
+
   return(df_pool)
 }
-
 
 #' history_by
 #' 
@@ -3526,7 +3520,7 @@ write_df_to_fasta <- function(df, out, compress=F){
 select_sequences <- function(file, n=100, randseed=0){
   
   # read file to a df, with headers in one column and sequences in another
-  seq_df <- read_fasta_to_df(file, dereplicte=FALSE)
+  seq_df <- read_fasta_to_df(file, dereplicate=FALSE)
   seq_n <- nrow(seq_df)
   if(seq_n > n){ # enough sequences
     if(randseed == 0){
