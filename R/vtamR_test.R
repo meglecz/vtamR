@@ -17,7 +17,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   setwd(test_dir)
   
   fastqinfo_df <- read.csv("data/fastqinfo_mfzr.csv", header=T, sep=sep)
-  fastqdir <- "data/"
+  fastq_dir <- "data/"
   outdir <- "out/"
   outdir <- check_dir(outdir)
   
@@ -37,7 +37,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   sep <- ","
   compress <- F
   merged_dir <- paste(outdir, "merged/", sep="")
-  fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+  fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
   ### compare results to precomputed files by vtam
   vtam_out <- "vtam/merged/"
@@ -84,7 +84,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
   cutadapt_maximum_length <- 500 # -M in cutadapt
   compress <- F
   
-  sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fastadir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+  sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
   vtam_out <-  "vtam/sorted/"

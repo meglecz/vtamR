@@ -22,12 +22,12 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-  #     fastqdir <- "vtamR_test/data/"
+  #     fastq_dir <- "vtamR_test/data/"
   #     fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
   #    outdir <- "vtamR_test/out_zfzr/"
   #     mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
   #      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
-      fastqdir <- "/home/meglecz/vtamR_large_files/fastq/"
+      fastq_dir <- "/home/meglecz/vtamR_large_files/fastq/"
       fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
      outdir <- "/home/meglecz/vtamR_large_files/out/"
      mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
@@ -42,12 +42,12 @@ if(computer == "Bombyx"){
   blast_path= "" # deactivate conda
   swarm_path <- ""
   db_path= "~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/"
-  #    fastqdir <- "vtamR_test/data/"
+  #    fastq_dir <- "vtamR_test/data/"
   #     fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
   #     outdir <- "vtamR_test/out_mfzr/"
   #     mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
   #     asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
-      fastqdir <- "~/vtamR_large_data"
+      fastq_dir <- "~/vtamR_large_data"
       fastqinfo <- "~/vtamR_large_data/metadata/fastqinfo_Sea18_IIICBR_vtamR.csv"
       outdir <- "/home/emese/vtamR_large_data/out/"
      mock_composition <- "~/vtamR_large_data/metadata/mock_composition_Sea18_IIICBR_vtamR.csv"
@@ -61,8 +61,8 @@ if(computer == "Bombyx"){
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
   swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
-#  fastqdir <- "C:/Users/emese/vtamR_private/fastq/"
-  fastqdir <- "vtamR_test/data/"
+#  fastq_dir <- "C:/Users/emese/vtamR_private/fastq/"
+  fastq_dir <- "vtamR_test/data/"
   fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
   outdir <- "vtamR_test/out_mfzr/"
   mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
@@ -106,6 +106,14 @@ usethis::use_roxygen_md() # rebuild the help files
 
 
 ###
+# Check coherence (often) user-made input files
+###
+# file_type [fastqinfo/fastainfo/sortedinfo/mock_composition/known_occurrences/read_count/read_count_sample/asv_list]
+check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo", sep=sep)
+check_fileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
+check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
+
+###
 # Test major functions
 ###
 test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
@@ -117,22 +125,22 @@ test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
 
 ####
 # define input filenames
-#fastadir <- "local/mfzr/sorted/"
+#fasta_dir <- "local/mfzr/sorted/"
 #sortedinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
 
 
-#fastadir <- "/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/"
+#fasta_dir <- "/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/"
 #sortedinfo <-"/home/meglecz/vtam_benchmark_local/vtam_fish/sorted_mfzr/fileinfo_vtamr.csv"
 #mock_composition <- "/home/meglecz/vtamR/local/user_input/mock_composition_mfzr_prerun.csv"
 #sep="\t"
 
-#fastadir <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/"
+#fasta_dir <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/"
 #sortedinfo <- "/home/meglecz/vtam_benchmark_local/vtam_bat/fasta/fileinfo_vtamr.csv"
 
 
 # create the output directory and check the the slash at the end
 outdir <- check_dir(dir=outdir)
-fastqdir <- check_dir(dir=fastqdir)
+fastq_dir <- check_dir(dir=fastq_dir)
 # Measure runtime using system.time()
 start_time <- Sys.time()  # Record the start time
 # define stat data frame that will be completed with counts after each step
@@ -160,7 +168,7 @@ fastq_allowmergestagger <- F
 merged_dir <- paste(outdir, "merged/", sep="")
 compress = T
 # read fastqinfo
-fastainfo_df <- Merge(fastqinfo, fastqdir=fastqdir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
+fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
 #test_file <- '/home/emese/vtamR_large_data/out/merged/Sea18_COI_R1_S8_R1_001.fasta' 
 #cmd <- paste("gzip -k", test_file, sep=" ")
@@ -190,7 +198,7 @@ cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- T
 fastainfo <- paste(randomseq_dir, "fastainfo.csv", sep="")
-sortedinfo_df <- SortReads(fastainfo_df, fastadir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
 
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each sample-replicate, add a unique id for ASVs, can take into account ASVs from earlier analyses
@@ -460,7 +468,7 @@ read_count_pool <- pool_datasets(files, outfile=outfile, asv_with_centroids=asv_
 dir <- "vtamR_test/data"
 df <- count_reads_dir(dir, pattern="_fw.fastq.gz", file_type="fastq", outfile="tmp.csv", sep=",")
 
-  
+
 ###
 # Graphs
 ###
@@ -495,205 +503,8 @@ p <- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, sep=
 print(p)
 p <- density_plot_renkonen_distance(renkonen_within_df)
 print(p)
-
-fastqdir <- "vtamR_test/data/"
-fastqinfo <- "vtamR_test/data/fastqinfo_mfzr_test.csv"
-outdir <- "vtamR_test/out_mfzr/"
-mock_composition <- "vtamR_test/data/mock_composition_mfzr_test.csv"
-asv_list <- "vtamR_test/data/asv_list_zfzr_test.csv"
-sep <- ","
-
-check_fileinfo(file=asv_list, dir=fastqdir, file_type="asv_list", sep=sep)
   
-check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
 
-  df <- read.csv(file)
-  # define expected columns
-  if(file_type == "fastqinfo"){
-    column_heading <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fastq_fw","fastq_rv")
-  }else if(file_type == "fastainfo"){
-    column_heading <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fasta")
-  }else if(file_type == "sortedinfo"){
-    column_heading <- c("sample","sample_type","habitat","replicate","filename")
-  }else if(file_type == "mock_composition"){
-    column_heading <- c("sample","action","asv")
-  }else if(file_type == "known_occurrences"){
-    column_heading <- c("sample","action","asv")
-  }else if(file_type == "read_count"){
-    column_heading <- c("asv","asv_id","sample","replicate","read_count")
-  }else if(file_type == "read_count_sample"){
-    column_heading <- c("asv","asv_id","sample","read_count")
-  }else if(file_type == "asv_list"){
-    column_heading <- c("asv","asv_id")
-  }
-  
-  # check if all essential columns are present
-  check_heading(column_heading, colnames(df), file=file)
-  
-  # Check sample type, habitat homogeneity across replicates
-  if(file_type == "fastqinfo" || file_type == "fastainfo" || file_type == "sortedinfo" ){
-    #sample_type
-    tmp <- df %>%
-      select("sample","sample_type","replicate") %>%
-      group_by(sample) %>%
-      summarise(same_sample_type = n_distinct(sample_type)) %>%
-      filter(same_sample_type > 1)
-      
-    if(nrow(tmp) > 0){
-      msg <- paste("Samples with inconsistent sample_type:", paste(tmp$sample, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-    
-    #habitat
-    tmp <- df %>%
-      select("sample","habitat","replicate") %>%
-      group_by(sample) %>%
-      summarise(same_sample_type = n_distinct(habitat)) %>%
-      filter(same_sample_type > 1)
-    if(nrow(tmp) > 0){
-      msg <- paste("Samples with inconsistent habitat:", paste(tmp$sample, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-    
-    # check sample_type
-    sample_type_unique <- c("negative", "mock", "real")
-    tmp <- unique(df$sample_type)
-    incorrect_sample_type <- tmp[!tmp %in% sample_type_unique]
-    if(length(incorrect_sample_type) > 0) {
-      msg <- paste("The following sample types are not accepted:", paste(incorrect_sample_type, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-    
-    # unique sample-replicate
-    tmp <- df %>%
-      select("sample","replicate") %>%
-      group_by(sample, replicate) %>%
-      summarize("n"=n(), .groups="drop_last") %>%
-      filter(n>1)
-    if(nrow(tmp) > 0){
-      msg <- paste("Sample-replicate combinations must be unique:", paste(tmp$sample, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-  }
-  
-  # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
-  # check if files exist
-  if(file_type == "fastqinfo"){
-    # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
-    tmp_rv <- df %>%
-      select("fastq_fw","fastq_rv") %>%
-      group_by(fastq_fw) %>%
-      summarize("rv_count"=n_distinct(fastq_rv)) %>%
-      filter(rv_count > 1)
-    
-    tmp_fw <- df %>%
-      select("fastq_fw","fastq_rv") %>%
-      group_by(fastq_rv) %>%
-      summarize("fw_count"=n_distinct(fastq_fw)) %>%
-      filter(fw_count > 1)
-    
-    if(nrow(tmp_rv)>0 || nrow(tmp_fw)>0) {
-      msg <- paste("The following fastq files have more than one pairs:", paste(tmp_fw$fastq_rv, tmp_rv$fastq_fw, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-    
-    # check if files exist
-    file_list_fw <- unique(df$fastq_fw)
-    file_list_rv <- unique(df$fastq_rv)
-    file_list <- c(file_list_fw, file_list_rv)
-    check_file_exists(dir=dir, file_list=file_list)
-  }
-  
-  # check if tag combinations are unique within a file(pair)
-  if(file_type == "fastqinfo" || file_type == "fastainfo"){
-    if(file_type == "fastqinfo"){
-      tmp <- df %>%
-        select("tag_fw", "tag_rv", "file"=fastq_fw)
-    }else{
-      tmp <- df %>%
-        select("tag_fw", "tag_rv", "file"=fasta)
-    }
-    tmp <- tmp %>%
-      group_by(file, tag_fw, tag_rv) %>%
-      summarize(count = n(), .groups="drop_last") %>%
-      filter(count>1)
-    tmp$res <- paste(tmp$tag_fw, tmp$tag_rv, tmp$file, sep=" ")
-    
-    if(nrow(tmp)>0) {
-       msg <- paste("The following  within file tag combinations are not unique:", paste(tmp$res, collapse = "\n"))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-  }
-  
-  # check action
-  if(file_type == "mock_composition" || file_type == "known_occurrences"){
-    action_type <- c("keep", "delete", "tolerate")
-    tmp <- unique(df$action)
-    incorrect_action_type <- tmp[!tmp %in% action_type]
-    if(length(incorrect_action_type) > 0) {
-      msg <- paste("The following actions types are not accepted:", paste(incorrect_action_type, collapse = ", "))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-  }
-  
-  # check if 1 to 1 relation between asv_id ad asv
-  if(file_type == "read_count" || file_type == "read_count_sample" || file_type == "asv_list" ){
-    
-    tmp_asv_id <- df %>%
-      select("asv_id","asv") %>%
-      group_by(asv_id) %>%
-      summarize("asv_count"=n_distinct(asv)) %>%
-      filter(asv_count > 1)
-    
-    tmp_asv <- df %>%
-      select("asv_id","asv") %>%
-      group_by(asv) %>%
-      summarize("asv_id_count"=n_distinct(asv_id)) %>%
-      filter(asv_id_count > 1)
-    
-    if(nrow(tmp_asv_id)>0 || nrow(tmp_asv)>0) {
-      msg <- paste("The following ASVs or asv_id are not unique:", paste(tmp_asv_id$asv_id, tmp_asv$asv, collapse = "\n"))
-      tryCatch(stop(msg), error = function(e) message(msg))
-    }
-  }
-  
-}
-
-
-check_file_exists <- function(dir=dir, file_list=file_list){
-  
-  dir <- check_dir(dir)
-  missing <- c()
-  for(i in file_list){
-    file_p <- paste(dir, i, sep="")
-    if(!file.exists(file_p)){
-      missing <- append(missing, file_p)
-    }
-  }
-  if(length(missing)>0 ) {
-    msg <- paste("The following files do not exist :", paste(missing, collapse = ", "))
-    tryCatch(stop(msg), error = function(e) message(msg))
-  }
-}
-
-
-
-
-check_heading <- function(liste1, liste2, file="") {
-  bool <- TRUE
-  col <- character(0)
-  for (i in liste1) {
-    if (!(i %in% liste2)) {
-      col <- append(col, i)
-      bool <- FALSE
-    }
-  }
-  col <- paste(col, collapse = ", ")
-  if (!bool) {
-    msg <- paste("The following column(s) are missing from", file, ":", col, sep = " ")
-    tryCatch(stop(msg), error = function(e) message(msg))
-  }
-}
   
 start_time <- Sys.time() 
 end_time <- Sys.time()  # Record the end time

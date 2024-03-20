@@ -6,7 +6,7 @@
 \usage{
 SortReads_no_reverse(
   fastainfo,
-  fastadir,
+  fasta_dir,
   outdir = "",
   cutadapt_path = "",
   tag_to_end = T,
@@ -19,7 +19,7 @@ SortReads_no_reverse(
 )
 }
 \arguments{
-\item{fastadir}{directory with input fasta files (listed in fastainfo_df$fasta)}
+\item{fasta_dir}{directory with input fasta files (listed in fastainfo_df$fasta)}
 
 \item{outdir}{output directory}
 

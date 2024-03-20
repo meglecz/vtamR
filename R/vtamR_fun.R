@@ -77,7 +77,7 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, out=""){
 #' Returns data frame corresponding to the output csv file
 #'  
 #' @param fastqinfo data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv  
-#' @param fastqdir directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)
+#' @param fastq_dir directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)
 #' @param vsearch_path path to vsearch executables
 #' @param outdir output directory
 #' @param fastq_ascii [33/64] ASCII character number used as the basis for the FASTQ quality score; default: 33 
@@ -96,7 +96,7 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, out=""){
 #' @export
 #'
 
-Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=F){
+Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=F){
   
   # can accept df or file as an input
   if(is.character(fastqinfo)){
@@ -105,6 +105,9 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
   }else{
     fastqinfo_df <- fastqinfo
   }
+  check_fileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep)
+
+  
   vsearch_path<- check_dir(vsearch_path)
   outdir<- check_dir(outdir)
   # get unique list of fastq file pairs
@@ -121,8 +124,8 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
     tmp$fasta[i] <- outfile
     outfile <- paste(outdir, outfile, sep="")
     # add path to input filenames
-    fw_fastq <- paste(fastqdir, tmp[i,1], sep="")
-    rv_fastq <- paste(fastqdir, tmp[i,2], sep="")
+    fw_fastq <- paste(fastq_dir, tmp[i,1], sep="")
+    rv_fastq <- paste(fastq_dir, tmp[i,2], sep="")
     
     if(!is_linux() && endsWith(fw_fastq, ".gz")){ #Decompress input files, since they are cannot be treated directly by vsearch on the OS
       fw_fastq <- decompress_file(fw_fastq, remove_input=F)
@@ -142,7 +145,7 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
     system(vsearch)
     seq_n <- count_seq(outfile)
     tmp$read_count[i] <- seq_n
-    
+
     # vsearch produces uncompressed files even if input is compressed => compress output file
     if(compress){
       if(is_linux()){
@@ -158,7 +161,7 @@ Merge <- function(fastqinfo, fastqdir, vsearch_path="", outdir="", fastq_ascii=3
       }
     }
     
-    original_fw_fastq <- paste(fastqdir, tmp[i,1], sep="")
+    original_fw_fastq <- paste(fastq_dir, tmp[i,1], sep="")
     if( original_fw_fastq != fw_fastq){# the input fastq has been unzipped for vsearch => rm unzipped file to free space
       file.remove(fw_fastq)
       file.remove(rv_fastq)
@@ -279,6 +282,7 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
     fastainfo_df <- RandomSeqWindows(fastainfo, fasta_dir=fasta_dir, outdir=outdir, n, randseed=randseed, compress=compress, sep=sep)
     return(fastainfo_df)
   }
+  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -287,6 +291,7 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
   }else{
     fastainfo_df <- fastainfo
   }
+  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # quite fast for uncompressed and gz files
   fasta_dir<- check_dir(fasta_dir)
@@ -444,7 +449,7 @@ count_seq <- function(file) {
 #' Returns data frame of corresponding to the output csv file.
 #'  
 #' @param fastainfo data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta  
-#' @param fastadir directory with input fasta files (listed in fastainfo_df$fasta)
+#' @param fasta_dir directory with input fasta files (listed in fastainfo_df$fasta)
 #' @param vsearch_path path to vsearch executables
 #' @param cutadapt_path path to cutadapt executables
 #' @param outdir output directory
@@ -458,7 +463,7 @@ count_seq <- function(file) {
 #' @param compress [T/F]; compress output to gzip format; Deault=F
 #' @export
 
-SortReads <- function(fastainfo, fastadir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
+SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -467,6 +472,7 @@ SortReads <- function(fastainfo, fastadir, outdir="", cutadapt_path="" ,vsearch_
   }else{
     fastainfo_df <- fastainfo
   }
+  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   #########
   # SortReads_no_reverse does the whole demultilexing, trimming and compress on the + strand
@@ -479,7 +485,7 @@ SortReads <- function(fastainfo, fastadir, outdir="", cutadapt_path="" ,vsearch_
   # run on strand +
   if(check_reverse){
     #### use +strand, output to sorted_dir, uncompressed
-    sortedinfo_df <- SortReads_no_reverse(fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
+    sortedinfo_df <- SortReads_no_reverse(fastainfo_df, fasta_dir=fasta_dir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
     
     #### use - strand
     # swap fw and rv tags and primers
@@ -491,7 +497,7 @@ SortReads <- function(fastainfo, fastadir, outdir="", cutadapt_path="" ,vsearch_
     rc_dir <-paste(outdir, 'rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- check_dir(rc_dir)
     # run sortreads on for reverse strand
-    sortedinfo_df <- SortReads_no_reverse(fastainfo_df_tmp, fastadir=fastadir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
+    sortedinfo_df <- SortReads_no_reverse(fastainfo_df_tmp, fasta_dir=fasta_dir, outdir=rc_dir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=F)
     
     ### reverse complement and pool
     # get list of files demultiplexed on - strand
@@ -530,7 +536,7 @@ SortReads <- function(fastainfo, fastadir, outdir="", cutadapt_path="" ,vsearch_
   }
   else{
     # check only + strand
-    sortedinfo_df <- SortReads_no_reverse(fastainfo_df, fastadir=fastadir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+    sortedinfo_df <- SortReads_no_reverse(fastainfo_df, fasta_dir=fasta_dir, outdir=outdir, cutadapt_path=cutadapt_path, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   }
   
   sortedinfo_df <- get_read_counts(sortedinfo_df, dir=outdir)
@@ -561,7 +567,7 @@ return(df)
 #' Returns data frame of corresponding to the output csv file.
 #'  
 #' @param fastainfo_df data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta  
-#' @param fastadir directory with input fasta files (listed in fastainfo_df$fasta)
+#' @param fasta_dir directory with input fasta files (listed in fastainfo_df$fasta)
 #' @param cutadapt_path path to cutadapt executables
 #' @param outdir output directory
 #' @param tag_to_end tags are at the extremity of the reads (starting at the first base); default: T
@@ -572,7 +578,7 @@ return(df)
 #' @param sep separator in input and output csv files; default: ","
 #' @param compress [T/F]; compress output to gzip files.
 #' @export
-SortReads_no_reverse <- function(fastainfo, fastadir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
+SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F){
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
   
   # can accept df or file as an input
@@ -593,7 +599,7 @@ SortReads_no_reverse <- function(fastainfo, fastadir, outdir="", cutadapt_path="
   
   # check dirs and make temp dir
   outdir <- check_dir(outdir)
-  fastadir<- check_dir(fastadir)
+  fasta_dir<- check_dir(fasta_dir)
   
   # get unique list of input fasta files
   fastas <- unique(fastainfo_df$fasta)
@@ -611,7 +617,7 @@ SortReads_no_reverse <- function(fastainfo, fastadir, outdir="", cutadapt_path="
     # make a tags.fasta file with all tag combinations of the fasta to be demultiplexed
     tag_file <- make_adapter_fasta(fastainfo_df, fasta_file=fasta_file, tag_to_end=tag_to_end, outdir=tmp_dir)
     # add path
-    fasta_file <- paste(fastadir, fasta_file, sep="")
+    fasta_file <- paste(fasta_dir, fasta_file, sep="")
     # demultiplex fasta, write output to tmp file
     demultiplex_cmd = paste(cutadapt_path, "cutadapt --cores=0 -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", tmp_dir, "tagtrimmed-{name}.fasta ", fasta_file, sep="")
     print(demultiplex_cmd)
@@ -756,6 +762,7 @@ read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=","
   }else{
     sortedinfo_df <- sortedinfo
   }
+  check_fileinfo(file=sortedinfo_df, dir=dir, file_type="sortedinfo", sep=sep)
   
   # read all fasta files in sortedinfo to a read_count_df
   if(nchar(dir)>0){
@@ -2560,6 +2567,7 @@ write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, sortedi
     mock_samples <-unique(sortedinfo_df$sample)
     
     # keep only keep and tolerate action, in case the file contains other lines 
+    check_fileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
     mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
       filter(action=="keep" | action=="tolerate")
 
@@ -2623,6 +2631,7 @@ OptimizePCRError <- function(read_count, mock_composition="", sep=",", outfile="
   }else{
     mock_composition_df <- mock_composition
   }
+  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
   
   # read the mock composition file and keep only lines with keep and tolerate
   mock_composition_df <- mock_composition_df %>%
@@ -2773,6 +2782,8 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
   }else{
     mock_composition_df <- mock_composition
   }
+  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
+  
   # read the mock composition file and keep only lines with keep
   mock_composition_df <- mock_composition_df %>%
     filter(action=="keep")
@@ -2857,6 +2868,7 @@ make_known_occurrences <- function(read_count_samples, sortedinfo="", mock_compo
   }else{
     mock_composition_df <- mock_composition
   }
+  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
   
   # read info on samples types and keep only relevant info
   sortedinfo_df <- sortedinfo_df %>%
@@ -3117,6 +3129,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
   }else{
       known_occurrences_df <- known_occurrences
   }
+  check_fileinfo(file=known_occurrences_df, file_type="known_occurrences", sep=sep)
   
   # filter by sample-replicate
   df <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, sep=sep)
@@ -3612,6 +3625,7 @@ RandomSeqWindows <- function(fastainfo, fasta_dir="", outdir="", n, randseed=0, 
   }else{
     fastainfo_df <- fastainfo
   }
+  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   fasta_dir<- check_dir(fasta_dir)
   outdir<- check_dir(outdir)
@@ -3750,4 +3764,244 @@ count_reads_dir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=
     write.table(df, file=outfile, sep=sep, row.names = F)
   }
   return(df)
+}
+
+#' check_fileinfo
+#' 
+#' Check the format and coherence of different file types:
+#' Check if all obligatory columns are present (all file_type)
+#' Check sample type, habitat homogeneity across replicates (fastqinfo, fastainfo, sortedinfo)
+#' Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)
+#  Check if files in fastq_fw, fastq_rv, fasta columns exist (fastqinfo, fastainfo, sortedinfo)
+#' Check if tag combinations are unique within a file(pair) (fastqinfo, fastainfo)
+#' Check action (mock_composition, known_occurrences)
+#' Check if 1 to 1 relation between asv_id ad asv (read_count,read_count_sample,asv_list)
+#'  
+#' @param file input file name or df to be checked 
+#' @param dir directory name containing the files in fastq_fw, fastq_rv and fasta columns in the input file
+#' @param file_type [fastqinfo/fastainfo/sortedinfo/mock_composition/known_occurrences/read_count/read_count_sample/asv_list] 
+#' @param sep separator used in csv files
+#' @export
+#' 
+
+check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
+  
+  if(is.character(file)){
+    # read known occurrences
+    df <- read.csv(file, header=T, sep=sep)
+  }else{
+    df <- file
+  }
+  
+  # define expected columns
+  if(file_type == "fastqinfo"){
+    column_heading <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fastq_fw","fastq_rv")
+  }else if(file_type == "fastainfo"){
+    column_heading <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fasta")
+  }else if(file_type == "sortedinfo"){
+    column_heading <- c("sample","sample_type","habitat","replicate","filename")
+  }else if(file_type == "mock_composition"){
+    column_heading <- c("sample","action","asv")
+  }else if(file_type == "known_occurrences"){
+    column_heading <- c("sample","action","asv")
+  }else if(file_type == "read_count"){
+    column_heading <- c("asv","asv_id","sample","replicate","read_count")
+  }else if(file_type == "read_count_sample"){
+    column_heading <- c("asv","asv_id","sample","read_count")
+  }else if(file_type == "asv_list"){
+    column_heading <- c("asv","asv_id")
+  }
+  
+  # check if all essential columns are present
+  check_heading(column_heading, colnames(df), file=file)
+  
+  # Check sample type, habitat homogeneity across replicates
+  if(file_type == "fastqinfo" || file_type == "fastainfo" || file_type == "sortedinfo" ){
+    #sample_type
+    tmp <- df %>%
+      select("sample","sample_type","replicate") %>%
+      group_by(sample) %>%
+      summarise(same_sample_type = n_distinct(sample_type)) %>%
+      filter(same_sample_type > 1)
+    
+    if(nrow(tmp) > 0){
+      msg <- paste("Samples with inconsistent sample_type:", paste(tmp$sample, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+    
+    #habitat
+    tmp <- df %>%
+      select("sample","habitat","replicate") %>%
+      group_by(sample) %>%
+      summarise(same_sample_type = n_distinct(habitat)) %>%
+      filter(same_sample_type > 1)
+    if(nrow(tmp) > 0){
+      msg <- paste("Samples with inconsistent habitat:", paste(tmp$sample, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+    
+    # check sample_type
+    sample_type_unique <- c("negative", "mock", "real")
+    tmp <- unique(df$sample_type)
+    incorrect_sample_type <- tmp[!tmp %in% sample_type_unique]
+    if(length(incorrect_sample_type) > 0) {
+      msg <- paste("The following sample types are not accepted:", paste(incorrect_sample_type, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+    
+    # unique sample-replicate
+    tmp <- df %>%
+      select("sample","replicate") %>%
+      group_by(sample, replicate) %>%
+      summarize("n"=n(), .groups="drop_last") %>%
+      filter(n>1)
+    if(nrow(tmp) > 0){
+      msg <- paste("Sample-replicate combinations must be unique:", paste(tmp$sample, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+  # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
+  if(file_type == "fastqinfo"){
+    # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
+    tmp_rv <- df %>%
+      select("fastq_fw","fastq_rv") %>%
+      group_by(fastq_fw) %>%
+      summarize("rv_count"=n_distinct(fastq_rv)) %>%
+      filter(rv_count > 1)
+    
+    tmp_fw <- df %>%
+      select("fastq_fw","fastq_rv") %>%
+      group_by(fastq_rv) %>%
+      summarize("fw_count"=n_distinct(fastq_fw)) %>%
+      filter(fw_count > 1)
+    
+    if(nrow(tmp_rv)>0 || nrow(tmp_fw)>0) {
+      msg <- paste("The following fastq files have more than one pairs:", paste(tmp_fw$fastq_rv, tmp_rv$fastq_fw, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+  # check if files exist
+  if(file_type == "fastqinfo" || file_type == "fastainfo" || file_type == "sortedinfo"){
+    
+    if(file_type == "fastqinfo"){
+      file_list_fw <- unique(df$fastq_fw)
+      file_list_rv <- unique(df$fastq_rv)
+      file_list <- c(file_list_fw, file_list_rv)
+    }
+    if(file_type == "fastainfo"){
+      file_list <- unique(df$fasta)
+    }
+    if(file_type == "sortedinfo"){
+      file_list <- unique(df$filename)
+    }
+    check_file_exists(dir=dir, file_list=file_list)
+  }
+  
+  # check if tag combinations are unique within a file(pair)
+  if(file_type == "fastqinfo" || file_type == "fastainfo"){
+    if(file_type == "fastqinfo"){
+      tmp <- df %>%
+        select("tag_fw", "tag_rv", "file"=fastq_fw)
+    }else{
+      tmp <- df %>%
+        select("tag_fw", "tag_rv", "file"=fasta)
+    }
+    tmp <- tmp %>%
+      group_by(file, tag_fw, tag_rv) %>%
+      summarize(count = n(), .groups="drop_last") %>%
+      filter(count>1)
+    tmp$res <- paste(tmp$tag_fw, tmp$tag_rv, tmp$file, sep=" ")
+    
+    if(nrow(tmp)>0) {
+      msg <- paste("The following  within file tag combinations are not unique:", paste(tmp$res, collapse = "\n"))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+  # check action
+  if(file_type == "mock_composition" || file_type == "known_occurrences"){
+    action_type <- c("keep", "delete", "tolerate")
+    tmp <- unique(df$action)
+    incorrect_action_type <- tmp[!tmp %in% action_type]
+    if(length(incorrect_action_type) > 0) {
+      msg <- paste("The following actions types are not accepted:", paste(incorrect_action_type, collapse = ", "))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+  # check if 1 to 1 relation between asv_id ad asv
+  if(file_type == "read_count" || file_type == "read_count_sample" || file_type == "asv_list" ){
+    
+    tmp_asv_id <- df %>%
+      select("asv_id","asv") %>%
+      group_by(asv_id) %>%
+      summarize("asv_count"=n_distinct(asv)) %>%
+      filter(asv_count > 1)
+    
+    tmp_asv <- df %>%
+      select("asv_id","asv") %>%
+      group_by(asv) %>%
+      summarize("asv_id_count"=n_distinct(asv_id)) %>%
+      filter(asv_id_count > 1)
+    
+    if(nrow(tmp_asv_id)>0 || nrow(tmp_asv)>0) {
+      msg <- paste("The following ASVs or asv_ids are not unique:", paste(tmp_asv_id$asv_id, tmp_asv$asv, collapse = "\n"))
+      tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+}
+
+#' check_file_exists
+#' 
+#' Check if all files in the input vector exist
+#'  
+#' @param dir name of the directory containig the input files
+#' @param file_list vector of file names
+#' @export
+#' 
+
+check_file_exists <- function(dir=dir, file_list=file_list){
+  
+  dir <- check_dir(dir)
+  missing <- c()
+  for(i in file_list){
+    file_p <- paste(dir, i, sep="")
+    if(!file.exists(file_p)){
+      missing <- append(missing, file_p)
+    }
+  }
+  if(length(missing)>0 ) {
+    msg <- paste("The following files do not exist :", paste(missing, collapse = ", "))
+    tryCatch(stop(msg), error = function(e) message(msg))
+  }
+}
+
+#' check_heading
+#' 
+#' Compare the 2 input vectors, and returns elements of list1 that are not on list2
+#'  
+#' @param list1 vector
+#' @param list2 vector
+#' @param file file name to write to error message. Optional
+#' @param outfile name of the output file; optional, it is not given results are returned in a data frame, but no file is written 
+#' @export
+#' 
+
+check_heading <- function(list1, list2, file="") {
+  bool <- TRUE
+  col <- character(0)
+  for (i in list1) {
+    if (!(i %in% list2)) {
+      col <- append(col, i)
+      bool <- FALSE
+    }
+  }
+  col <- paste(col, collapse = ", ")
+  if (!bool) {
+    msg <- paste("The following column(s) are missing from", file, ":", col, sep = " ")
+    tryCatch(stop(msg), error = function(e) message(msg))
+  }
 }

@@ -6,7 +6,7 @@
 \usage{
 Merge(
   fastqinfo,
-  fastqdir,
+  fastq_dir,
   vsearch_path = "",
   outdir = "",
   fastq_ascii = 33,
@@ -27,7 +27,7 @@ Merge(
 \arguments{
 \item{fastqinfo}{data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv}
 
-\item{fastqdir}{directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)}
+\item{fastq_dir}{directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)}
 
 \item{vsearch_path}{path to vsearch executables}
 
