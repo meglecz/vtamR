@@ -101,8 +101,8 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
 #setwd("D:/vtamR")
 # load local packages
 load_all(".")
-roxygenise() # Builds the help files
-usethis::use_roxygen_md() # rebuild the help files
+roxygenise() 
+usethis::use_roxygen_md()
 
 
 ###

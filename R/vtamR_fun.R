@@ -2020,16 +2020,18 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' Find LTG for each asv in the input dataframe
 #'  
 #' @param df csv file or data frame containing and asv column
-#' @param ltg_params_df csv file or data frame with a list of percentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)
+#' @param ltg_params csv file or data frame with a list of percentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)
 #' @param taxonomy file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)
 #' @param blast_db BLAST database
 #' @param blast_path path to BLAST executable
 #' @param outdir name of the output directory
 #' @param num_threads Number of CPUs
+#' @param tax_sep separator used in taxonomy file
+#' @param sep separator used in csv files
 #' @param outfile Name of the output csv file with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres; if no file name provided, only a data frame is returned
 #' @export
 #'
-TaxAssign <- function(asv, ltg_params_df="", taxonomy="", blast_db="", blast_path="", outfile="", num_threads=1){
+TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="", outfile="", num_threads=1, tax_sep="\t", sep=","){
   # can accept df or file as an input
   if(is.character(asv)){
     # read known occurrences
@@ -2037,8 +2039,11 @@ TaxAssign <- function(asv, ltg_params_df="", taxonomy="", blast_db="", blast_pat
   }else{
     asv_df <- asv
   }
-  # default value for ltg_params_df
-  if(nrow(ltg_params_df)==0){
+
+  if(is.character(ltg_params)){
+    ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
+  }else if (ltg_params == ""){   # default value for ltg_params_df
+
     ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                                 pcov=c(70,70,70,70,70,70),
                                 phit=c(70,70,70,70,70,70),
@@ -2046,12 +2051,21 @@ TaxAssign <- function(asv, ltg_params_df="", taxonomy="", blast_db="", blast_pat
                                 seqn=c(1,1,2,3,4,4),
                                 refres=c(8,8,8,7,6,6),
                                 ltgres=c(8,8,8,8,7,7)
-    )
+                                )
+  }else{
+    ltg_params_df <- ltg_params
+  }
+  
+  if(is.character(fastqinfo)){
+    # read known occurrences
+    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+  }else{
+    fastqinfo_df <- fastqinfo
   }
   
   #### Read taxonomy info 
   # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
-  tax_df <- read.delim(taxonomy, header=T, sep="\t", fill=T, quote="")
+  tax_df <- read.delim(taxonomy, header=T, sep=tax_sep, fill=T, quote="")
   # make data frame with old taxids as line numbers and taxids in a columns
   old_taxid <- tax_df %>%
     filter(!is.na(old_tax_id)) %>%

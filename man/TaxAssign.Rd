@@ -11,7 +11,9 @@ TaxAssign(
   blast_db = "",
   blast_path = "",
   outfile = "",
-  num_threads = 1
+  num_threads = 1,
+  tax_sep = "\\t",
+  sep = ","
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ TaxAssign(
 \item{outfile}{Name of the output csv file with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres; if no file name provided, only a data frame is returned}
 
 \item{num_threads}{Number of CPUs}
+
+\item{tax_sep}{separator used in taxonomy file}
+
+\item{sep}{separator used in csv files}
 
 \item{df}{csv file or data frame containing and asv column}
 

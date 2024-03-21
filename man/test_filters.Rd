@@ -4,7 +4,7 @@
 \alias{test_filters}
 \title{test_filters}
 \usage{
-test_filters(test_dir = "~/vtamR/vtamR_test/", vsearch_path = "", sep = ",")
+test_filters(test_dir = "vtamR_test/", vsearch_path = "", sep = ",")
 }
 \arguments{
 \item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}

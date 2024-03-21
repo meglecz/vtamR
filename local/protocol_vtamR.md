@@ -295,6 +295,10 @@ The executable is in the C:\swarm-3.1.4-win-x86_64\bin directory
 
 
 
+# Rmarkdown
+
+https://ourcodingclub.github.io/tutorials/rmarkdown/
+
 
 
 

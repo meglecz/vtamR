@@ -5,8 +5,8 @@
 \title{test_taxassign}
 \usage{
 test_taxassign(
-  test_dir = "~/vtamR/vtamR_test/",
-  sep = sep,
+  test_dir = "vtamR_test/",
+  sep = ",",
   blast_path = blast_path,
   blast_db = blast_db,
   taxonomy = taxonomy,

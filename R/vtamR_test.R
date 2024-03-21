@@ -8,7 +8,7 @@
 #' @export
 #'
 
-test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", cutadapt_path=""){
+test_merge_and_sortreads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path=""){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -145,7 +145,7 @@ test_merge_and_sortreads <- function(test_dir="~/vtamR/vtamR_test/", vsearch_pat
 #'
 
 
-test_filters <- function(test_dir="~/vtamR/vtamR_test/", vsearch_path="", sep=","){
+test_filters <- function(test_dir="vtamR_test/", vsearch_path="", sep=","){
   
   test_dir <- check_dir(test_dir)
   outdir <- paste(test_dir, "out", sep="")
@@ -386,7 +386,7 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @export
 #'
 
-test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=1){
+test_taxassign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=1){
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")
   expeted_output <- paste(test_dir, "test/test_taxassign_out.tsv", sep="")
@@ -425,7 +425,7 @@ test_taxassign <- function(test_dir="~/vtamR/vtamR_test/", sep=sep, blast_path=b
 #' @export
 #'
 
-test_make_known_occurrences <- function(test_dir="~/vtamR/vtamR_test/", sep=","){
+test_make_known_occurrences <- function(test_dir="vtamR_test/", sep=","){
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")

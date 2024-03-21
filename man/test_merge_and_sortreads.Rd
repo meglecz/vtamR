@@ -5,7 +5,7 @@
 \title{test_merge_and_sortreads}
 \usage{
 test_merge_and_sortreads(
-  test_dir = "~/vtamR/vtamR_test/",
+  test_dir = "vtamR_test/",
   vsearch_path = "",
   cutadapt_path = ""
 )

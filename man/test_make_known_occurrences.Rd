@@ -4,7 +4,7 @@
 \alias{test_make_known_occurrences}
 \title{test_make_known_occurrences}
 \usage{
-test_make_known_occurrences(test_dir = "~/vtamR/vtamR_test/", sep = ",")
+test_make_known_occurrences(test_dir = "vtamR_test/", sep = ",")
 }
 \arguments{
 \item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}

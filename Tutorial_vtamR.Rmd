@@ -1,0 +1,188 @@
+---
+title: "vtamR Tutorial"
+auhor: Emese Meglecz
+date: "2024-03-21"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+
+## Summary
+
+**vtamR** is a revised, completed version of [VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) rewritten in R. 
+As VTAM (Validation and Taxonomic Assignation of Metabarcoding Data) it is a metabarcoding pipeline starting from fastq files of amplicon sequences and produces an Amplicon Sequence Variant (ASV or variant) table of validated variants assigned to taxonomic groups.
+
+From fsq till ASV table
+Hadles replicates
+Includes adaptions parmaters based o positive and negative cotrols
+can pool multiple datasets
+can pool ovarlapping markers
+
+No marker 
+No run
+very flexible
+includes swarm
+additional graphic options
+
+### Implementation
+The heavy lifting of sequence analyses are done by the following third party programs, that should be installed on your computer:
+
+* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/))
+* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/))
+* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479))
+* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/))
+
+Tested in Windows and Linux, and should work in all operating systems.
+Access to R package ...
+
+
+## Comparison to VTAM
+### common
+From fsq till ASV table
+Hadles replicates
+Includes adaptions parmaters based o positive and negative cotrols
+can pool multiple datasets
+can pool ovarlapping markers
+
+No marker 
+No run
+very flexible
+includes swarm
+additional graphic options
+
+
+## Installation
+
+Test major functions
+```{r}
+library("devtools")
+library("roxygen2")
+library("seqinr")
+library("dplyr")
+library("tidyr")
+library("ggplot2") 
+load_all(".")
+roxygenise()
+usethis::use_roxygen_md()
+
+cutadapt_path="C:/Users/Public/"
+vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
+blast_path="C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
+num_threads=4
+
+test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_filters(vsearch_path=vsearch_path)
+test_make_known_occurrences()
+test_optimize(vsearch_path=vsearch_path)
+test_taxassign(blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
+```
+
+
+## Input files
+
+## Getting Started
+
+Install R packages and third party programs
+```{r}
+#install.packages("devtools")
+#install.packages("roxygen2")
+#install.packages("seqinr")
+#install.packages("tidyr")
+```
+
+Load libraries
+```{r, warning = FALSE, message=FALSE, eval=TRUE}
+library("devtools")
+library("roxygen2")
+library("seqinr")
+library("dplyr")
+library("tidyr")
+library("ggplot2") 
+```
+
+Load local packages
+```{r, eval=TRUE, message=FALSE}
+load_all(".")
+roxygenise()
+usethis::use_roxygen_md()
+```
+
+**Set general parameters**
+
+* Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
+* `num_threads` is the number of CPUs for multithreaded programs
+* `sep` is the separator used in csv files
+* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. this saves space, but compressing/decompressing adds more run time in some cases. I suggest to avoid compressed intermediate files and delete/compress them as soon as the analyses are finished. (See more in xxxx). The input fasta and fatsq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files. 
+
+```{r, eval=TRUE}
+# path to third party programs 
+cutadapt_path="C:/Users/Public/"
+vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
+blast_path="C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
+num_threads=4
+sep=","
+compress = F
+```
+
+
+**Taxassign reference data base**
+
+* `taxonomy` CSV file file with the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel (see details xxxx)
+* `blast_db` BLAST database (see details xxxx)
+```{r, eval=TRUE}
+taxonomy="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
+```
+
+**Set input data**
+
+* `fastq_dir` Directory containing the input fastq files
+* `outdir` Name of the output directory
+* `fastqinfo` CSV file file with the following columns: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)
+* `mock_composition` CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)
+* `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
+
+```{r, eval=TRUE}
+fastq_dir <- "vtamR_test/data/" # directory with input fastq files
+outdir <- "vtamR_test/out_mfzr/"
+fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
+mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
+asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+```
+
+
+**Check the format of input files**
+The `check_fileinfo` function test if all obligatory columns are present, and do some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
+```{r}
+check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo", sep=sep)
+check_fileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
+check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
+```
+
+
+## Tutorial merge-demultiplex-dereplicate
+
+```{r}
+
+```
+
+
+## Tutorial filter
+## Helper functions
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
