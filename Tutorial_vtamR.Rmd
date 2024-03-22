@@ -3,9 +3,11 @@ title: "vtamR Tutorial"
 auhor: Emese Meglecz
 date: "2024-03-21"
 output:
-  html_document: default
-  html_notebook: default
+  html_document:
+    toc: true
+    toc_float: true
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
@@ -14,52 +16,105 @@ knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 
 ## Summary
 
-**vtamR** is a revised, completed version of [VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) rewritten in R. 
-As VTAM (Validation and Taxonomic Assignation of Metabarcoding Data) it is a metabarcoding pipeline starting from fastq files of amplicon sequences and produces an Amplicon Sequence Variant (ASV or variant) table of validated variants assigned to taxonomic groups.
+**vtamR** is a revised, completed version of [VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) rewritten in R. As VTAM (Validation and Taxonomic Assignation of Metabarcoding Data) it is a complete metabarcoding pipeline:
 
-From fsq till ASV table
-Hadles replicates
-Includes adaptions parmaters based o positive and negative cotrols
-can pool multiple datasets
-can pool ovarlapping markers
+* Sequence analyses from raw fastq files of amplicon sequences till Amplicon Sequence Variant (ASV or variant) table of validated variants assigned to taxonomic groups.
+* Handles replicates (technical or biological replicate of the same sample)
+* Uses positive and negative control samples to fine tune the filtering and reduce false positive and false negative occurrences.
+* Can pool multiple data sets (resultas or earlier analyses)
+* Can pool results from overlapping markers
 
-No marker 
-No run
-very flexible
-includes swarm
-additional graphic options
+**Novelties compared to VTAM:**
 
-### Implementation
-The heavy lifting of sequence analyses are done by the following third party programs, that should be installed on your computer:
+* Highly adaptable to include, exculde and order different filtering steps
+* Includes swarm for for denoising
+* Graphic options
+* Functions to get statistics of each filtering steps (read and variant count etc.)
+* The notion of marker and run has been dropped to simplify the analyses
 
-* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/))
-* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/))
-* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479))
-* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/))
-
-Tested in Windows and Linux, and should work in all operating systems.
-Access to R package ...
-
-
-## Comparison to VTAM
-### common
-From fsq till ASV table
-Hadles replicates
-Includes adaptions parmaters based o positive and negative cotrols
-can pool multiple datasets
-can pool ovarlapping markers
-
-No marker 
-No run
-very flexible
-includes swarm
-additional graphic options
 
 
 ## Installation
 
-Test major functions
-```{r}
+### Implementation
+
+The heavy lifting of sequence analyses are done by the following third party programs. They should be installed on your computer:
+
+* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (version >= )
+* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (version >= )
+* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (version >= )
+* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (version >= )
+
+vtamR was tested in Windows and Linux, and should work in all operating systems.
+Access to R package xxxx
+
+
+### Install third party programs on Linux
+
+All third-party programs can be easily installed to a conda environment, but it is not essential to use conda.
+Commands for a quick installation of the conda environment and dependencies:
+
+xxxx check conda install swarm and versions, check if it works with R ??? if not give web sites 
+
+```{bash install_prg}
+
+conda create --name vtamR python=3.9 -y
+conda activate mkcoinr
+
+python3 -m pip install cutadapt
+conda install -c bioconda blast -y
+conda install -c bioconda vsearch -y
+
+```
+
+### Install third party programs on Windows
+
+**vsearch**
+
+* Download binaries from https://github.com/torognes/vsearch/releases/tag/v2.23.0
+* Extraire zip file
+* The executables are found in `vsearch-x.xx.x-win-x86_64/bin/`
+
+**BLAST**
+
+* Detailed instructions: [https://www.ncbi.nlm.nih.gov/books/NBK52637/](https://www.ncbi.nlm.nih.gov/books/NBK52637/)
+* Download executable (ncbi-blast-x.xx.x+-win64.exe) from [https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/](https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/)
+* Double click on the .exe file, accept the license agreement and specify the install location in a new prompt. Attention! Do not accept the standard location (C:/Program Files/...) since it contains a space. Chose a directory with a path without space.
+* The executables are found in `blast-x.xx.x+/bin/`
+
+**cutadapt**
+
+* Download `cutadapt.exe` from [https://github.com/marcelm/cutadapt/releases](https://github.com/marcelm/cutadapt/releases)  and save it a convenient place on your computer (path without space, e.g. `C:/Users/Public/`)
+
+**swarm**
+
+* Download binaries from [https://github.com/torognes/swarm/releases](https://github.com/torognes/swarm/releases) and save it to a convenient place on your computer (path without space, e.g. `C:/Users/Public/`)
+* Unzip file
+* The executable is in the `swarm-x.x.x-win-x86_64/bin` directory
+
+
+### Install R packages
+
+```{r install_pck}
+install.packages("devtools")
+install.packages("roxygen2")
+install.packages("seqinr")
+install.packages("tidyr")
+```
+
+### Test your installation
+
+**Set path to third party programs**
+```{r set_path, eval=TRUE}
+cutadapt_path <- "C:/Users/Public/"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
+blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
+num_threads=4
+```
+
+**Load libraries**
+```{r load_libraries}
 library("devtools")
 library("roxygen2")
 library("seqinr")
@@ -69,13 +124,10 @@ library("ggplot2")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
+```
 
-cutadapt_path="C:/Users/Public/"
-vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
-blast_path="C:/Users/Public/blast-2.14.1+/bin/"
-swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
-num_threads=4
-
+**Run test functions on test data**
+```{r test_vtamR}
 test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
 test_filters(vsearch_path=vsearch_path)
 test_make_known_occurrences()
@@ -84,20 +136,10 @@ test_taxassign(blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_
 ```
 
 
-## Input files
-
 ## Getting Started
 
-Install R packages and third party programs
-```{r}
-#install.packages("devtools")
-#install.packages("roxygen2")
-#install.packages("seqinr")
-#install.packages("tidyr")
-```
-
 Load libraries
-```{r, warning = FALSE, message=FALSE, eval=TRUE}
+```{r load_packages, warning = FALSE, message=FALSE, eval=TRUE}
 library("devtools")
 library("roxygen2")
 library("seqinr")
@@ -107,18 +149,13 @@ library("ggplot2")
 ```
 
 Load local packages
-```{r, eval=TRUE, message=FALSE}
+```{r load_local_packages, eval=TRUE, message=FALSE}
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
 ```
 
 **Set general parameters**
-
-* Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
-* `num_threads` is the number of CPUs for multithreaded programs
-* `sep` is the separator used in csv files
-* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. this saves space, but compressing/decompressing adds more run time in some cases. I suggest to avoid compressed intermediate files and delete/compress them as soon as the analyses are finished. (See more in xxxx). The input fasta and fatsq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files. 
 
 ```{r, eval=TRUE}
 # path to third party programs 
@@ -132,22 +169,25 @@ compress = F
 ```
 
 
+* Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
+* `num_threads` is the number of CPUs for multithreaded programs
+* `sep` is the separator used in csv files
+* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. This saves space, but compressing/decompressing increases run time in some cases. I suggest to avoid compress intermediate files and delete/compress them as soon as the analyses are finished. (See more in xxxx). The input fasta and fatsq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files and they are automatically detected bazed on the file extension.
+
 **Taxassign reference data base**
 
-* `taxonomy` CSV file file with the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel (see details xxxx)
-* `blast_db` BLAST database (see details xxxx)
+You can download a ready to use, comprehensive COI database from [OSF](https://osf.io/vrfwz/) [Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)
+
 ```{r, eval=TRUE}
 taxonomy="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
 blast_db="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
 ```
 
-**Set input data**
+* `taxonomy` CSV file file with the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel (see details xxxx)
+* `blast_db` BLAST database (see details xxxx)
 
-* `fastq_dir` Directory containing the input fastq files
-* `outdir` Name of the output directory
-* `fastqinfo` CSV file file with the following columns: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)
-* `mock_composition` CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)
-* `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
+
+**Set input data**
 
 ```{r, eval=TRUE}
 fastq_dir <- "vtamR_test/data/" # directory with input fastq files
@@ -158,31 +198,28 @@ asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
 ```
 
 
+* `fastq_dir` Directory containing the input fastq files
+* `outdir` Name of the output directory
+* `fastqinfo` CSV file file with the following columns: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)
+* `mock_composition` CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)
+* `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
+
+
 **Check the format of input files**
-The `check_fileinfo` function test if all obligatory columns are present, and do some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
+
+The `check_fileinfo` function tests if all obligatory columns are present, and do some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
+
 ```{r}
 check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo", sep=sep)
 check_fileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
 check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
 ```
 
+## Merge - Demultiplex - Dereplicate
 
-## Tutorial merge-demultiplex-dereplicate
-
-```{r}
-
-```
+I suppose that you have [installed third party programs and set path to them](#installation) and followed the [Getting started section](#getting-started)
 
 
 ## Tutorial filter
 ## Helper functions
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
+## Input files

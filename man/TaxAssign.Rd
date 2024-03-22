@@ -6,7 +6,7 @@
 \usage{
 TaxAssign(
   asv,
-  ltg_params_df = "",
+  ltg_params = "",
   taxonomy = "",
   blast_db = "",
   blast_path = "",
@@ -17,7 +17,7 @@ TaxAssign(
 )
 }
 \arguments{
-\item{ltg_params_df}{csv file or data frame with a list of percentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)}
+\item{ltg_params}{csv file or data frame with a list of percentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)}
 
 \item{taxonomy}{file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)}
 
