@@ -790,7 +790,7 @@ read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=","
   # reorder columns
   read_count_df <- read_count_df[, c("asv", "sample", "replicate", "read_count")]
   
-  # add asv_id, but do not add new asv s to asv_list; it is probably too early at this stage, better to do it after swarm
+  # add asv_id, but do not add new asv to asv_list; it is probably too early at this stage, better to do it after swarm
   read_count_df <- add_ids(read_count_df, asv_list=asv_list, sep=sep,  updated_asv_list=updated_asv_list)
   
   # write read_count table
@@ -890,7 +890,7 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 }
 
 
-#' swarm
+#' Swarm
 #' 
 #' Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
 #' Return a data frame with the same structure as the input
@@ -907,7 +907,7 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' @export
 #' 
 
-swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T){
+Swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1706,7 +1706,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="", abskew=2){
   }
   
   # create a tmp directory for temporary files using time and a random number
-  outdir_tmp <- paste('tmp_FilterChimeara_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- paste('tmp_FilterChimera_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir_tmp <- check_dir(outdir_tmp)
   
   # make fasta file with unique reads; use sequences as ids

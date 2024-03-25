@@ -12,7 +12,7 @@
 
 <meta name="date" content="2024-03-21" />
 
-<title>vtamR Tutorial</title>
+<title>vtamR Documentation</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1484,7 +1484,7 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">vtamR Tutorial</h1>
+<h1 class="title toc-ignore">vtamR Documentation</h1>
 <h4 class="date">2024-03-21</h4>
 
 </div>
@@ -1499,7 +1499,7 @@ Metabarcoding Data) it is a complete metabarcoding pipeline:</p>
 <li>Sequence analyses from raw fastq files of amplicon sequences till
 Amplicon Sequence Variant (ASV or variant) table of validated variants
 assigned to taxonomic groups.</li>
-<li>Handles replicates (technical or biological replicate of the same
+<li>Handles replicates (technical or biological replicates of the same
 sample)</li>
 <li>Uses positive and negative control samples to fine tune the
 filtering and reduce false positive and false negative occurrences.</li>
@@ -1508,12 +1508,12 @@ filtering and reduce false positive and false negative occurrences.</li>
 </ul>
 <p><strong>Novelties compared to VTAM:</strong></p>
 <ul>
-<li>Highly adaptable to include, exculde and order different filtering
-steps</li>
-<li>Includes swarm for for denoising</li>
+<li>As it is a series of R functions, vramR is highly adaptable to
+include, exclude and order different steps of tha analyses</li>
+<li>Includes swarm for denoising</li>
 <li>Graphic options</li>
-<li>Functions to get statistics of each filtering steps (read and
-variant count etc.)</li>
+<li>Include functions to get statistics of each filtering steps (read
+and variant count etc.)</li>
 <li>The notion of marker and run has been dropped to simplify the
 analyses</li>
 </ul>
@@ -1526,16 +1526,20 @@ analyses</li>
 third party programs. They should be installed on your computer:</p>
 <ul>
 <li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et
-al., 1990</a>) (version &gt;= )</li>
+al., 1990</a>) (v2.11.0+)</li>
 <li>vsearch (<a href="https://peerj.com/articles/2584/">Rognes et al.,
-2016</a>) (version &gt;= )</li>
+2016</a>) (v2.7.0)</li>
 <li>cutadapt(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479">Martin,
-2011</a>) (version &gt;= )</li>
+2011</a>) (v4.0)</li>
 <li>swarm (<a href="https://peerj.com/articles/1420/">Mahé et al.,
-2015</a>) (version &gt;= )</li>
+2015</a>) (v2.1.12)</li>
 </ul>
+<p>vtamR has been tested using the above mentioned versions. It should
+work with later version, and it is also likely to work with older
+versions.</p>
 <p>vtamR was tested in Windows and Linux, and should work in all
-operating systems. Access to R package xxxx</p>
+operating systems. Access to R package xxxx =&gt; To be written once the
+package is ready</p>
 </div>
 <div id="install-third-party-programs-on-linux" class="section level3">
 <h3>Install third party programs on Linux</h3>
@@ -1558,8 +1562,8 @@ conda install -c bioconda vsearch -y
 <p><strong>vsearch</strong></p>
 <ul>
 <li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a></li>
-<li>Extraire zip file</li>
-<li>The executables are found in
+<li>Decompress the zip file</li>
+<li>The executable are found in
 <code>vsearch-x.xx.x-win-x86_64/bin/</code></li>
 </ul>
 <p><strong>BLAST</strong></p>
@@ -1567,9 +1571,9 @@ conda install -c bioconda vsearch -y
 <li>Detailed instructions: <a href="https://www.ncbi.nlm.nih.gov/books/NBK52637/">https://www.ncbi.nlm.nih.gov/books/NBK52637/</a></li>
 <li>Download executable (ncbi-blast-x.xx.x+-win64.exe) from <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
 <li>Double click on the .exe file, accept the license agreement and
-specify the install location in a new prompt. Attention! Do not accept
-the standard location (C:/Program Files/…) since it contains a space.
-Chose a directory with a path without space.</li>
+specify the install location when prompted. Attention! Do not accept the
+standard location (C:/Program Files/…) since it contains a space. Chose
+a directory with a path without space.</li>
 <li>The executables are found in <code>blast-x.xx.x+/bin/</code></li>
 </ul>
 <p><strong>cutadapt</strong></p>
@@ -1593,11 +1597,14 @@ directory</li>
 <pre class="r"><code>install.packages(&quot;devtools&quot;)
 install.packages(&quot;roxygen2&quot;)
 install.packages(&quot;seqinr&quot;)
-install.packages(&quot;tidyr&quot;)</code></pre>
+install.packages(&quot;dplyr&quot;)
+install.packages(&quot;tidyr&quot;)
+install.packages(&quot;ggplot2&quot;)</code></pre>
 </div>
 <div id="test-your-installation" class="section level3">
 <h3>Test your installation</h3>
-<p><strong>Set path to third party programs</strong></p>
+<p><strong>Set path to third party programs and specify the number of
+CPUs</strong></p>
 <pre class="r"><code>cutadapt_path &lt;- &quot;C:/Users/Public/&quot;
 vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path &lt;- &quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
@@ -1613,6 +1620,9 @@ library(&quot;ggplot2&quot;)
 load_all(&quot;.&quot;)
 roxygenise()
 usethis::use_roxygen_md()</code></pre>
+<p>TODO: Make shorter version of the ref db and include to the files.
+Till then test_taxassign need blast_db and taxonomy should be
+specified.</p>
 <p><strong>Run test functions on test data</strong></p>
 <pre class="r"><code>test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
 test_filters(vsearch_path=vsearch_path)
@@ -1635,8 +1645,7 @@ library(&quot;ggplot2&quot;) </code></pre>
 roxygenise()
 usethis::use_roxygen_md()</code></pre>
 <p><strong>Set general parameters</strong></p>
-<pre class="r"><code># path to third party programs 
-cutadapt_path=&quot;C:/Users/Public/&quot;
+<pre class="r"><code>cutadapt_path=&quot;C:/Users/Public/&quot;
 vsearch_path = &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path=&quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
 swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
@@ -1654,63 +1663,352 @@ programs</li>
 <code>Merge</code>, <code>RandomSeq</code> and <code>SortReads</code>
 functions are compressed. This saves space, but
 compressing/decompressing increases run time in some cases. I suggest to
-avoid compress intermediate files and delete/compress them as soon as
-the analyses are finished. (See more in xxxx). The input fasta and fatsq
-files of these functions can be compressed (<code>.gz</code>,
-<code>.bz2</code>, but NOT .zip) or uncompressed files and they are
-automatically detected bazed on the file extension.</li>
+avoid compressing intermediate files and delete/compress them as soon as
+the analyses are finished. (See more in the <a href="#troubleshooting">troubleshooting section</a>). The input fasta
+and fatsq files of these functions can be compressed (<code>.gz</code>,
+<code>.bz2</code>, but NOT .zip) or uncompressed files and compression
+is automatically detected based on the file extension.</li>
 </ul>
 <p><strong>Taxassign reference data base</strong></p>
-<p>You can download a ready to use, comprehensive COI database from <a href="https://osf.io/vrfwz/">OSF</a> <a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a></p>
+<p>You can download a ready to use, comprehensive COI database from <a href="https://osf.io/vrfwz/">OSF</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
+2023</a>). Set the path to the database and the accompanying taxonomy
+file.</p>
 <pre class="r"><code>taxonomy=&quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv&quot;
 blast_db=&quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam&quot;</code></pre>
 <ul>
-<li><code>taxonomy</code> CSV file file with the following columns:
-tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel (see details
-xxxx)</li>
-<li><code>blast_db</code> BLAST database (see details xxxx)</li>
+<li><code>taxonomy</code> CSV file file with taxonomic information</li>
+<li><code>blast_db</code> BLAST database</li>
+<li>Details are in <a href="#input-and-output-files">Input and output
+files section</a></li>
 </ul>
 <p><strong>Set input data</strong></p>
-<pre class="r"><code>fastq_dir &lt;- &quot;vtamR_test/data/&quot; # directory with input fastq files
+<pre class="r"><code>fastq_dir &lt;- &quot;vtamR_test/data/&quot;
 outdir &lt;- &quot;vtamR_test/out_mfzr/&quot;
 fastqinfo &lt;- &quot;vtamR_test/data/fastqinfo_mfzr.csv&quot;
 mock_composition &lt;- &quot;vtamR_test/data/mock_composition_mfzr.csv&quot;
-asv_list &lt;- &quot;vtamR_test/data/asv_list_zfzr.csv&quot;</code></pre>
+asv_list &lt;- &quot;vtamR_test/data/asv_list.csv&quot;</code></pre>
 <ul>
 <li><code>fastq_dir</code> Directory containing the input fastq
 files</li>
 <li><code>outdir</code> Name of the output directory</li>
-<li><code>fastqinfo</code> CSV file file with the following columns:
-tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv
-(see details xxxx)</li>
-<li><code>mock_composition</code> CSV file file with the following
-columns: sample,action,asv,taxon,asv_id (see details xxxx)</li>
-<li><code>asv_list</code> CSV file file with the following columns:
-asv_id,asv (see details xxxx)</li>
+<li><code>fastqinfo</code> CSV file file with information on input
+files, primers, tags, samples</li>
+<li><code>mock_composition</code> CSV file file with expected ASVs in
+mock samples</li>
+<li><code>asv_list</code> CSV file file with ASVs from earlier data sets
+(if any)</li>
+<li>Details are in <a href="#input-and-output-files">Input and output
+files section</a></li>
 </ul>
 <p><strong>Check the format of input files</strong></p>
 <p>The <code>check_fileinfo</code> function tests if all obligatory
 columns are present, and do some sanity checks. This can be helpful,
 since these files are produced by the users, and may contain errors
 difficult to spot by eye.</p>
-<pre class="r"><code>check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type=&quot;fastqinfo&quot;, sep=sep)
-check_fileinfo(file=mock_composition, file_type=&quot;mock_composition&quot;, sep=sep)
-check_fileinfo(file=asv_list, file_type=&quot;asv_list&quot;, sep=sep)</code></pre>
+<pre class="r"><code>check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type=&quot;fastqinfo&quot;)
+check_fileinfo(file=mock_composition, file_type=&quot;mock_composition&quot;)
+check_fileinfo(file=asv_list, file_type=&quot;asv_list&quot;)</code></pre>
 </div>
-<div id="merge---demultiplex---dereplicate" class="section level2">
-<h2>Merge - Demultiplex - Dereplicate</h2>
+<div id="merge---demultiplex" class="section level2">
+<h2>Merge - Demultiplex</h2>
 <p>I suppose that you have <a href="#installation">installed third party
 programs and set path to them</a> and followed the <a href="#getting-started">Getting started section</a></p>
+<p>According to your wetlab and sequencing protocol fastq files can
+contain one or more sample-replicate, and sequences may or may not
+contain tags (for demultiplexing) and primer sequences. In the following
+sections I show 3 different scenarios to obtain the <a href="#input-and-output-files">read_count_df</a>, the input data frame
+to the filtering steps.</p>
+<div id="one-sample-per-fastq---no-tag---no-primer" class="section level3">
+<h3>One sample per fastq - no tag - no primer</h3>
+<p>Read pairs should be quality filtered merged and written to fasta
+format. This can be done by the <code>Merge</code> function.</p>
+<p>See the help of the <code>Merge</code> function for setting the
+correct parameters for quality filtering: <code>?Merge</code></p>
+<p><a href="#input-and-output-files">fastqinfo</a> is either a csv file,
+or a data frame, with the following columns: tag_fw, primer_fw, tag_rv,
+primer_rv, sample, sample_type, habitat, replicate, fastq_fw,
+fastq_rv</p>
+<p>The tag_fw, primer_fw, tag_rv, primer_rv are irrelevant in this case,
+just fill them with NA.</p>
+<p><code>fastq_dir</code> is the directory containing the input fastq
+files</p>
+<pre class="r"><code>merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
+fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)</code></pre>
 </div>
-<div id="tutorial-filter" class="section level2">
-<h2>Tutorial filter</h2>
+<div id="one-sample-per-fastq---primer---no-tag" class="section level3">
+<h3>One sample per fastq - primer - no tag</h3>
+<p>Read pairs should be quality filtered merged and written to fasta
+format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous section</a>.
+The only difference is that you should fill the primer_fw and the
+primer_rv columns of the <a href="#input-and-output-files">fastqinfo</a>
+file.</p>
+<p>Then the <code>SortReads</code> function will trim the primers from
+the reads.</p>
+<p>See the help of the <code>SortReads</code> function for setting the
+correct parameters for primer trimming: <code>?SortReads</code></p>
+<p><a href="#input-and-output-files">fastainfo_df</a> is the output of
+<code>Merge</code></p>
+<p><code>fasta_dir</code> is the directory containing he input fasta
+files</p>
+<pre class="r"><code>sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
+sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
+</div>
+<div id="several-samples-per-fastq---tags---primers" class="section level3">
+<h3>Several samples per fastq - tags - primers</h3>
+<p>Read pairs should be quality filtered, merged and written to fasta
+format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous sections</a>.
+The only difference is that you should fill the tag_fw, primer_fw,
+tag_rv and primer_rv columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
+<p>Then the <code>SortReads</code> function will demultiplex the fasta
+files according to the tag combinations and trim the primers from the
+reads.</p>
+<p>See the help of the <code>SortReads</code> function for setting the
+correct parameters for demultiplexing and primer trimming:
+<code>?SortReads</code></p>
+<p><a href="#input-and-output-files">fastainfo_df</a> is the output of
+<code>Merge</code></p>
+<p><code>fasta_dir</code> is the directory containing he input fasta
+files</p>
+<pre class="r"><code>sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
+sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
+</div>
+</div>
+<div id="dereplicate" class="section level2">
+<h2>Dereplicate</h2>
+<p>I suppose that you have <a href="#installation">installed third party
+programs and set path to them</a> and followed the <a href="#getting-started">Getting started section</a>, and you have one
+fasta file per sample-replicate containing merged reads, tags and
+primers have been removed from the reads.</p>
+<p>The fasta files then should be dereplicated and a numerical ID
+(asv_id) assigned to each ASV. The output is a data frame (<a href="#input-and-output-files">read_count_df</a>). This can also be
+written to a csv file if <code>outfile</code> is given. It is good idea
+to write this file, since it is the starting point of data filtering.
+You can experiment with different filtering strategies starting from
+this file, without the need of re-running the long steps of merging and
+filtering.</p>
+<p>If you want to keep the IDs of ASVs from earlier analyses, you can
+give a file containing earlier ASVs and their IDs (<a href="#input-and-output-files">asv_list</a>). The completed ASV list is
+written to <code>updated_asv_list</code> file.</p>
+<p>Giving only the file name to <code>updated_asv_list</code>, but not
+to <code>asv_list</code>, the function will write the complete list of
+ASVs. This can be useful when analyzing subsequent data sets.</p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;1_before_filter.csv&quot;, sep=&quot;&quot;)
+updated_asv_list &lt;- paste(outdir, &quot;ASV_list_with_IDs.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)</code></pre>
+</div>
+<div id="filter" class="section level2">
+<h2>Filter</h2>
+<p>vtamR has a large number of functions to filter out ASVs or
+occurrences of ASVs in a given sample-replicate due to technical or
+biological problems associated with metabarcoding. The different filters
+can be applied to the original data set and then the results pooled
+together (accepting only occurrences that pass all filters) or can be
+applied sequentially in the order defined according to your needs or
+constraints (like computing capacity).</p>
+<p>In this section I give an example using most filtering options. It is
+up to you to construct your own pipeline.</p>
+<p>Each function returns a data frame with the filtered output. You can
+also write the results to a csv file. This can be useful of tracking the
+presence/absence of some of the ASVs/samples throughout the analyses
+using different <a href="#helper-functions">helper functions</a>. I will
+start the names of the output files by a number to keep the order of the
+different steps and allow the <code>xxx</code> <a href="#helper-functions">helper function</a> to make final statistics at
+each step of the analyses.</p>
+<p>We can also follow the evolution of the number of reads and ASVs
+remaining in the data set after each filtering steps. Let’s define a
+data frame, that will contain this information, and we will complete
+after each step, and add line with information on the unfiltered data
+set.</p>
+<p><code>params</code> is a string containing the major parameters of
+each filtering steps. <code>stage</code> is a string referring to the
+filtering step.</p>
+<pre class="r"><code>stat_df &lt;- data.frame(parameters=character(),
+                      asv_count=integer(),
+                      read_count=integer(),
+                      sample_count=integer(),
+                      sample_replicate_count=integer())
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;Input&quot;, params=NA)</code></pre>
+<div id="denoising-by-swarm" class="section level3">
+<h3>Denoising by swarm</h3>
+<p>Swarm (<a href="https://peerj.com/articles/1420/">Mahé et al.,
+2015</a>) is a powerful and quick computer program to denoise the data
+set by clustering variants that are likely to be the result of
+sequencing errors to ASVs representing real biological sequences. It
+will considerably reduce the number of ASVs.</p>
+<p>By default, vtamR uses 1 as swam’s d and the fastidious algorithm.
+See <code>?Swarm</code> on how to change this. It is possible to run
+Swarm separately for each sample (<code>by_sample=TRUE</code>; default)
+or at once for the whole data set. This second option is more efficient
+in reducing the number of ASVs but can cluster very similar real
+sequences appearing in different samples. Is you are interested in
+intra-specific variability, I suggest <code>by_sample=TRUE</code>.</p>
+<pre class="r"><code>by_sample &lt;- TRUE
+outfile &lt;- paste(outdir, &quot;2_Swarm_by_sample.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, by_sample=by_sample)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;Swarm&quot;, params=by_sample)</code></pre>
+</div>
+<div id="lfn_global_read_count" class="section level3">
+<h3>LFN_global_read_count</h3>
+<p>Although, swarm has reduced considerably the number of ASVs, there
+are still many ASVs with low read count. The LFN_global_read_count
+function filter out all ASVs with total read count bellow a
+threshold.</p>
+<p>Let’s eliminate singletons:</p>
+<pre class="r"><code>global_read_count_cutoff = 2
+outfile &lt;- paste(outdir, &quot;3_LFN_global_read_count.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- LFN_global_read_count(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;LFN_global_read_count&quot;, params=global_read_count_cutoff)</code></pre>
+</div>
+<div id="filerindel" class="section level3">
+<h3>FilerIndel</h3>
+<p>This filter is applicable only for coding sequences. The idea is that
+if the length of the ASV differs from the most frequent ASV length by a
+number that is not a multiple of 3, it is likely an erroneous sequence
+or a pseudo-gene.</p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;4_FilterIndel.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- FilterIndel(read_count_df, outfile=outfile)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterIndel&quot;)</code></pre>
+</div>
+<div id="filtercodonstop" class="section level3">
+<h3>FilterCodonStop</h3>
+<p>This filter is applicable only for coding sequences. It checks the
+number of codon STOPs in all 3 reading frames, and eliminates ASV with
+STOP in all of them.</p>
+<p>The Genetic code can be chosen from <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes">here</a>.
+By default, it is the invertebrate mitochondrial genetic code (5)</p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;5_FilterCodonStop.csv&quot;, sep=&quot;&quot;)
+genetic_code = 5
+
+read_count_df &lt;- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerCodonStop&quot;, params=genetic_code)</code></pre>
+</div>
+<div id="filterchimera" class="section level3">
+<h3>FilterChimera</h3>
+<p>This function will run the <code>uchime3_denovo</code> function
+implemented in vsearch. It can be run sample by sample
+(<code>by_sample=T</code>; default), or once in the whole data set. If
+<code>by_sample=T</code>, ASVs are eliminated if they have been
+identified as chimeras in <code>sample_prop</code> proportion of the
+samples where they are present.</p>
+<p><code>abskew</code> A chimera must be at least abskew times less
+frequent that the parental ASVs</p>
+<pre class="r"><code>abskew=2
+by_sample = T
+sample_prop = 0.8
+outfile &lt;- paste(outdir, &quot;6_FilterChimera.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
+
+params &lt;- paste(abskew, by_sample, sample_prop, sep=&quot;;&quot;)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterChimera&quot;, params=params)</code></pre>
+</div>
+<div id="filterrenkonen" class="section level3">
+<h3>FilterRenkonen</h3>
+<p>Let’s eliminate aberrant replicates that are not similar to other
+replicates of the same sample.</p>
+<p>We will calculate the renkonen distance among all replicates within
+sample and plot them.</p>
+<pre class="r"><code># calculate renkonen distance among all replicates within sample 
+renkonen_within_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;within&quot;)
+# density plot
+renkonen_density_plot &lt;- density_plot_renkonen_distance(renkonen_within_df)
+print(renkonen_density_plot)
+# barplot
+sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep=&quot;&quot;)
+renkonen_barplot &lt;- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
+print(renkonen_barplot)</code></pre>
+<p>In this example, we have only a few distances, so the density plot is
+not very relevant. The barplot indicates that the replicate 1 of the
+tnegtag sample (negative control) is distant from the other two
+replicates. Lets, establish the Renkonen cutoff value to 0.4. We will
+filter out replicates that have Renkonen distances above this cutoff to
+most other replicates of the sample. in this case replicate 1 on the
+tnegtag sample will be eliminated</p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;7_FilterRenkonen.csv&quot;, sep=&quot;&quot;)
+cutoff &lt;- 0.4
+
+read_count_df &lt;- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerRenkonen&quot;, params=cutoff)</code></pre>
+</div>
+<div id="optimizepcrerror" class="section level3">
+<h3>OptimizePCRError</h3>
+</div>
+<div id="filterpcrerror" class="section level3">
+<h3>FilterPCRerror</h3>
+</div>
+<div id="optimizelfnsamplereplicate" class="section level3">
+<h3>OptimizeLFNsampleReplicate</h3>
+</div>
+<div id="lfn_sample_replicate" class="section level3">
+<h3>LFN_sample_replicate</h3>
+</div>
+<div id="make_known_occurrences" class="section level3">
+<h3>make_known_occurrences</h3>
+</div>
+<div id="optimizelfnreadcountandlfnvariant" class="section level3">
+<h3>OptimizeLFNReadCountAndLFNvariant</h3>
+</div>
+<div id="lfn_read_count" class="section level3">
+<h3>LFN_read_count</h3>
+</div>
+<div id="lfn_variant" class="section level3">
+<h3>LFN_variant</h3>
+</div>
+<div id="pool_lfn" class="section level3">
+<h3>pool_LFN</h3>
+</div>
+<div id="filterminreplicatenumber" class="section level3">
+<h3>FilterMinReplicateNumber</h3>
+</div>
+<div id="make_known_occurrences-to-get-fp-fn-fp" class="section level3">
+<h3>make_known_occurrences (to get FP, FN, FP)</h3>
+</div>
+<div id="poolreplicates" class="section level3">
+<h3>PoolReplicates</h3>
+</div>
+<div id="taxassign" class="section level3">
+<h3>TaxAssign</h3>
+</div>
+<div id="write_asvtable" class="section level3">
+<h3>write_asvtable</h3>
+</div>
+<div id="write.csv-stat" class="section level3">
+<h3>write.csv stat</h3>
+</div>
 </div>
 <div id="helper-functions" class="section level2">
 <h2>Helper functions</h2>
+<p>RandomSeq</p>
 </div>
-<div id="input-files" class="section level2">
-<h2>Input files</h2>
+<div id="input-and-output-files" class="section level2">
+<h2>Input and output files</h2>
+<ul>
+<li><p><code>taxonomy</code> CSV file file with the following columns:
+tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel</p></li>
+<li><p><code>blast_db</code> BLAST database (see details xxxx)</p></li>
+<li><p><code>fastqinfo</code> CSV file file with information on input
+files, primers, tags, samples
+tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv
+(see details xxxx)</p></li>
+<li><p><code>mock_composition</code> CSV file file with the following
+columns: sample,action,asv,taxon,asv_id (see details xxxx)</p></li>
+<li><p><code>asv_list</code> CSV file file with the following columns:
+asv_id,asv (see details xxxx)</p></li>
+<li><p>read_count_df</p></li>
+</ul>
+</div>
+<div id="troubleshooting" class="section level2">
+<h2>Troubleshooting</h2>
 </div>
 
 

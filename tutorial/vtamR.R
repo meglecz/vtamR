@@ -97,8 +97,6 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
 )
 
 
-
-#setwd("D:/vtamR")
 # load local packages
 load_all(".")
 roxygenise() 
@@ -219,7 +217,7 @@ swarm_d <- 1
 fastidious <- TRUE
 by_sample <- TRUE
 outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
-read_count_df <- swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample)
+read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm_by_sample", params=params)
 
@@ -229,7 +227,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="swarm_by_sample", params=para
 # Eliminate variants with less than global_read_count_cutoff reads in the dataset
 global_read_count_cutoff = 2
 outfile <- paste(outdir, "3_LFN_global_read_count.csv", sep="")
-read_count_df <- LFN_global_read_count(read_count_df, global_read_count_cutoff, outfile=outfile, sep=sep)
+read_count_df <- LFN_global_read_count(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
 stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", params=global_read_count_cutoff)
 
 ###
