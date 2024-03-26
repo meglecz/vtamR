@@ -1750,7 +1750,12 @@ correct parameters for primer trimming: <code>?SortReads</code></p>
 <code>Merge</code></p>
 <p><code>fasta_dir</code> is the directory containing he input fasta
 files</p>
-<pre class="r"><code>sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
+<pre class="r"><code># merge an quality filter
+merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
+fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
+
+# trim primers
+sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
 sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
 </div>
 <div id="several-samples-per-fastq---tags---primers" class="section level3">
@@ -1769,7 +1774,12 @@ correct parameters for demultiplexing and primer trimming:
 <code>Merge</code></p>
 <p><code>fasta_dir</code> is the directory containing he input fasta
 files</p>
-<pre class="r"><code>sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
+<pre class="r"><code># merge an quality filter
+merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
+fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
+
+# demultiplex, trim tags and pimers
+sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
 sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
 </div>
 </div>
@@ -1931,7 +1941,7 @@ not very relevant. The barplot indicates that the replicate 1 of the
 tnegtag sample (negative control) is distant from the other two
 replicates. Lets, establish the Renkonen cutoff value to 0.4. We will
 filter out replicates that have Renkonen distances above this cutoff to
-most other replicates of the sample. in this case replicate 1 on the
+most other replicates of the sample. In this case replicate 1 on the
 tnegtag sample will be eliminated</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;7_FilterRenkonen.csv&quot;, sep=&quot;&quot;)
 cutoff &lt;- 0.4
@@ -1940,23 +1950,91 @@ read_count_df &lt;- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff
 
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerRenkonen&quot;, params=cutoff)</code></pre>
 </div>
-<div id="optimizepcrerror" class="section level3">
-<h3>OptimizePCRError</h3>
+<div id="make-mock_composition-file" class="section level3">
+<h3>Make mock_composition file</h3>
+<p>If you do not know the exact amplicon sequences of the individuals in
+your mock sample, this is the time to find them among the ASVs of
+<code>read_count_df</code>. This will be necessary for optimizing the
+Low Frequency Noise filters, and evaluate precision and accuracy of the
+filtering.</p>
+<p><strong>Assign taxa to ASVs</strong> See details of taxonomic
+assignment <a href="#taxassign">here</a></p>
+<pre class="r"><code>asv_tax &lt;- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)</code></pre>
+<p><strong>Pool replicates by sample</strong></p>
+<pre class="r"><code>tmp_read_count_samples_df &lt;- PoolReplicates(read_count_df, digits=0, outfile=outfile, sep=sep)</code></pre>
+<p><strong>Make an ASV table with taxonomic assignments</strong></p>
+<p>We will add to the data frame the total number of reads for each ASV
+and the number of samples they are present. See details of
+<code>WriteAsVtable</code> <a href="#writeasvtable">here</a></p>
+<pre class="r"><code>sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
+tmp_asv_table &lt;- WriteASVtable(tmp_read_count_samples_df, sortedinfo=sortedinfo, add_sums_by_asv=T, asv_tax=asv_tax)</code></pre>
+<p>If there are many samples it might be better to select only mock
+samples and pertinent columns.</p>
+<pre class="r"><code>asv_tpos1 &lt;- tmp_asv_table %&gt;%
+  select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, phylum, class, order, family, genus, species, asv) %&gt;%
+  filter(tpos1 &gt; 0) %&gt;%
+  arrange(desc(tpos1))</code></pre>
+<p>Yous can now pick the correct sequences of the epected ASVs in each
+mock and make the <a href="#input-and-output-files">mock_composition</a>
+file</p>
 </div>
 <div id="filterpcrerror" class="section level3">
 <h3>FilterPCRerror</h3>
-</div>
-<div id="optimizelfnsamplereplicate" class="section level3">
-<h3>OptimizeLFNsampleReplicate</h3>
+<p>If you are doing the denoising step by swarm, this function is
+probably redundant. Let’s see, if there are still potential PCR errors
+in mock samples.</p>
+<p><strong>OptimizePCRError</strong></p>
+<p><code>OptimizePCRError</code>, will find all highly similar ASV pairs
+(max_mismatch=1 by default) within a mock sample, where one ASV is
+expected, and the other is not. Their read_count ratio is printed in the
+output file. The function considers only ASVs with more then
+<code>min_read_count reads</code> in the sample. See details using the
+help: <code>?OptimizePCRError</code></p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;OptimizePCRError.csv&quot;, sep=&quot;&quot;)
+OptimizePCRError_df &lt;- OptimizePCRError(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)</code></pre>
+<p><strong>FilterPCRerror</strong></p>
+<p>It seems that Swarm has done a good job. The highest read count
+ration is 0.03 which is way bellow the default value of
+<code>FilterPCRerror</code> (0.1). Let’s run
+<code>FilterPCRerror</code>. See the help for more detail
+<code>?FilterPCRerror</code>.</p>
+<pre class="r"><code>pcr_error_var_prop &lt;- 0.1
+max_mismatch &lt;- 2
+by_sample &lt;- T
+outfile &lt;- paste(outdir, &quot;8_FilterPCRerror.csv&quot;, sep=&quot;&quot;)
+
+read_count_df &lt;- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample)
+
+params &lt;- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=&quot;;&quot;)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerPCRerror&quot;, params=params)</code></pre>
 </div>
 <div id="lfn_sample_replicate" class="section level3">
 <h3>LFN_sample_replicate</h3>
+<p><code>LFN_sample_replicate</code> will eliminate occurrences with
+very low read counts compared to the total number of reads in the
+sample-replicate. The default cotuff proportion is 0.001. We can have an
+idea of the maximum value of this cutoff, by examining the proportions
+of expected ASVs in the mock samples using the
+<code>OptimizeLFNsampleReplicate</code> function</p>
+<p><strong>OptimizeLFNsampleReplicate</strong></p>
+<pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNsampleReplicate.csv&quot;, sep=&quot;&quot;)
+OptimizeLFNsampleReplicate_df &lt;- OptimizeLFNsampleReplicate(read_count=read_count_df, mock_composition=mock_composition, outfile=outfile)</code></pre>
+<p><strong>LFN_sample_replicate</strong></p>
+<p>We can see in the output, that the lowest proportion of an expected
+ASV is 0.005. Let’s use this cutoff for the
+<code>LFN_sample_replicate</code> filter</p>
+<pre class="r"><code>lfn_sample_replicate_cutoff &lt;- 0.005
+outfile &lt;- paste(outdir, &quot;9_LFN_sample_replicate.csv&quot;, sep=&quot;&quot;)
+
+read_count_df_lnf_sample_replicate &lt;- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
+
+stat_df &lt;- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFN_sample_replicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
 </div>
-<div id="make_known_occurrences" class="section level3">
-<h3>make_known_occurrences</h3>
-</div>
-<div id="optimizelfnreadcountandlfnvariant" class="section level3">
-<h3>OptimizeLFNReadCountAndLFNvariant</h3>
+<div id="lfn_sample_replicate-1" class="section level3">
+<h3>LFN_sample_replicate</h3>
+<p><strong>make_known_occurrences</strong></p>
+<p><strong>OptimizeLFNReadCountAndLFNvariant</strong></p>
+<p><strong>LFN_sample_replicate</strong></p>
 </div>
 <div id="lfn_read_count" class="section level3">
 <h3>LFN_read_count</h3>
@@ -1979,8 +2057,8 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerRenkonen&quot;, 
 <div id="taxassign" class="section level3">
 <h3>TaxAssign</h3>
 </div>
-<div id="write_asvtable" class="section level3">
-<h3>write_asvtable</h3>
+<div id="writeasvtable" class="section level3">
+<h3>WriteASVtable</h3>
 </div>
 <div id="write.csv-stat" class="section level3">
 <h3>write.csv stat</h3>

@@ -2040,10 +2040,7 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
     asv_df <- asv
   }
 
-  if(is.character(ltg_params)){
-    ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
-  }else if (ltg_params == ""){   # default value for ltg_params_df
-
+    if (ltg_params == ""){   # default value for ltg_params_df
     ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                                 pcov=c(70,70,70,70,70,70),
                                 phit=c(70,70,70,70,70,70),
@@ -2052,7 +2049,9 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
                                 refres=c(8,8,8,7,6,6),
                                 ltgres=c(8,8,8,8,7,7)
                                 )
-  }else{
+  } else if(is.character(ltg_params)){
+    ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
+  } else{
     ltg_params_df <- ltg_params
   }
   
@@ -2509,7 +2508,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' @param sep separator used in the I/O csv files
 #' @export
 #'
-write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, sortedinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
+WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sortedinfo="", add_empty_samples=F, add_sums_by_sample=F, add_sums_by_asv=F, add_expected_asv=F, mock_composition="", sep=","){
   
   # make a wide data frame with samples in columns, ASVs in lines
   wide_read_count_df <- as.data.frame(pivot_wider(read_count_samples_df, names_from = c(sample), values_from = read_count, values_fill=0, names_sep = ".", names_sort=T))
@@ -2600,18 +2599,25 @@ write_asvtable <- function(read_count_samples_df, outfile, asv_tax=NULL, sortedi
     }
   }
   
-  if(!is.null(asv_tax)){ # df with taxonomic assignation is given
-    asv_tax$asv_id <- as.character(asv_tax$asv_id)
-    wide_read_count_df$asv_id <- as.character(wide_read_count_df$asv_id)
-    wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by=c("asv", "asv_id"))
+  
+  if(!is.null(asv_tax)){ #  taxonomic assignation is given
+    if(is.character(asv_tax)  && asv_tax != ""){ # as a file
+      asv_tax <- read.csv(asv_tax, header=T, sep=sep)
+    }
+      asv_tax$asv_id <- as.character(asv_tax$asv_id)
+      wide_read_count_df$asv_id <- as.character(wide_read_count_df$asv_id)
+      wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by=c("asv", "asv_id"))
   }
   
   # put the asv column at the end
   wide_read_count_df <- wide_read_count_df %>%
     select(-asv, everything(), asv)
-#  wide_read_count_df <- wide_read_count_df[, c(colnames(wide_read_count_df)[-2], colnames(wide_read_count_df)[length(colnames(wide_read_count_df))])]
-  write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
   
+  if(outfile != ""){
+  #  wide_read_count_df <- wide_read_count_df[, c(colnames(wide_read_count_df)[-2], colnames(wide_read_count_df)[length(colnames(wide_read_count_df))])]
+    write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
+  }
+  return(wide_read_count_df)
 }
 
 

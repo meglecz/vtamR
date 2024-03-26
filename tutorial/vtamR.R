@@ -7,7 +7,7 @@ library("devtools")
 library("roxygen2")
 library("seqinr") # splitseq for FilterCodonStop
 library("dplyr")
-library("tidyr") # gather for read_asv_table; pivot_wider in write_asvtable and stat_sample !!sym
+library("tidyr") # gather for read_asv_table; pivot_wider in WriteAsVtable and stat_sample !!sym
 #library("utils") # to handle zipped files
 library("ggplot2") 
 
@@ -247,7 +247,7 @@ read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 
 
-# LFN_sample_variant (by line)
+# LFN_variant (by line)
 lnf_variant_cutoff = 0.001
 by_replicate = TRUE
 outfile <- paste(outdir, "6_LFN_variant_replicate.csv", sep="")
@@ -363,10 +363,10 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 # wide format (ASV table), samples are in columns, ASVs in lines
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
-write_asvtable(read_count_samples_df, outfile=outfile, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+WriteAsVtable(read_count_samples_df, outfile=outfile, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 # write ASV table completed by taxonomic assignments
 outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
-write_asvtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+WriteAsVtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 
 
 

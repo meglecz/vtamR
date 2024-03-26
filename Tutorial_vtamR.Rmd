@@ -50,6 +50,9 @@ vtamR has been tested using the above mentioned versions. It should work with la
 vtamR was tested in Windows and Linux, and should work in all operating systems.
 Access to R package xxxx => To be written once the package is ready
 
+The help id available for all vtamR function by `?function_name`
+In most cases, the input data can be either a data frame or a csv file and most function return a data frame and can also write them into a file if a file name is provided.
+
 
 ### Install third party programs on Linux
 
@@ -259,6 +262,11 @@ See the help of the `SortReads` function for setting the correct parameters for 
 `fasta_dir` is the directory containing he input fasta files
 
 ```{r}
+# merge an quality filter
+merged_dir <- paste(outdir, "merged/", sep="")
+fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
+
+# trim primers
 sorted_dir <- paste(outdir, "sorted/", sep="")
 sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)
 ```
@@ -276,6 +284,11 @@ See the help of the `SortReads` function for setting the correct parameters for 
 `fasta_dir` is the directory containing he input fasta files
 
 ```{r}
+# merge an quality filter
+merged_dir <- paste(outdir, "merged/", sep="")
+fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
+
+# demultiplex, trim tags and pimers
 sorted_dir <- paste(outdir, "sorted/", sep="")
 sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)
 ```
@@ -423,7 +436,7 @@ renkonen_barplot <- barplot_renkonen_distance(renkonen_within_df, sample_types=s
 print(renkonen_barplot)
 ```
 
-In this example, we have only a few distances, so the density plot is not very relevant. The barplot indicates that the replicate 1 of the tnegtag sample (negative control) is distant from the other two replicates. Lets, establish the Renkonen cutoff value to 0.4. We will filter out replicates that have Renkonen distances above this cutoff to most other replicates of the sample. in this case replicate 1 on the tnegtag sample will be eliminated
+In this example, we have only a few distances, so the density plot is not very relevant. The barplot indicates that the replicate 1 of the tnegtag sample (negative control) is distant from the other two replicates. Lets, establish the Renkonen cutoff value to 0.4. We will filter out replicates that have Renkonen distances above this cutoff to most other replicates of the sample. In this case replicate 1 on the tnegtag sample will be eliminated
 
 ```{r}
 outfile <- paste(outdir, "7_FilterRenkonen.csv", sep="")
@@ -434,24 +447,128 @@ read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff)
 ```
 
+### Make mock_composition file
 
-### OptimizePCRError
+If you do not know the exact amplicon sequences of the individuals in your mock sample, this is the time to find them among the ASVs of `read_count_df`. This will be necessary for optimizing the Low Frequency Noise filters, and evaluate precision and accuracy of the filtering.
+
+**Assign taxa to ASVs**
+See details of taxonomic assignment [here](#taxassign)
+```{r}
+asv_tax <- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
+```
+
+**Pool replicates by sample**
+```{r}
+tmp_read_count_samples_df <- PoolReplicates(read_count_df, digits=0, outfile=outfile, sep=sep)
+```
+
+**Make an ASV table with taxonomic assignments**
+
+We will add to the data frame the total number of reads for each ASV and the number of samples they are present.
+See details of `WriteAsVtable` [here](#writeasvtable)
+```{r}
+sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
+tmp_asv_table <- WriteASVtable(tmp_read_count_samples_df, sortedinfo=sortedinfo, add_sums_by_asv=T, asv_tax=asv_tax)
+```
+
+If there are many samples it might be better to select only mock samples and pertinent columns.
+```{r}
+asv_tpos1 <- tmp_asv_table %>%
+  select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, phylum, class, order, family, genus, species, asv) %>%
+  filter(tpos1 > 0) %>%
+  arrange(desc(tpos1))
+```
+
+Yous can now pick the correct sequences of the epected ASVs in each mock and make the [mock_composition](#input-and-output-files) file
 
 ### FilterPCRerror
 
-### OptimizeLFNsampleReplicate
+If you are doing the denoising step by swarm, this function is probably redundant. Let's see, if there are still potential PCR errors in mock samples. 
+
+**OptimizePCRError**
+
+`OptimizePCRError`, will find all highly similar ASV pairs (max_mismatch=1 by default) within a mock sample, where one ASV is expected, and the other is not. Their read_count ratio is printed in the output file. The function considers only ASVs with more then `min_read_count reads` in the sample. See details using the help: `?OptimizePCRError`
+
+```{r}
+outfile <- paste(outdir, "OptimizePCRError.csv", sep="")
+OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)
+```
+
+**FilterPCRerror**
+
+It seems that Swarm has done a good job. The highest read count ration is 0.03 which is way bellow the default value of `FilterPCRerror` (0.1). Let's run `FilterPCRerror`. See the help for more detail `?FilterPCRerror`.
+
+```{r}
+pcr_error_var_prop <- 0.1
+max_mismatch <- 2
+by_sample <- T
+outfile <- paste(outdir, "8_FilterPCRerror.csv", sep="")
+
+read_count_df <- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample)
+
+params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=";")
+stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
+```
 
 ### LFN_sample_replicate
 
-### make_known_occurrences
+`LFN_sample_replicate` will eliminate occurrences with very low read counts compared to the total number of reads in the sample-replicate. The default cutuff proportion is 0.001. 
+We can have an idea of the maximum value of this cutoff, by examining the proportions of expected ASVs in the mock samples using the `OptimizeLFNsampleReplicate` function
 
-### OptimizeLFNReadCountAndLFNvariant
+**OptimizeLFNsampleReplicate**
 
-### LFN_read_count
+```{r}
+outfile = paste(outdir, "OptimizeLFNsampleReplicate.csv", sep="")
+OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count=read_count_df, mock_composition=mock_composition, outfile=outfile)
+```
 
-### LFN_variant
+**LFN_sample_replicate**
 
-### pool_LFN
+We can see in the output, that the lowest proportion of an expected ASV is 0.005. Let's use this cutoff for the `LFN_sample_replicate` filter
+
+```{r}
+lfn_sample_replicate_cutoff <- 0.005
+outfile <- paste(outdir, "9_LFN_sample_replicate.csv", sep="")
+
+read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
+
+stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
+```
+
+### LFN_variant and LFN_read_count
+
+The `LFN_variant` filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. The `LFN_read_count` filter simply eliminates occurrences with less then `lfn_read_count_cutoff` reads (10 by default). 
+
+To find the best cutoff values for these filters, we will count the number of [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences using a series of combination of the cutoff values of these two filters.
+
+**make_known_occurrences**
+
+The make_known_occurrences function will identify [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets. 
+
+The false positive and the true positive ocurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurreces. For details see `?make_known_occurrences`.
+
+This function takes a read_count_samples data frame as an input, where the replicates of the same sample have been pooled (see `?PoolReplicates`)
+
+
+```{r}
+# Pool replicates
+read_count_samples_df <- PoolReplicates(read_count_df)
+
+# Detect known occurrences
+results <- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
+
+# give explicit names to the 3 output data frames
+known_occurrences_df <- results[[1]]
+missing_occurrences_df <- results[[2]]
+performance_metrics_df <- results[[3]]
+```
+
+
+**OptimizeLFNReadCountAndLFNvariant**
+
+**LFN_variant, LFN_read_count**
+
+**pool_LFN**
 
 ### FilterMinReplicateNumber
 
@@ -460,7 +577,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff
 
 ### PoolReplicates
 ### TaxAssign
-### write_asvtable
+### WriteASVtable
 ### write.csv stat
 
 ## Helper functions
@@ -477,6 +594,13 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff
 * `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
 
 * read_count_df
+
+## Glossary
+
+* False positive occurrence
+* False negative occurrence
+* True positive occurrence
+
 
 ## Troubleshooting
 
