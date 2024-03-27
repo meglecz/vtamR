@@ -454,7 +454,8 @@ If you do not know the exact amplicon sequences of the individuals in your mock 
 **Assign taxa to ASVs**
 See details of taxonomic assignment [here](#taxassign)
 ```{r}
-asv_tax <- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
+outfile <- paste(outdir, "ASV_taxa.csv", sep="")
+asv_tax <- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads, outfile=outfile)
 ```
 
 **Pool replicates by sample**
@@ -483,11 +484,13 @@ Yous can now pick the correct sequences of the epected ASVs in each mock and mak
 
 ### FilterPCRerror
 
-If you are doing the denoising step by swarm, this function is probably redundant. Let's see, if there are still potential PCR errors in mock samples. 
+If you have done the denoising step by swarm, this function is probably redundant. Let's see, if there are still potential PCR errors in mock samples. 
 
 **OptimizePCRError**
 
-`OptimizePCRError`, will find all highly similar ASV pairs (max_mismatch=1 by default) within a mock sample, where one ASV is expected, and the other is not. Their read_count ratio is printed in the output file. The function considers only ASVs with more then `min_read_count reads` in the sample. See details using the help: `?OptimizePCRError`
+`OptimizePCRError`, will find all highly similar ASV pairs (`max_mismatch=1` by default) within a mock sample, where one ASV is expected, and the other is not. Their read_count ratio is printed in the output file. 
+
+The function considers only ASVs with more then `min_read_count` reads in the sample to avoid count a ratio based on low read counts that are more influenced by stochastic events and will be probably filtered out anyway. See details using the help: `?OptimizePCRError`
 
 ```{r}
 outfile <- paste(outdir, "OptimizePCRError.csv", sep="")
@@ -496,15 +499,14 @@ OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_com
 
 **FilterPCRerror**
 
-It seems that Swarm has done a good job. The highest read count ration is 0.03 which is way bellow the default value of `FilterPCRerror` (0.1). Let's run `FilterPCRerror`. See the help for more detail `?FilterPCRerror`.
+It seems that Swarm has done a good job. The highest read count ratio is 0.03 which is way bellow the default value of `FilterPCRerror` (0.1). Let's run `FilterPCRerror`. See the help for more detail `?FilterPCRerror`.
 
 ```{r}
 pcr_error_var_prop <- 0.1
 max_mismatch <- 2
-by_sample <- T
 outfile <- paste(outdir, "8_FilterPCRerror.csv", sep="")
 
-read_count_df <- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample)
+read_count_df <- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
 
 params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
@@ -512,7 +514,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params
 
 ### LFN_sample_replicate
 
-`LFN_sample_replicate` will eliminate occurrences with very low read counts compared to the total number of reads in the sample-replicate. The default cutuff proportion is 0.001. 
+`LFN_sample_replicate` will eliminate occurrences with very low read counts compared to the total number of reads in the sample-replicate. The default cutoff proportion is 0.001. 
 We can have an idea of the maximum value of this cutoff, by examining the proportions of expected ASVs in the mock samples using the `OptimizeLFNsampleReplicate` function
 
 **OptimizeLFNsampleReplicate**
@@ -537,7 +539,9 @@ stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_samp
 
 ### LFN_variant and LFN_read_count
 
-The `LFN_variant` filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. The `LFN_read_count` filter simply eliminates occurrences with less then `lfn_read_count_cutoff` reads (10 by default). 
+The `LFN_variant` filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. This is an important filter, to filter out occurrences present in the data set due to tag-jump.
+
+The `LFN_read_count` filter simply eliminates occurrences with less then `lfn_read_count_cutoff` reads (10 by default). 
 
 To find the best cutoff values for these filters, we will count the number of [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences using a series of combination of the cutoff values of these two filters.
 
@@ -545,7 +549,7 @@ To find the best cutoff values for these filters, we will count the number of [f
 
 The make_known_occurrences function will identify [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets. 
 
-The false positive and the true positive ocurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurreces. For details see `?make_known_occurrences`.
+The false positive and the true positive occurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurrences. For details see `?make_known_occurrences`.
 
 This function takes a read_count_samples data frame as an input, where the replicates of the same sample have been pooled (see `?PoolReplicates`)
 
@@ -566,23 +570,148 @@ performance_metrics_df <- results[[3]]
 
 **OptimizeLFNReadCountAndLFNvariant**
 
+The the `LFN_read_count` and `LFN_variant` is run for a series of cutoff value combinations of the two filters. For each of them the number of FN, TP, and FP is reported. Chose the parameter setting that minimizes, FN and FP.
+
+Here we will use the default range of cutoffs to test, but you can set the minimum, the maximum and the increment for the cutoff values for both filters. (see `?OptimizeLFNReadCountAndLFNvariant`)
+
+
+```{r}
+outfile = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
+
+OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, vsearch_path=vsearch_path, max_mismatch=max_mismatch)
+```
+
 **LFN_variant, LFN_read_count**
 
-**pool_LFN**
+From the output, it we choose 0.001 for the cutoff of `LFN_variant` and 85 for `LFN_read_count`.
+
+We will run the two filters on the same input data frame (for which the parameters has been optimized), and pool the results by accepting only occurrences that pass both filters. 
+
+See `?LFN_variant` for details.
+
+```{r}
+## LFN_variant
+# Set parameter values
+lnf_variant_cutoff = 0.001
+outfile <- paste(outdir, "10_LFN_variant.csv", sep="")
+# Run filter and get stats
+read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
+stat_df <- get_stat(read_count_df_lnf_variant, stat_df, stage="LFN_variant", params=lnf_variant_cutoff)
+
+## LFN_read_count
+# Set parameter values
+lfn_read_count_cutoff <- 85
+outfile <- paste(outdir, "11_LFN_read_count.csv", sep="")
+# Run filter and get stats
+read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
+stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
+
+## Combine results
+# Set parameter values
+outfile <- paste(outdir, "12_pool_LFN.csv", sep="")
+# Combine results and get stats
+read_count_df <- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
+stat_df <- get_stat(read_count_df, stat_df, stage="FilterLFN")
+# delete temporary data frames
+rm(read_count_df_lfn_read_count)
+rm(read_count_df_lnf_variant)
+```
 
 ### FilterMinReplicateNumber
 
-### make_known_occurrences (to get FP, FN, FP)
+To ensure repeatability, we can accept occurrences if they are present in at least `min_replicate_number` replicates of the sample (2 by default).
 
+```{r}
+## LFN_variant
+# Set parameter values
+min_replicate_number <- 2
+outfile <- paste(outdir, "13_FilterMinReplicateNumber.csv", sep="")
+# Run filter and get stats
+read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
+stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
+```
 
 ### PoolReplicates
+
+Let's pool replicates of the same sample. `PoolReplicates` function will take the mean non-zero read counts of each ASV over replicates of the same sample.
+
+```{r}
+# Set parameter values
+outfile <- paste(outdir, "14_PoolReplicates.csv", sep="")
+read_count_samples_df <- PoolReplicates(read_count_df, outfile=outfile)
+# Run function and get stats
+stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
+```
+
+### Get performance metrics
+
+Run make_known_occurrences again to get performance metrics (FP, FN, FP). 
+This time we will write the output data frames to files as well. The `performance_metrics` file will give you the count of FP, FN, TP, accuracy and sensitivity, you can found false negatives in `missing_occurrences`, and true and false positives in `known_occurrences`.
+
+```{r}
+# Set parameter values
+missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
+performance_metrics <- paste(outdir, "performance_metrics.csv", sep= "")
+known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
+sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
+# Run function
+results <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
+# give explicit names to the 3 output data frames
+known_occurrences_df <- results[[1]]
+missing_occurrences_df <- results[[2]]
+performance_metrics_df <- results[[3]]
+```
+
 ### TaxAssign
-### WriteASVtable
-### write.csv stat
+
+If you haven't assigned ASV to taxa yet (before the optimization step), it is time to do it. If you have already done it, you can use the same output as previously and skip this step.
+
+```{r}
+# Set parameter values
+outfile <- paste(outdir, "TaxAssign.csv", sep="")
+# Run function
+asv_tax <- TaxAssign(asv=read_count_samples_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
+```
+
+### Print output
+
+`WriteAsVtable` will reorganize the `read_count_samples_df` data frame, with samples in columns and ASV in lines. 
+
+It is possible to add supplementary informations as well:
+
+* Taxonomic assignment (`asv_tax`)
+* Total number of reads and samples for each ASV (`add_sums_by_asv`)
+* Total number of reads and ASVs in each sample (`add_sums_by_sample`)
+* Supplementary column per mock samples with expected occurrences in each of them (`add_expected_asv`)
+* Supplementary column for samples that have been filtered out (`add_empty_samples`)
+
+For more information see `?WriteAsVtable`
+
+```{r}
+# write ASV table completed by taxonomic assignments
+outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
+
+asv_table_df <- WriteASVtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition)
+```
+
+Print out the number of reads, ASVs, samples and replicates after each step.
+
+```{r}
+write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
+```
 
 ## Helper functions
 
  RandomSeq
+ history_by
+ summarize_by
+ pool_datasets
+ count_reads_dir
+ 
+ barplot_read_count_by_sample
+ histogram_read_count_by_variant
+ barplot_renkonen_distance
+ density_plot_renkonen_distance
 
 ## Input and output files
 
@@ -603,5 +732,5 @@ performance_metrics_df <- results[[3]]
 
 
 ## Troubleshooting
-
+Explain min_read_count_prop for LFN_variant
 

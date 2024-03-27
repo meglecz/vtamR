@@ -616,7 +616,8 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
     
     # make a tags.fasta file with all tag combinations of the fasta to be demultiplexed
     tag_file <- make_adapter_fasta(fastainfo_df, fasta_file=fasta_file, tag_to_end=tag_to_end, outdir=tmp_dir)
-    # add path
+
+     # add path
     fasta_file <- paste(fasta_dir, fasta_file, sep="")
     # demultiplex fasta, write output to tmp file
     demultiplex_cmd = paste(cutadapt_path, "cutadapt --cores=0 -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", tmp_dir, "tagtrimmed-{name}.fasta ", fasta_file, sep="")
@@ -649,7 +650,7 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
         system(primer_trim_cmd)
       } # end tag-trimmed 
     # delete the tmp dir with the tag-trimmed files
-    unlink(tmp_dir, recursive = TRUE)
+#    unlink(tmp_dir, recursive = TRUE)
   }# end fasta
   
   # make sortedinfo file
@@ -674,8 +675,17 @@ make_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end, outdir){
   tags <- fastainfo_df %>%
     filter(fasta==fasta_file) %>%
     select(tag_fw, tag_rv)
+    
   # make unique tag combinations and add necessary columns
   tags <- unique(tags)
+  
+  # return NA if all tags are NA
+  if(nrow(tags) == 1){ # only on etag combination
+    if(is.na(tags$tag_fw[1]) && is.na(tags$tag_rv[1])){ # no tags
+      return(NA)
+    }
+  }
+  
   tags$tag_fw <- toupper(tags$tag_fw)
   tags$tag_rv <- toupper(tags$tag_rv)
   tags$tag_rv_rc <- lapply(tags$tag_rv, reverse_complement)
@@ -684,7 +694,7 @@ make_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end, outdir){
   
   # Specify the file path
   tag_file <- paste(outdir, "tags.fasta", sep="")
-  # initialise te content of the tag_file
+  # initialize the content of the tag_file
   text <- c()
   if(tag_to_end){
     #>tag_fw-tag_rv

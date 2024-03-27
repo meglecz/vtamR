@@ -1,0 +1,4 @@
+tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count
+NA,TCCACTAATCACAARGATATTGGTAC,NA,WACTAATCAATTWCCAAATCCTCC,tpos1,mock,terrestrial,1,mfzr_1_fw.fasta,37351
+NA,TCCACTAATCACAARGATATTGGTAC,NA,WACTAATCAATTWCCAAATCCTCC,14ben01,real,freshwater,2,mfzr_2_fw.fasta,40359
+NA,TCCACTAATCACAARGATATTGGTAC,NA,WACTAATCAATTWCCAAATCCTCC,14ben02,real,freshwater,3,mfzr_3_fw.fasta,46796

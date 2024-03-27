@@ -1540,6 +1540,10 @@ versions.</p>
 <p>vtamR was tested in Windows and Linux, and should work in all
 operating systems. Access to R package xxxx =&gt; To be written once the
 package is ready</p>
+<p>The help id available for all vtamR function by
+<code>?function_name</code> In most cases, the input data can be either
+a data frame or a csv file and most function return a data frame and can
+also write them into a file if a file name is provided.</p>
 </div>
 <div id="install-third-party-programs-on-linux" class="section level3">
 <h3>Install third party programs on Linux</h3>
@@ -1959,7 +1963,8 @@ Low Frequency Noise filters, and evaluate precision and accuracy of the
 filtering.</p>
 <p><strong>Assign taxa to ASVs</strong> See details of taxonomic
 assignment <a href="#taxassign">here</a></p>
-<pre class="r"><code>asv_tax &lt;- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)</code></pre>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;ASV_taxa.csv&quot;, sep=&quot;&quot;)
+asv_tax &lt;- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads, outfile=outfile)</code></pre>
 <p><strong>Pool replicates by sample</strong></p>
 <pre class="r"><code>tmp_read_count_samples_df &lt;- PoolReplicates(read_count_df, digits=0, outfile=outfile, sep=sep)</code></pre>
 <p><strong>Make an ASV table with taxonomic assignments</strong></p>
@@ -1980,30 +1985,32 @@ file</p>
 </div>
 <div id="filterpcrerror" class="section level3">
 <h3>FilterPCRerror</h3>
-<p>If you are doing the denoising step by swarm, this function is
+<p>If you have done the denoising step by swarm, this function is
 probably redundant. Let’s see, if there are still potential PCR errors
 in mock samples.</p>
 <p><strong>OptimizePCRError</strong></p>
 <p><code>OptimizePCRError</code>, will find all highly similar ASV pairs
-(max_mismatch=1 by default) within a mock sample, where one ASV is
-expected, and the other is not. Their read_count ratio is printed in the
-output file. The function considers only ASVs with more then
-<code>min_read_count reads</code> in the sample. See details using the
-help: <code>?OptimizePCRError</code></p>
+(<code>max_mismatch=1</code> by default) within a mock sample, where one
+ASV is expected, and the other is not. Their read_count ratio is printed
+in the output file.</p>
+<p>The function considers only ASVs with more then
+<code>min_read_count</code> reads in the sample to avoid count a ratio
+based on low read counts that are more influenced by stochastic events
+and will be probably filtered out anyway. See details using the help:
+<code>?OptimizePCRError</code></p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;OptimizePCRError.csv&quot;, sep=&quot;&quot;)
 OptimizePCRError_df &lt;- OptimizePCRError(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)</code></pre>
 <p><strong>FilterPCRerror</strong></p>
-<p>It seems that Swarm has done a good job. The highest read count
-ration is 0.03 which is way bellow the default value of
+<p>It seems that Swarm has done a good job. The highest read count ratio
+is 0.03 which is way bellow the default value of
 <code>FilterPCRerror</code> (0.1). Let’s run
 <code>FilterPCRerror</code>. See the help for more detail
 <code>?FilterPCRerror</code>.</p>
 <pre class="r"><code>pcr_error_var_prop &lt;- 0.1
 max_mismatch &lt;- 2
-by_sample &lt;- T
 outfile &lt;- paste(outdir, &quot;8_FilterPCRerror.csv&quot;, sep=&quot;&quot;)
 
-read_count_df &lt;- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample)
+read_count_df &lt;- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
 
 params &lt;- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=&quot;;&quot;)
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerPCRerror&quot;, params=params)</code></pre>
@@ -2012,7 +2019,7 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerPCRerror&quot;, 
 <h3>LFN_sample_replicate</h3>
 <p><code>LFN_sample_replicate</code> will eliminate occurrences with
 very low read counts compared to the total number of reads in the
-sample-replicate. The default cotuff proportion is 0.001. We can have an
+sample-replicate. The default cutoff proportion is 0.001. We can have an
 idea of the maximum value of this cutoff, by examining the proportions
 of expected ASVs in the mock samples using the
 <code>OptimizeLFNsampleReplicate</code> function</p>
@@ -2030,38 +2037,166 @@ read_count_df_lnf_sample_replicate &lt;- LFN_sample_replicate(read_count_df, cut
 
 stat_df &lt;- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFN_sample_replicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
 </div>
-<div id="lfn_sample_replicate-1" class="section level3">
-<h3>LFN_sample_replicate</h3>
+<div id="lfn_variant-and-lfn_read_count" class="section level3">
+<h3>LFN_variant and LFN_read_count</h3>
+<p>The <code>LFN_variant</code> filter will eliminate occurrences with
+very low read counts compared to the total number of reads of the ASV.
+The default cutoff proportion is 0.001. This is an important filter, to
+filter out occurrences present in the data set due to tag-jump.</p>
+<p>The <code>LFN_read_count</code> filter simply eliminates occurrences
+with less then <code>lfn_read_count_cutoff</code> reads (10 by
+default).</p>
+<p>To find the best cutoff values for these filters, we will count the
+number of <a href="#glossary">false positive</a>, <a href="#glossary">false negative</a> and <a href="#glossary">true
+positive</a> occurrences using a series of combination of the cutoff
+values of these two filters.</p>
 <p><strong>make_known_occurrences</strong></p>
+<p>The make_known_occurrences function will identify <a href="#glossary">false positive</a>, <a href="#glossary">false
+negative</a> and <a href="#glossary">true positive</a> occurrences in
+controls samples (mock and negative). Some false positives can also be
+identified in real samples if samples of different habitats are included
+in the data sets.</p>
+<p>The false positive and the true positive occurrences are written to
+the known_occurrences data frame (or file), false negatives to the
+missing_occurrences data frame (or file), and a performance_metrics data
+frame is also produced with the count of these occurrences. For details
+see <code>?make_known_occurrences</code>.</p>
+<p>This function takes a read_count_samples data frame as an input,
+where the replicates of the same sample have been pooled (see
+<code>?PoolReplicates</code>)</p>
+<pre class="r"><code># Pool replicates
+read_count_samples_df &lt;- PoolReplicates(read_count_df)
+
+# Detect known occurrences
+results &lt;- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
+
+# give explicit names to the 3 output data frames
+known_occurrences_df &lt;- results[[1]]
+missing_occurrences_df &lt;- results[[2]]
+performance_metrics_df &lt;- results[[3]]</code></pre>
 <p><strong>OptimizeLFNReadCountAndLFNvariant</strong></p>
-<p><strong>LFN_sample_replicate</strong></p>
-</div>
-<div id="lfn_read_count" class="section level3">
-<h3>LFN_read_count</h3>
-</div>
-<div id="lfn_variant" class="section level3">
-<h3>LFN_variant</h3>
-</div>
-<div id="pool_lfn" class="section level3">
-<h3>pool_LFN</h3>
+<p>The the <code>LFN_read_count</code> and <code>LFN_variant</code> is
+run for a series of cutoff value combinations of the two filters. For
+each of them the number of FN, TP, and FP is reported. Chose the
+parameter setting that minimizes, FN and FP.</p>
+<p>Here we will use the default range of cutoffs to test, but you can
+set the minimum, the maximum and the increment for the cutoff values for
+both filters. (see <code>?OptimizeLFNReadCountAndLFNvariant</code>)</p>
+<pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNReadCountAndLFNvariant.csv&quot;, sep=&quot;&quot;)
+
+OptimizeLFNReadCountAndLFNvariant_df &lt;- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, vsearch_path=vsearch_path, max_mismatch=max_mismatch)</code></pre>
+<p><strong>LFN_variant, LFN_read_count</strong></p>
+<p>From the output, it we choose 0.001 for the cutoff of
+<code>LFN_variant</code> and 85 for <code>LFN_read_count</code>.</p>
+<p>We will run the two filters on the same input data frame (for which
+the parameters has been optimized), and pool the results by accepting
+only occurrences that pass both filters.</p>
+<p>See <code>?LFN_variant</code> for details.</p>
+<pre class="r"><code>## LFN_variant
+# Set parameter values
+lnf_variant_cutoff = 0.001
+outfile &lt;- paste(outdir, &quot;10_LFN_variant.csv&quot;, sep=&quot;&quot;)
+# Run filter and get stats
+read_count_df_lnf_variant &lt;- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
+stat_df &lt;- get_stat(read_count_df_lnf_variant, stat_df, stage=&quot;LFN_variant&quot;, params=lnf_variant_cutoff)
+
+## LFN_read_count
+# Set parameter values
+lfn_read_count_cutoff &lt;- 85
+outfile &lt;- paste(outdir, &quot;11_LFN_read_count.csv&quot;, sep=&quot;&quot;)
+# Run filter and get stats
+read_count_df_lfn_read_count &lt;- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
+stat_df &lt;- get_stat(read_count_df_lfn_read_count, stat_df, stage=&quot;LFN_read_count&quot;, params=lfn_read_count_cutoff)
+
+## Combine results
+# Set parameter values
+outfile &lt;- paste(outdir, &quot;12_pool_LFN.csv&quot;, sep=&quot;&quot;)
+# Combine results and get stats
+read_count_df &lt;- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
+# delete temporary data frames
+rm(read_count_df_lfn_read_count)
+rm(read_count_df_lnf_variant)</code></pre>
 </div>
 <div id="filterminreplicatenumber" class="section level3">
 <h3>FilterMinReplicateNumber</h3>
-</div>
-<div id="make_known_occurrences-to-get-fp-fn-fp" class="section level3">
-<h3>make_known_occurrences (to get FP, FN, FP)</h3>
+<p>To ensure repeatability, we can accept occurrences if they are
+present in at least <code>min_replicate_number</code> replicates of the
+sample (2 by default).</p>
+<pre class="r"><code>## LFN_variant
+# Set parameter values
+min_replicate_number &lt;- 2
+outfile &lt;- paste(outdir, &quot;13_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
+# Run filter and get stats
+read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
 </div>
 <div id="poolreplicates" class="section level3">
 <h3>PoolReplicates</h3>
+<p>Let’s pool replicates of the same sample. <code>PoolReplicates</code>
+function will take the mean non-zero read counts of each ASV over
+replicates of the same sample.</p>
+<pre class="r"><code># Set parameter values
+outfile &lt;- paste(outdir, &quot;14_PoolReplicates.csv&quot;, sep=&quot;&quot;)
+read_count_samples_df &lt;- PoolReplicates(read_count_df, outfile=outfile)
+# Run function and get stats
+stat_df &lt;- get_stat(read_count_samples_df, stat_df, stage=&quot;PoolReplicates&quot;)</code></pre>
+</div>
+<div id="get-performance-metrics" class="section level3">
+<h3>Get performance metrics</h3>
+<p>Run make_known_occurrences again to get performance metrics (FP, FN,
+FP). This time we will write the output data frames to files as well.
+The <code>performance_metrics</code> file will give you the count of FP,
+FN, TP, accuracy and sensitivity, you can found false negatives in
+<code>missing_occurrences</code>, and true and false positives in
+<code>known_occurrences</code>.</p>
+<pre class="r"><code># Set parameter values
+missing_occurrences &lt;- paste(outdir, &quot;missing_occurrences.csv&quot;, sep= &quot;&quot;)
+performance_metrics &lt;- paste(outdir, &quot;performance_metrics.csv&quot;, sep= &quot;&quot;)
+known_occurrences &lt;- paste(outdir, &quot;known_occurrences.csv&quot;, sep= &quot;&quot;)
+sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
+# Run function
+results &lt;- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
+# give explicit names to the 3 output data frames
+known_occurrences_df &lt;- results[[1]]
+missing_occurrences_df &lt;- results[[2]]
+performance_metrics_df &lt;- results[[3]]</code></pre>
 </div>
 <div id="taxassign" class="section level3">
 <h3>TaxAssign</h3>
+<p>If you haven’t assigned ASV to taxa yet (before the optimization
+step), it is time to do it. If you have already done it, you can use the
+same output as previously and skip this step.</p>
+<pre class="r"><code># Set parameter values
+outfile &lt;- paste(outdir, &quot;TaxAssign.csv&quot;, sep=&quot;&quot;)
+# Run function
+asv_tax &lt;- TaxAssign(asv=read_count_samples_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)</code></pre>
 </div>
-<div id="writeasvtable" class="section level3">
-<h3>WriteASVtable</h3>
-</div>
-<div id="write.csv-stat" class="section level3">
-<h3>write.csv stat</h3>
+<div id="print-output" class="section level3">
+<h3>Print output</h3>
+<p><code>WriteAsVtable</code> will reorganize the
+<code>read_count_samples_df</code> data frame, with samples in columns
+and ASV in lines.</p>
+<p>It is possible to add supplementary information:</p>
+<ul>
+<li>Taxonomic assignment (<code>asv_tax</code>)</li>
+<li>Total number of reads and samples for each ASV
+(<code>add_sums_by_asv</code>)</li>
+<li>Total number of reads and ASVs in each sample
+(<code>add_sums_by_sample</code>)</li>
+<li>Supplementary column per mock samples with expected occurrences i
+each of them (<code>add_expected_asv</code>)</li>
+<li>Supplementary column for samples that have been filtered out
+(<code>add_empty_samples</code>)</li>
+</ul>
+<p>For more information see <code>?WriteAsVtable</code></p>
+<pre class="r"><code># write ASV table completed by taxonomic assignments
+outfile=paste(outdir, &quot;Final_asvtable_with_taxassign.csv&quot;, sep=&quot;&quot;)
+
+asv_table_df &lt;- WriteASVtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition)</code></pre>
+<p>Print out the number of reads, ASVs, samples and replicates after
+each step.</p>
+<pre class="r"><code>write.csv(stat_df, file = paste(outdir, &quot;stat_steps.csv&quot;, sep=&quot;&quot;))</code></pre>
 </div>
 </div>
 <div id="helper-functions" class="section level2">
@@ -2085,8 +2220,17 @@ asv_id,asv (see details xxxx)</p></li>
 <li><p>read_count_df</p></li>
 </ul>
 </div>
+<div id="glossary" class="section level2">
+<h2>Glossary</h2>
+<ul>
+<li>False positive occurrence</li>
+<li>False negative occurrence</li>
+<li>True positive occurrence</li>
+</ul>
+</div>
 <div id="troubleshooting" class="section level2">
 <h2>Troubleshooting</h2>
+<p>Explain min_read_count_prop for LFN_variant</p>
 </div>
 
 
