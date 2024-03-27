@@ -440,6 +440,146 @@ count_seq <- function(file) {
   }
 }
 
+#' TrimPrimer_OneFile
+#' 
+#' Trim primers from the input fasta file
+#'   
+#' @param fasta input fasta file (icluding path);  can be uncompressed or gz, bz2 compressed
+#' @param outfile input fasta file (icluding path); can be uncompressed  or gz compressed, the other compression types are not supported
+#' @param primer_fw forward primer (IUPAC ambiguity codes are accepted)
+#' @param primer_rv reverse primer (IUPAC ambiguity codes are accepted)
+#' @param vsearch_path path to vsearch executables
+#' @param cutadapt_path path to cutadapt executables
+#' @param check_reverse [T/F] if TRUE, ckeck the reverse comlementary sequences of the input fasta as well; default: F
+#' @param primer_to_end primers follow directly the tags (no heterogeneity spacer); default: T
+#' @param cutadapt_error_rate maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1
+#' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
+#' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
+#' @export
+#' 
+TrimPrimer_OneFile <- function(fasta, outfile="", primer_fw="", primer_rv="", cutadapt_path="", vsearch_path="", check_reverse=F, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500){
+  
+  if(fasta == outfile){
+    msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
+    stop(msg)
+  }
+  original_output <- outfile
+  # if check_reverse, the output of vsearch --fastx_revcomp is uncompressed => make uncompressed outfiles for fw and rv, pool, then compress
+  if(check_reverse && (endsWith(outfile, ".gz") || endsWith(outfile, ".bz2")) ){
+    outfile <- sub( "\\.gz$", "", outfile)
+    outfile <- sub( "\\.bz2$", "", outfile)
+    if(fasta == outfile){
+      msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
+      stop(msg)
+    }
+  }
+  
+  primer_rv_rc <- reverse_complement(primer_rv)
+  if(primer_to_end){
+    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", outfile, " ", fasta, sep="")
+  } else{
+    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', outfile, " ", fasta, sep="")
+  }
+  print(primer_trim_cmd)
+  system(primer_trim_cmd)
+  
+  if(check_reverse){
+    # exchange fw and rv primers
+    primer_rv_rc  <- reverse_complement(primer_fw)
+    primer_fw <- primer_rv
+    # change output filename
+    out_rv <- sub("\\.", "_rv.", outfile)
+    
+    if(primer_to_end){
+      primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", out_rv, " ", fasta, sep="")
+    } else{
+      primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', out_rv, " ", fasta, sep="")
+    }
+    print(primer_trim_cmd)
+    system(primer_trim_cmd)
+    
+    # reverse complement rv file and append it to the outfile
+    if(file.size(out_rv) > 0){ # there are sequences in the reverse trimmed file
+      # reverse complement sequences in out_rv file
+      out_rv_rc <- sub("\\.", "_rc.", out_rv)
+      rev_comp_cmd <- paste(vsearch_path, "vsearch --fastx_revcomp ", out_rv, " --fastaout ", out_rv_rc, " --quiet", sep="")
+      print(rev_comp_cmd)
+      system(rev_comp_cmd)
+      # append content of minus_rc to plus file
+      file.append(outfile, out_rv_rc)
+      unlink(out_rv_rc)
+    }
+    unlink(out_rv)
+    
+    if(outfile != original_output ){ # Output should be compressed
+      outfile <- compress_file(filename=outfile, remove_input=T)
+    }
+  }
+}
+
+#' TrimPrimer
+#' 
+#' Trim primers from each fasta file in input fastainfo csv file of data frame. Keep only trimmed reads.
+#' Can check both orientation
+#' Count the number of reads in the output files
+#'   
+#' @param fastainfo csv file of data frame with the following columns: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count
+#' @param fasta_dir name of the directory with the fasta files to be trimmed
+#' @param compress [T/F]; compress output to gzip format; Default=F
+#' @param outdir name of the directory for the trimmed fasta files to be trimmed
+#' @param cutadapt_path path to cutadapt executable
+#' @param vsearch_path path to vsearch executable
+#' @param check_reverse [T/F] if TRUE, check the reverse complementary sequences of the input fasta as well; default: F
+#' @param primer_to_end primers follow directly the tags (no heterogeneity spacer); default: T
+#' @param cutadapt_error_rate maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1
+#' @param cutadapt_minimum_length minimum length of the trimmed sequence; default: 50
+#' @param cutadapt_maximum_length maximum length of the merged sequence; default: 500
+#' @export
+#' 
+TrimPrimer <- function(fastainfo, fasta_dir="", outdir="", compress=F, cutadapt_path="", vsearch_path="", check_reverse=F, primer_to_end=T, cutadapt_error_rate=0.1, cutadapt_minimum_length=50, cutadapt_maximum_length=500){
+  
+  # can accept df or file as an input
+  if(is.character(fastainfo)){
+    # read known occurrences
+    fastainfo_df <- read.csv(fastainfo, header=T, sep=sep)
+  }else{
+    fastainfo_df <- fastainfo
+  }
+  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+  
+  # upper case for all primers and tags
+  fastainfo_df$primer_fw <- toupper(fastainfo_df$primer_fw)
+  fastainfo_df$primer_rv <- toupper(fastainfo_df$primer_rv)
+  # make a column for output filenames
+  fastainfo_df$filename <- NA
+  
+  # check dirs
+  outdir <- check_dir(outdir)
+  fasta_dir<- check_dir(fasta_dir)
+  
+  for(i in 1:nrow(fastainfo_df)){ # for each input fasta
+    
+    # define output file name
+    input <- fastainfo_df$fasta[i]
+    output <- fastainfo_df$fasta[i]
+    if(compress && !endsWith(output, ".gz")){ # add .gz if necessary
+      output <- sub("\\..+", ".fasta.gz", output)
+    }
+    fastainfo_df$filename[i] <- output
+    input <- paste(fasta_dir, input, sep="")
+    output <- paste(outdir, output, sep="")
+    TrimPrimer_OneFile(input, outfile=output, primer_fw=fastainfo_df$primer_fw[i], primer_rv=fastainfo_df$primer_rv[i], cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length)
+    # count reads
+    seq_n <- count_seq(output)
+    fastainfo_df$read_count[i] <- seq_n
+  }
+  fastainfo_df <- fastainfo_df %>%
+    select(sample, sample_type, habitat, replicate, filename, read_count)
+  
+  write.table(fastainfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep)
+  return(fastainfo_df)
+}
+
 #' SortReads
 #' 
 #' Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.
@@ -650,7 +790,7 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
         system(primer_trim_cmd)
       } # end tag-trimmed 
     # delete the tmp dir with the tag-trimmed files
-#    unlink(tmp_dir, recursive = TRUE)
+    unlink(tmp_dir, recursive = TRUE)
   }# end fasta
   
   # make sortedinfo file
@@ -3891,8 +4031,19 @@ check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
     }
   }
   
-  # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
-  if(file_type == "fastqinfo"){
+  # check if fastq file pairs are coherent (e.g. 1 to 1 relation)
+  # check file extension. accept only .fastq or .fastq.gz
+  if(file_type == "fastginfo"){
+    
+    unique_files <- unique(df$fastq_fw)
+    unique_files <- append(unique_files, unique(df$fastq_rv))
+    for(file in unique_files){
+      if( !( endsWith(file, ".fastq.gz") || endsWith(file, ".fastq") ) ){
+        msg <- paste("Only fastq or fastq.gz formats are accepted in the fastq_fw and fastq_rv columns")
+        tryCatch(stop(msg), error = function(e) message(msg))
+      }
+    }
+    
     # check if fastq filepairs are coherent (e.g. 1 to 1 relation)
     tmp_rv <- df %>%
       select("fastq_fw","fastq_rv") %>%
@@ -3909,6 +4060,23 @@ check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
     if(nrow(tmp_rv)>0 || nrow(tmp_fw)>0) {
       msg <- paste("The following fastq files have more than one pairs:", paste(tmp_fw$fastq_rv, tmp_rv$fastq_fw, collapse = ", "))
       tryCatch(stop(msg), error = function(e) message(msg))
+    }
+  }
+  
+  # check file extension. accept only .fasta .fas  .fasta.gz .fas.gz
+  if(file_type == "fastainfo" || file_type == "sortedinfo"){
+    if(file_type == "fastainfo"){
+      unique_files <- unique(df$fasta)
+    }
+    if(file_type == "sortedinfo"){
+      unique_files <- unique(df$filename)
+    }
+    unique_files <- unique(df$fastq_fw)
+    for(file in unique_files){
+      if( !( endsWith(file, ".fasta.gz") || endsWith(file, ".fasta") || endsWith(file, ".fas")  || endsWith(file, ".fas.gz")  ) ){
+        msg <- paste("Only fas, fasta, fas.gz or fasta.gz file extentions are accepted in ", file, sep="")
+        tryCatch(stop(msg), error = function(e) message(msg))
+      }
     }
   }
   

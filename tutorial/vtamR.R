@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -102,41 +102,23 @@ load_all(".")
 roxygenise() 
 usethis::use_roxygen_md()
 
-outdir <- "test_sortreads"
+####
+# Make TrimPrimer
+###
+fastainfo <- "/home/meglecz/vtamR/vtamR_test/data/fastainfo_notag.csv"
+fasta_dir <- "vtamR_test/out/test_sortreads/no_tag/"
+outdir <- "vtamR_test/out/test_sortreads/primer_trimmed/"
 outdir <- check_dir(dir=outdir)
-merged_dir <- "vtamR_test/out_mfzr/merged/"
-fastainfo <- paste(outdir, "fastainfo_notag.csv", sep="")
-
-sorted_dir <- paste(outdir, "sorted/", sep="")
-check_reverse <- F
-tag_to_end <- F
+check_reverse <- T
 primer_to_end <-F
 cutadapt_error_rate <- 0.1 # -e in cutadapt
 cutadapt_minimum_length <- 50 # -m in cutadapt
 cutadapt_maximum_length <- 500 # -M in cutadapt
-compress <- F
-sortedinfo_df <- SortReads(fastainfo, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+compress <- T
 
+fastainfo_df <- TrimPrimer(fastainfo, fasta_dir=fasta_dir, outdir=outdir, compress=compress, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length)
 
-TrimPrimer_noreverse <- function(fasta, outfile=, primer_fw=, primer_rv= cutadapt_path=cutadapt_path, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length){
-  
-  if(primer_to_end){
-    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", outfile, " ", fasta, sep="")
-  }
-  else{
-    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', outfile, " ", fasta, sep="")
-  }
-  
-}
-
-
-check_if_tag <- function(fastainfo_df){
-  
-  df <- fastainfo_df %>%
-    select()
-  
-}
-
+!!!! # TrimPrimer can replace part of SortReads ??
 
 ###
 # Check coherence (often) user-made input files
@@ -154,8 +136,6 @@ test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
 test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
 test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
 test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
-
-
 
 
 ####
