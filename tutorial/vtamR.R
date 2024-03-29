@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -66,7 +66,7 @@ if(computer == "Bombyx"){
   fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
   outdir <- "vtamR_test/out_mfzr/"
   mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
-  asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+  asv_list <- "vtamR_test/data/asv_list.csv"
   num_threads=4
   compress = F
 }

@@ -395,7 +395,7 @@ test_taxassign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
   input_df <- input_df %>%
     select(asv_id, asv)
   
-  asv_tax <- TaxAssign(input_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
+  asv_tax <- TaxAssign(input_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
   
   expected_asv_tax <- read.table(expeted_output, sep="\t", header=T)
   expected_asv_tax <- expected_asv_tax %>%

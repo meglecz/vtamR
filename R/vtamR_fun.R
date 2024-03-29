@@ -2190,15 +2190,15 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
     asv_df <- asv
   }
 
-    if (ltg_params == ""){   # default value for ltg_params_df
-    ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
-                                pcov=c(70,70,70,70,70,70),
-                                phit=c(70,70,70,70,70,70),
-                                taxn=c(1,1,2,3,4,4),
-                                seqn=c(1,1,2,3,4,4),
-                                refres=c(8,8,8,7,6,6),
-                                ltgres=c(8,8,8,8,7,7)
-                                )
+  if (ltg_params == ""){   # default value for ltg_params_df
+      ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
+                                  pcov=c(70,70,70,70,70,70),
+                                  phit=c(70,70,70,70,70,70),
+                                  taxn=c(1,1,2,3,4,4),
+                                  seqn=c(1,1,2,3,4,4),
+                                  refres=c(8,8,8,7,6,6),
+                                  ltgres=c(8,8,8,8,7,7)
+                                  )
   } else if(is.character(ltg_params)){
     ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
   } else{
