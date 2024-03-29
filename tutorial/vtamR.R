@@ -118,7 +118,7 @@ compress <- T
 
 fastainfo_df <- TrimPrimer(fastainfo, fasta_dir=fasta_dir, outdir=outdir, compress=compress, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length)
 
-!!!! # TrimPrimer can replace part of SortReads ??
+  
 
 ###
 # Check coherence (often) user-made input files

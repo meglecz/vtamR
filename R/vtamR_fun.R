@@ -3179,7 +3179,7 @@ flag_from_habitat <- function(occurrence_df, sortedinfo_df, habitat_proportion=0
     ungroup()
   # add total readcount of asv to tmp and keep only lines where the asv in a given habitat is less frequent than in the other habitats
   tmp <- left_join(tmp, tmp3, by="asv")
-  tmp <- tmp[tmp$habitat_read_count/tmp$sum_read_count < 0.5, ]
+  tmp <- tmp[tmp$habitat_read_count/tmp$sum_read_count < habitat_proportion, ]
   # keep only pertinent columns in tmp and add hab_action column with "delete"
   tmp <- tmp %>%
     select(habitat, asv)
@@ -3248,9 +3248,10 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
 
 #' OptimizeLFNReadCountAndLFNvariant
 #' 
-#' Suggest optimal parametres for lfn_read_count_cutoff and lnf_variant_cutoff 
-#' This script will run LFN_sample_replicate, FilterPCRerror and FilterMinReplicateNumber on the input using parameters set by the user (ideally optimized ones), to eliminate part of the noise. 
-#' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations, for each of them the number of FN, TP, and FP is reported. 
+#' Suggest optimal parameters for lfn_read_count_cutoff and lnf_variant_cutoff 
+#' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations followed by FilterMinReplicateNumber. 
+#' For each parameter combination the number of FN, TP, and FP is reported. 
+#' 
 #' The results are written to data frame and to an outfile if the filename is given.
 #' Users should chose the parameter setting that minimizes, FN and FP.
 #'  
@@ -3262,21 +3263,15 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
 #' @param max_lfn_read_count_cutoff the highest cutoff value for LFN_read_count function (100 by default). 
 #' @param increment_lfn_read_count_cutoff values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default). 
 #' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function (0.001 by default). 
-#' @param max_lnf_variant_cutoff the highest value for LFN_variant function (0.05 by default).
+#' @param max_lnf_variant_cutoff the highest value for LFN_variant function (0.01 by default).
 #' @param increment_lnf_variant_cutoff values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default). 
 #' @param by_replicate T/F (False by default); see LFN_variant function
-#' @param lfn_sample_replicate_cutoff cutoff value for LFN_sample_replicate (see LFN_sample_replicate function; default 0.001)
-#' @param pcr_error_var_prop cutoff value for FilterPCRerror (see FilterPCRerror function; default 0.1)
-#' @param vsearch_path path to vsearch executables
-#' @param max_mismatch parameter for FilterPCRerror (see FilterPCRerror function; default 1)
-#' @param by_sample parameter for FilterPCRerror (see FilterPCRerror function; default T)
-#' @param sample_prop for FilterPCRerror (see FilterPCRerror function; default 0.8)
-#' @param min_replicate_number for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 2)
+#' @param min_replicate_number for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 1)
 #' @param verbose [T/F]  if TRUE print out progress; T by default
 #' @export
 #'
 
-OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.05, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2, verbose=T){
+OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.01, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, min_replicate_number=2, verbose=T){
   #  read_count_df = optimize_read_count_df
   #  min_lfn_read_count_cutoff = 10
   #  min_lnf_variant_cutoff = 0.001
@@ -3300,22 +3295,13 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
       known_occurrences_df <- known_occurrences
   }
   check_fileinfo(file=known_occurrences_df, file_type="known_occurrences", sep=sep)
-  
-  # filter by sample-replicate
-  df <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, sep=sep)
-  # FilterPCRerror
-  df <- FilterPCRerror(df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
-  # FilterMinReplicateNumber
-  df <- FilterMinReplicateNumber(df, cutoff=min_replicate_number, sep=sep)
-  
+
   # make a series of cutoff values for LFN_read_count
   rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=max_lfn_read_count_cutoff, by=increment_lfn_read_count_cutoff)
   # make a series of cutoff values for LFN_read_count
   var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=max_lnf_variant_cutoff, by=increment_lnf_variant_cutoff)
   
-  out_df <- data.frame( 
-    lfn_sample_replicate_cutoff =numeric(),
-    pcr_error_var_prop =numeric(),
+  out_df <- data.frame(
     lfn_read_count_cutoff=numeric(),
     lnf_variant_cutoff=numeric(),
     FN=numeric(),
@@ -3325,7 +3311,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
   # go through all parameter combination and count the number of TP and FN
   
   for(rc_cutoff in rc_cutoff_list){
-    df_tmp <- df
+    df_tmp <- read_count_df
     #LFN_read_count
     df_tmp <- LFN_read_count(df_tmp, rc_cutoff)
     for(var_cutoff in var_cutoff_list){
@@ -3358,7 +3344,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
       if ("delete" %in% ko$action) {
         FP_count <- subset(ko, action == "delete")$TPFP
       }
-      new_line <- data.frame(lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
+      new_line <- data.frame(lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
       if(verbose){
         print(new_line)
       }

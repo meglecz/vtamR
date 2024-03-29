@@ -13,15 +13,9 @@ OptimizeLFNReadCountAndLFNvariant(
   max_lfn_read_count_cutoff = 100,
   increment_lfn_read_count_cutoff = 5,
   min_lnf_variant_cutoff = 0.001,
-  max_lnf_variant_cutoff = 0.05,
+  max_lnf_variant_cutoff = 0.01,
   increment_lnf_variant_cutoff = 0.001,
   by_replicate = FALSE,
-  lfn_sample_replicate_cutoff = 0.001,
-  pcr_error_var_prop = 0.1,
-  vsearch_path = "",
-  max_mismatch = 1,
-  by_sample = T,
-  sample_prop = 0.8,
   min_replicate_number = 2,
   verbose = T
 )
@@ -43,32 +37,22 @@ OptimizeLFNReadCountAndLFNvariant(
 
 \item{min_lnf_variant_cutoff}{the lowest cutoff value for LFN_variant function (0.001 by default).}
 
-\item{max_lnf_variant_cutoff}{the highest value for LFN_variant function (0.05 by default).}
+\item{max_lnf_variant_cutoff}{the highest value for LFN_variant function (0.01 by default).}
 
 \item{increment_lnf_variant_cutoff}{values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default).}
 
 \item{by_replicate}{T/F (False by default); see LFN_variant function}
 
-\item{lfn_sample_replicate_cutoff}{cutoff value for LFN_sample_replicate (see LFN_sample_replicate function; default 0.001)}
-
-\item{pcr_error_var_prop}{cutoff value for FilterPCRerror (see FilterPCRerror function; default 0.1)}
-
-\item{vsearch_path}{path to vsearch executables}
-
-\item{max_mismatch}{parameter for FilterPCRerror (see FilterPCRerror function; default 1)}
-
-\item{by_sample}{parameter for FilterPCRerror (see FilterPCRerror function; default T)}
-
-\item{sample_prop}{for FilterPCRerror (see FilterPCRerror function; default 0.8)}
-
-\item{min_replicate_number}{for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 2)}
+\item{min_replicate_number}{for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 1)}
 
 \item{verbose}{\link{T/F}  if TRUE print out progress; T by default}
 }
 \description{
-Suggest optimal parametres for lfn_read_count_cutoff and lnf_variant_cutoff
-This script will run LFN_sample_replicate, FilterPCRerror and FilterMinReplicateNumber on the input using parameters set by the user (ideally optimized ones), to eliminate part of the noise.
-The the LFN_read_count and LFN_variant is run for a series of parameter value combinations, for each of them the number of FN, TP, and FP is reported.
+Suggest optimal parameters for lfn_read_count_cutoff and lnf_variant_cutoff
+The the LFN_read_count and LFN_variant is run for a series of parameter value combinations followed by FilterMinReplicateNumber.
+For each parameter combination the number of FN, TP, and FP is reported.
+}
+\details{
 The results are written to data frame and to an outfile if the filename is given.
 Users should chose the parameter setting that minimizes, FN and FP.
 }

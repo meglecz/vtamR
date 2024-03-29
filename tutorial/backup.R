@@ -377,3 +377,148 @@ dereplicate_reads <- function(files){
   df$asv_id <- rownames(df)
   return(df)
 }
+
+
+
+#' OptimizeLFNReadCountAndLFNvariant_with_prerunning_other_filters
+#' 
+#' Suggest optimal parametres for lfn_read_count_cutoff and lnf_variant_cutoff 
+#' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations followed by FilterMinReplicateNumber. 
+#' For each parameter combination the number of FN, TP, and FP is reported. 
+#' 
+#' This script can run LFN_sample_replicate, FilterPCRerror and FilterMinReplicateNumber before optimizing LFN_variant and LFN_variant. 
+#' This is helpful if known_occurrences has been established before running these filters, 
+#' and thus avoid of pushing too high the cutoff for LFN_read_count and LFN_variant, due to FP occurrences that will be eliminated by other filters.
+#' However the most forward solution is to run LFN_sample_replicate, FilterPCRerror, FilterMinReplicateNumber first, than make known_occurrences.
+#' 
+#' on the input using parameters set by the user (ideally optimized ones), to eliminate part of the noise. 
+
+#' The results are written to data frame and to an outfile if the filename is given.
+#' Users should chose the parameter setting that minimizes, FN and FP.
+#'  
+#' @param read_count data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv
+#' @param known_occurrences  data frame or file produced by make_known_occurrences function, with known FP and TP
+#' @param sep separator used in csv files
+#' @param outfile name of the output file; Optional; If empty the results are not written to a file
+#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function (10 by default). 
+#' @param max_lfn_read_count_cutoff the highest cutoff value for LFN_read_count function (100 by default). 
+#' @param increment_lfn_read_count_cutoff values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default). 
+#' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function (0.001 by default). 
+#' @param max_lnf_variant_cutoff the highest value for LFN_variant function (0.01 by default).
+#' @param increment_lnf_variant_cutoff values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default). 
+#' @param by_replicate T/F (False by default); see LFN_variant function
+#' @param lfn_sample_replicate_cutoff cutoff value for LFN_sample_replicate (see LFN_sample_replicate function; default NA)
+#' @param pcr_error_var_prop cutoff value for FilterPCRerror (see FilterPCRerror function; default NA)
+#' @param vsearch_path path to vsearch executables
+#' @param max_mismatch parameter for FilterPCRerror (see FilterPCRerror function; default 1)
+#' @param by_sample parameter for FilterPCRerror (see FilterPCRerror function; default T)
+#' @param sample_prop for FilterPCRerror (see FilterPCRerror function; default 0.8)
+#' @param min_replicate_number for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 1)
+#' @param verbose [T/F]  if TRUE print out progress; T by default
+#' @export
+#'
+
+OptimizeLFNReadCountAndLFNvariant_with_prerunning_other_filters <- function(read_count, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.01, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, lfn_sample_replicate_cutoff=NA, pcr_error_var_prop=NA, vsearch_path="", max_mismatch=1, by_sample=T, sample_prop=0.8, min_replicate_number=2, verbose=T){
+  #  read_count_df = optimize_read_count_df
+  #  min_lfn_read_count_cutoff = 10
+  #  min_lnf_variant_cutoff = 0.001
+  #  rc_cutoff = 55
+  #  var_cutoff = 0.05
+  #  by_replicate = T
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  # can accept df or file as an input
+  if(is.character(known_occurrences)){
+    # read known occurrences
+    known_occurrences_df <- read.csv(known_occurrences, header=T, sep=sep)
+  }else{
+    known_occurrences_df <- known_occurrences
+  }
+  check_fileinfo(file=known_occurrences_df, file_type="known_occurrences", sep=sep)
+  
+  df <- read_count_df
+  # filter by sample-replicate
+  if(!is.na(lfn_sample_replicate_cutoff)){
+    df <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, sep=sep)
+    df <- FilterMinReplicateNumber(df, cutoff=min_replicate_number, sep=sep)
+  }
+  # FilterPCRerror
+  if(!is.na(pcr_error_var_prop)){
+    df <- FilterPCRerror(df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
+    df <- FilterMinReplicateNumber(df, cutoff=min_replicate_number, sep=sep)
+  }
+  
+  
+  # make a series of cutoff values for LFN_read_count
+  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=max_lfn_read_count_cutoff, by=increment_lfn_read_count_cutoff)
+  # make a series of cutoff values for LFN_read_count
+  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=max_lnf_variant_cutoff, by=increment_lnf_variant_cutoff)
+  
+  out_df <- data.frame( 
+    lfn_sample_replicate_cutoff =numeric(),
+    pcr_error_var_prop =numeric(),
+    lfn_read_count_cutoff=numeric(),
+    lnf_variant_cutoff=numeric(),
+    FN=numeric(),
+    TP=numeric(),
+    FP=numeric()
+  )
+  # go through all parameter combination and count the number of TP and FN
+  
+  for(rc_cutoff in rc_cutoff_list){
+    df_tmp <- df
+    #LFN_read_count
+    df_tmp <- LFN_read_count(df_tmp, rc_cutoff)
+    for(var_cutoff in var_cutoff_list){
+      # LFN_variant
+      df_tmp <- LFN_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      # FilterMinReplicateNumber
+      df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number)
+      # PoolReplicates
+      df_tmp_sample <- PoolReplicates(df_tmp, digits=0)
+      # pool readcount info and known occurrences info
+      ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
+        filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
+        filter(!(is.na(read_count) & action=="delete")) # delete lines if asv is not present (read_count==NA) and the action is delete
+      # get the number of FN (misssing expected occurrences) 
+      missing <- ko %>%
+        filter(is.na(read_count) & action=="keep")
+      FN_count <- nrow(missing)
+      # get the number of TP and FP
+      ko <- ko %>%
+        filter(!(is.na(read_count) & action=="keep")) %>%
+        group_by(action) %>%
+        summarise(TPFP=length(action)) %>%
+        ungroup()
+      
+      TP_count <- 0
+      if ("keep" %in% ko$action) {
+        TP_count <- subset(ko, action == "keep")$TPFP
+      }
+      FP_count <- 0
+      if ("delete" %in% ko$action) {
+        FP_count <- subset(ko, action == "delete")$TPFP
+      }
+      new_line <- data.frame(lfn_sample_replicate_cutoff=lfn_sample_replicate_cutoff, pcr_error_var_prop=pcr_error_var_prop, lfn_read_count_cutoff=rc_cutoff, lnf_variant_cutoff=var_cutoff ,FN=FN_count, TP=TP_count, FP=FP_count)
+      if(verbose){
+        print(new_line)
+      }
+      out_df <- bind_rows(out_df, new_line )
+    }
+  }
+  
+  out_df <- out_df %>%
+    arrange(FN, FP, lnf_variant_cutoff, lfn_read_count_cutoff)
+  
+  if(outfile != ""){
+    write.table(out_df, file=outfile, sep=sep, row.names = F)
+  }
+  return(out_df)
+}
