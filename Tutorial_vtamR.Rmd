@@ -490,7 +490,7 @@ asv_tpos1 <- tmp_asv_table %>%
   arrange(desc(tpos1))
 ```
 
-Yous can now pick the correct sequences of the epected ASVs in each mock and make the [mock_composition](#input-and-output-files) file
+Yous can now pick the correct sequences of the expected ASVs in each mock and make the [mock_composition](#input-and-output-files) file
 
 ### FilterPCRerror
 
@@ -690,6 +690,10 @@ performance_metrics_df <- results[[3]]
 
 If you haven't assigned ASV to taxa yet (before the optimization step), it is time to do it. If you have already done it, you can use the same output as previously and skip this step.
 
+For the format of `taxonomy` and `blast_db` check the [Input and output files](#input-and-output-files) section
+taxonomy
+blast_db
+
 ```{r}
 # Set parameter values
 outfile <- paste(outdir, "TaxAssign.csv", sep="")
@@ -739,8 +743,33 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 
 ## Input and output files
 
-* `taxonomy` CSV file file with the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel
-* `blast_db` BLAST database (see details xxxx)
+### Reference database for taxonomic assignments
+
+A data base is composed of two elements. A BLAST database (`blast_db`) and a `taxonomy` file.
+
+`blast_db` can produced by a `makeblastdb` of BLAST:
+
+```{bash}
+makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]
+```
+
+FASTA_FILE is a fasta fie containing reference sequences
+TAXID_FILE is a tab separated file with sequence IDs and the corresponding numerical taxIDs
+DB_NAME is the name of the newly created BLAST database.
+
+`taxonomy` is a tab separated csv file with the following columns:
+
+* tax_id: tax_id: can be correct NCBI taxID, or arbitrary negative numbers for taxa not in NCBI
+* parent_tax_id: taxiID of the closest parent of tax_id
+* rank: taxonomic rank (e.g. species, genus, subgenus, no_rank) 
+* name_txt: Scientifc name of the taxon 
+* old_tax_id: taxIDs that have been merged to the tax_id by NCBI; if more than one for a given tax_id, make one line for each old_tax_id
+* taxlevel: Integer associated to a major taxonomic rank. (0 => root, 1=> superkingdom, 2=> kingdom, 3=> phylum, 4=> class, 5=> order, 6=> family, 7=> genus, 8=> species). Levels in between have 0.5 added to the next highest level (e.g. 5.5 for infraorder and for superfamily).
+
+
+A ready to use COI database and the associated taxonomy file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/). It was created usin [mkCOInr](https://github.com/meglecz/mkCOInr).
+
+
 
 * `fastqinfo` CSV file file with information on input files, primers, tags, samples tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)
 * `mock_composition` CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)
@@ -757,4 +786,7 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 
 ## Troubleshooting
 Explain min_read_count_prop for LFN_variant
+
+If pb of running swarm for the whole dataset try to run it sample by sample. If still problem, do global_read_count first, then swarm
+
 
