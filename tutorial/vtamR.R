@@ -14,7 +14,7 @@ library("ggplot2")
 #library("Biostrings")
 
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -102,6 +102,7 @@ load_all(".")
 roxygenise() 
 usethis::use_roxygen_md()
 
+
 ####
 # Make TrimPrimer
 ###
@@ -118,7 +119,6 @@ compress <- T
 
 fastainfo_df <- TrimPrimer(fastainfo, fasta_dir=fasta_dir, outdir=outdir, compress=compress, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length)
 
-  
 
 ###
 # Check coherence (often) user-made input files
@@ -131,11 +131,11 @@ check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
 ###
 # Test major functions
 ###
-test_merge_and_sortreads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
-test_make_known_occurrences(test_dir="vtamR_test/", sep=sep)
-test_taxassign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
-test_optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
+test_Merge_and_SortReads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_Filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+test_MakeKnownOccurrences(test_dir="vtamR_test/", sep=sep)
+test_Optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
+test_TaxAssign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, num_threads=num_threads)
 
 
 ####
@@ -413,7 +413,7 @@ known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
 missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
 performance_metrics <- paste(outdir, "performance_metrics.csv", sep= "")
 habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
-results <- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics, habitat_proportion=habitat_proportion)
+results <- MakeKnownOccurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics, habitat_proportion=habitat_proportion)
 known_occurrences_df <- results[[1]]
 missing_occurrences <- results[[2]]
 performance_metrics <- results[[3]]

@@ -133,15 +133,15 @@ roxygenise()
 usethis::use_roxygen_md()
 ```
 
-TODO: Make shorter version of the ref db and include to the files. Till then test_taxassign need blast_db and taxonomy should be specified.
+TODO: Make shorter version of the ref db and include to the files. Till then test_TaxAssign need blast_db and taxonomy should be specified.
 
 **Run test functions on test data**
 ```{r test_vtamR}
-test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(vsearch_path=vsearch_path)
-test_make_known_occurrences()
-test_optimize(vsearch_path=vsearch_path)
-test_taxassign(blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)
+test_Merge_and_SortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
+test_MakeKnownOccurrences()
+test_Optimize(vsearch_path=vsearch_path)
+test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
 ```
 
 
@@ -569,11 +569,11 @@ The `LFN_read_count` filter simply eliminates occurrences with less then `lfn_re
 
 To find the best cutoff values for these filters, we will count the number of [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences using a series of combination of the cutoff values of these two filters.
 
-**make_known_occurrences**
+**MakeKnownOccurrences**
 
-The make_known_occurrences function will identify [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets. 
+The MakeKnownOccurrences function will identify [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets. 
 
-The false positive and the true positive occurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurrences. For details see `?make_known_occurrences`.
+The false positive and the true positive occurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurrences. For details see `?MakeKnownOccurrences`.
 
 This function takes a read_count_samples data frame as an input, where the replicates of the same sample have been pooled (see `?PoolReplicates`)
 
@@ -583,7 +583,7 @@ This function takes a read_count_samples data frame as an input, where the repli
 read_count_samples_df <- PoolReplicates(read_count_df)
 
 # Detect known occurrences
-results <- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
+results <- MakeKnownOccurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
@@ -669,7 +669,7 @@ stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
 
 ### Get performance metrics
 
-Run make_known_occurrences again to get performance metrics (FP, FN, FP). 
+Run MakeKnownOccurrences again to get performance metrics (FP, FN, FP). 
 This time we will write the output data frames to files as well. The `performance_metrics` file will give you the count of FP, FN, TP, accuracy and sensitivity, you can found false negatives in `missing_occurrences`, and true and false positives in `known_occurrences`.
 
 ```{r}
@@ -679,7 +679,7 @@ performance_metrics <- paste(outdir, "performance_metrics.csv", sep= "")
 known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
 # Run function
-results <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
+results <- MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
 missing_occurrences_df <- results[[2]]

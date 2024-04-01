@@ -2205,12 +2205,12 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
     ltg_params_df <- ltg_params
   }
   
-  if(is.character(fastqinfo)){
+#  if(is.character(fastqinfo)){
     # read known occurrences
-    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
-  }else{
-    fastqinfo_df <- fastqinfo
-  }
+#    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+#  }else{
+#    fastqinfo_df <- fastqinfo
+#  }
   
   #### Read taxonomy info 
   # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
@@ -2997,7 +2997,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 }
 
 
-#' make_known_occurrences
+#' MakeKnownOccurrences
 #' 
 #' Prepare three data frames and if file names are given they are also write to files
 #' - known_occurrences list all occurrences that are expected in mock or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
@@ -3015,7 +3015,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 #' @export
 #' 
 
-make_known_occurrences <- function(read_count_samples, sortedinfo="", mock_composition="", sep=",", known_occurrences="", missing_occurrences="", performance_metrics="", habitat_proportion=0.5){
+MakeKnownOccurrences <- function(read_count_samples, sortedinfo="", mock_composition="", sep=",", known_occurrences="", missing_occurrences="", performance_metrics="", habitat_proportion=0.5){
   
   # can accept df or file as an input
   if(is.character(read_count_samples)){
@@ -3234,6 +3234,8 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
   df <- left_join(mock_comp, read_count_samples_df,  by=c("sample", "asv")) %>%
     filter(is.na(read_count)) %>%
     select(-"read_count")
+#    select(sample, action, asv_id, asv)
+  
   
   # write to outfile
   if(out != ""){
@@ -3256,7 +3258,7 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
 #' Users should chose the parameter setting that minimizes, FN and FP.
 #'  
 #' @param read_count data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv
-#' @param known_occurrences  data frame or file produced by make_known_occurrences function, with known FP and TP
+#' @param known_occurrences  data frame or file produced by MakeKnownOccurrences function, with known FP and TP
 #' @param sep separator used in csv files
 #' @param outfile name of the output file; Optional; If empty the results are not written to a file
 #' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function (10 by default). 

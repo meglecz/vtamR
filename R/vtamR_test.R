@@ -1,4 +1,4 @@
-#' test_merge_and_sortreads
+#' test_Merge_and_SortReads
 #' 
 #' Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam
 #'  
@@ -8,7 +8,7 @@
 #' @export
 #'
 
-test_merge_and_sortreads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path=""){
+test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path=""){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -134,7 +134,7 @@ test_merge_and_sortreads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   setwd(backup_wd)
 }
 
-#' test_filters
+#' test_Filters
 #' 
 #' Run different filtering steps on a test input and compare results to expected (pre-computed) output
 #'  
@@ -145,7 +145,7 @@ test_merge_and_sortreads <- function(test_dir="vtamR_test/", vsearch_path="", cu
 #'
 
 
-test_filters <- function(test_dir="vtamR_test/", vsearch_path="", sep=","){
+test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=","){
   
   test_dir <- check_dir(test_dir)
   outdir <- paste(test_dir, "out", sep="")
@@ -155,6 +155,15 @@ test_filters <- function(test_dir="vtamR_test/", vsearch_path="", sep=","){
   ### make input df
   input_df <- read_asv_table(filename=test_input_file, sep=sep) %>% 
     rename("asv_id"=seq_id)
+  
+  #Swarm
+  test_input_file_swarm <- paste(test_dir, "test/test_file_asv_id.csv", sep="")
+  input_df_swarm <- read_asv_table(filename=test_input_file_swarm, sep=sep) %>% 
+    rename("asv_id"=seq_id)
+  swarm_out_df <- Swarm(input_df_swarm, swarm_path=swarm_path, by_sample=T)
+  swarm_out_df$replicate <- as.integer(swarm_out_df$replicate)
+  swarm_exp_df = read.csv(file=paste(test_dir, "test/test_file_asv_id_swarm_out.csv", sep=""), sep=",")
+  comp_swarm <- compare_df(swarm_out_df, swarm_exp_df, step="Swarm")
   
   
   #LFN_global_read_count
@@ -314,7 +323,7 @@ read_asv_table <- function(filename, sep=","){
 compare_df<- function(df1, df2, step=""){
   
   df1 <- df1 %>%
-    select("asv", "sample","replicate","read_count_vtamR"="read_count")
+    select(asv, sample,replicate,"read_count_vtamR"="read_count")
   
   df1 <- full_join(df1, df2, by=c("sample", "replicate", "asv"))
   comp <- df1$read_count == df1$read_count_vtamR
@@ -373,7 +382,7 @@ compare_df_sample<- function(df1, df2, step=""){
   return(df1)
 }
 
-#' test_taxassign
+#' test_TaxAssign
 #' 
 #' Run TaxAssign on a test file and compare the output to mkLTG results
 #'  
@@ -386,7 +395,8 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @export
 #'
 
-test_taxassign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=1){
+test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/data/db_test/COInr_reduced", taxonomy="vtamR_test/data/db_test/taxonomy_reduced.tsv", num_threads=1){
+  
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")
   expeted_output <- paste(test_dir, "test/test_taxassign_out.tsv", sep="")
@@ -416,16 +426,16 @@ test_taxassign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
   }
 }
 
-#' test_make_known_occurrences
+#' test_MakeKnownOccurrences
 #' 
-#' Run make_known_occurrences on a test file and compare the output to expected results
+#' Run MakeKnownOccurrences on a test file and compare the output to expected results
 #'  
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param sep separator in csv files
 #' @export
 #'
 
-test_make_known_occurrences <- function(test_dir="vtamR_test/", sep=","){
+test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=","){
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
@@ -448,8 +458,8 @@ test_make_known_occurrences <- function(test_dir="vtamR_test/", sep=","){
   missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
   # params
   habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
-  # run make_known_occurrences
-  TP_df <- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
+  # run MakeKnownOccurrences
+  TP_df <- MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
   
   # expected results
   expected_known_occurrences <- paste(test_dir, "test/test_known_occurrences_out.csv", sep="")
@@ -483,13 +493,13 @@ test_make_known_occurrences <- function(test_dir="vtamR_test/", sep=","){
   #  print(identical(output_known_occurrences_df, expected_known_occurrences_df))
   
   if(missing & known){
-    print("make_known_occurrences: PASS")
+    print("MakeKnownOccurrences: PASS")
   }else{
-    print("make_known_occurrences: FAIL")
+    print("MakeKnownOccurrences: FAIL")
   }
 }
 
-#' test_optimize
+#' test_Optimize
 #' 
 #' Run OptimizePCRError, OptimizeLFNsampleReplicate and OptimizeLFNReadCountAndLFNvariant on a test file and compare the output to expected results
 #'  
@@ -497,7 +507,7 @@ test_make_known_occurrences <- function(test_dir="vtamR_test/", sep=","){
 #' @param vsearch_path path to vsearch executable
 #' @export
 #'
-test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
+test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
   
   test_dir <- check_dir(test_dir)
   outdir <- paste(test_dir, "out/", sep="")
@@ -561,9 +571,9 @@ test_optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
   }
   
   ### OptimizeLFNReadCountAndLFNvariant
-  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, lfn_sample_replicate_cutoff=0.001, pcr_error_var_prop=0.1, vsearch_path=vsearch_path, max_mismatch=1, by_sample=TRUE, sample_prop=0.8, min_replicate_number=2, verbose=F)
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, verbose=F)
   OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant_df %>%
-    select(lfn_sample_replicate_cutoff,pcr_error_var_prop,lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
+    select(lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
     arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
   
   # compare expected and observed results 

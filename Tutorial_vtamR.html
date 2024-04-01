@@ -427,8 +427,7 @@ check_fileinfo(file=asv_list, file_type=&quot;asv_list&quot;)</code></pre>
 <p>According to your wetlab and sequencing protocol fastq files can contain one or more sample-replicate, and sequences may or may not contain tags (for demultiplexing) and primer sequences. In the following sections I show 3 different scenarios to obtain the <a href="#input-and-output-files">read_count_df</a>, the input data frame to the filtering steps.</p>
 <div id="one-sample-per-fastq---no-tag---no-primer" class="section level3">
 <h3>One sample per fastq - no tag - no primer</h3>
-<p>Read pairs should be quality filtered merged and written to fasta format. This can be done by the <code>Merge</code> function.</p>
-<p>See the help of the <code>Merge</code> function for setting the correct parameters for quality filtering: <code>?Merge</code></p>
+<p>Read pairs should be quality filtered merged and written to fasta format. This can be done by the <code>Merge</code> function. See the help of the <code>Merge</code> function for setting the correct parameters for quality filtering: <code>?Merge</code></p>
 <ul>
 <li><a href="#input-and-output-files">fastqinfo</a> is either a csv file, or a data frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fastq_fw, fastq_rv. The tag_fw, primer_fw, tag_rv, primer_rv are irrelevant in this case, just fill them with NA.</li>
 <li><code>fastq_dir</code> is the directory containing the input fastq files</li>
@@ -438,7 +437,7 @@ fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_pa
 </div>
 <div id="one-sample-per-fastq---primer---no-tag" class="section level3">
 <h3>One sample per fastq - primer - no tag</h3>
-<p>Read pairs should be quality filtered merged and written to fasta format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous section</a>. The only difference is that you should fill the primer_fw and the primer_rv columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
+<p>Read pairs should be quality filtered merged and written to fasta format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous section</a>. The only difference is that you should fill the <code>primer_fw</code> and the <code>primer_rv</code> columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
 <p>Then the <code>TrimPrimer</code> function will trim the primers from the reads. See the help of the <code>TrimPrimer</code> function for setting the correct parameters for primer trimming: <code>?TrimPrimer</code></p>
 <ul>
 <li><a href="#input-and-output-files">fastainfo_df</a> is the output of <code>Merge</code></li>
@@ -455,7 +454,7 @@ sortedinfo_df &lt;- TrimPrimer(fastainfo_df, fasta_dir=merged_dir, outdir=sorted
 </div>
 <div id="several-samples-per-fastq---tags---primers" class="section level3">
 <h3>Several samples per fastq - tags - primers</h3>
-<p>Read pairs should be quality filtered, merged and written to fasta format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous sections</a>. The only difference is that you should fill the tag_fw, primer_fw, tag_rv and primer_rv columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
+<p>Read pairs should be quality filtered, merged and written to fasta format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous sections</a>. The only difference is that you should fill the <code>tag_fw</code>, <code>primer_fw</code>, <code>tag_rv</code> and <code>primer_rv</code> columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
 <p>Then the <code>SortReads</code> function will demultiplex the fasta files according to the tag combinations and trim the primers from the reads. See the help of the <code>SortReads</code> function for setting the correct parameters for demultiplexing and primer trimming: <code>?SortReads</code></p>
 <ul>
 <li><a href="#input-and-output-files">fastainfo_df</a> is the output of <code>Merge</code></li>
@@ -626,6 +625,17 @@ read_count_df_lnf_sample_replicate &lt;- LFN_sample_replicate(read_count_df, cut
 
 stat_df &lt;- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFN_sample_replicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
 </div>
+<div id="filterminreplicatenumber_1" class="section level3">
+<h3>FilterMinReplicateNumber_1</h3>
+<p>To ensure repeatability, we can accept occurrences if they are present in at least <code>min_replicate_number</code> replicates of the sample (2 by default).</p>
+<pre class="r"><code>## LFN_variant
+# Set parameter values
+min_replicate_number &lt;- 2
+outfile &lt;- paste(outdir, &quot;10_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
+# Run filter and get stats
+read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
+</div>
 <div id="lfn_variant-and-lfn_read_count" class="section level3">
 <h3>LFN_variant and LFN_read_count</h3>
 <p>The <code>LFN_variant</code> filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. This is an important filter, to filter out occurrences present in the data set due to tag-jump.</p>
@@ -646,11 +656,11 @@ known_occurrences_df &lt;- results[[1]]
 missing_occurrences_df &lt;- results[[2]]
 performance_metrics_df &lt;- results[[3]]</code></pre>
 <p><strong>OptimizeLFNReadCountAndLFNvariant</strong></p>
-<p>The the <code>LFN_read_count</code> and <code>LFN_variant</code> is run for a series of cutoff value combinations of the two filters. For each of them the number of FN, TP, and FP is reported. Chose the parameter setting that minimizes, FN and FP.</p>
-<p>Here we will use the default range of cutoffs to test, but you can set the minimum, the maximum and the increment for the cutoff values for both filters. (see <code>?OptimizeLFNReadCountAndLFNvariant</code>)</p>
+<p>The the <code>LFN_read_count</code> and <code>LFN_variant</code> is run for a series of cutoff value combinations of the two filters, followed by FilterMinReplicateNumber. For each parameter combination the number of FN, TP, and FP is reported. Chose the parameter setting that minimizes, FN and FP.</p>
+<p>Here we will use the default range of cutoffs to test, but you can set the minimum, the maximum and the increment for the cutoff values for both filters. (see <code>?OptimizeLFNReadCountAndLFNvariant</code>). We set <code>min_replicate_number</code> to 2 (1 by default), to eliminate non-repeatable occurrences among replicates of the sample.</p>
 <pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNReadCountAndLFNvariant.csv&quot;, sep=&quot;&quot;)
 
-OptimizeLFNReadCountAndLFNvariant_df &lt;- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, vsearch_path=vsearch_path, max_mismatch=max_mismatch)</code></pre>
+OptimizeLFNReadCountAndLFNvariant_df &lt;- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, min_replicate_number=2)</code></pre>
 <p><strong>LFN_variant, LFN_read_count</strong></p>
 <p>From the output, it we choose 0.001 for the cutoff of <code>LFN_variant</code> and 85 for <code>LFN_read_count</code>.</p>
 <p>We will run the two filters on the same input data frame (for which the parameters has been optimized), and pool the results by accepting only occurrences that pass both filters.</p>
@@ -658,7 +668,7 @@ OptimizeLFNReadCountAndLFNvariant_df &lt;- OptimizeLFNReadCountAndLFNvariant(rea
 <pre class="r"><code>## LFN_variant
 # Set parameter values
 lnf_variant_cutoff = 0.001
-outfile &lt;- paste(outdir, &quot;10_LFN_variant.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;11_LFN_variant.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
 read_count_df_lnf_variant &lt;- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
 stat_df &lt;- get_stat(read_count_df_lnf_variant, stat_df, stage=&quot;LFN_variant&quot;, params=lnf_variant_cutoff)
@@ -666,14 +676,14 @@ stat_df &lt;- get_stat(read_count_df_lnf_variant, stat_df, stage=&quot;LFN_varia
 ## LFN_read_count
 # Set parameter values
 lfn_read_count_cutoff &lt;- 85
-outfile &lt;- paste(outdir, &quot;11_LFN_read_count.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;12_LFN_read_count.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
 read_count_df_lfn_read_count &lt;- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
 stat_df &lt;- get_stat(read_count_df_lfn_read_count, stat_df, stage=&quot;LFN_read_count&quot;, params=lfn_read_count_cutoff)
 
 ## Combine results
 # Set parameter values
-outfile &lt;- paste(outdir, &quot;12_pool_LFN.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;13_pool_LFN.csv&quot;, sep=&quot;&quot;)
 # Combine results and get stats
 read_count_df &lt;- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
@@ -681,13 +691,13 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)</code></pre>
 </div>
-<div id="filterminreplicatenumber" class="section level3">
-<h3>FilterMinReplicateNumber</h3>
-<p>To ensure repeatability, we can accept occurrences if they are present in at least <code>min_replicate_number</code> replicates of the sample (2 by default).</p>
+<div id="filterminreplicatenumber_2" class="section level3">
+<h3>FilterMinReplicateNumber_2</h3>
+<p>Let’s run again FilterMinReplicateNumber to ensure repeatability among replicates of the sample (2 by default).</p>
 <pre class="r"><code>## LFN_variant
 # Set parameter values
 min_replicate_number &lt;- 2
-outfile &lt;- paste(outdir, &quot;13_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;14_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
 read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
@@ -696,7 +706,7 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNum
 <h3>PoolReplicates</h3>
 <p>Let’s pool replicates of the same sample. <code>PoolReplicates</code> function will take the mean non-zero read counts of each ASV over replicates of the same sample.</p>
 <pre class="r"><code># Set parameter values
-outfile &lt;- paste(outdir, &quot;14_PoolReplicates.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;15_PoolReplicates.csv&quot;, sep=&quot;&quot;)
 read_count_samples_df &lt;- PoolReplicates(read_count_df, outfile=outfile)
 # Run function and get stats
 stat_df &lt;- get_stat(read_count_samples_df, stat_df, stage=&quot;PoolReplicates&quot;)</code></pre>
