@@ -395,7 +395,7 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @export
 #'
 
-test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/data/db_test/COInr_reduced", taxonomy="vtamR_test/data/db_test/taxonomy_reduced.tsv", num_threads=1){
+test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="/home/meglecz/vtamR/vtamR_test/test/db_test/COInr_reduced", taxonomy="/home/meglecz/vtamR/vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
   
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")

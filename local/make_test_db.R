@@ -7,16 +7,17 @@ library("tidyr") # gather for read_asv_table; pivot_wider in WriteAsVtable and s
 library("ggplot2") 
 
 # input
-blast_out <- "/home/meglecz/vtamR/local/blast.out"
+blast_out <- "/home/meglecz/vtamR/local/blast.out" # produced by taxassign
+sseqids <- "/home/meglecz/vtamR/local/ssegids.csv" # sbj ids of the BLAST
 taxonomy <- "~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam_taxonomy.tsv"
-new_taxonomy_file <- "/home/meglecz/vtamR/vtamR_test/data/db_test/taxonomy_reduced.tsv"
 COInr <- "/home/meglecz/mkCOInr/COInr/COInr_2023_05_03/COInr.tsv"
 blast_path <- "~/ncbi-blast-2.11.0+/bin/"
 
 # output
-out_db_name <- "/home/meglecz/vtamR/vtamR_test/data/db_test/COInr_reduced"
-taxids <-"/home/meglecz/vtamR/vtamR_test/data/db_test/COInr_reduced_taxids.tsv"
-new_db_fas <-"/home/meglecz/vtamR/vtamR_test/data/db_test/COInr_reduced.fas"
+new_taxonomy_file <- "/home/meglecz/vtamR/vtamR_test/db_test/taxonomy_reduced.tsv"
+out_db_name <- "/home/meglecz/vtamR/vtamR_test/db_test/COInr_reduced"
+taxids <-"/home/meglecz/vtamR/vtamR_test/db_test/COInr_reduced_taxids.tsv"
+new_db_fas <-"/home/meglecz/vtamR/vtamR_test/db_test/COInr_reduced.fas"
 
 
 #### Read taxonomy info 
@@ -44,9 +45,13 @@ lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
 # get all taxid in the blast res and all taxids in their lineages
 unique_taxids <- as.data.frame(unique(na.omit(unlist(lineages))))
 colnames(unique_taxids) <- c("tax_id")
+# add 1 wic is a root taxid, and it is not yet in unique_taxids
+unique_taxids[nrow(unique_taxids)+1,] <- 1
 
 new_tax_df <- left_join(unique_taxids, tax_df, by="tax_id")
 new_tax_df$old_tax_id <- ""
+new_tax_df <- new_tax_df %>%
+  select(tax_id, parent_tax_id, rank, name_txt, old_tax_id, taxlevel)
 write.table(new_tax_df, new_taxonomy_file, sep="\t", row.names = F)
 # save memory
 rm(df)
@@ -56,11 +61,13 @@ rm(blast_res)
 rm(old_taxid)
 rm(new_tax_df)
 
-### select sequneces of the taxa in unique_lowest_resolution_taxids
+### select sequences of the taxa in unique_lowest_resolution_taxids
+seqids_selected <- read.csv(sseqids, header=T) %>%
+  unique()
+
 seq_ref <- read.table(COInr, sep="\t", header=T)
 seq_ref <- seq_ref %>%
-  filter(taxID %in% unique_lowest_resolution_taxids)
-seq_ref$taxID <- as.numeric(seq_ref$taxID)
+  filter(seqID %in% seqids_selected$sseqid)
 
 # tsv with seq id taxid
 taxids_df <- seq_ref %>%
