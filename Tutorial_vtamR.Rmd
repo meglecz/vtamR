@@ -45,32 +45,18 @@ The heavy lifting of sequence analyses are done by the following third party pro
 * cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
 * swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
 
-vtamR has been tested using the above mentioned versions. It should work with later version, and it is also likely to work with older versions.
-
+vtamR has been tested using the above mentioned versions. It should work with later versions, and it is also likely to work with older ones.
 vtamR was tested in Windows and Linux, and should work in all operating systems.
-Access to R package xxxx => To be written once the package is ready
 
-The help id available for all vtamR function by `?function_name`
+The help is available for all vtamR function by `?function_name`
 In most cases, the input data can be either a data frame or a csv file and most function return a data frame and can also write them into a file if a file name is provided.
-
 
 ### Install third party programs on Linux
 
-All third-party programs can be easily installed to a conda environment, but it is not essential to use conda.
-Commands for a quick installation of the conda environment and dependencies:
-
-xxxx check conda install swarm and versions, check if it works with R ??? if not give web sites 
-
-```{bash install_prg}
-
-conda create --name vtamR python=3.9 -y
-conda activate mkcoinr
-
-python3 -m pip install cutadapt
-conda install -c bioconda blast -y
-conda install -c bioconda vsearch -y
-
-```
+* `vsearch` [https://github.com/torognes/vsearch](https://github.com/torognes/swarm)
+* `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
+* `cutadapt` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
+* `swarm` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
 
 ### Install third party programs on Windows
 
@@ -100,6 +86,8 @@ conda install -c bioconda vsearch -y
 
 ### Install R packages
 
+TODO: make en R package for vtamR and adapt the installation
+
 ```{r install_pck}
 install.packages("devtools")
 install.packages("roxygen2")
@@ -107,6 +95,7 @@ install.packages("seqinr")
 install.packages("dplyr")
 install.packages("tidyr")
 install.packages("ggplot2")
+#devtools::install_github("meglecz/vtamR", build_vignettes = TRUE)
 ```
 
 ### Test your installation
@@ -128,12 +117,11 @@ library("seqinr")
 library("dplyr")
 library("tidyr")
 library("ggplot2") 
+#library("vtamR")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
 ```
-
-TODO: Make shorter version of the ref db and include to the files. Till then test_TaxAssign need blast_db and taxonomy should be specified.
 
 **Run test functions on test data**
 ```{r test_vtamR}

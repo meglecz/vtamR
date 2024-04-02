@@ -273,22 +273,17 @@ div.tocify {
 <li>cutadapt(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479">Martin, 2011</a>) (v4.0)</li>
 <li>swarm (<a href="https://peerj.com/articles/1420/">Mahé et al., 2015</a>) (v2.1.12)</li>
 </ul>
-<p>vtamR has been tested using the above mentioned versions. It should work with later version, and it is also likely to work with older versions.</p>
-<p>vtamR was tested in Windows and Linux, and should work in all operating systems. Access to R package xxxx =&gt; To be written once the package is ready</p>
-<p>The help id available for all vtamR function by <code>?function_name</code> In most cases, the input data can be either a data frame or a csv file and most function return a data frame and can also write them into a file if a file name is provided.</p>
+<p>vtamR has been tested using the above mentioned versions. It should work with later versions, and it is also likely to work with older ones. vtamR was tested in Windows and Linux, and should work in all operating systems.</p>
+<p>The help is available for all vtamR function by <code>?function_name</code> In most cases, the input data can be either a data frame or a csv file and most function return a data frame and can also write them into a file if a file name is provided.</p>
 </div>
 <div id="install-third-party-programs-on-linux" class="section level3">
 <h3>Install third party programs on Linux</h3>
-<p>All third-party programs can be easily installed to a conda environment, but it is not essential to use conda. Commands for a quick installation of the conda environment and dependencies:</p>
-<p>xxxx check conda install swarm and versions, check if it works with R ??? if not give web sites</p>
-<pre class="bash"><code>
-conda create --name vtamR python=3.9 -y
-conda activate mkcoinr
-
-python3 -m pip install cutadapt
-conda install -c bioconda blast -y
-conda install -c bioconda vsearch -y
-</code></pre>
+<ul>
+<li><code>vsearch</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/vsearch</a></li>
+<li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
+<li><code>cutadapt</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
+<li><code>swarm</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
+</ul>
 </div>
 <div id="install-third-party-programs-on-windows" class="section level3">
 <h3>Install third party programs on Windows</h3>
@@ -318,12 +313,14 @@ conda install -c bioconda vsearch -y
 </div>
 <div id="install-r-packages" class="section level3">
 <h3>Install R packages</h3>
+<p>TODO: make en R package for vtamR and adapt the installation</p>
 <pre class="r"><code>install.packages(&quot;devtools&quot;)
 install.packages(&quot;roxygen2&quot;)
 install.packages(&quot;seqinr&quot;)
 install.packages(&quot;dplyr&quot;)
 install.packages(&quot;tidyr&quot;)
-install.packages(&quot;ggplot2&quot;)</code></pre>
+install.packages(&quot;ggplot2&quot;)
+#devtools::install_github(&quot;meglecz/vtamR&quot;, build_vignettes = TRUE)</code></pre>
 </div>
 <div id="test-your-installation" class="section level3">
 <h3>Test your installation</h3>
@@ -340,16 +337,16 @@ library(&quot;seqinr&quot;)
 library(&quot;dplyr&quot;)
 library(&quot;tidyr&quot;)
 library(&quot;ggplot2&quot;) 
+#library(&quot;vtamR&quot;)
 load_all(&quot;.&quot;)
 roxygenise()
 usethis::use_roxygen_md()</code></pre>
-<p>TODO: Make shorter version of the ref db and include to the files. Till then test_taxassign need blast_db and taxonomy should be specified.</p>
 <p><strong>Run test functions on test data</strong></p>
-<pre class="r"><code>test_merge_and_sortreads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_filters(vsearch_path=vsearch_path)
-test_make_known_occurrences()
-test_optimize(vsearch_path=vsearch_path)
-test_taxassign(blast_path=blast_path, blast_db=blast_db, taxonomy=taxonomy, num_threads=num_threads)</code></pre>
+<pre class="r"><code>test_Merge_and_SortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
+test_MakeKnownOccurrences()
+test_Optimize(vsearch_path=vsearch_path)
+test_TaxAssign(blast_path=blast_path, num_threads=num_threads)</code></pre>
 </div>
 </div>
 <div id="getting-started" class="section level2">
@@ -363,10 +360,8 @@ library(&quot;tidyr&quot;)
 library(&quot;ggplot2&quot;) </code></pre>
 <p>Load local packages</p>
 <pre class="r"><code>load_all(&quot;.&quot;)
-roxygenise()</code></pre>
-<pre><code>## Warning: Installed roxygen2 is older than the version used with this package
-## ℹ You have &quot;7.2.3&quot; but you need &quot;7.3.1&quot;</code></pre>
-<pre class="r"><code>usethis::use_roxygen_md()</code></pre>
+roxygenise()
+usethis::use_roxygen_md()</code></pre>
 <p><strong>Set general parameters Windows</strong></p>
 <pre class="r"><code>cutadapt_path=&quot;C:/Users/Public/&quot;
 vsearch_path = &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
@@ -589,7 +584,7 @@ tmp_asv_table &lt;- WriteASVtable(tmp_read_count_samples_df, sortedinfo=sortedin
   select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, phylum, class, order, family, genus, species, asv) %&gt;%
   filter(tpos1 &gt; 0) %&gt;%
   arrange(desc(tpos1))</code></pre>
-<p>Yous can now pick the correct sequences of the epected ASVs in each mock and make the <a href="#input-and-output-files">mock_composition</a> file</p>
+<p>Yous can now pick the correct sequences of the expected ASVs in each mock and make the <a href="#input-and-output-files">mock_composition</a> file</p>
 </div>
 <div id="filterpcrerror" class="section level3">
 <h3>FilterPCRerror</h3>
@@ -641,15 +636,15 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNum
 <p>The <code>LFN_variant</code> filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. This is an important filter, to filter out occurrences present in the data set due to tag-jump.</p>
 <p>The <code>LFN_read_count</code> filter simply eliminates occurrences with less then <code>lfn_read_count_cutoff</code> reads (10 by default).</p>
 <p>To find the best cutoff values for these filters, we will count the number of <a href="#glossary">false positive</a>, <a href="#glossary">false negative</a> and <a href="#glossary">true positive</a> occurrences using a series of combination of the cutoff values of these two filters.</p>
-<p><strong>make_known_occurrences</strong></p>
-<p>The make_known_occurrences function will identify <a href="#glossary">false positive</a>, <a href="#glossary">false negative</a> and <a href="#glossary">true positive</a> occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets.</p>
-<p>The false positive and the true positive occurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurrences. For details see <code>?make_known_occurrences</code>.</p>
+<p><strong>MakeKnownOccurrences</strong></p>
+<p>The MakeKnownOccurrences function will identify <a href="#glossary">false positive</a>, <a href="#glossary">false negative</a> and <a href="#glossary">true positive</a> occurrences in controls samples (mock and negative). Some false positives can also be identified in real samples if samples of different habitats are included in the data sets.</p>
+<p>The false positive and the true positive occurrences are written to the known_occurrences data frame (or file), false negatives to the missing_occurrences data frame (or file), and a performance_metrics data frame is also produced with the count of these occurrences. For details see <code>?MakeKnownOccurrences</code>.</p>
 <p>This function takes a read_count_samples data frame as an input, where the replicates of the same sample have been pooled (see <code>?PoolReplicates</code>)</p>
 <pre class="r"><code># Pool replicates
 read_count_samples_df &lt;- PoolReplicates(read_count_df)
 
 # Detect known occurrences
-results &lt;- make_known_occurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
+results &lt;- MakeKnownOccurrences(read_count_samples = read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df &lt;- results[[1]]
@@ -713,14 +708,14 @@ stat_df &lt;- get_stat(read_count_samples_df, stat_df, stage=&quot;PoolReplicate
 </div>
 <div id="get-performance-metrics" class="section level3">
 <h3>Get performance metrics</h3>
-<p>Run make_known_occurrences again to get performance metrics (FP, FN, FP). This time we will write the output data frames to files as well. The <code>performance_metrics</code> file will give you the count of FP, FN, TP, accuracy and sensitivity, you can found false negatives in <code>missing_occurrences</code>, and true and false positives in <code>known_occurrences</code>.</p>
+<p>Run MakeKnownOccurrences again to get performance metrics (FP, FN, FP). This time we will write the output data frames to files as well. The <code>performance_metrics</code> file will give you the count of FP, FN, TP, accuracy and sensitivity, you can found false negatives in <code>missing_occurrences</code>, and true and false positives in <code>known_occurrences</code>.</p>
 <pre class="r"><code># Set parameter values
 missing_occurrences &lt;- paste(outdir, &quot;missing_occurrences.csv&quot;, sep= &quot;&quot;)
 performance_metrics &lt;- paste(outdir, &quot;performance_metrics.csv&quot;, sep= &quot;&quot;)
 known_occurrences &lt;- paste(outdir, &quot;known_occurrences.csv&quot;, sep= &quot;&quot;)
 sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
 # Run function
-results &lt;- make_known_occurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
+results &lt;- MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, performance_metrics=performance_metrics)
 # give explicit names to the 3 output data frames
 known_occurrences_df &lt;- results[[1]]
 missing_occurrences_df &lt;- results[[2]]
@@ -729,6 +724,7 @@ performance_metrics_df &lt;- results[[3]]</code></pre>
 <div id="taxassign" class="section level3">
 <h3>TaxAssign</h3>
 <p>If you haven’t assigned ASV to taxa yet (before the optimization step), it is time to do it. If you have already done it, you can use the same output as previously and skip this step.</p>
+<p>For the format of <code>taxonomy</code> and <code>blast_db</code> check the <a href="#input-and-output-files">Input and output files</a> section taxonomy blast_db</p>
 <pre class="r"><code># Set parameter values
 outfile &lt;- paste(outdir, &quot;TaxAssign.csv&quot;, sep=&quot;&quot;)
 # Run function
@@ -761,14 +757,29 @@ asv_table_df &lt;- WriteASVtable(read_count_samples_df, outfile=outfile, asv_tax
 </div>
 <div id="input-and-output-files" class="section level2">
 <h2>Input and output files</h2>
+<div id="reference-database-for-taxonomic-assignments" class="section level3">
+<h3>Reference database for taxonomic assignments</h3>
+<p>A data base is composed of two elements. A BLAST database (<code>blast_db</code>) and a <code>taxonomy</code> file.</p>
+<p><code>blast_db</code> can produced by a <code>makeblastdb</code> of BLAST:</p>
+<pre class="bash"><code>makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]</code></pre>
+<p>FASTA_FILE is a fasta fie containing reference sequences TAXID_FILE is a tab separated file with sequence IDs and the corresponding numerical taxIDs DB_NAME is the name of the newly created BLAST database.</p>
+<p><code>taxonomy</code> is a tab separated csv file with the following columns:</p>
 <ul>
-<li><p><code>taxonomy</code> CSV file file with the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id,taxlevel</p></li>
-<li><p><code>blast_db</code> BLAST database (see details xxxx)</p></li>
+<li>tax_id: tax_id: can be correct NCBI taxID, or arbitrary negative numbers for taxa not in NCBI</li>
+<li>parent_tax_id: taxiID of the closest parent of tax_id</li>
+<li>rank: taxonomic rank (e.g. species, genus, subgenus, no_rank)</li>
+<li>name_txt: Scientifc name of the taxon</li>
+<li>old_tax_id: taxIDs that have been merged to the tax_id by NCBI; if more than one for a given tax_id, make one line for each old_tax_id</li>
+<li>taxlevel: Integer associated to a major taxonomic rank. (0 =&gt; root, 1=&gt; superkingdom, 2=&gt; kingdom, 3=&gt; phylum, 4=&gt; class, 5=&gt; order, 6=&gt; family, 7=&gt; genus, 8=&gt; species). Levels in between have 0.5 added to the next highest level (e.g. 5.5 for infraorder and for superfamily).</li>
+</ul>
+<p>A ready to use COI database and the associated taxonomy file can be downloaded from <a href="https://osf.io/vrfwz/">https://osf.io/vrfwz/</a>. It was created usin <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>.</p>
+<ul>
 <li><p><code>fastqinfo</code> CSV file file with information on input files, primers, tags, samples tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)</p></li>
 <li><p><code>mock_composition</code> CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)</p></li>
 <li><p><code>asv_list</code> CSV file file with the following columns: asv_id,asv (see details xxxx)</p></li>
 <li><p>read_count_df</p></li>
 </ul>
+</div>
 </div>
 <div id="glossary" class="section level2">
 <h2>Glossary</h2>
@@ -781,6 +792,7 @@ asv_table_df &lt;- WriteASVtable(read_count_samples_df, outfile=outfile, asv_tax
 <div id="troubleshooting" class="section level2">
 <h2>Troubleshooting</h2>
 <p>Explain min_read_count_prop for LFN_variant</p>
+<p>If pb of running swarm for the whole dataset try to run it sample by sample. If still problem, do global_read_count first, then swarm</p>
 </div>
 
 
