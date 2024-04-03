@@ -21,7 +21,8 @@ Merge(
   fastq_minovlen = 50,
   fastq_allowmergestagger = F,
   sep = ",",
-  compress = F
+  compress = F,
+  quiet = T
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ Merge(
 \item{sep}{separator in input and output csv files; default: ","}
 
 \item{compress}{\link{T/F}; Compress output file to gzip format; Default=F}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Merge forward are reverse fastq read pairs to fasta.

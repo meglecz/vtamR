@@ -12,7 +12,8 @@ Swarm(
   swarm_d = 1,
   fastidious = T,
   sep = ",",
-  by_sample = T
+  by_sample = T,
+  quiet = T
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ Swarm(
 \item{sep}{separator for the output file}
 
 \item{by_sample}{\link{T/F}, if TRUE, swarm run separately for each sample}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs

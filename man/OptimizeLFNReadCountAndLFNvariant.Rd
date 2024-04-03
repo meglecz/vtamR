@@ -17,7 +17,7 @@ OptimizeLFNReadCountAndLFNvariant(
   increment_lnf_variant_cutoff = 0.001,
   by_replicate = FALSE,
   min_replicate_number = 2,
-  verbose = T
+  quiet = T
 )
 }
 \arguments{
@@ -45,7 +45,7 @@ OptimizeLFNReadCountAndLFNvariant(
 
 \item{min_replicate_number}{for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 1)}
 
-\item{verbose}{\link{T/F}  if TRUE print out progress; T by default}
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Suggest optimal parameters for lfn_read_count_cutoff and lnf_variant_cutoff

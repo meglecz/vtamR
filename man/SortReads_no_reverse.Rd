@@ -15,7 +15,8 @@ SortReads_no_reverse(
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
   sep = ",",
-  compress = F
+  compress = F,
+  quiet = T
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ SortReads_no_reverse(
 \item{sep}{separator in input and output csv files; default: ","}
 
 \item{compress}{\link{T/F}; compress output to gzip files.}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 
 \item{fastainfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
 }

@@ -12,7 +12,8 @@ RandomSeq(
   n,
   randseed = 0,
   compress = F,
-  sep = ","
+  sep = ",",
+  quiet = T
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ RandomSeq(
 \item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
 
 \item{compress}{\link{T/F}; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 
 \item{separator}{used un csv files; "," by default}
 }

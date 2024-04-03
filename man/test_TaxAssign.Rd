@@ -8,8 +8,8 @@ test_TaxAssign(
   test_dir = "vtamR_test/",
   sep = ",",
   blast_path = blast_path,
-  blast_db = "/home/meglecz/vtamR/vtamR_test/test/db_test/COInr_reduced",
-  taxonomy = "/home/meglecz/vtamR/vtamR_test/test/db_test/taxonomy_reduced.tsv",
+  blast_db = "vtamR_test/test/db_test/COInr_reduced",
+  taxonomy = "vtamR_test/test/db_test/taxonomy_reduced.tsv",
   num_threads = 1
 )
 }

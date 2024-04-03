@@ -10,7 +10,8 @@ read_fastas_from_sortedinfo(
   outfile = "",
   sep = ",",
   asv_list = "",
-  updated_asv_list = ""
+  updated_asv_list = "",
+  quiet = T
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ read_fastas_from_sortedinfo(
 \item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
 
 \item{updated_asv_list}{name of the output file, containing the updated ASVs. Optional.}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Read all fasta file in sortedinfo_df data frame (sample	replicate	file name).

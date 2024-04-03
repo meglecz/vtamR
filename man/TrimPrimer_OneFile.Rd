@@ -15,7 +15,8 @@ TrimPrimer_OneFile(
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
   cutadapt_minimum_length = 50,
-  cutadapt_maximum_length = 500
+  cutadapt_maximum_length = 500,
+  quiet = T
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ TrimPrimer_OneFile(
 \item{cutadapt_minimum_length}{minimum length of the trimmed sequence; default: 50}
 
 \item{cutadapt_maximum_length}{maximum length of the merged sequence; default: 500}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Trim primers from the input fasta file

@@ -13,7 +13,8 @@ TaxAssign(
   outfile = "",
   num_threads = 1,
   tax_sep = "\\t",
-  sep = ","
+  sep = ",",
+  quiet = T
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ TaxAssign(
 \item{tax_sep}{separator used in taxonomy file}
 
 \item{sep}{separator used in csv files}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 
 \item{df}{csv file or data frame containing and asv column}
 

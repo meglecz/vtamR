@@ -13,8 +13,13 @@ library("ggplot2")
 
 #library("Biostrings")
 
+# load local packages
+load_all(".")
+roxygenise() 
+usethis::use_roxygen_md()
 
-computer <- "Bombyx" # Bombyx/Endoume/Windows
+
+computer <- "Windows" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -97,10 +102,7 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
 )
 
 
-# load local packages
-load_all(".")
-roxygenise() 
-usethis::use_roxygen_md()
+
 
 
 ####
@@ -132,13 +134,14 @@ check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
 # Test major functions
 ###
 test_Merge_and_SortReads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_Filters(test_dir="vtamR_test/", vsearch_path=vsearch_path, sep=sep)
+test_Filters(test_dir="vtamR_test/", swarm_path=swarm_path, vsearch_path=vsearch_path, sep=sep)
 test_MakeKnownOccurrences(test_dir="vtamR_test/", sep=sep)
 test_Optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
 test_TaxAssign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, num_threads=num_threads)
 
 
 ####
+
 # define input filenames
 #fasta_dir <- "local/mfzr/sorted/"
 #sortedinfo <- "local/user_input/fileinfo_mfzr_eu.csv"
@@ -181,7 +184,7 @@ fastq_truncqual <- 10
 fastq_minovlen <- 50
 fastq_allowmergestagger <- F
 merged_dir <- paste(outdir, "merged/", sep="")
-compress = T
+compress = F
 # read fastqinfo
 fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
 
@@ -232,7 +235,7 @@ read_count_df <- read.csv(paste(outdir, "1_before_filter.csv", sep=""), sep=sep)
 
 swarm_d <- 1
 fastidious <- TRUE
-by_sample <- TRUE
+by_sample <- FALSE
 outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
 read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")

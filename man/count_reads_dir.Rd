@@ -9,7 +9,8 @@ count_reads_dir(
   pattern = ".fastq",
   file_type = "",
   outfile = "",
-  sep = ","
+  sep = ",",
+  quiet = T
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ count_reads_dir(
 \item{outfile}{name of the output file; optional, it is not given results are returned in a data frame, but no file is written}
 
 \item{sep}{separator used in csv files}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 For all files in input directory, where the file name contains pattern,

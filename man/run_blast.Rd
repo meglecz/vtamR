@@ -11,7 +11,8 @@ run_blast(
   outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
-  num_threads = 8
+  num_threads = 8,
+  quiet = T
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ run_blast(
 \item{perc_identity}{minimum percentage of identity}
 
 \item{num_threads}{number of threads}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Run BLAST

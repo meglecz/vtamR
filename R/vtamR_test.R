@@ -37,6 +37,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   sep <- ","
   compress <- F
   merged_dir <- paste(outdir, "merged/", sep="")
+  print("Runnig Merge")
   fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress)
   
   ### compare results to precomputed files by vtam
@@ -83,7 +84,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   cutadapt_minimum_length <- 50 # -m in cutadapt
   cutadapt_maximum_length <- 500 # -M in cutadapt
   compress <- F
-  
+  print("Runnig SortReads")
   sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
@@ -111,7 +112,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   for(i in 1:nrow(df)){
     vtamRf <- paste(sorted_dir, df$filename[i], sep="")
     vtamf <- paste(vtam_out, df$sortedfasta[i], sep="")
-    print(vtamRf)
+#    print(vtamRf)
     
     vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate=T)
     vtamRseq <- vtamRseq %>% arrange(asv)
@@ -395,7 +396,7 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @export
 #'
 
-test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="/home/meglecz/vtamR/vtamR_test/test/db_test/COInr_reduced", taxonomy="/home/meglecz/vtamR/vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
+test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
   
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")
@@ -571,7 +572,7 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
   }
   
   ### OptimizeLFNReadCountAndLFNvariant
-  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, verbose=F)
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, quiet=T)
   OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant_df %>%
     select(lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
     arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
