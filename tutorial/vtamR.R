@@ -13,13 +13,7 @@ library("ggplot2")
 
 #library("Biostrings")
 
-# load local packages
-load_all(".")
-roxygenise() 
-usethis::use_roxygen_md()
-
-
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -27,16 +21,16 @@ if(computer == "Bombyx"){
   blast_path="~/ncbi-blast-2.11.0+/bin/" # bombyx
   swarm_path <- ""
   db_path="~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/"
-  #     fastq_dir <- "vtamR_test/data/"
-  #     fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-  #    outdir <- "vtamR_test/out_zfzr/"
-  #     mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-  #      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
-      fastq_dir <- "/home/meglecz/vtamR_large_files/fastq/"
-      fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
-     outdir <- "/home/meglecz/vtamR_large_files/out/"
-     mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
-     asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
+      fastq_dir <- "vtamR_test/data/"
+      fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+      outdir <- "vtamR_test/out_zfzr/"
+      mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+  #      fastq_dir <- "/home/meglecz/vtamR_large_files/fastq/"
+      #      fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
+      #     outdir <- "/home/meglecz/vtamR_large_files/out/"
+     #     mock_composition <- "/home/meglecz/vtamR_large_files/user_input/mock_composition_mfzr.csv"
+     #     asv_list <- "/home/meglecz/vtamR_large_files/user_input/asv_list.csv"
 
   num_threads=8
   compress = T
@@ -78,7 +72,6 @@ if(computer == "Bombyx"){
 sep=","
 setwd(vtam_dir)
 
-
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
 
@@ -101,7 +94,10 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                             ltgres=c(8,8,8,8,7,7)
 )
 
-
+# load local packages
+load_all(".")
+roxygenise() 
+usethis::use_roxygen_md()
 
 
 

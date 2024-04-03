@@ -16,7 +16,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   backup_wd <- getwd()
   setwd(test_dir)
   
-  fastqinfo_df <- read.csv("data/fastqinfo_mfzr.csv", header=T, sep=sep)
+  fastqinfo_df <- read.csv("data/fastqinfo_test.csv", header=T, sep=sep)
   fastq_dir <- "data/"
   outdir <- "out/"
   outdir <- check_dir(outdir)
