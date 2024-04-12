@@ -33,10 +33,7 @@ knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 * The notion of marker and run has been dropped to simplify the analyses
 
 
-
-## Installation
-
-### Implementation
+## Implementation
 
 The heavy lifting of sequence analyses are done by the following third party programs. They should be installed on your computer:
 
@@ -50,6 +47,8 @@ vtamR was tested in Windows and Linux, and should work in all operating systems.
 
 The help is available for all vtamR function by `?function_name`
 In most cases, the input data can be either a data frame or a csv file and most function return a data frame and can also write them into a file if a file name is provided.
+
+## Installation
 
 ### Install third party programs on Linux
 
@@ -86,7 +85,7 @@ In most cases, the input data can be either a data frame or a csv file and most 
 
 ### Install R packages
 
-TODO: make en R package for vtamR and adapt the installation
+TODO: make an R package for vtamR and adapt the installation procedure
 
 ```{r install_pck}
 install.packages("devtools")
@@ -106,7 +105,7 @@ cutadapt_path <- "C:/Users/Public/"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
 blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
 swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
-num_threads=4
+num_threads <- 4
 ```
 
 **Load libraries**
@@ -132,6 +131,7 @@ test_Optimize(vsearch_path=vsearch_path)
 test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
 ```
 
+You should see "PASS" after the tested function names.
 
 ## Getting Started
 
@@ -159,9 +159,8 @@ cutadapt_path="C:/Users/Public/"
 vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
 blast_path="C:/Users/Public/blast-2.14.1+/bin/"
 swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
-num_threads=4
+num_threads <- 4
 sep=","
-compress = F
 ```
 
 **Set general parameters Bombyx**
@@ -170,16 +169,15 @@ cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
 vsearch_path = ""
 blast_path="~/ncbi-blast-2.11.0+/bin/"
 swarm_path <- ""
-num_threads=8
+num_threads <- 8
 sep=","
-compress = F
 ```
 
 
 * Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
 * `num_threads` is the number of CPUs for multithreaded programs
 * `sep` is the separator used in csv files
-* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. This saves space, but compressing/decompressing increases run time in some cases. I suggest to avoid compressing intermediate files and delete/compress them as soon as the analyses are finished. (See more in the [troubleshooting section](#troubleshooting)). The input fasta and fatsq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files and compression is automatically detected based on the file extension.
+
 
 **Taxassign reference data base**
 
@@ -221,7 +219,7 @@ asv_list <- "vtamR_test/data/asv_list.csv"
 
 **Check the format of input files**
 
-The `check_fileinfo` function tests if all obligatory columns are present, and do some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
+The `check_fileinfo` function tests if all obligatory columns are present, and makes some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
 
 ```{r}
 check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
@@ -239,7 +237,7 @@ According to your wetlab and sequencing protocol fastq files can contain one or 
 
 Read pairs should be quality filtered merged and written to fasta format.
 This can be done by the `Merge` function. 
-See the help of the `Merge` function for setting the correct parameters for quality filtering: `?Merge`
+See the help (`?Merge`) for setting the correct parameters for quality filtering.
 
 * [fastqinfo](#input-and-output-files) is either a csv file, or a data frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fastq_fw, fastq_rv. The tag_fw, primer_fw, tag_rv, primer_rv are irrelevant in this case, just fill them with NA.
 * `fastq_dir` is the directory containing the input fastq files
@@ -255,7 +253,7 @@ fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path,
 Read pairs should be quality filtered merged and written to fasta format as in the [previous section](#one-sample-per-fastq---no-tag---no-primer). The only difference is that you should fill the `primer_fw` and the `primer_rv` columns of the [fastqinfo](#input-and-output-files) file.
 
 Then the `TrimPrimer` function will trim the primers from the reads. 
-See the help of the `TrimPrimer` function for setting the correct parameters for primer trimming: `?TrimPrimer`
+See the help (`?TrimPrimer`) for setting the correct parameters for primer trimming.
 
 * [fastainfo_df](#input-and-output-files) is the output of `Merge`
 * `fasta_dir` is the directory containing he input fasta files
@@ -275,7 +273,7 @@ sortedinfo_df <- TrimPrimer(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_di
 
 Read pairs should be quality filtered, merged and written to fasta format as in the [previous sections](#one-sample-per-fastq---no-tag---no-primer). The only difference is that you should fill the `tag_fw`, `primer_fw`, `tag_rv` and `primer_rv` columns of the [fastqinfo](#input-and-output-files) file.
 
-Then the `SortReads` function will demultiplex the fasta files according to the tag combinations and trim the primers from the reads. See the help of the `SortReads` function for setting the correct parameters for demultiplexing and primer trimming: `?SortReads`
+Then the `SortReads` function will demultiplex the fasta files according to the tag combinations and trim the primers from the reads. See the help (`?SortReads`) for setting the correct parameters for demultiplexing and primer trimming:.
 
 * [fastainfo_df](#input-and-output-files) is the output of `Merge`
 * `fasta_dir` is the directory containing he input fasta files
@@ -294,14 +292,14 @@ sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir
 
 ## Dereplicate
 
-I suppose that you have [installed third party programs and set path to them](#installation) and followed the [Getting started section](#getting-started), and you have one fasta file per sample-replicate containing merged reads, tags and primers have been removed from the reads.
+I suppose that you have [installed third party programs and set path to them](#installation) and followed the [Getting started section](#getting-started), and you have one fasta file per sample-replicate containing merged reads. Tags and primers have been removed from the reads.
 
-The fasta files then should be dereplicated and a numerical ID (asv_id) assigned to each ASV. The output is a data frame ([read_count_df](#input-and-output-files)). This can also be written to a csv file if `outfile` is given. It is good idea to write this file, since it is the starting point of data filtering. You can experiment with different filtering strategies starting from this file, without the need of re-running the long steps of merging and filtering.
+The fasta files then should be dereplicated and a numerical ID (asv_id) assigned to each ASV. The output is a data frame ([read_count_df](#input-and-output-files)). This can also be written to a csv file if `outfile` is given. It is a good idea to write this file, since it is the starting point of data filtering. You can experiment with different filtering strategies starting from this file, without the need of re-running the long steps of merging and filtering.
 
 
 If you want to keep the IDs of ASVs from earlier analyses, you can give a file containing earlier ASVs and their IDs ([asv_list](#input-and-output-files)). The completed ASV list is written to `updated_asv_list` file.
 
-Giving only the file name to `updated_asv_list`, but not to `asv_list`, the function will write the complete list of ASVs. This can be useful when analyzing subsequent data sets.
+Giving only the file name to `updated_asv_list`, but not to `asv_list`, the function will write the complete list of ASVs. This can be useful later when analyzing subsequent data sets.
 
 
 ```{r}
@@ -314,15 +312,16 @@ read_count_df <- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outf
 
 ## Filter
 
-vtamR has a large number of functions to filter out ASVs or occurrences of ASVs in a given sample-replicate due to technical or biological problems associated with metabarcoding. The different filters can be applied to the original data set and then the results pooled together (accepting only occurrences that pass all filters) or can be applied sequentially in the order defined according to your needs or constraints (like computing capacity).
+vtamR has a large number of functions to filter out ASVs or occurrences of ASVs in a given sample-replicate, which are the results of technical or biological problems associated with metabarcoding. The different filters can be applied to the original data set and then the results pooled together (accepting only occurrences that pass all filters) or can be applied sequentially in the order defined according to your needs or constraints (like computing capacity).
 
 In this section I give an example using most filtering options. It is up to you to construct your own pipeline.
 
-Each function returns a data frame with the filtered output. You can also write the results to a csv file. This can be useful of tracking the presence/absence of some of the ASVs/samples throughout the analyses using different [helper functions](#helper-functions). I will start the names of the output files by a number to keep the order of the different steps and allow the `xxx` [helper function](#helper-functions) to make final statistics at each step of the analyses.
+Each function returns a data frame with the filtered output. You can also write the results to a csv file. This can be useful of tracking the presence/absence of some of the ASVs/samples throughout the analyses using different [helper functions](#helper-functions). I will start the names of the output files by a number to keep the order of the different steps and allow the `summarize_by` [helper function](#helper-functions) to make final statistics at each step of the analyses.
 
-We can also follow the evolution of the number of reads and ASVs remaining in the data set after each filtering steps. Let's define a data frame, that will contain this information, and we will complete after each step, and add line with information on the unfiltered data set.
+We can also follow the evolution of the number of reads and ASVs remaining in the data set after each filtering steps. Let's define a data frame (`stat_df`), that will contain this information, and we will complete after each step, and add line with information on the unfiltered data set.
 
 `params` is a string containing the major parameters of each filtering steps.
+
 `stage` is a string referring to the filtering step.
 
 ```{r}
@@ -727,7 +726,7 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
  barplot_read_count_by_sample
  histogram_read_count_by_variant
  barplot_renkonen_distance
- density_plot_renkonen_distance
+ 
 
 ## Input and output files
 
@@ -764,6 +763,8 @@ A ready to use COI database and the associated taxonomy file can be downloaded f
 * `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
 
 * read_count_df
+
+* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. This saves space, but compressing/decompressing increases run time in some cases. I suggest to avoid compressing intermediate files and delete/compress them as soon as the analyses are finished. (See more in the [troubleshooting section](#troubleshooting)). The input fasta and fastq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files and compression is automatically detected based on the file extension.
 
 ## Glossary
 

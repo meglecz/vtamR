@@ -145,7 +145,6 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
     if(!quiet){
       print(vsearch)
     }
-    print(vsearch)
     system(vsearch, show.output.on.console = FALSE)
     seq_n <- count_seq(outfile)
     tmp$read_count[i] <- seq_n
