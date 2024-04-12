@@ -129,10 +129,10 @@ check_fileinfo(file=asv_list, file_type="asv_list", sep=sep)
 ###
 # Test major functions
 ###
-test_Merge_and_SortReads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_Filters(test_dir="vtamR_test/", swarm_path=swarm_path, vsearch_path=vsearch_path, sep=sep)
-test_MakeKnownOccurrences(test_dir="vtamR_test/", sep=sep)
-test_Optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path)
+test_Merge_and_SortReads(test_dir="vtamR_test/", vsearch_path=vsearch_path, cutadapt_path=cutadapt_path, delete_tmp=T)
+test_Filters(test_dir="vtamR_test/", swarm_path=swarm_path, vsearch_path=vsearch_path, sep=sep, delete_tmp=T)
+test_MakeKnownOccurrences(test_dir="vtamR_test/", sep=sep, delete_tmp=T)
+test_Optimize(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T)
 test_TaxAssign(test_dir="vtamR_test/", sep=sep, blast_path=blast_path, num_threads=num_threads)
 
 
@@ -364,7 +364,7 @@ stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
 ### TaxAssign
 ###
 outfile <- paste(outdir, "TaxAssign.csv", sep="")
-asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
+asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params=ltg_params, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
 
 
 ###

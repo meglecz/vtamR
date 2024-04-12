@@ -4,12 +4,18 @@
 \alias{test_Optimize}
 \title{test_Optimize}
 \usage{
-test_Optimize(test_dir = "vtamR_test/", vsearch_path = vsearch_path)
+test_Optimize(
+  test_dir = "vtamR_test/",
+  vsearch_path = vsearch_path,
+  delete_tmp = T
+)
 }
 \arguments{
 \item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}
 
 \item{vsearch_path}{path to vsearch executable}
+
+\item{delete_tmp}{\link{T/F}  Delete output folder}
 }
 \description{
 Run OptimizePCRError, OptimizeLFNsampleReplicate and OptimizeLFNReadCountAndLFNvariant on a test file and compare the output to expected results

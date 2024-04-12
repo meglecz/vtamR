@@ -5,10 +5,11 @@
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executables
 #' @param cutadapt_path path to cutadapt executables
+#' @param delete_tmp [T/F]  Delete output folder
 #' @export
 #'
 
-test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path=""){
+test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -18,7 +19,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   
   fastqinfo_df <- read.csv("data/fastqinfo_test.csv", header=T, sep=sep)
   fastq_dir <- "data/"
-  outdir <- "out/"
+  outdir <-paste('out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir <- check_dir(outdir)
   
   ###
@@ -35,15 +36,15 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   fastq_minovlen <- 50 #
   fastq_allowmergestagger <- F #
   sep <- ","
-  compress <- F
+  compress <- T
   merged_dir <- paste(outdir, "merged/", sep="")
   print("Runnig Merge")
   fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress, quiet=T)
   
   ### compare results to precomputed files by vtam
   vtam_out <- "vtam/merged/"
-  vtamfiles <- list.files(path = vtam_out, pattern = "\\.fasta$")
-  vtamRfiles <- list.files(path = merged_dir, pattern = "\\.fasta$")
+  vtamfiles <- list.files(path = vtam_out, pattern = "\\.fasta.gz$")
+  vtamRfiles <- list.files(path = merged_dir, pattern = "\\.fasta.gz$")
   
   
   if(length(vtamfiles) == length(vtamRfiles)){# same number of files
@@ -53,8 +54,10 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
       vtamf <- paste(vtam_out, vtamf, sep="")
       if(file.exists(vtamRf)){ # corresponding file exists for vtamR
         
-        vtamRseq <- read.fasta(vtamRf, seqonly = T)
-        vtamseq <- read.fasta(vtamf, seqonly = T)
+        vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate = T)
+        vtamRseq <- vtamRseq %>% arrange(asv)
+        vtamseq <- read_fasta_seq(filename=vtamf, dereplicate = T)
+        vtamseq <- vtamseq %>% arrange(asv)
         
         if(!(identical(vtamRseq, vtamseq))){# the sequences differ between the two files
           
@@ -74,8 +77,6 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   
   ###
   # run Sortreads using the same parameters as vtam
-  fastainfo <- paste(merged_dir, "fastainfo.csv", sep="")
-  fastainfo_df <- read.csv(fastainfo, header=T, sep=sep)
   sorted_dir <- paste(outdir, "sorted/", sep="")
   check_reverse <- T
   tag_to_end <- F
@@ -83,7 +84,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   cutadapt_error_rate <- 0.1 # -e in cutadapt
   cutadapt_minimum_length <- 50 # -m in cutadapt
   cutadapt_maximum_length <- 500 # -M in cutadapt
-  compress <- F
+  compress <- T
   print("Runnig SortReads")
   sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
@@ -108,11 +109,10 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
     stop("Some output files are missing")
   }
   
-  # 
+
   for(i in 1:nrow(df)){
     vtamRf <- paste(sorted_dir, df$filename[i], sep="")
     vtamf <- paste(vtam_out, df$sortedfasta[i], sep="")
-#    print(vtamRf)
     
     vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate=T)
     vtamRseq <- vtamRseq %>% arrange(asv)
@@ -125,6 +125,10 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
     }
   }
   sortreads_pass <- T
+  
+  if(delete_tmp){
+    unlink(outdir, recursive=TRUE)
+  }
   
   if(merge_pass){
     print("PASS: The results of merge are identical for vtam and vtamR")
@@ -142,15 +146,17 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executables
 #' @param sep separator of the csv files
+#' @param delete_tmp [T/F] Delete output folder
 #' @export
 #'
 
-
-test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=","){
+test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T){
   
   test_dir <- check_dir(test_dir)
-  outdir <- paste(test_dir, "out", sep="")
+  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir <- check_dir(outdir)
+  
+#  outdir <- paste(test_dir, "out", sep="")
   test_input_file <- paste(test_dir, "test/test_file.csv", sep="")
   
   ### make input df
@@ -289,6 +295,10 @@ test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   PoolReplicates_exp_df <- PoolReplicates_exp_df %>% rename("asv_id"=seq_id)
   comp_PoolReplicates <- compare_df_sample(PoolReplicates_df, PoolReplicates_exp_df, step="PoolReplicates")
   
+  
+  if(delete_tmp){
+    unlink(outdir, recursive=TRUE)
+  }
   
 }
 
@@ -433,10 +443,11 @@ test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
 #'  
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param sep separator in csv files
+#' @param delete_tmp [T/F]  Delete output folder
 #' @export
 #'
 
-test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=","){
+test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T){
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
@@ -453,8 +464,10 @@ test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=","){
   ###
   
   # output dirs and filenames
-  outdir <- paste(test_dir, "out/", sep="")
+  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir <- check_dir(outdir)
+#  outdir <- paste(test_dir, "out/", sep="")
+
   known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
   missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
   # params
@@ -493,6 +506,10 @@ test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=","){
   #  cat("\nOutput known occurrences correspond to expected:")
   #  print(identical(output_known_occurrences_df, expected_known_occurrences_df))
   
+  if(delete_tmp){
+    unlink(outdir, recursive=TRUE)
+  }
+  
   if(missing & known){
     print("MakeKnownOccurrences: PASS")
   }else{
@@ -506,12 +523,14 @@ test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=","){
 #'  
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executable
+#' @param delete_tmp [T/F]  Delete output folder
 #' @export
 #'
-test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
+test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T){
   
   test_dir <- check_dir(test_dir)
-  outdir <- paste(test_dir, "out/", sep="")
+#  outdir <- paste(test_dir, "out/", sep="")
+  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir <- check_dir(outdir)
   # Attention, if optimize function is modified seriously, the expected output should be checked
   expected_OptimizePCRError <- paste(test_dir, "test/OptimizePCRError.csv", sep="")
@@ -580,6 +599,10 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path){
   # compare expected and observed results 
   diff_df <- full_join(OptimizeLFNReadCountAndLFNvariant_df, expected_OptimizeLFNReadCountAndLFNvariant_df, by = names(OptimizeLFNReadCountAndLFNvariant_df), suffix=c("_obs", "_exp")) %>%
     filter(rowSums(is.na(.))>0)
+  
+  if(delete_tmp){
+    unlink(outdir, recursive=TRUE)
+  }
   
   if(nrow(diff_df)==0){
     print("OptimizeLFNReadCountAndLFNvariant: PASS")

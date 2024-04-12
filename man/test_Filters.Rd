@@ -8,7 +8,8 @@ test_Filters(
   test_dir = "vtamR_test/",
   vsearch_path = "",
   swarm_path = "",
-  sep = ","
+  sep = ",",
+  delete_tmp = T
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ test_Filters(
 \item{vsearch_path}{path to vsearch executables}
 
 \item{sep}{separator of the csv files}
+
+\item{delete_tmp}{\link{T/F} Delete output folder}
 }
 \description{
 Run different filtering steps on a test input and compare results to expected (pre-computed) output

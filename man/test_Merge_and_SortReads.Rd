@@ -7,7 +7,8 @@
 test_Merge_and_SortReads(
   test_dir = "vtamR_test/",
   vsearch_path = "",
-  cutadapt_path = ""
+  cutadapt_path = "",
+  delete_tmp = T
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ test_Merge_and_SortReads(
 \item{vsearch_path}{path to vsearch executables}
 
 \item{cutadapt_path}{path to cutadapt executables}
+
+\item{delete_tmp}{\link{T/F}  Delete output folder}
 }
 \description{
 Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam

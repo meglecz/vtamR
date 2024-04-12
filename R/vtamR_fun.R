@@ -1029,7 +1029,7 @@ add_ids <- function(read_count_df, asv_list=asv_list, updated_asv_list="", sep="
 #' read_fasta_seq
 #' 
 #' Read sequences from a fasta file. Fasta can be gz compressed or uncompressed
-#' Returns a either a data frame with read read in a line, or a data frame with asv and read counts (if dereplicate==T) 
+#' Returns either a data frame with reads in a line, or a data frame with asv and read counts (if dereplicate==T) 
 #' 
 #' @param filename name of the input file including full path
 #' @param dereplicate [T/F] if T, return asvs with read counts
