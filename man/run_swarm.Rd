@@ -9,7 +9,8 @@ run_swarm(
   swarm_path = "",
   num_threads = 1,
   swarm_d = 1,
-  fastidious = T
+  fastidious = T,
+  quiet = T
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ run_swarm(
 \item{swarm_d}{positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.}
 
 \item{fastidious}{\link{T/F} when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)}
+
+\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
 Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs

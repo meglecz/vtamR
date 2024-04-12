@@ -75,7 +75,7 @@ setwd(vtam_dir)
 taxonomy=paste(db_path, "COInr_for_vtam_taxonomy.tsv", sep="")
 blast_db=paste(db_path, "COInr_for_vtam", sep="")
 
-
+ltg_params = "vtamR_test/data/ltg_params.csv"
 ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                             pcov=c(70,70,70,70,70,70),
                             phit=c(70,70,70,70,70,70),
@@ -232,8 +232,9 @@ read_count_df <- read.csv(paste(outdir, "1_before_filter.csv", sep=""), sep=sep)
 swarm_d <- 1
 fastidious <- TRUE
 by_sample <- FALSE
+quiet <- F
 outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
-read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample)
+read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, sep=sep, by_sample=by_sample, quiet=quiet)
 params <- paste(swarm_d, fastidious, by_sample, sep=";")
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm_by_sample", params=params)
 
@@ -363,11 +364,8 @@ stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
 ### TaxAssign
 ###
 outfile <- paste(outdir, "TaxAssign.csv", sep="")
-start_time <- Sys.time()  # Record the start time
-asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params_df=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
-end_time <- Sys.time()  # Record the end time
-runtime <- end_time - start_time  # Calculate the run time
-print(runtime)
+asv_tax <- TaxAssign(asv=read_count_samples_df, ltg_params=ltg_params_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, outfile=outfile, num_threads=num_threads)
+
 
 ###
 ### print output files

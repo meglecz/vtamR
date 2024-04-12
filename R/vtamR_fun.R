@@ -1115,12 +1115,12 @@ Swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=
       df_sample <- read_count_df %>%
         filter(sample==s)
       # run swarm
-      df_sample <- run_swarm(df_sample, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+      df_sample <- run_swarm(df_sample, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, quiet=quiet)
       # add output of the sample to the total data frame
       out_df <- rbind(out_df, df_sample)
     }
   }else{ # run swarm for all samples together
-    out_df <- run_swarm(read_count_df, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious)
+    out_df <- run_swarm(read_count_df, swarm_path=swarm_path, num_threads=num_threads, swarm_d=swarm_d, fastidious=fastidious, quiet=quiet)
   }
   
   if(outfile != ""){
@@ -1140,10 +1140,11 @@ Swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=
 #' @param num_threads Number of CPUs
 #' @param swarm_d positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.
 #' @param fastidious [T/F] when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)
+#' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #' 
 
-run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fastidious=T){
+run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fastidious=T, quiet=T){
   
   tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   tmp_dir <- check_dir(tmp_dir)
@@ -1169,8 +1170,11 @@ run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fa
     swarm <- paste(swarm, "-f", sep=" ")
   }
   swarm <- paste(swarm, input_swarm, sep=" ")
-#  print(swarm)
+  if(!quiet){
+    print(swarm)
+  }
   system(swarm, show.output.on.console = FALSE)
+
   
   ###
   # pool clusters in read_count_df
@@ -2218,7 +2222,8 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
     asv_df <- asv
   }
 
-  if (ltg_params == ""){   # default value for ltg_params_df
+  if (is.character(ltg_params)){ 
+    if(ltg_params == ""){ # default value for ltg_params_df
       ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                                   pcov=c(70,70,70,70,70,70),
                                   phit=c(70,70,70,70,70,70),
@@ -2227,9 +2232,10 @@ TaxAssign <- function(asv, ltg_params="", taxonomy="", blast_db="", blast_path="
                                   refres=c(8,8,8,7,6,6),
                                   ltgres=c(8,8,8,8,7,7)
                                   )
-  } else if(is.character(ltg_params)){
-    ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
-  } else{
+    }else{ # read params from file
+      ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
+    }
+  } else{ # ltg_params is df
     ltg_params_df <- ltg_params
   }
   
