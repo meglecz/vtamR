@@ -534,7 +534,7 @@ read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff
 stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
 ```
 
-### FilterMinReplicateNumber_1
+### FilterMinReplicateNumber 1
 
 To ensure repeatability, we can accept occurrences if they are present in at least `min_replicate_number` replicates of the sample (2 by default).
 
@@ -628,7 +628,7 @@ rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)
 ```
 
-### FilterMinReplicateNumber_2
+### FilterMinReplicateNumber 2
 
 Let's run again FilterMinReplicateNumber to ensure repeatability among replicates of the sample (2 by default).
 
@@ -641,6 +641,8 @@ outfile <- paste(outdir, "14_FilterMinReplicateNumber.csv", sep="")
 read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
 stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
 ```
+
+## Pool, Taxassign and document
 
 ### PoolReplicates
 
@@ -717,7 +719,24 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 
 ## Helper functions
 
- RandomSeq
+### RandomSeq
+
+Random select **n** sequences from each input fasta file. It can be used before of after demultiplexing (`SortReads`). However, if using `LFN_variant` and `LFN_read_count` which are partially based on the number of reads in negative controls, standardizing the number of reads among samples does not make sense. Thus I use `RandomSeq` after `Merge`, to get the same number of reads for each replicate series (same samples, different replicates in each fasta file).
+
+
+* [fastainfo](#fastainfo) is either a csv file, or a data frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fasta
+* `fasta_dir` is the directory containing the input fasta files
+* `n` the number of 
+
+
+```{r}
+randomseq_dir = paste(outdir, "random_seq/", sep="")
+fastainfo_df <- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)
+```
+
+
+
+
  history_by
  summarize_by
  pool_datasets
@@ -728,54 +747,131 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
  barplot_renkonen_distance
  
 
-## Input and output files
+## Input and output files/data frames
+
+### fastqinfo
+
+CSV file file with information on input files, primers, tags, samples with the following columns. Each line corresponds to a sample-replicate combination.
+
+ * tag_fw: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
+ * primer_fw: Forward primer (NA if primer has been trimmed)
+ * tag_rv: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
+ * primer_rv: Reverse primer (NA if primer has been trimmed)
+ * sample: Name of the sample (alpha-numerical). Must be unique.
+ * sample_type: [real/mock/negative](#glossary)
+ * habitat: If real or mock samples are from different habitats, that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use also NA for negative controls.
+ * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1 2 or 3)
+ * fasta: Fasta file
+
+
+### fastainfo
+
+### asv_list
+
+This file lists ASVs and their IDs from earlier data sets. When provided (optional), identical ASVs in the present and earlier data sets have the same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list. It is CSV file with the following columns:
+
+ * asv_id: Unique numerical ID of the [ASV](#glossary)
+ * asv: [ASV](#glossary) sequence
+ 
+
+### read_count_df
+
+Data frame with the following columns:
+
+ * asv: Sequence of the [ASV](#glossary)
+ * asv_id: Numerical ID of the ASV
+ * sample: Sample name
+ * replicate: Replicate within sample (Numerical)
+ * read_count: Number of read of the ASV in the Sample-Replicate
 
 ### Reference database for taxonomic assignments
 
 A data base is composed of two elements. A BLAST database (`blast_db`) and a `taxonomy` file.
 
-`blast_db` can produced by a `makeblastdb` of BLAST:
+`blast_db` can produced using the `makeblastdb` command of BLAST:
 
 ```{bash}
 makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]
 ```
 
-FASTA_FILE is a fasta fie containing reference sequences
-TAXID_FILE is a tab separated file with sequence IDs and the corresponding numerical taxIDs
-DB_NAME is the name of the newly created BLAST database.
+ * FASTA_FILE is a fasta file containing reference sequences
+ * TAXID_FILE is a tab separated file with sequence IDs and the corresponding numerical [taxIDs](#glossary)
+ * DB_NAME is the name of the newly created BLAST database.
 
 `taxonomy` is a tab separated csv file with the following columns:
 
-* tax_id: tax_id: can be correct NCBI taxID, or arbitrary negative numbers for taxa not in NCBI
-* parent_tax_id: taxiID of the closest parent of tax_id
-* rank: taxonomic rank (e.g. species, genus, subgenus, no_rank) 
-* name_txt: Scientifc name of the taxon 
-* old_tax_id: taxIDs that have been merged to the tax_id by NCBI; if more than one for a given tax_id, make one line for each old_tax_id
-* taxlevel: Integer associated to a major taxonomic rank. (0 => root, 1=> superkingdom, 2=> kingdom, 3=> phylum, 4=> class, 5=> order, 6=> family, 7=> genus, 8=> species). Levels in between have 0.5 added to the next highest level (e.g. 5.5 for infraorder and for superfamily).
+ * tax_id: Numerical Taxonomic ID. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), or arbitrary negative numbers for taxa not in NCBI
+ * parent_tax_id: taxID of the closest parent of tax_id
+ * rank: taxonomic rank (e.g. species, genus, subgenus, no_rank) 
+ * name_txt: Scientifc name of the taxon 
+ * old_tax_id: taxIDs that have been merged to the tax_id by NCBI; if there is more than one for a given tax_id, make one line for each old_tax_id
+ * taxlevel: Integer associated to each major taxonomic rank. (0 => root, 1=> superkingdom, 2=> kingdom, 3=> phylum, 4=> class, 5=> order, 6=> family, 7=> genus, 8=> species). Levels in between have 0.5 added to the next highest level (e.g. 5.5 for infraorder and for superfamily).
 
 
-A ready to use COI database and the associated taxonomy file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/). It was created usin [mkCOInr](https://github.com/meglecz/mkCOInr).
+**A ready to use COI database** in BLAST format and the associated taxonomy file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/). It was created using [mkCOInr](https://github.com/meglecz/mkCOInr). It is also possible to make a [customized database](https://mkcoinr.readthedocs.io/en/latest/content/tutorial.html#customize-database) using mkCOInr. 
 
 
 
-* `fastqinfo` CSV file file with information on input files, primers, tags, samples tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv (see details xxxx)
-* `mock_composition` CSV file file with the following columns: sample,action,asv,taxon,asv_id (see details xxxx)
-* `asv_list` CSV file file with the following columns: asv_id,asv (see details xxxx)
-
-* read_count_df
+## Options
 
 * `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` functions are compressed. This saves space, but compressing/decompressing increases run time in some cases. I suggest to avoid compressing intermediate files and delete/compress them as soon as the analyses are finished. (See more in the [troubleshooting section](#troubleshooting)). The input fasta and fastq files of these functions can be compressed (`.gz`, `.bz2`, but NOT .zip) or uncompressed files and compression is automatically detected based on the file extension.
 
+
+* `delete_tmp`: Delete automatically intermediate files. TRUE by default.
+
+* `sep`: Separator used in sv files. Use the same separate in all CSV files except for the [taxonomy](#reference-database-for-taxonomic-assignments) file of the reference database, which is tag separated.
+
+* `quiet`: If TRUE print as little information to the terminal as possible. TRUE by default.
+
+
+
 ## Glossary
 
-* False positive occurrence
-* False negative occurrence
-* True positive occurrence
+* **False positive occurrence**: Un expected presence an ASV in a Sample. It can be all occurreces in all negative contols, unexpected occurrences in mock samples, and presence of an ASV in an incompatible habitat (e.g. ASV with high read count in samples of habitat 1 and low read count in habitat 2).
+* **False negative occurrence**: An expected ASV in a mock sample, not found in the data.
+* **True positive occurrence**: An expected occurrence in a mock sample
+* **ASV**: Amplicon Sequence Variant. Unique sequnece, caracterized by the numbre of reads in each sample-replicate.
+* **taxIDs**: Numerical taxonomic identifier. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), or arbitrary negative numbers for taxa not in NCBI
 
 
 ## Troubleshooting
-Explain min_read_count_prop for LFN_variant
 
-If pb of running swarm for the whole dataset try to run it sample by sample. If still problem, do global_read_count first, then swarm
+### LFN_variant eliminate most occurrences of a frequent ASV
+
+`LFN_variant` will filter out all occurrences where
+
+(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff 
+
+As a consequence, if an ASV is present in most samples, there are many samples in the data set and the cutoff is relatively high, most occurrences can fall bellow the cutoff and the total read count of the ASV will decrease strongly at this step.
+
+If the proportion of the read count of a ASV in the output compared to the input is less than `min_read_count_prop`, vtamR prints out a Warning. Take a close look at the variant. It can be the result of a general contamination, and in this case, the whole ASV could/should be eliminated from the data set. Otherwise, you might want to reduce the cutoff value for `LFN_variant`.
+
+### Memory issues for running swarm on the whole dataset
+
+Possible workarounds:
+
+* Try to run Swarm sample by sample (`by_sample=T`). 
+* Run `global_read_count` first to eliminate singletons then swarm. 
+
+Both solutions make swarm a bit less efficient, but at least your analyses can get through.
+
+### Memory issues in Merge on Windows
+
+If input fastq files are very large and do not go through `Merge`, try working with uncompressed input files.
+
+
+### Files to keep
+
+At the first steps (Merge, RandomSeq, Sortreads), many files are produced, and some of them can be very large, especially before the dereplication (before `read_fastas_from_sortedinfo`).
+
+Compressing and decompressing between the different steps can take a while and can have memory issues in some cases (especially on Windows). Therefore, vtamR uses by default uncompressed files. This behavior can be changed by the [compress](#options) option.
+
+Here is a list of files I would tend to keep, delete or compress.
+
+* `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for information on read counts after `Merge`.
+* `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility in case of re-analyse.
+* `SortReads`: Delete the output fasta files, but keep `sortedinfo.csv` for information on read counts after `SortReads`. 
+* `read_fastas_from_sortedinfo`: Write the dereplicated info to a file (`1_before_filter.csv` in the tutorial) and compress it after the analyses. This is an important file, since you can restart the analyses from here, without re-doing the longest merging, and demultiplexing steps. Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), since this can be used when analyzing subsequent data sets to homogenize the asv_ids.
+* Output of different filtering steps: Compress them if they are too large. They are useful for tracing back the history of a sample or an ASV (see [history_by](#history_by)) or making summary files (see [summarize_by](#summarize_by)).
 
 

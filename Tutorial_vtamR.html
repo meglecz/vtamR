@@ -1517,10 +1517,8 @@ and variant count etc.)</li>
 analyses</li>
 </ul>
 </div>
-<div id="installation" class="section level2">
-<h2>Installation</h2>
-<div id="implementation" class="section level3">
-<h3>Implementation</h3>
+<div id="implementation" class="section level2">
+<h2>Implementation</h2>
 <p>The heavy lifting of sequence analyses are done by the following
 third party programs. They should be installed on your computer:</p>
 <ul>
@@ -1542,6 +1540,8 @@ systems.</p>
 a data frame or a csv file and most function return a data frame and can
 also write them into a file if a file name is provided.</p>
 </div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
 <div id="install-third-party-programs-on-linux" class="section level3">
 <h3>Install third party programs on Linux</h3>
 <ul>
@@ -1588,7 +1588,8 @@ directory</li>
 </div>
 <div id="install-r-packages" class="section level3">
 <h3>Install R packages</h3>
-<p>TODO: make en R package for vtamR and adapt the installation</p>
+<p>TODO: make an R package for vtamR and adapt the installation
+procedure</p>
 <pre class="r"><code>install.packages(&quot;devtools&quot;)
 install.packages(&quot;roxygen2&quot;)
 install.packages(&quot;seqinr&quot;)
@@ -1605,7 +1606,7 @@ CPUs</strong></p>
 vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path &lt;- &quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
 swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
-num_threads=4</code></pre>
+num_threads &lt;- 4</code></pre>
 <p><strong>Load libraries</strong></p>
 <pre class="r"><code>library(&quot;devtools&quot;)
 library(&quot;roxygen2&quot;)
@@ -1623,6 +1624,7 @@ test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
 test_MakeKnownOccurrences()
 test_Optimize(vsearch_path=vsearch_path)
 test_TaxAssign(blast_path=blast_path, num_threads=num_threads)</code></pre>
+<p>You should see “PASS” after the tested function names.</p>
 </div>
 </div>
 <div id="getting-started" class="section level2">
@@ -1643,17 +1645,15 @@ usethis::use_roxygen_md()</code></pre>
 vsearch_path = &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path=&quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
 swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
-num_threads=4
-sep=&quot;,&quot;
-compress = F</code></pre>
+num_threads &lt;- 4
+sep=&quot;,&quot;</code></pre>
 <p><strong>Set general parameters Bombyx</strong></p>
 <pre class="r"><code>cutadapt_path=&quot;/home/meglecz/miniconda3/envs/vtam_2/bin/&quot;
 vsearch_path = &quot;&quot;
 blast_path=&quot;~/ncbi-blast-2.11.0+/bin/&quot;
 swarm_path &lt;- &quot;&quot;
-num_threads=8
-sep=&quot;,&quot;
-compress = F</code></pre>
+num_threads &lt;- 8
+sep=&quot;,&quot;</code></pre>
 <ul>
 <li>Adapt the path to third party programs according to your
 installation. If the program is in your path, it can be empty
@@ -1661,15 +1661,6 @@ installation. If the program is in your path, it can be empty
 <li><code>num_threads</code> is the number of CPUs for multithreaded
 programs</li>
 <li><code>sep</code> is the separator used in csv files</li>
-<li><code>compress</code>: If TRUE, output files of the
-<code>Merge</code>, <code>RandomSeq</code> and <code>SortReads</code>
-functions are compressed. This saves space, but
-compressing/decompressing increases run time in some cases. I suggest to
-avoid compressing intermediate files and delete/compress them as soon as
-the analyses are finished. (See more in the <a href="#troubleshooting">troubleshooting section</a>). The input fasta
-and fatsq files of these functions can be compressed (<code>.gz</code>,
-<code>.bz2</code>, but NOT .zip) or uncompressed files and compression
-is automatically detected based on the file extension.</li>
 </ul>
 <p><strong>Taxassign reference data base</strong></p>
 <p>You can download a ready to use, comprehensive COI database from <a href="https://osf.io/vrfwz/">OSF</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
@@ -1707,7 +1698,7 @@ files section</a></li>
 </ul>
 <p><strong>Check the format of input files</strong></p>
 <p>The <code>check_fileinfo</code> function tests if all obligatory
-columns are present, and do some sanity checks. This can be helpful,
+columns are present, and makes some sanity checks. This can be helpful,
 since these files are produced by the users, and may contain errors
 difficult to spot by eye.</p>
 <pre class="r"><code>check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type=&quot;fastqinfo&quot;)
@@ -1727,8 +1718,8 @@ to the filtering steps.</p>
 <h3>One sample per fastq - no tag - no primer</h3>
 <p>Read pairs should be quality filtered merged and written to fasta
 format. This can be done by the <code>Merge</code> function. See the
-help of the <code>Merge</code> function for setting the correct
-parameters for quality filtering: <code>?Merge</code></p>
+help (<code>?Merge</code>) for setting the correct parameters for
+quality filtering.</p>
 <ul>
 <li><a href="#input-and-output-files">fastqinfo</a> is either a csv
 file, or a data frame, with the following columns: tag_fw, primer_fw,
@@ -1748,9 +1739,8 @@ format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous s
 The only difference is that you should fill the <code>primer_fw</code>
 and the <code>primer_rv</code> columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
 <p>Then the <code>TrimPrimer</code> function will trim the primers from
-the reads. See the help of the <code>TrimPrimer</code> function for
-setting the correct parameters for primer trimming:
-<code>?TrimPrimer</code></p>
+the reads. See the help (<code>?TrimPrimer</code>) for setting the
+correct parameters for primer trimming.</p>
 <ul>
 <li><a href="#input-and-output-files">fastainfo_df</a> is the output of
 <code>Merge</code></li>
@@ -1776,9 +1766,8 @@ The only difference is that you should fill the <code>tag_fw</code>,
 columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
 <p>Then the <code>SortReads</code> function will demultiplex the fasta
 files according to the tag combinations and trim the primers from the
-reads. See the help of the <code>SortReads</code> function for setting
-the correct parameters for demultiplexing and primer trimming:
-<code>?SortReads</code></p>
+reads. See the help (<code>?SortReads</code>) for setting the correct
+parameters for demultiplexing and primer trimming:.</p>
 <ul>
 <li><a href="#input-and-output-files">fastainfo_df</a> is the output of
 <code>Merge</code></li>
@@ -1800,21 +1789,21 @@ sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_
 <h2>Dereplicate</h2>
 <p>I suppose that you have <a href="#installation">installed third party
 programs and set path to them</a> and followed the <a href="#getting-started">Getting started section</a>, and you have one
-fasta file per sample-replicate containing merged reads, tags and
+fasta file per sample-replicate containing merged reads. Tags and
 primers have been removed from the reads.</p>
 <p>The fasta files then should be dereplicated and a numerical ID
 (asv_id) assigned to each ASV. The output is a data frame (<a href="#input-and-output-files">read_count_df</a>). This can also be
-written to a csv file if <code>outfile</code> is given. It is good idea
-to write this file, since it is the starting point of data filtering.
-You can experiment with different filtering strategies starting from
-this file, without the need of re-running the long steps of merging and
-filtering.</p>
+written to a csv file if <code>outfile</code> is given. It is a good
+idea to write this file, since it is the starting point of data
+filtering. You can experiment with different filtering strategies
+starting from this file, without the need of re-running the long steps
+of merging and filtering.</p>
 <p>If you want to keep the IDs of ASVs from earlier analyses, you can
 give a file containing earlier ASVs and their IDs (<a href="#input-and-output-files">asv_list</a>). The completed ASV list is
 written to <code>updated_asv_list</code> file.</p>
 <p>Giving only the file name to <code>updated_asv_list</code>, but not
 to <code>asv_list</code>, the function will write the complete list of
-ASVs. This can be useful when analyzing subsequent data sets.</p>
+ASVs. This can be useful later when analyzing subsequent data sets.</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;1_before_filter.csv&quot;, sep=&quot;&quot;)
 updated_asv_list &lt;- paste(outdir, &quot;ASV_list_with_IDs.csv&quot;, sep=&quot;&quot;)
 
@@ -1823,12 +1812,12 @@ read_count_df &lt;- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, o
 <div id="filter" class="section level2">
 <h2>Filter</h2>
 <p>vtamR has a large number of functions to filter out ASVs or
-occurrences of ASVs in a given sample-replicate due to technical or
-biological problems associated with metabarcoding. The different filters
-can be applied to the original data set and then the results pooled
-together (accepting only occurrences that pass all filters) or can be
-applied sequentially in the order defined according to your needs or
-constraints (like computing capacity).</p>
+occurrences of ASVs in a given sample-replicate, which are the results
+of technical or biological problems associated with metabarcoding. The
+different filters can be applied to the original data set and then the
+results pooled together (accepting only occurrences that pass all
+filters) or can be applied sequentially in the order defined according
+to your needs or constraints (like computing capacity).</p>
 <p>In this section I give an example using most filtering options. It is
 up to you to construct your own pipeline.</p>
 <p>Each function returns a data frame with the filtered output. You can
@@ -1836,16 +1825,16 @@ also write the results to a csv file. This can be useful of tracking the
 presence/absence of some of the ASVs/samples throughout the analyses
 using different <a href="#helper-functions">helper functions</a>. I will
 start the names of the output files by a number to keep the order of the
-different steps and allow the <code>xxx</code> <a href="#helper-functions">helper function</a> to make final statistics at
+different steps and allow the <code>summarize_by</code> <a href="#helper-functions">helper function</a> to make final statistics at
 each step of the analyses.</p>
 <p>We can also follow the evolution of the number of reads and ASVs
 remaining in the data set after each filtering steps. Let’s define a
-data frame, that will contain this information, and we will complete
-after each step, and add line with information on the unfiltered data
-set.</p>
+data frame (<code>stat_df</code>), that will contain this information,
+and we will complete after each step, and add line with information on
+the unfiltered data set.</p>
 <p><code>params</code> is a string containing the major parameters of
-each filtering steps. <code>stage</code> is a string referring to the
-filtering step.</p>
+each filtering steps.</p>
+<p><code>stage</code> is a string referring to the filtering step.</p>
 <pre class="r"><code>stat_df &lt;- data.frame(parameters=character(),
                       asv_count=integer(),
                       read_count=integer(),
@@ -2046,8 +2035,8 @@ read_count_df_lnf_sample_replicate &lt;- LFN_sample_replicate(read_count_df, cut
 
 stat_df &lt;- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFN_sample_replicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
 </div>
-<div id="filterminreplicatenumber_1" class="section level3">
-<h3>FilterMinReplicateNumber_1</h3>
+<div id="filterminreplicatenumber-1" class="section level3">
+<h3>FilterMinReplicateNumber 1</h3>
 <p>To ensure repeatability, we can accept occurrences if they are
 present in at least <code>min_replicate_number</code> replicates of the
 sample (2 by default).</p>
@@ -2143,8 +2132,8 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)</code></pre>
 </div>
-<div id="filterminreplicatenumber_2" class="section level3">
-<h3>FilterMinReplicateNumber_2</h3>
+<div id="filterminreplicatenumber-2" class="section level3">
+<h3>FilterMinReplicateNumber 2</h3>
 <p>Let’s run again FilterMinReplicateNumber to ensure repeatability
 among replicates of the sample (2 by default).</p>
 <pre class="r"><code>## LFN_variant
@@ -2155,6 +2144,9 @@ outfile &lt;- paste(outdir, &quot;14_FilterMinReplicateNumber.csv&quot;, sep=&qu
 read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
 </div>
+</div>
+<div id="pool-taxassign-and-document" class="section level2">
+<h2>Pool, Taxassign and document</h2>
 <div id="poolreplicates" class="section level3">
 <h3>PoolReplicates</h3>
 <p>Let’s pool replicates of the same sample. <code>PoolReplicates</code>
@@ -2232,64 +2224,197 @@ each step.</p>
 <p>barplot_read_count_by_sample histogram_read_count_by_variant
 barplot_renkonen_distance</p>
 </div>
-<div id="input-and-output-files" class="section level2">
-<h2>Input and output files</h2>
+<div id="input-and-output-filesdata-frames" class="section level2">
+<h2>Input and output files/data frames</h2>
+<div id="fastqinfo" class="section level3">
+<h3>fastqinfo</h3>
+<p>CSV file file with information on input files, primers, tags, samples
+with the following columns. Each line corresponds to a sample-replicate
+combination.</p>
+<ul>
+<li>tag_fw: Sequence tag on the 5’ of the fw read (NA if file is already
+demultiplexed)</li>
+<li>primer_fw: Forward primer (NA if primer has been trimmed)</li>
+<li>tag_rv: Sequence tag on the 5’ of the fw read (NA if file is already
+demultiplexed)</li>
+<li>primer_rv: Reverse primer (NA if primer has been trimmed)</li>
+<li>sample: Name of the sample (alpha-numerical). Must be unique.</li>
+<li>sample_type: <a href="#glossary">real/mock/negative</a></li>
+<li>habitat: If real or mock samples are from different habitats, that
+cannot contain the same type of organisms (e.g. terrestrial vs. marine),
+this information is used for detecting false positives. Use NA
+otherwise. Use also NA for negative controls.</li>
+<li>replicate: Numerical id of a replicate (e.g. Sample1 can have
+replicate 1 2 or 3)</li>
+<li>fastq_fw: Forward fastq file name (without path)</li>
+<li>fastq_rv: Reverse fastq file name (without path)</li>
+</ul>
+</div>
+<div id="asv_list" class="section level3">
+<h3>asv_list</h3>
+<p>This file lists ASVs and their IDs from earlier data sets. When
+provided (optional), identical ASVs in the present and earlier data sets
+have the same ID. New ASVs (not present in asv_list) will get unique IDs
+not present in asv_list. It is CSV file with the following columns:</p>
+<ul>
+<li>asv_id: Unique numerical ID of the <a href="#glossary">ASV</a></li>
+<li>asv: <a href="#glossary">ASV</a> sequence</li>
+</ul>
+</div>
+<div id="read_count_df" class="section level3">
+<h3>read_count_df</h3>
+<p>Data frame with the following columns:</p>
+<ul>
+<li>asv: Sequence of the <a href="#glossary">ASV</a></li>
+<li>asv_id: Numerical ID of the ASV</li>
+<li>sample: Sample name</li>
+<li>replicate: Replicate within sample (Numerical)</li>
+<li>read_count: Number of read of the ASV in the Sample-Replicate</li>
+</ul>
+</div>
 <div id="reference-database-for-taxonomic-assignments" class="section level3">
 <h3>Reference database for taxonomic assignments</h3>
 <p>A data base is composed of two elements. A BLAST database
 (<code>blast_db</code>) and a <code>taxonomy</code> file.</p>
-<p><code>blast_db</code> can produced by a <code>makeblastdb</code> of
-BLAST:</p>
+<p><code>blast_db</code> can produced using the <code>makeblastdb</code>
+command of BLAST:</p>
 <pre class="bash"><code>makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]</code></pre>
-<p>FASTA_FILE is a fasta fie containing reference sequences TAXID_FILE
-is a tab separated file with sequence IDs and the corresponding
-numerical taxIDs DB_NAME is the name of the newly created BLAST
-database.</p>
+<ul>
+<li>FASTA_FILE is a fasta file containing reference sequences</li>
+<li>TAXID_FILE is a tab separated file with sequence IDs and the
+corresponding numerical <a href="#glossary">taxIDs</a></li>
+<li>DB_NAME is the name of the newly created BLAST database.</li>
+</ul>
 <p><code>taxonomy</code> is a tab separated csv file with the following
 columns:</p>
 <ul>
-<li>tax_id: tax_id: can be correct NCBI taxID, or arbitrary negative
-numbers for taxa not in NCBI</li>
-<li>parent_tax_id: taxiID of the closest parent of tax_id</li>
+<li>tax_id: Numerical Taxonomic ID. It can be a valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI taxID</a>, or
+arbitrary negative numbers for taxa not in NCBI</li>
+<li>parent_tax_id: taxID of the closest parent of tax_id</li>
 <li>rank: taxonomic rank (e.g. species, genus, subgenus, no_rank)</li>
 <li>name_txt: Scientifc name of the taxon</li>
 <li>old_tax_id: taxIDs that have been merged to the tax_id by NCBI; if
-more than one for a given tax_id, make one line for each old_tax_id</li>
-<li>taxlevel: Integer associated to a major taxonomic rank. (0 =&gt;
+there is more than one for a given tax_id, make one line for each
+old_tax_id</li>
+<li>taxlevel: Integer associated to each major taxonomic rank. (0 =&gt;
 root, 1=&gt; superkingdom, 2=&gt; kingdom, 3=&gt; phylum, 4=&gt; class,
 5=&gt; order, 6=&gt; family, 7=&gt; genus, 8=&gt; species). Levels in
 between have 0.5 added to the next highest level (e.g. 5.5 for
 infraorder and for superfamily).</li>
 </ul>
-<p>A ready to use COI database and the associated taxonomy file can be
-downloaded from <a href="https://osf.io/vrfwz/">https://osf.io/vrfwz/</a>. It was created
-usin <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>.</p>
-<ul>
-<li><p><code>fastqinfo</code> CSV file file with information on input
-files, primers, tags, samples
-tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fastq_fw,fastq_rv
-(see details xxxx)</p></li>
-<li><p><code>mock_composition</code> CSV file file with the following
-columns: sample,action,asv,taxon,asv_id (see details xxxx)</p></li>
-<li><p><code>asv_list</code> CSV file file with the following columns:
-asv_id,asv (see details xxxx)</p></li>
-<li><p>read_count_df</p></li>
-</ul>
+<p><strong>A ready to use COI database</strong> in BLAST format and the
+associated taxonomy file can be downloaded from <a href="https://osf.io/vrfwz/">https://osf.io/vrfwz/</a>. It was created
+using <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>. It is
+also possible to make a <a href="https://mkcoinr.readthedocs.io/en/latest/content/tutorial.html#customize-database">customized
+database</a> using mkCOInr.</p>
 </div>
+</div>
+<div id="options" class="section level2">
+<h2>Options</h2>
+<ul>
+<li><p><code>compress</code>: If TRUE, output files of the
+<code>Merge</code>, <code>RandomSeq</code> and <code>SortReads</code>
+functions are compressed. This saves space, but
+compressing/decompressing increases run time in some cases. I suggest to
+avoid compressing intermediate files and delete/compress them as soon as
+the analyses are finished. (See more in the <a href="#troubleshooting">troubleshooting section</a>). The input fasta
+and fastq files of these functions can be compressed (<code>.gz</code>,
+<code>.bz2</code>, but NOT .zip) or uncompressed files and compression
+is automatically detected based on the file extension.</p></li>
+<li><p><code>delete_tmp</code>: Delete automatically intermediate files.
+TRUE by default.</p></li>
+<li><p><code>sep</code>: Separator used in sv files. Use the same
+separate in all CSV files except for the <a href="#reference-database-for-taxonomic-assignments">taxonomy</a> file
+of the reference database, which is tag separated.</p></li>
+<li><p><code>quiet</code>: If TRUE print as little information to the
+terminal as possible. TRUE by default.</p></li>
+</ul>
 </div>
 <div id="glossary" class="section level2">
 <h2>Glossary</h2>
 <ul>
-<li>False positive occurrence</li>
-<li>False negative occurrence</li>
-<li>True positive occurrence</li>
+<li><strong>False positive occurrence</strong>: Un expected presence an
+ASV in a Sample. It can be all occurreces in all negative contols,
+unexpected occurrences in mock samples, and presence of an ASV in an
+incompatible habitat (e.g. ASV with high read count in samples of
+habitat 1 and low read count in habitat 2).</li>
+<li><strong>False negative occurrence</strong>: An expected ASV in a
+mock sample, not found in the data.</li>
+<li><strong>True positive occurrence</strong>: An expected occurrence in
+a mock sample</li>
+<li><strong>ASV</strong>: Amplicon Sequence Variant. Unique sequnece,
+caracterized by the numbre of reads in each sample-replicate.</li>
+<li><strong>taxIDs</strong>: Numerical taxonomic identifier. It can be a
+valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI taxID</a>, or
+arbitrary negative numbers for taxa not in NCBI</li>
 </ul>
 </div>
 <div id="troubleshooting" class="section level2">
 <h2>Troubleshooting</h2>
-<p>Explain min_read_count_prop for LFN_variant</p>
-<p>If pb of running swarm for the whole dataset try to run it sample by
-sample. If still problem, do global_read_count first, then swarm</p>
+<div id="lfn_variant-eliminate-most-occurrences-of-a-frequent-asv" class="section level3">
+<h3>LFN_variant eliminate most occurrences of a frequent ASV</h3>
+<p><code>LFN_variant</code> will filter out all occurrences where</p>
+<p>(number of reads of the ASV in a sample-replicate) / (total number of
+read of the ASV) &lt; cutoff</p>
+<p>As a consequence, if an ASV is present in most samples, there are
+many samples in the data set and the cutoff is relatively high, most
+occurrences can fall bellow the cutoff and the total read count of the
+ASV will decrease strongly at this step.</p>
+<p>If the proportion of the read count of a ASV in the output compared
+to the input is less than <code>min_read_count_prop</code>, vtamR prints
+out a Warning. Take a close look at the variant. It can be the result of
+a general contamination, and in this case, the whole ASV could/should be
+eliminated from the data set. Otherwise, you might want to reduce the
+cutoff value for <code>LFN_variant</code>.</p>
+</div>
+<div id="memory-issues-for-running-swarm-on-the-whole-dataset" class="section level3">
+<h3>Memory issues for running swarm on the whole dataset</h3>
+<p>Possible workarounds:</p>
+<ul>
+<li>Try to run Swarm sample by sample (<code>by_sample=T</code>).</li>
+<li>Run <code>global_read_count</code> first to eliminate singletons
+then swarm.</li>
+</ul>
+<p>Both solutions make swarm a bit less efficient, but at least your
+analyses can get through.</p>
+</div>
+<div id="memory-issues-in-merge-on-windows" class="section level3">
+<h3>Memory issues in Merge on Windows</h3>
+<p>If input fastq files are very large and do not go through
+<code>Merge</code>, try working with uncompressed input files.</p>
+</div>
+<div id="files-to-keep" class="section level3">
+<h3>Files to keep</h3>
+<p>At the first steps (Merge, RandomSeq, Sortreads), many files are
+produced, and some of them can be very large, especially before the
+dereplication (before <code>read_fastas_from_sortedinfo</code>).</p>
+<p>Compressing and decompressing between the different steps can take a
+while and can have memory issues in some cases (especially on Windows).
+Therefore, vtamR uses by default uncompressed files. This behavior can
+be changed by the <a href="#options">compress</a> option.</p>
+<p>Here is a list of files I would tend to keep, delete or compress.</p>
+<ul>
+<li><code>Merge</code>: Delete the output fasta files, but keep
+<code>fastainfo.csv</code> for information on read counts after
+<code>Merge</code>.</li>
+<li><code>RandomSeq</code>: Compress fasta files, but keep them to
+ensure reproducibility in case of re-analyse.</li>
+<li><code>SortReads</code>: Delete the output fasta files, but keep
+<code>sortedinfo.csv</code> for information on read counts after
+<code>SortReads</code>.</li>
+<li><code>read_fastas_from_sortedinfo</code>: Write the dereplicated
+info to a file (<code>1_before_filter.csv</code> in the tutorial) and
+compress it after the analyses. This is an important file, since you can
+restart the analyses from here, without re-doing the longest merging,
+and demultiplexing steps. Compress and keep the updated ASV list
+(<code>ASV_list_with_IDs.csv</code> in the tutorial), since this can be
+used when analyzing subsequent data sets to homogenize the asv_ids.</li>
+<li>Output of different filtering steps: Compress them if they are too
+large. They are useful for tracing back the history of a sample or an
+ASV (see <a href="#history_by">history_by</a>) or making summary files
+(see <a href="#summarize_by">summarize_by</a>).</li>
+</ul>
+</div>
 </div>
 
 
