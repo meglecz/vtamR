@@ -1,4 +1,4 @@
-#' test_Merge_and_SortReads
+#' Test_MergeSortReads
 #' 
 #' Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam
 #'  
@@ -9,7 +9,7 @@
 #' @export
 #'
 
-test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T){
+Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -139,7 +139,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   setwd(backup_wd)
 }
 
-#' test_Filters
+#' Test_Filters
 #' 
 #' Run different filtering steps on a test input and compare results to expected (pre-computed) output
 #'  
@@ -150,7 +150,7 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
 #' @export
 #'
 
-test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T){
+Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T){
   
   test_dir <- check_dir(test_dir)
   outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
@@ -173,54 +173,54 @@ test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   comp_swarm <- compare_df(swarm_out_df, swarm_exp_df, step="Swarm")
   
   
-  #LFN_global_read_count
+  #LFNglobalReadCount
   global_read_count_cutoff = 50
-  global_read_count_cutoff_df <- LFN_global_read_count(input_df, global_read_count_cutoff, sep=sep)
+  global_read_count_cutoff_df <- LFNglobalReadCount(input_df, global_read_count_cutoff, sep=sep)
   global_read_count_cutoff_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_global_read_count50_out.csv", sep=""), sep=sep)
-  comp_LFN_global_read_count <- compare_df(global_read_count_cutoff_df, global_read_count_cutoff_exp_df, step="LFN_global_read_count")
+  comp_LFN_global_read_count <- compare_df(global_read_count_cutoff_df, global_read_count_cutoff_exp_df, step="LFNglobalReadCount")
   
   
   input_df_tmp <- input_df %>%
     select(-asv_id)
   ### LFN_filters
-  # LFN_read_count
+  # LFNreadCount
   lfn_read_count_cutoff <- 10
-  lfn_read_count_df <- LFN_read_count(input_df_tmp, cutoff=lfn_read_count_cutoff, sep=sep)
+  lfn_read_count_df <- LFNreadCount(input_df_tmp, cutoff=lfn_read_count_cutoff, sep=sep)
   lfn_read_count_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_min_read_count_out.csv", sep=""), sep=sep)
-  comp_LFN_read_count <- compare_df(lfn_read_count_df, lfn_read_count_exp_df, step="LFN_read_count")
+  comp_LFN_read_count <- compare_df(lfn_read_count_df, lfn_read_count_exp_df, step="LFNreadCount")
   
-  # LFN_sample_replicate (by column)
+  # LFNsampleReplicate (by column)
   lfn_sample_replicate_cutoff <- 0.001
-  lnf_sample_replicate_df <- LFN_sample_replicate(input_df_tmp, cutoff=lfn_sample_replicate_cutoff, sep=sep)
+  lnf_sample_replicate_df <- LFNsampleReplicate(input_df_tmp, cutoff=lfn_sample_replicate_cutoff, sep=sep)
   lnf_sample_replicate_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_sample_replicate_out.csv", sep=""), sep=sep)
-  comp_LFN_sample_replicate <- compare_df(lnf_sample_replicate_df, lnf_sample_replicate_exp_df, step="LFN_sample_replicate")
+  comp_LFN_sample_replicate <- compare_df(lnf_sample_replicate_df, lnf_sample_replicate_exp_df, step="LFNsampleReplicate")
   
-  # LFN_variant_replicate (by line)
+  # LFNvariant_replicate (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = TRUE
-  lnf_variant_replicate_df <- LFN_variant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
+  lnf_variant_replicate_df <- LFNvariant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
   lnf_variant_replicate_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant_replicate002_out.csv", sep=""), sep=sep)
-  comp_LFN_variant_replicate <- compare_df(lnf_variant_replicate_df, lnf_variant_replicate_exp_df, step="LFN_variant_replicate")
+  comp_LFN_variant_replicate <- compare_df(lnf_variant_replicate_df, lnf_variant_replicate_exp_df, step="LFNvariant_replicate")
   
-  # LFN_variant (by line)
+  # LFNvariant (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = FALSE
-  lnf_variant_df <- LFN_variant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
+  lnf_variant_df <- LFNvariant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
   lnf_variant_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant002_out.csv", sep=""), sep=sep)
-  comp_LFN_variant <- compare_df(lnf_variant_df, lnf_variant_exp_df, step="LFN_variant")
+  comp_LFN_variant <- compare_df(lnf_variant_df, lnf_variant_exp_df, step="LFNvariant")
   
   
   # pool the results of the different filterLFN to one data frame; keep only occurrences that passed all filters
-  lfn_pool_df <- pool_LFN(lfn_read_count_df, lnf_sample_replicate_df, lnf_variant_df, sep=sep)
+  lfn_pool_df <- PoolFilters(lfn_read_count_df, lnf_sample_replicate_df, lnf_variant_df, sep=sep)
   lnf_pool_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_pool_LFN_out.csv", sep=""), sep=sep)
-  comp_LFN_variant <- compare_df(lfn_pool_df, lnf_pool_exp_df, step="pool_LFN")
+  comp_LFN_variant <- compare_df(lfn_pool_df, lnf_pool_exp_df, step="PoolFilters")
   
   
   ### keep repeatable occurrences
   min_replicate_number <- 2
-  FilterMinReplicateNumber_df <- FilterMinReplicateNumber(input_df, min_replicate_number, sep=sep)
+  FilterMinReplicateNumber_df <- FilterMinReplicate(input_df, min_replicate_number, sep=sep)
   FilterMinReplicateNumber_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_repeat_out.csv", sep=""), sep=sep)
-  comp_FilterMinReplicateNumber <- compare_df(FilterMinReplicateNumber_df, FilterMinReplicateNumber_exp_df, step="FilterMinReplicateNumber")
+  comp_FilterMinReplicateNumber <- compare_df(FilterMinReplicateNumber_df, FilterMinReplicateNumber_exp_df, step="FilterMinReplicate")
   
   
   ### FilterPCRerror
@@ -393,7 +393,7 @@ compare_df_sample<- function(df1, df2, step=""){
   return(df1)
 }
 
-#' test_TaxAssign
+#' Test_TaxAssign
 #' 
 #' Run TaxAssign on a test file and compare the output to mkLTG results
 #'  
@@ -406,7 +406,7 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @export
 #'
 
-test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
+Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
   
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")
@@ -437,7 +437,7 @@ test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
   }
 }
 
-#' test_MakeKnownOccurrences
+#' Test_MakeKnownOccurrences
 #' 
 #' Run MakeKnownOccurrences on a test file and compare the output to expected results
 #'  
@@ -447,7 +447,7 @@ test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
 #' @export
 #'
 
-test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T){
+Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T){
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
@@ -517,16 +517,16 @@ test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tm
   }
 }
 
-#' test_Optimize
+#' Test_Optimize
 #' 
-#' Run OptimizePCRError, OptimizeLFNsampleReplicate and OptimizeLFNReadCountAndLFNvariant on a test file and compare the output to expected results
+#' Run OptimizePCRerror, OptimizeLFNsampleReplicate and OptimizeLFNreadCountLFNvariant on a test file and compare the output to expected results
 #'  
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executable
 #' @param delete_tmp [T/F]  Delete output folder
 #' @export
 #'
-test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T){
+Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T){
   
   test_dir <- check_dir(test_dir)
 #  outdir <- paste(test_dir, "out/", sep="")
@@ -563,7 +563,7 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, del
   ###
   
   ### PCRerror
-  OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, max_mismatch=1, min_read_count=10)
+  OptimizePCRError_df <- OptimizePCRerror(read_count_df, mock_composition=mock_composition, max_mismatch=1, min_read_count=10)
   OptimizePCRError_df <- OptimizePCRError_df %>%
     select(-expected_asv_id, -unexpected_asv_id) %>%
     arrange(expected_asv, unexpected_asv)
@@ -572,9 +572,9 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, del
     filter(rowSums(is.na(.))>0)
   
   if(nrow(diff_df)==0){
-    print("OptimizePCRError: PASS")
+    print("OptimizePCRerror: PASS")
   }else{
-    print("OptimizePCRError: FAIL")
+    print("OptimizePCRerror: FAIL")
     print(diff_df)
   }
   
@@ -590,8 +590,8 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, del
     print("OptimizeLFNsampleReplicate: FAIL")
   }
   
-  ### OptimizeLFNReadCountAndLFNvariant
-  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, quiet=T)
+  ### OptimizeLFNreadCountLFNvariant
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, quiet=T)
   OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant_df %>%
     select(lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
     arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
@@ -605,9 +605,9 @@ test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, del
   }
   
   if(nrow(diff_df)==0){
-    print("OptimizeLFNReadCountAndLFNvariant: PASS")
+    print("OptimizeLFNreadCountLFNvariant: PASS")
   }else{
-    print("OptimizeLFNReadCountAndLFNvariant: FAIL")
+    print("OptimizeLFNreadCountLFNvariant: FAIL")
     print(diff_df)
   }
 }

@@ -124,11 +124,11 @@ usethis::use_roxygen_md()
 
 **Run test functions on test data**
 ```{r test_vtamR}
-test_Merge_and_SortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
-test_MakeKnownOccurrences()
-test_Optimize(vsearch_path=vsearch_path)
-test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
+Test_MergeSortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+Test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
+Test_MakeKnownOccurrences()
+Test_Optimize(vsearch_path=vsearch_path)
+Test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
 ```
 
 You should see "PASS" after the tested function names.
@@ -219,12 +219,12 @@ asv_list <- "vtamR_test/data/asv_list.csv"
 
 **Check the format of input files**
 
-The `check_fileinfo` function tests if all obligatory columns are present, and makes some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
+The `CheckFileinfo` function tests if all obligatory columns are present, and makes some sanity checks. This can be helpful, since these files are produced by the users, and may contain errors difficult to spot by eye.
 
 ```{r}
-check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
-check_fileinfo(file=mock_composition, file_type="mock_composition")
-check_fileinfo(file=asv_list, file_type="asv_list")
+CheckFileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
+CheckFileinfo(file=mock_composition, file_type="mock_composition")
+CheckFileinfo(file=asv_list, file_type="asv_list")
 ```
 
 ## Merge - Demultiplex
@@ -306,7 +306,7 @@ Giving only the file name to `updated_asv_list`, but not to `asv_list`, the func
 outfile <- paste(outdir, "1_before_filter.csv", sep="")
 updated_asv_list <- paste(outdir, "ASV_list_with_IDs.csv", sep="")
 
-read_count_df <- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)
+read_count_df <- Dereplicate(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)
 ```
 
 
@@ -316,7 +316,7 @@ vtamR has a large number of functions to filter out ASVs or occurrences of ASVs 
 
 In this section I give an example using most filtering options. It is up to you to construct your own pipeline.
 
-Each function returns a data frame with the filtered output. You can also write the results to a csv file. This can be useful of tracking the presence/absence of some of the ASVs/samples throughout the analyses using different [helper functions](#helper-functions). I will start the names of the output files by a number to keep the order of the different steps and allow the `summarize_by` [helper function](#helper-functions) to make final statistics at each step of the analyses.
+Each function returns a data frame with the filtered output. You can also write the results to a csv file. This can be useful of tracking the presence/absence of some of the ASVs/samples throughout the analyses using different [helper functions](#helper-functions). I will start the names of the output files by a number to keep the order of the different steps and allow the `SummarizeBy` [helper function](#helper-functions) to make final statistics at each step of the analyses.
 
 We can also follow the evolution of the number of reads and ASVs remaining in the data set after each filtering steps. Let's define a data frame (`stat_df`), that will contain this information, and we will complete after each step, and add line with information on the unfiltered data set.
 
@@ -331,7 +331,7 @@ stat_df <- data.frame(parameters=character(),
                       sample_count=integer(),
                       sample_replicate_count=integer())
 
-stat_df <- get_stat(read_count_df, stat_df, stage="Input", params=NA)
+stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 ```
 
 ### Denoising by swarm
@@ -348,22 +348,22 @@ outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
 
 read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, by_sample=by_sample)
 
-stat_df <- get_stat(read_count_df, stat_df, stage="Swarm", params=by_sample)
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
 ```
 
-### LFN_global_read_count
+### LFNglobalReadCount
 
-Although, swarm has reduced considerably the number of ASVs, there are still many ASVs with low read count. The LFN_global_read_count function filter out all ASVs with total read count bellow a threshold.
+Although, swarm has reduced considerably the number of ASVs, there are still many ASVs with low read count. The LFNglobalReadCount function filter out all ASVs with total read count bellow a threshold.
 
 Let's eliminate singletons:
 
 ```{r}
 global_read_count_cutoff = 2
-outfile <- paste(outdir, "3_LFN_global_read_count.csv", sep="")
+outfile <- paste(outdir, "3_LFNglobalReadCount.csv", sep="")
 
-read_count_df <- LFN_global_read_count(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
+read_count_df <- LFNglobalReadCount(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
 
-stat_df <- get_stat(read_count_df, stat_df, stage="LFN_global_read_count", params=global_read_count_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=global_read_count_cutoff)
 ```
 
 ### FilerIndel
@@ -375,7 +375,7 @@ outfile <- paste(outdir, "4_FilterIndel.csv", sep="")
 
 read_count_df <- FilterIndel(read_count_df, outfile=outfile)
 
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterIndel")
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel")
 ```
 
 
@@ -392,7 +392,7 @@ genetic_code = 5
 
 read_count_df <- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code)
 
-stat_df <- get_stat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilerCodonStop", params=genetic_code)
 ```
 
 ### FilterChimera
@@ -412,7 +412,7 @@ outfile <- paste(outdir, "6_FilterChimera.csv", sep="")
 read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
 
 params <- paste(abskew, by_sample, sample_prop, sep=";")
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterChimera", params=params)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=params)
 ```
 
 ### FilterRenkonen
@@ -423,13 +423,13 @@ We will calculate the renkonen distance among all replicates within sample and p
 
 ```{r}
 # calculate renkonen distance among all replicates within sample 
-renkonen_within_df <- make_renkonen_distances(read_count_df, compare="within")
+renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare="within")
 # density plot
-renkonen_density_plot <- density_plot_renkonen_distance(renkonen_within_df)
+renkonen_density_plot <- DensityPlot_RenkonenDistance(renkonen_within_df)
 print(renkonen_density_plot)
 # barplot
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep="")
-renkonen_barplot <- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
+renkonen_barplot <- Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
 print(renkonen_barplot)
 ```
 
@@ -441,7 +441,7 @@ cutoff <- 0.4
 
 read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
 
-stat_df <- get_stat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff)
 ```
 
 ### Make mock_composition file
@@ -483,15 +483,15 @@ Yous can now pick the correct sequences of the expected ASVs in each mock and ma
 
 If you have done the denoising step by swarm, this function is probably redundant. Let's see, if there are still potential PCR errors in mock samples. 
 
-**OptimizePCRError**
+**OptimizePCRerror**
 
-`OptimizePCRError`, will find all highly similar ASV pairs (`max_mismatch=1` by default) within a mock sample, where one ASV is expected, and the other is not. Their read_count ratio is printed in the output file. 
+`OptimizePCRerror`, will find all highly similar ASV pairs (`max_mismatch=1` by default) within a mock sample, where one ASV is expected, and the other is not. Their read_count ratio is printed in the output file. 
 
-The function considers only ASVs with more then `min_read_count` reads in the sample to avoid count a ratio based on low read counts that are more influenced by stochastic events and will be probably filtered out anyway. See details using the help: `?OptimizePCRError`
+The function considers only ASVs with more then `min_read_count` reads in the sample to avoid count a ratio based on low read counts that are more influenced by stochastic events and will be probably filtered out anyway. See details using the help: `?OptimizePCRerror`
 
 ```{r}
-outfile <- paste(outdir, "OptimizePCRError.csv", sep="")
-OptimizePCRError_df <- OptimizePCRError(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)
+outfile <- paste(outdir, "OptimizePCRerror.csv", sep="")
+OptimizePCRerror_df <- OptimizePCRerror(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)
 ```
 
 **FilterPCRerror**
@@ -506,12 +506,12 @@ outfile <- paste(outdir, "8_FilterPCRerror.csv", sep="")
 read_count_df <- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
 
 params <- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=";")
-stat_df <- get_stat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilerPCRerror", params=params)
 ```
 
-### LFN_sample_replicate
+### LFNsampleReplicate
 
-`LFN_sample_replicate` will eliminate occurrences with very low read counts compared to the total number of reads in the sample-replicate. The default cutoff proportion is 0.001. 
+`LFNsampleReplicate` will eliminate occurrences with very low read counts compared to the total number of reads in the sample-replicate. The default cutoff proportion is 0.001. 
 We can have an idea of the maximum value of this cutoff, by examining the proportions of expected ASVs in the mock samples using the `OptimizeLFNsampleReplicate` function
 
 **OptimizeLFNsampleReplicate**
@@ -521,38 +521,38 @@ outfile = paste(outdir, "OptimizeLFNsampleReplicate.csv", sep="")
 OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count=read_count_df, mock_composition=mock_composition, outfile=outfile)
 ```
 
-**LFN_sample_replicate**
+**LFNsampleReplicate**
 
-We can see in the output, that the lowest proportion of an expected ASV is 0.005. Let's use this cutoff for the `LFN_sample_replicate` filter
+We can see in the output, that the lowest proportion of an expected ASV is 0.005. Let's use this cutoff for the `LFNsampleReplicate` filter
 
 ```{r}
 lfn_sample_replicate_cutoff <- 0.005
-outfile <- paste(outdir, "9_LFN_sample_replicate.csv", sep="")
+outfile <- paste(outdir, "9_LFNsampleReplicate.csv", sep="")
 
-read_count_df_lnf_sample_replicate <- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
+read_count_df_lnf_sample_replicate <- LFNsampleReplicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
 
-stat_df <- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage="LFN_sample_replicate", params=lfn_sample_replicate_cutoff)
+stat_df <- GetStat(read_count_df_lnf_sample_replicate, stat_df, stage="LFNsampleReplicate", params=lfn_sample_replicate_cutoff)
 ```
 
-### FilterMinReplicateNumber 1
+### FilterMinReplicate 1
 
 To ensure repeatability, we can accept occurrences if they are present in at least `min_replicate_number` replicates of the sample (2 by default).
 
 ```{r}
-## LFN_variant
+## LFNvariant
 # Set parameter values
 min_replicate_number <- 2
-outfile <- paste(outdir, "10_FilterMinReplicateNumber.csv", sep="")
+outfile <- paste(outdir, "10_FilterMinReplicate.csv", sep="")
 # Run filter and get stats
-read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
+read_count_df <- FilterMinReplicate(read_count_df, min_replicate_number, outfile=outfile)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=min_replicate_number)
 ```
 
-### LFN_variant and LFN_read_count
+### LFNvariant and LFNreadCount
 
-The `LFN_variant` filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. This is an important filter, to filter out occurrences present in the data set due to tag-jump.
+The `LFNvariant` filter will eliminate occurrences with very low read counts compared to the total number of reads of the ASV. The default cutoff proportion is 0.001. This is an important filter, to filter out occurrences present in the data set due to tag-jump.
 
-The `LFN_read_count` filter simply eliminates occurrences with less then `lfn_read_count_cutoff` reads (10 by default). 
+The `LFNreadCount` filter simply eliminates occurrences with less then `lfn_read_count_cutoff` reads (10 by default). 
 
 To find the best cutoff values for these filters, we will count the number of [false positive](#glossary), [false negative](#glossary) and [true positive](#glossary) occurrences using a series of combination of the cutoff values of these two filters.
 
@@ -579,67 +579,67 @@ performance_metrics_df <- results[[3]]
 ```
 
 
-**OptimizeLFNReadCountAndLFNvariant**
+**OptimizeLFNreadCountLFNvariant**
 
-The the `LFN_read_count` and `LFN_variant` is run for a series of cutoff value combinations of the two filters, followed by FilterMinReplicateNumber. For each parameter combination the number of FN, TP, and FP is reported. Chose the parameter setting that minimizes, FN and FP.
+The the `LFNreadCount` and `LFNvariant` is run for a series of cutoff value combinations of the two filters, followed by FilterMinReplicate. For each parameter combination the number of FN, TP, and FP is reported. Chose the parameter setting that minimizes, FN and FP.
 
-Here we will use the default range of cutoffs to test, but you can set the minimum, the maximum and the increment for the cutoff values for both filters. (see `?OptimizeLFNReadCountAndLFNvariant`). We set `min_replicate_number` to 2 (1 by default), to eliminate non-repeatable occurrences among replicates of the sample.
+Here we will use the default range of cutoffs to test, but you can set the minimum, the maximum and the increment for the cutoff values for both filters. (see `?OptimizeLFNreadCountLFNvariant`). We set `min_replicate_number` to 2 (1 by default), to eliminate non-repeatable occurrences among replicates of the sample.
 
 
 ```{r}
-outfile = paste(outdir, "OptimizeLFNReadCountAndLFNvariant.csv", sep="")
+outfile = paste(outdir, "OptimizeLFNreadCountLFNvariant.csv", sep="")
 
-OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, min_replicate_number=2)
+OptimizeLFNreadCountLFNvariant_df <- OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, min_replicate_number=2)
 ```
 
-**LFN_variant, LFN_read_count**
+**LFNvariant, LFNreadCount**
 
-From the output, it we choose 0.001 for the cutoff of `LFN_variant` and 85 for `LFN_read_count`.
+From the output, it we choose 0.001 for the cutoff of `LFNvariant` and 85 for `LFNreadCount`.
 
 We will run the two filters on the same input data frame (for which the parameters has been optimized), and pool the results by accepting only occurrences that pass both filters. 
 
-See `?LFN_variant` for details.
+See `?LFNvariant` for details.
 
 ```{r}
-## LFN_variant
+## LFNvariant
 # Set parameter values
 lnf_variant_cutoff = 0.001
-outfile <- paste(outdir, "11_LFN_variant.csv", sep="")
+outfile <- paste(outdir, "11_LFNvariant.csv", sep="")
 # Run filter and get stats
-read_count_df_lnf_variant <- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
-stat_df <- get_stat(read_count_df_lnf_variant, stat_df, stage="LFN_variant", params=lnf_variant_cutoff)
+read_count_df_lnf_variant <- LFNvariant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
+stat_df <- GetStat(read_count_df_lnf_variant, stat_df, stage="LFNvariant", params=lnf_variant_cutoff)
 
-## LFN_read_count
+## LFNreadCount
 # Set parameter values
 lfn_read_count_cutoff <- 85
-outfile <- paste(outdir, "12_LFN_read_count.csv", sep="")
+outfile <- paste(outdir, "12_LFNreadCount.csv", sep="")
 # Run filter and get stats
-read_count_df_lfn_read_count <- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
-stat_df <- get_stat(read_count_df_lfn_read_count, stat_df, stage="LFN_read_count", params=lfn_read_count_cutoff)
+read_count_df_lfn_read_count <- LFNreadCount(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
+stat_df <- GetStat(read_count_df_lfn_read_count, stat_df, stage="LFNreadCount", params=lfn_read_count_cutoff)
 
 ## Combine results
 # Set parameter values
-outfile <- paste(outdir, "13_pool_LFN.csv", sep="")
+outfile <- paste(outdir, "13_poolLFN.csv", sep="")
 # Combine results and get stats
-read_count_df <- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterLFN")
+read_count_df <- PoolFilters(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterLFN")
 # delete temporary data frames
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)
 ```
 
-### FilterMinReplicateNumber 2
+### FilterMinReplicate 2
 
-Let's run again FilterMinReplicateNumber to ensure repeatability among replicates of the sample (2 by default).
+Let's run again FilterMinReplicate to ensure repeatability among replicates of the sample (2 by default).
 
 ```{r}
-## LFN_variant
+## LFNvariant
 # Set parameter values
 min_replicate_number <- 2
-outfile <- paste(outdir, "14_FilterMinReplicateNumber.csv", sep="")
+outfile <- paste(outdir, "14_FilterMinReplicate.csv", sep="")
 # Run filter and get stats
-read_count_df <- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
-stat_df <- get_stat(read_count_df, stat_df, stage="FilterMinReplicateNumber", params=min_replicate_number)
+read_count_df <- FilterMinReplicate(read_count_df, min_replicate_number, outfile=outfile)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=min_replicate_number)
 ```
 
 ## Pool, TaxAssign and document
@@ -653,7 +653,7 @@ Let's pool replicates of the same sample. `PoolReplicates` function will take th
 outfile <- paste(outdir, "15_PoolReplicates.csv", sep="")
 read_count_samples_df <- PoolReplicates(read_count_df, outfile=outfile)
 # Run function and get stats
-stat_df <- get_stat(read_count_samples_df, stat_df, stage="PoolReplicates")
+stat_df <- GetStat(read_count_samples_df, stat_df, stage="PoolReplicates")
 ```
 
 ### Get performance metrics
@@ -721,7 +721,7 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 
 ### RandomSeq
 
-Random select `n` sequences from each input fasta file. It can be used before or after demultiplexing (`SortReads`). However, if using `LFN_variant` and `LFN_read_count` which are partially based on the number of reads in negative controls, standardizing the number of reads among samples does not make sense. Thus I use `RandomSeq` after `Merge`, to get the same number of reads for each replicate series (same samples, different replicates in each fasta file).
+Random select `n` sequences from each input fasta file. It can be used before or after demultiplexing (`SortReads`). However, if using `LFNvariant` and `LFNreadCount` which are partially based on the number of reads in negative controls, standardizing the number of reads among samples does not make sense. Thus I use `RandomSeq` after `Merge`, to get the same number of reads for each replicate series (same samples, different replicates in each fasta file).
 
 
 * [fastainfo](#fastainfo) is either a csv file, or a data frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fasta
@@ -735,7 +735,7 @@ fastainfo_df <- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir,
 ```
 
 
-###  history_by
+###  HistoryBy
 
 This function scans the all files in the `dir` that starts by a number. (See file names of the output files of the different filtering steps). It will select all lines were the `feature` (asv_id/asv/sample/replicate) has a `value` we are looking for.
 
@@ -743,21 +743,21 @@ This function scans the all files in the `dir` that starts by a number. (See fil
 
 Get the history of ASV (`feature`) 915 (`value`).
 ```{r}
-tmp_ASV_915 <- history_by(dir=outdir, feature="asv_id", value="915", sep=sep)
+tmp_ASV_915 <- HistoryBy(dir=outdir, feature="asv_id", value="915", sep=sep)
 ```
 
 Same search by using the sequence of the ASV  (`feature`) CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT (`value`).
 ```{r}
-tmp_replicate_1 <- history_by(dir=outdir, feature="asv", value="CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT", sep=sep)
+tmp_replicate_1 <- HistoryBy(dir=outdir, feature="asv", value="CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT", sep=sep)
 ```
 
 Get the history of sample (`feature`) tpos1 (`value`).
 ```{r}
-tmp_sample_tpos1 <- history_by(dir=outdir, feature="sample", value="tpos1", sep=sep)
+tmp_sample_tpos1 <- HistoryBy(dir=outdir, feature="sample", value="tpos1", sep=sep)
 ```
 
 
-### summarize_by
+### SummarizeBy
 
 This function scans all files in the `dir` that starts by a number. (See file names of the output files of the different filtering steps). 
 
@@ -770,7 +770,7 @@ Get the number of reads of each sample after each filtering steps.
 
 From this data frame, we can see that the negative control sample become "clean" after the LFN filters, and there is a considerable variation among the number of reads of different real samples.
 ```{r}
-read_count_by_sample <- summarize_by(dir=outdir, feature="read_count", grouped_by="sample")
+read_count_by_sample <- SummarizeBy(dir=outdir, feature="read_count", grouped_by="sample")
 ```
 
 
@@ -778,7 +778,7 @@ Get the number asv for each sample after each filtering steps.
 
 From this data frame, we can see that the negative control sample become "clean" after the LFN filters, and the mock samples has 7 ASVs at the end which is very close to the expected 6.
 ```{r}
-asv_by_sample <- summarize_by(dir=outdir, feature="asv", grouped_by="sample")
+asv_by_sample <- SummarizeBy(dir=outdir, feature="asv", grouped_by="sample")
 ```
 
 
@@ -786,7 +786,7 @@ Get the number asv_id for each replicate after each filtering steps.
 
 We can see that number of ASVs are comparable in different replicates.
 ```{r}
-asvid_by_replicate <- summarize_by(dir=outdir, feature="asv_id", grouped_by="replicate")
+asvid_by_replicate <- SummarizeBy(dir=outdir, feature="asv_id", grouped_by="replicate")
 ```
 
 
@@ -794,11 +794,22 @@ Get the number of ASVs with x reads after each filtering steps.
 
 A large majority of the ASVs have very few reads before filtering. The number of singletons are reduced strongly by swarm, but still there are many of them.
 ```{r}
-asv_by_readcount <- summarize_by(dir=outdir, feature="asv", grouped_by="read_count")
+asv_by_readcount <- SummarizeBy(dir=outdir, feature="asv", grouped_by="read_count")
 ```
 
+### UpdateASVlist
 
-### pool_datasets
+Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file (asv_list)
+
+The input file is typically a csv file containing ASVs seen in earlier data sets with their asv_id.
+If there is a conflict within or between the input data the function quits with a error message. Otherwise write the updated_asv_list with their asv_id to the outfile
+
+```{r}
+updated_asv_list <- paste(outdir, "updated_ASV_list.csv", sep="")
+UpdateASVlist(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
+```
+
+### PoolDatasets
 
 **More than one overlapping marker**
 
@@ -817,16 +828,16 @@ files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_t
 outfile <- paste(outdir, "Pooled_datasets.csv", sep="") 
 asv_with_centroids <- paste(outdir, "Pooled_datasets_asv_with_centroids.csv", sep="") 
 
-read_count_pool <- pool_datasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)
+read_count_pool <- PoolDatasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)
 ```
 
 **Only one marker**
 
-Pooling the results of different data sets of the same marker is very simple. Basically the long output format with `asv`, `asv_id`, `sample`, `read_count` columns are concatenated. The `pool_datasets` function also  checks if sample names are unique. If not it sums the read count of the same sample and same ASV, but returns a warning.
+Pooling the results of different data sets of the same marker is very simple. Basically the long output format with `asv`, `asv_id`, `sample`, `read_count` columns are concatenated. The `PoolDatasets` function also  checks if sample names are unique. If not it sums the read count of the same sample and same ASV, but returns a warning.
 
 The output file or data frame can be rearranged to wide format bu the [WriteASVtable](#print-output) function.
 
-### count_reads_dir
+### CountReadsDir
 
 Count the number of reads in `fasta` or `fastq` files found in the input directory.
 Input files can be gz compressed or uncompressed, but zip files are not supported.
@@ -839,10 +850,10 @@ The [fastainfo](#fastainfo) and the [sortedinfo](#sortedinfo) files contain the 
 
 ```{r}
 dir <- "vtamR_test/data"
-df <- count_reads_dir(dir, pattern="_fw.fastq.gz", file_type="fastq")
+df <- CountReadsDir(dir, pattern="_fw.fastq.gz", file_type="fastq")
 ```
  
-### barplot_read_count_by_sample
+### Barplot_ReadCountBySample
 
 Make a bar plot of read counts by [sample](#glossary) (`sample_replicate=F`) or [sample-replicate](#glossary) (`sample_replicate=T`).
 Can use different colors for different sample types ([real/mock/negative](#glossary))
@@ -852,11 +863,11 @@ Can use different colors for different sample types ([real/mock/negative](#gloss
 
 ```{r}
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
-barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)
+Barplot_ReadCountBySample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)
 ```
 
 
-### histogram_read_count_by_variant
+### Histogram_ReadCountByVariant
 
 Histogram of read counts by ASV
 
@@ -865,7 +876,7 @@ Histogram of read counts by ASV
 * `binwidth` Width of bins
 
 ```{r}
-histogram_read_count_by_variant(read_count_df, min_read_count=10, binwidth=1000)
+Histogram_ReadCountByVariant(read_count_df, min_read_count=10, binwidth=1000)
 ```
 
 
@@ -877,12 +888,12 @@ Calculate the Renkonen distances among all replicates (compare="all") or among r
 * `sample_types` data frame or CSV file containing info on sample types for each sample
 
 ```{r}
-renkonen_within_df <- make_renkonen_distances(read_count_df, compare="within")
-barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo)
-density_plot_renkonen_distance(renkonen_within_df)
+renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare="within")
+Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
+DensityPlot_RenkonenDistance(renkonen_within_df)
 
-renkonen_all_df <- make_renkonen_distances(read_count_df, compare="all")
-density_plot_renkonen_distance(renkonen_all_df)
+renkonen_all_df <- MakeRenkonenDistances(read_count_df, compare="all")
+DensityPlot_RenkonenDistance(renkonen_all_df)
 ```
 
  
@@ -1008,15 +1019,15 @@ makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] 
 
 ## Troubleshooting
 
-### LFN_variant eliminate most occurrences of a frequent ASV
+### LFNvariant eliminate most occurrences of a frequent ASV
 
-`LFN_variant` will filter out all occurrences where
+`LFNvariant` will filter out all occurrences where
 
 (number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff 
 
 As a consequence, if an ASV is present in most samples, there are many samples in the data set and the cutoff is relatively high, most occurrences can fall bellow the cutoff and the total read count of the ASV will decrease strongly at this step.
 
-If the proportion of the read count of a ASV in the output compared to the input is less than `min_read_count_prop`, vtamR prints out a Warning. Take a close look at the variant. It can be the result of a general contamination, and in this case, the whole ASV could/should be eliminated from the data set. Otherwise, you might want to reduce the cutoff value for `LFN_variant`.
+If the proportion of the read count of a ASV in the output compared to the input is less than `min_read_count_prop`, vtamR prints out a Warning. Take a close look at the variant. It can be the result of a general contamination, and in this case, the whole ASV could/should be eliminated from the data set. Otherwise, you might want to reduce the cutoff value for `LFNvariant`.
 
 ### Memory issues for running swarm on the whole dataset
 
@@ -1034,7 +1045,7 @@ If input fastq files are very large and do not go through `Merge`, try working w
 
 ### Files to keep
 
-At the first steps (Merge, RandomSeq, Sortreads), many files are produced, and some of them can be very large, especially before the dereplication (before `read_fastas_from_sortedinfo`).
+At the first steps (Merge, RandomSeq, Sortreads), many files are produced, and some of them can be very large, especially before the dereplication (before `Dereplicate`).
 
 Compressing and decompressing between the different steps can take a while and can have memory issues in some cases (especially on Windows). Therefore, vtamR uses by default uncompressed files. This behavior can be changed by the [compress](#options) option.
 
@@ -1043,7 +1054,7 @@ Here is a list of files I would tend to keep, delete or compress.
 * `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for information on read counts after `Merge`.
 * `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility in case of re-analyse.
 * `SortReads`: Delete the output fasta files, but keep `sortedinfo.csv` for information on read counts after `SortReads`. 
-* `read_fastas_from_sortedinfo`: Write the dereplicated info to a file (`1_before_filter.csv` in the tutorial) and compress it after the analyses. This is an important file, since you can restart the analyses from here, without re-doing the longest merging, and demultiplexing steps. Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), since this can be used when analyzing subsequent data sets to homogenize the asv_ids.
-* Output of different filtering steps: Compress them if they are too large. They are useful for tracing back the history of a sample or an ASV (see [history_by](#history_by)) or making summary files (see [summarize_by](#summarize_by)).
+* `Dereplicate`: Write the dereplicated info to a file (`1_before_filter.csv` in the tutorial) and compress it after the analyses. This is an important file, since you can restart the analyses from here, without re-doing the longest merging, and demultiplexing steps. Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), since this can be used when analyzing subsequent data sets to homogenize the asv_ids.
+* Output of different filtering steps: Compress them if they are too large. They are useful for tracing back the history of a sample or an ASV (see [HistoryBy](#historyby)) or making summary files (see [SummarizeBy](#summarizeby)).
 
 

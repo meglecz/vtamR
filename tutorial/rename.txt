@@ -8,17 +8,17 @@ density_plot_renkonen_distance	DensityPlot_RenkonenDistance
 barplot_renkonen_distance	Barplot_RenkonenDistance
 make_renkonen_distances	MakeRenkonenDistances
 
-read_fastas_from_sortedinfo	ReadFastasSortedinfo	Dereplicate ?
+read_fastas_from_sortedinfo	Dereplicate
 get_stat	GetStat
 
 FilterMinReplicateNumber	FilterMinReplicate
+
 
 LFN_sample_replicate	LFNsampleReplicate
 LFN_variant 	LFNvariant 
 LFN_read_count	LFNreadCount
 LFN_global_read_count	LFNglobalReadCount
 pool_LFN	PoolFilters
-
 
 OptimizePCRError	OptimizePCRerror
 OptimizeLFNsampleReplicate	OptimizeLFNsampleReplicate
@@ -31,3 +31,5 @@ test_Optimize	Test_Optimize
 test_TaxAssign	Test_TaxAssign
 
 check_fileinfo	CheckFileinfo
+
+update_asv_list	UpdateASVlist

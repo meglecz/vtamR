@@ -23,5 +23,5 @@ OptimizeLFNsampleReplicate(
 \description{
 Prepare a data frame that lists all expected occurrences in all mock sample replicates their read_counts and the proportion of
 read_counts to the total number of reads in the sample-replicate.
-The lfn_variant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
+The LFNvariant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
 }

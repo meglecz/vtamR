@@ -21,7 +21,7 @@ check_dir <- function(dir){
 }
 
 
-#' get_stat
+#' GetStat
 #' Get read, variant, sample and replicate counts.
 #' Complete the stat_df with the above statistics.
 #' 
@@ -32,7 +32,7 @@ check_dir <- function(dir){
 #' @param out name of the output file
 #' @export
 #' 
-get_stat <- function(read_count, stat_df, stage="", params=NA, out=""){
+GetStat <- function(read_count, stat_df, stage="", params=NA, out=""){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -106,7 +106,7 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
   }else{
     fastqinfo_df <- fastqinfo
   }
-  check_fileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep)
+  CheckFileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep)
 
   
   vsearch_path<- check_dir(vsearch_path)
@@ -294,7 +294,7 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
   }else{
     fastainfo_df <- fastainfo
   }
-#  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+#  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # quite fast for uncompressed and gz files
   fasta_dir<- check_dir(fasta_dir)
@@ -563,7 +563,7 @@ TrimPrimer <- function(fastainfo, fasta_dir="", outdir="", compress=F, cutadapt_
   }else{
     fastainfo_df <- fastainfo
   }
-  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # upper case for all primers and tags
   fastainfo_df$primer_fw <- toupper(fastainfo_df$primer_fw)
@@ -631,7 +631,7 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
   }else{
     fastainfo_df <- fastainfo
   }
-  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   #########
   # SortReads_no_reverse does the whole demultilexing, trimming and compress on the + strand
@@ -933,7 +933,7 @@ reverse_complement <- function(sequence){
 #' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #' 
-read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=",", asv_list="", updated_asv_list="", quiet=T) {
+Dereplicate <- function (sortedinfo, dir="", outfile="", sep=",", asv_list="", updated_asv_list="", quiet=T) {
   # can accept df or file as an input
   if(is.character(sortedinfo)){
     # read known occurrences
@@ -941,7 +941,7 @@ read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=","
   }else{
     sortedinfo_df <- sortedinfo
   }
-  check_fileinfo(file=sortedinfo_df, dir=dir, file_type="sortedinfo", sep=sep)
+  CheckFileinfo(file=sortedinfo_df, dir=dir, file_type="sortedinfo", sep=sep)
   
   # read all fasta files in sortedinfo to a read_count_df
   if(nchar(dir)>0){
@@ -1259,7 +1259,7 @@ check_one_to_one_relationship <- function(df){
   return(TRUE)
 }
 
-#' update_asv_list
+#' UpdateASVlist
 #' 
 #' Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file (asv_list)
 #' The input file is typically a csv file containing asv seen in earlier runs with their asv_id.
@@ -1271,7 +1271,7 @@ check_one_to_one_relationship <- function(df){
 #' @param sep separator in csv files; default: ","
 #' @export
 #' 
-update_asv_list <- function(read_count_df, asv_list=asv_list, outfile="", sep=","){
+UpdateASVlist <- function(read_count_df, asv_list=asv_list, outfile="", sep=","){
   
   # read earlier ASV list
   if(asv_list != ""){  # read already existing asvs, if the file is given
@@ -1304,7 +1304,7 @@ update_asv_list <- function(read_count_df, asv_list=asv_list, outfile="", sep=",
   
 }
 
-#' LFN_global_read_count
+#' LFNglobalReadCount
 #' 
 #' Eliminate ASVs with less than cutoff reads in the dataset.
 #' Returns the filtered read_count_df data frame.
@@ -1314,7 +1314,7 @@ update_asv_list <- function(read_count_df, asv_list=asv_list, outfile="", sep=",
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @param sep separator in csv files; default: ","
 #' @export
-LFN_global_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
+LFNglobalReadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1336,7 +1336,7 @@ LFN_global_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
   return(read_count_df)
 }
 
-#' LFN_read_count
+#' LFNreadCount
 #' 
 #' Eliminate occurrences with less than cutoff reads.
 #' Returns the filtered read_count_df data frame.
@@ -1346,7 +1346,7 @@ LFN_global_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @param sep separator in csv files; default: ","
 #' @export
-LFN_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
+LFNreadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1362,7 +1362,7 @@ LFN_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
   return(read_count_df)
 }
 
-#' LFN_sample_replicate
+#' LFNsampleReplicate
 #' 
 #' Eliminate occurrences where the read_count/sum(read_count of the sample-replicate) is less than cutoff.
 #' Returns the filtered read_count_df data frame.
@@ -1372,7 +1372,7 @@ LFN_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @param sep separator in csv files; default: ","
 #' @export
-LFN_sample_replicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
+LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1397,7 +1397,7 @@ LFN_sample_replicate <- function (read_count, cutoff=0.001, outfile="", sep=",")
   return(read_count_df)
 }
 
-#' LFN_variant
+#' LFNvariant
 #' 
 #' If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
 #' If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv in its replicate) is less than cutoff.
@@ -1411,7 +1411,7 @@ LFN_sample_replicate <- function (read_count, cutoff=0.001, outfile="", sep=",")
 #' @param sep separator in csv files; default: ","
 #' @param min_read_count_prop If the proportion of the read count of a variant in the output compared to the input is less then min_read_count_prop, print out a warning, since it suggest a to high cutoff value; default: 0.7
 #' @export
-LFN_variant <- function (read_count, cutoff=0.001, by_replicate=FALSE, outfile="", sep=",", min_read_count_prop=0.7) {
+LFNvariant <- function (read_count, cutoff=0.001, by_replicate=FALSE, outfile="", sep=",", min_read_count_prop=0.7) {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1464,7 +1464,7 @@ LFN_variant <- function (read_count, cutoff=0.001, by_replicate=FALSE, outfile="
     select("asv_id", "read_count_input", "read_count_output", "read_count_prop", "sample_count_input", "sample_count_output", "sample_prop")
   
   if(nrow(asvs > 0)){
-    print("WARNING: The following ASVs have lost a high proportion of their reads during this filtering step. The cutoff value of LFN_variant function might need to be reduced.")
+    print("WARNING: The following ASVs have lost a high proportion of their reads during this filtering step. The cutoff value of LFNvariant function might need to be reduced.")
     print(asvs)
   }
   
@@ -1474,7 +1474,7 @@ LFN_variant <- function (read_count, cutoff=0.001, by_replicate=FALSE, outfile="
   return(read_count_df)
 }
 
-#' pool_LFN
+#' PoolFilters
 #' 
 #' pool all count_read_df data frames, and keep only occurrences present in all filters
 #' 
@@ -1483,7 +1483,7 @@ LFN_variant <- function (read_count, cutoff=0.001, by_replicate=FALSE, outfile="
 #' @param sep separator in csv files; default: ","
 #' @export
 #' 
-pool_LFN <- function (... , outfile="", sep=",") {
+PoolFilters <- function (... , outfile="", sep=",") {
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
@@ -1496,7 +1496,7 @@ pool_LFN <- function (... , outfile="", sep=",") {
   return(merged)
 }
 
-#' FilterMinReplicateNumber
+#' FilterMinReplicate
 #' 
 #' Filter out all occurrences where the asv in not present in at least cutoff number of replicates.
 #' Returns the filtered read_count_df data frame.
@@ -1506,7 +1506,7 @@ pool_LFN <- function (... , outfile="", sep=",") {
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @export
 #'
-FilterMinReplicateNumber <- function(read_count, cutoff=2, outfile="", sep=","){
+FilterMinReplicate <- function(read_count, cutoff=2, outfile="", sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2033,7 +2033,7 @@ calculate_renkonen_dist <- function(df1, df2){
   rdist <- 1- sum(df$min)
 }
 
-#' make_renkonen_distances
+#' MakeRenkonenDistances
 #' 
 #' Calculate the Renkonen distance between pairs of sample-replicates
 #' Returns a data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp (within, if sample1 and sample2 are identical, between otherwise)
@@ -2042,7 +2042,7 @@ calculate_renkonen_dist <- function(df1, df2){
 #' @param compare [all/within] calculate the Renkonen distance among all pairs of sample-replicates (all), only between replicates of the same sample (within)
 #' @export
 #' 
-make_renkonen_distances <- function(read_count_df, compare="all"){
+MakeRenkonenDistances <- function(read_count_df, compare="all"){
   
   df <- read_count_df %>%
     select(asv, sample, replicate, read_count)
@@ -2115,7 +2115,7 @@ FilterRenkonen <- function(read_count, outfile="", cutoff = NA, renkonen_distanc
   }
   
   # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- make_renkonen_distances(read_count_df, compare="within") %>%
+  renkonen_df <- MakeRenkonenDistances(read_count_df, compare="within") %>%
     select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
     arrange(renkonen_d)
  
@@ -2765,7 +2765,7 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
     mock_samples <-unique(sortedinfo_df$sample)
     
     # keep only keep and tolerate action, in case the file contains other lines 
-    check_fileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
+    CheckFileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
     mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
       filter(action=="keep" | action=="tolerate")
 
@@ -2806,7 +2806,7 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
 }
 
 
-#' OptimizePCRError
+#' OptimizePCRerror
 #' 
 #' Prepare a data frame that lists pairs of expected and unexpected ASVs in mock samples maximum max_mismatch difference between them.
 #' The pcr_error_var_prop parameter should be above the highest pcr_error_var_prop  (unexpected_read_count/expected_read_count) value in the table.
@@ -2820,7 +2820,7 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
 #' @export
 #'
 
-OptimizePCRError <- function(read_count, mock_composition="", sep=",", outfile="", max_mismatch=1, min_read_count=2){
+OptimizePCRerror <- function(read_count, mock_composition="", sep=",", outfile="", max_mismatch=1, min_read_count=2){
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -2836,7 +2836,7 @@ OptimizePCRError <- function(read_count, mock_composition="", sep=",", outfile="
   }else{
     mock_composition_df <- mock_composition
   }
-  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
+  CheckFileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
   
   # read the mock composition file and keep only lines with keep and tolerate
   mock_composition_df <- mock_composition_df %>%
@@ -2963,7 +2963,7 @@ OptimizePCRError <- function(read_count, mock_composition="", sep=",", outfile="
 #' 
 #' Prepare a data frame that lists all expected occurrences in all mock sample replicates their read_counts and the proportion of 
 #' read_counts to the total number of reads in the sample-replicate. 
-#' The lfn_variant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
+#' The LFNvariant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
 #'  
 #' @param read_count data frame or csv file with the following variables: asv_id, plate, marker, sample, replicate, read_count, asv
 #' @param mock_composition data frame or csv file with columns: sample, action (keep/tolerate), asv
@@ -2987,7 +2987,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
   }else{
     mock_composition_df <- mock_composition
   }
-  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
+  CheckFileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
   
   # read the mock composition file and keep only lines with keep
   mock_composition_df <- mock_composition_df %>%
@@ -3073,7 +3073,7 @@ MakeKnownOccurrences <- function(read_count_samples, sortedinfo="", mock_composi
   }else{
     mock_composition_df <- mock_composition
   }
-  check_fileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
+  CheckFileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep)
   
   # read info on samples types and keep only relevant info
   sortedinfo_df <- sortedinfo_df %>%
@@ -3283,10 +3283,10 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
 }
 
 
-#' OptimizeLFNReadCountAndLFNvariant
+#' OptimizeLFNreadCountLFNvariant
 #' 
 #' Suggest optimal parameters for lfn_read_count_cutoff and lnf_variant_cutoff 
-#' The the LFN_read_count and LFN_variant is run for a series of parameter value combinations followed by FilterMinReplicateNumber. 
+#' The the LFNreadCount and LFNvariant is run for a series of parameter value combinations followed by FilterMinReplicate. 
 #' For each parameter combination the number of FN, TP, and FP is reported. 
 #' 
 #' The results are written to data frame and to an outfile if the filename is given.
@@ -3296,19 +3296,19 @@ make_missing_occurrences <- function(read_count_samples, mock_composition="", se
 #' @param known_occurrences  data frame or file produced by MakeKnownOccurrences function, with known FP and TP
 #' @param sep separator used in csv files
 #' @param outfile name of the output file; Optional; If empty the results are not written to a file
-#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFN_read_count function (10 by default). 
-#' @param max_lfn_read_count_cutoff the highest cutoff value for LFN_read_count function (100 by default). 
+#' @param min_lfn_read_count_cutoff the lowest cutoff value for LFNreadCount function (10 by default). 
+#' @param max_lfn_read_count_cutoff the highest cutoff value for LFNreadCount function (100 by default). 
 #' @param increment_lfn_read_count_cutoff values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default). 
-#' @param min_lnf_variant_cutoff the lowest cutoff value for LFN_variant function (0.001 by default). 
-#' @param max_lnf_variant_cutoff the highest value for LFN_variant function (0.01 by default).
+#' @param min_lnf_variant_cutoff the lowest cutoff value for LFNvariant function (0.001 by default). 
+#' @param max_lnf_variant_cutoff the highest value for LFNvariant function (0.01 by default).
 #' @param increment_lnf_variant_cutoff values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default). 
-#' @param by_replicate T/F (False by default); see LFN_variant function
-#' @param min_replicate_number for FilterMinReplicateNumber (see FilterMinReplicateNumber function; default 1)
+#' @param by_replicate T/F (False by default); see LFNvariant function
+#' @param min_replicate_number for FilterMinReplicate (see FilterMinReplicate function; default 1)
 #' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #'
 
-OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.01, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, min_replicate_number=2, quiet=T){
+OptimizeLFNreadCountLFNvariant <- function(read_count, known_occurrences="", sep=",", outfile="", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=100, increment_lfn_read_count_cutoff=5, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.01, increment_lnf_variant_cutoff=0.001, by_replicate=FALSE, min_replicate_number=2, quiet=T){
   #  read_count_df = optimize_read_count_df
   #  min_lfn_read_count_cutoff = 10
   #  min_lnf_variant_cutoff = 0.001
@@ -3331,11 +3331,11 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
   }else{
       known_occurrences_df <- known_occurrences
   }
-  check_fileinfo(file=known_occurrences_df, file_type="known_occurrences", sep=sep)
+  CheckFileinfo(file=known_occurrences_df, file_type="known_occurrences", sep=sep)
 
-  # make a series of cutoff values for LFN_read_count
+  # make a series of cutoff values for LFNreadCount
   rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, to=max_lfn_read_count_cutoff, by=increment_lfn_read_count_cutoff)
-  # make a series of cutoff values for LFN_read_count
+  # make a series of cutoff values for LFNreadCount
   var_cutoff_list <- seq(from=min_lnf_variant_cutoff, to=max_lnf_variant_cutoff, by=increment_lnf_variant_cutoff)
   
   out_df <- data.frame(
@@ -3349,13 +3349,13 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
   
   for(rc_cutoff in rc_cutoff_list){
     df_tmp <- read_count_df
-    #LFN_read_count
-    df_tmp <- LFN_read_count(df_tmp, rc_cutoff)
+    #LFNreadCount
+    df_tmp <- LFNreadCount(df_tmp, rc_cutoff)
     for(var_cutoff in var_cutoff_list){
-      # LFN_variant
-      df_tmp <- LFN_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
-      # FilterMinReplicateNumber
-      df_tmp <- FilterMinReplicateNumber(df_tmp, min_replicate_number)
+      # LFNvariant
+      df_tmp <- LFNvariant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      # FilterMinReplicate
+      df_tmp <- FilterMinReplicate(df_tmp, min_replicate_number)
       # PoolReplicates
       df_tmp_sample <- PoolReplicates(df_tmp, digits=0)
       # pool readcount info and known occurrences info
@@ -3399,7 +3399,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
 }
 
 
-#' pool_datasets
+#' PoolDatasets
 #' 
 #' Take several input files, each in long format containing asv_id, sample, read_count and asv columns
 #' Pool the different data sets, if all have the same marker
@@ -3416,7 +3416,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
 #' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #'
-pool_datasets <- function(files, outfile="", asv_with_centroids="", sep=",", mean_over_markers=T, vsearch_path="", quiet=T){
+PoolDatasets <- function(files, outfile="", asv_with_centroids="", sep=",", mean_over_markers=T, vsearch_path="", quiet=T){
   
   vsearch_path <- check_dir(vsearch_path)
   tmp_dir <-paste('tmp_pool_datasets_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
@@ -3553,17 +3553,17 @@ pool_datasets <- function(files, outfile="", asv_with_centroids="", sep=",", mea
   return(df_pool)
 }
 
-#' history_by
+#' HistoryBy
 #' 
 #' Filters a feature (asv_id/asv/sample/replicate), in all output files of intermediate filtering steps to retain only lines corresponding a value
 #'  
-#' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFN_sample_replicate.csv)
+#' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFNsampleReplicate.csv)
 #' @param feature [asv_id/asv/sample/replicate/asv_id]
 #' @param value values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files
 #' @param sep separator used in csv files
 #' @export
 #'
-history_by <- function(dir, feature="", value='', sep=","){
+HistoryBy <- function(dir, feature="", value='', sep=","){
 
   dir <- check_dir(dir)
   files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
@@ -3609,13 +3609,13 @@ history_by <- function(dir, feature="", value='', sep=","){
   return(selected_lines)
 }
 
-#' summarize_by
+#' SummarizeBy
 #' 
 #' Summarizes the output of each intermediate filtering steps. 
 #' Takes all files in the dir, that start with a number.
 #' For each file, groups the lines by grouped_by variable, and gets the number of distinct values of feature for each group, or if feature is read_count, gets the total number of reads of each group
 #'  
-#' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFN_sample_replicate.csv)
+#' @param dir directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFNsampleReplicate.csv)
 #' @param feature [asv_id/asv/sample/replicate/read_count] if read_count, get the total number of reads for each of the grouped values, otherwise get the number of distinct values of feature 
 #' @param grouped_by [asv_id/asv/sample/replicate] group data by this variable
 #' @param value values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files
@@ -3623,7 +3623,7 @@ history_by <- function(dir, feature="", value='', sep=","){
 #' @param outfile name of the output file; optional, it is not given results are returned in a data frame, but no file is written 
 #' @export
 #'
-summarize_by <- function(dir, sep=",", outfile="", feature="asv", grouped_by="sample"){
+SummarizeBy <- function(dir, sep=",", outfile="", feature="asv", grouped_by="sample"){
   
   # read file names in dir
   dir <- check_dir(dir)
@@ -3821,7 +3821,7 @@ RandomSeqWindows <- function(fastainfo, fasta_dir="", outdir="", n, randseed=0, 
   }else{
     fastainfo_df <- fastainfo
   }
-#  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+#  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   fasta_dir<- check_dir(fasta_dir)
   outdir<- check_dir(outdir)
@@ -3926,7 +3926,7 @@ count_reads_file <- function(file, file_type=""){
   return(0)
 }
 
-#' count_reads_dir
+#' CountReadsDir
 #' 
 #' For all files in input directory, where the file name contains pattern, 
 #' count the number of sequences in a fasta or fastq file, or  he number of line in other files
@@ -3941,7 +3941,7 @@ count_reads_file <- function(file, file_type=""){
 #' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #' 
-count_reads_dir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=",", quiet=T){
+CountReadsDir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=",", quiet=T){
   
   dir <- check_dir(dir)
   files <- list.files(path = dir, pattern=pattern)
@@ -3965,7 +3965,7 @@ count_reads_dir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=
   return(df)
 }
 
-#' check_fileinfo
+#' CheckFileinfo
 #' 
 #' Check the format and coherence of different file types:
 #' Check if all obligatory columns are present (all file_type)
@@ -3983,7 +3983,7 @@ count_reads_dir<- function(dir, pattern=".fastq", file_type="", outfile="", sep=
 #' @export
 #' 
 
-check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
+CheckFileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
   
   if(is.character(file)){
     # read known occurrences
