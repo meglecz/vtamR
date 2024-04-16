@@ -13,7 +13,7 @@ library("ggplot2")
 
 #library("Biostrings")
 
-computer <- "Windows" # Bombyx/Endoume/Windows
+computer <- "Bombyx" # Bombyx/Endoume/Windows
 if(computer == "Bombyx"){
   vtam_dir <- "~/vtamR"
   cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
@@ -25,7 +25,7 @@ if(computer == "Bombyx"){
       fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
       outdir <- "vtamR_test/out_zfzr/"
       mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
-      asv_list <- "vtamR_test/data/asv_list_zfzr.csv"
+      asv_list <- "vtamR_test/data/asv_list.csv"
   #      fastq_dir <- "/home/meglecz/vtamR_large_files/fastq/"
       #      fastqinfo <- "/home/meglecz/vtamR_large_files/user_input/fastqinfo_mfzr.csv"
       #     outdir <- "/home/meglecz/vtamR_large_files/out/"
