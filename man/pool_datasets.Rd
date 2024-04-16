@@ -30,7 +30,7 @@ pool_datasets(
 \item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
 }
 \description{
-Take several output files, each in long format containing asv_id, sample, read_count and asv columns
+Take several input files, each in long format containing asv_id, sample, read_count and asv columns
 Pool the different data sets, if all have the same marker
 If more than one markers, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are pooled under the centroid (longest ASV of the group).
 Pooling can take the mean of the read counts of the ASV (default) or their sum.

@@ -286,7 +286,6 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
     fastainfo_df <- RandomSeqWindows(fastainfo, fasta_dir=fasta_dir, outdir=outdir, n, randseed=randseed, compress=compress, sep=sep)
     return(fastainfo_df)
   }
-  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -295,7 +294,7 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
   }else{
     fastainfo_df <- fastainfo
   }
-  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+#  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   # quite fast for uncompressed and gz files
   fasta_dir<- check_dir(fasta_dir)
@@ -369,8 +368,10 @@ RandomSeq <- function(fastainfo, fasta_dir="", outdir="", vsearch_path="", n, ra
     fastainfo_df$read_count[which(fastainfo_df$fasta==input_fasta)] <- n
   }# all files
   
+  fastainfo_df$fasta <- fastainfo_df$new_file
   fastainfo_df <- fastainfo_df %>%
-    select(tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate, fasta=new_file, read_count)
+#    select(tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate, fasta=new_file, read_count)
+    select(-new_file)
   new_fastainfo <- paste(outdir, "fastainfo.csv", sep="")
   write.table(fastainfo_df, file = new_fastainfo,  row.names = F, sep=sep)
   return(fastainfo_df)
@@ -687,8 +688,8 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
       
       for(i in 1:nrow(sortedinfo_df)){
         
-        file <- sortedinfo_df$filename[i]
-        sortedinfo_df$filename[i] <- paste(file, ".gz", sep="") # correct output filename
+        file <- sortedinfo_df$fasta[i]
+        sortedinfo_df$fasta[i] <- paste(file, ".gz", sep="") # correct output filename
         file <- paste(outdir, file, sep="") # add path
         file_gz <- compress_file(file, remove_input=T) # compress file
       }
@@ -820,7 +821,9 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
   
   # make sortedinfo file
   fastainfo_df <- fastainfo_df %>%
-    select(-tag_fw, -primer_fw, -tag_rv, -primer_rv, -fasta)
+    select(-fasta) %>%
+    select(sample, sample_type, habitat, replicate, "fasta" = filename)
+    
 #  write.table(fastainfo_df, file = paste(outdir, "sortedinfo.csv", sep=""),  row.names = F, sep=sep) 
   return(fastainfo_df)
 }
@@ -921,7 +924,7 @@ reverse_complement <- function(sequence){
 #' If updated_asv_list is given, writes an updated file containing all asv and asv_id is asv_list and sortedinfo_df
 #' Returns a df ("asv_id", "sample", "replicate", "read_count", asv)
 #' 
-#' @param sortedinfo data frame or csv file with columns:  sample,  replicate, file name, (optional: sample_type(mock/negative/real), habitat)
+#' @param sortedinfo data frame or csv file with columns:  sample,  replicate, fasta, (optional: sample_type(mock/negative/real), habitat)
 #' @param dir name of the directory with fasta files 
 #' @param outfile Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned
 #' @param sep separator in csv files; default: ","
@@ -950,8 +953,8 @@ read_fastas_from_sortedinfo <- function (sortedinfo, dir="", outfile="", sep=","
                               sample=character(),
                               replicate=character())
   # read all fasta files in sortedinfo and count the reads
-  for(i in 1:length(sortedinfo_df$filename)){
-    fas <- paste(dir, sortedinfo_df$filename[i], sep = "")
+  for(i in 1:length(sortedinfo_df$fasta)){
+    fas <- paste(dir, sortedinfo_df$fasta[i], sep = "")
     if(!quiet){
       print(fas)
     }
@@ -3398,7 +3401,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
 
 #' pool_datasets
 #' 
-#' Take several output files, each in long format containing asv_id, sample, read_count and asv columns
+#' Take several input files, each in long format containing asv_id, sample, read_count and asv columns
 #' Pool the different data sets, if all have the same marker
 #' If more than one markers, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are pooled under the centroid (longest ASV of the group).
 #' Pooling can take the mean of the read counts of the ASV (default) or their sum.
@@ -3413,7 +3416,7 @@ OptimizeLFNReadCountAndLFNvariant <- function(read_count, known_occurrences="", 
 #' @param quiet [T/F]; TRUE by default print only warnings and error to STDOUT
 #' @export
 #'
-pool_datasets <- function(files, outfile="", asv_with_centroids= "", sep=",", mean_over_markers=T, vsearch_path="", quiet=T){
+pool_datasets <- function(files, outfile="", asv_with_centroids="", sep=",", mean_over_markers=T, vsearch_path="", quiet=T){
   
   vsearch_path <- check_dir(vsearch_path)
   tmp_dir <-paste('tmp_pool_datasets_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
@@ -3533,7 +3536,7 @@ pool_datasets <- function(files, outfile="", asv_with_centroids= "", sep=",", me
     df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id")) %>%
       select("asv_id"=centroid_id, sample, read_count, asv)
     
-    if(centroid_file != ""){
+    if(asv_with_centroids != ""){
       write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
     }
   }else{# one marker
@@ -3818,7 +3821,7 @@ RandomSeqWindows <- function(fastainfo, fasta_dir="", outdir="", n, randseed=0, 
   }else{
     fastainfo_df <- fastainfo
   }
-  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
+#  check_fileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   fasta_dir<- check_dir(fasta_dir)
   outdir<- check_dir(outdir)
@@ -3995,7 +3998,7 @@ check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
   }else if(file_type == "fastainfo"){
     column_heading <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fasta")
   }else if(file_type == "sortedinfo"){
-    column_heading <- c("sample","sample_type","habitat","replicate","filename")
+    column_heading <- c("sample","sample_type","habitat","replicate","fasta")
   }else if(file_type == "mock_composition"){
     column_heading <- c("sample","action","asv")
   }else if(file_type == "known_occurrences"){
@@ -4095,7 +4098,7 @@ check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
       unique_files <- unique(df$fasta)
     }
     if(file_type == "sortedinfo"){
-      unique_files <- unique(df$filename)
+      unique_files <- unique(df$fasta)
     }
     unique_files <- unique(df$fastq_fw)
     for(file in unique_files){
@@ -4118,7 +4121,7 @@ check_fileinfo <- function(file, dir="", file_type="fastqinfo", sep=","){
       file_list <- unique(df$fasta)
     }
     if(file_type == "sortedinfo"){
-      file_list <- unique(df$filename)
+      file_list <- unique(df$fasta)
     }
     check_file_exists(dir=dir, file_list=file_list)
   }

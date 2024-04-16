@@ -62,10 +62,11 @@ if(computer == "Bombyx"){
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastq_dir <- "C:/Users/emese/vtamR_private/fastq/"
   fastq_dir <- "vtamR_test/data/"
-  fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
-  outdir <- "vtamR_test/out_mfzr/"
-  mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
-  asv_list <- "vtamR_test/data/asv_list.csv"
+  fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
+  outdir <- "vtamR_test/out_zfzr/"
+  mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+#  asv_list <- "vtamR_test/data/asv_list.csv"
+  asv_list <- "vtamR_test/out_mfzr/ASV_list_with_IDs.csv"
   num_threads=4
   compress = F
 }
@@ -98,8 +99,6 @@ ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
 load_all(".")
 roxygenise() 
 usethis::use_roxygen_md()
-
-
 
 ####
 # Make TrimPrimer
@@ -213,6 +212,14 @@ cutadapt_maximum_length <- 500 # -M in cutadapt
 compress <- T
 fastainfo <- paste(randomseq_dir, "fastainfo.csv", sep="")
 sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=randomseq_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+
+
+
+randomseq_dir = paste(outdir, "random_seq_after_sortreads/", sep="")
+fastainfo_df <- RandomSeq(sortedinfo_df, fasta_dir=sorted_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=100, randseed=0, compress=compress, sep=sep)
+#fastainfo_df <- RandomSeqWindows(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, n=1000, randseed=0, compress=compress, sep=sep)
+
+
 
 ###
 ### Read input fasta files, dereplicate reads to ASV, and count the number of reads of each ASV in each sample-replicate, add a unique id for ASVs, can take into account ASVs from earlier analyses
@@ -377,7 +384,7 @@ write.csv(stat_df, file = paste(outdir, "stat_steps.csv", sep=""))
 # wide format (ASV table), samples are in columns, ASVs in lines
 outfile=paste(outdir, "Final_asvtable.csv", sep="")
 sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
-WriteAsVtable(read_count_samples_df, outfile=outfile, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
+WriteASVtable(read_count_samples_df, outfile=outfile, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
 # write ASV table completed by taxonomic assignments
 outfile=paste(outdir, "Final_asvtable_with_taxassign.csv", sep="")
 WriteAsVtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition, sep=sep)
@@ -468,7 +475,7 @@ update_asv_list(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 # Pool different data sets
 ###
 files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
-                    marker=c("MFZR", "MFZR"))
+                    marker=c("MFZR", "ZFZR"))
 outfile <- paste(outdir, "Pooled_datasets.csv", sep="") # pooled data sets; ASVs are grouped in identical in their overlapping region
 asv_with_centroids <- paste(outdir, "Pooled_datasets_asv_with_centroids.csv", sep="") # original ASVs + centroids for each of them
 read_count_pool <- pool_datasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, sep=sep, mean_over_markers=T, vsearch_path=vsearch_path)

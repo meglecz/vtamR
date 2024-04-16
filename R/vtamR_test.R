@@ -97,21 +97,21 @@ test_Merge_and_SortReads <- function(test_dir="vtamR_test/", vsearch_path="", cu
   df <- full_join(fastainfo_vtam_df, sortedinfo_df, by=c("sample", "replicate"))
   
   # check if all output files are present
-  if(any(is.na(df$sortedfasta)) | any(is.na(df$filename))){
+  if(any(is.na(df$sortedfasta)) | any(is.na(df$fasta))){
     setwd(backup_wd)
     vtam_missing <- df %>%
       filter(is.na(sortedfasta))
     print(vtam_missing)
     
     vtamR_missing <- df %>%
-      filter(is.na(filename))
+      filter(is.na(fasta))
     print(vtamR_missing)
     stop("Some output files are missing")
   }
   
 
   for(i in 1:nrow(df)){
-    vtamRf <- paste(sorted_dir, df$filename[i], sep="")
+    vtamRf <- paste(sorted_dir, df$fasta[i], sep="")
     vtamf <- paste(vtam_out, df$sortedfasta[i], sep="")
     
     vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate=T)

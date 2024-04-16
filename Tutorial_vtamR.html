@@ -1641,9 +1641,9 @@ library(&quot;ggplot2&quot;) </code></pre>
 roxygenise()
 usethis::use_roxygen_md()</code></pre>
 <p><strong>Set general parameters Windows</strong></p>
-<pre class="r"><code>cutadapt_path=&quot;C:/Users/Public/&quot;
-vsearch_path = &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
-blast_path=&quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
+<pre class="r"><code>cutadapt_path &lt;- &quot;C:/Users/Public/&quot;
+vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
+blast_path &lt;- &quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
 swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
 num_threads &lt;- 4
 sep=&quot;,&quot;</code></pre>
@@ -1653,7 +1653,7 @@ vsearch_path = &quot;&quot;
 blast_path=&quot;~/ncbi-blast-2.11.0+/bin/&quot;
 swarm_path &lt;- &quot;&quot;
 num_threads &lt;- 8
-sep=&quot;,&quot;</code></pre>
+sep &lt;- &quot;,&quot;</code></pre>
 <ul>
 <li>Adapt the path to third party programs according to your
 installation. If the program is in your path, it can be empty
@@ -1662,15 +1662,15 @@ installation. If the program is in your path, it can be empty
 programs</li>
 <li><code>sep</code> is the separator used in csv files</li>
 </ul>
-<p><strong>Taxassign reference data base</strong></p>
+<p><strong>TaxAssign reference data base</strong></p>
 <p>You can download a ready to use, comprehensive COI database from <a href="https://osf.io/vrfwz/">OSF</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
 2023</a>). Set the path to the database and the accompanying taxonomy
 file.</p>
-<pre class="r"><code>taxonomy=&quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv&quot;
-blast_db=&quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam&quot;</code></pre>
-<p><strong>Taxassign reference data base Bombyx</strong></p>
-<pre class="r"><code>taxonomy=&quot;~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam_taxonomy.tsv&quot;
-blast_db=&quot;~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam&quot;</code></pre>
+<pre class="r"><code>taxonomy &lt;- &quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv&quot;
+blast_db &lt;- &quot;C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam&quot;</code></pre>
+<p><strong>TaxAssign reference data base Bombyx</strong></p>
+<pre class="r"><code>taxonomy &lt;- &quot;~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam_taxonomy.tsv&quot;
+blast_db &lt;- &quot;~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam&quot;</code></pre>
 <ul>
 <li><code>taxonomy</code> CSV file file with taxonomic information</li>
 <li><code>blast_db</code> BLAST database</li>
@@ -2146,7 +2146,7 @@ stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNum
 </div>
 </div>
 <div id="pool-taxassign-and-document" class="section level2">
-<h2>Pool, Taxassign and document</h2>
+<h2>Pool, TaxAssign and document</h2>
 <div id="poolreplicates" class="section level3">
 <h3>PoolReplicates</h3>
 <p>Let’s pool replicates of the same sample. <code>PoolReplicates</code>
@@ -2210,7 +2210,7 @@ each of them (<code>add_expected_asv</code>)</li>
 </ul>
 <p>For more information see <code>?WriteAsVtable</code></p>
 <pre class="r"><code># write ASV table completed by taxonomic assignments
-outfile=paste(outdir, &quot;Final_asvtable_with_taxassign.csv&quot;, sep=&quot;&quot;)
+outfile=paste(outdir, &quot;Final_asvtable_with_TaxAssign.csv&quot;, sep=&quot;&quot;)
 
 asv_table_df &lt;- WriteASVtable(read_count_samples_df, outfile=outfile, asv_tax=asv_tax, sortedinfo=sortedinfo, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition=mock_composition)</code></pre>
 <p>Print out the number of reads, ASVs, samples and replicates after
@@ -2220,17 +2220,194 @@ each step.</p>
 </div>
 <div id="helper-functions" class="section level2">
 <h2>Helper functions</h2>
-<p>RandomSeq history_by summarize_by pool_datasets count_reads_dir</p>
-<p>barplot_read_count_by_sample histogram_read_count_by_variant
-barplot_renkonen_distance</p>
+<div id="randomseq" class="section level3">
+<h3>RandomSeq</h3>
+<p>Random select <code>n</code> sequences from each input fasta file. It
+can be used before or after demultiplexing (<code>SortReads</code>).
+However, if using <code>LFN_variant</code> and
+<code>LFN_read_count</code> which are partially based on the number of
+reads in negative controls, standardizing the number of reads among
+samples does not make sense. Thus I use <code>RandomSeq</code> after
+<code>Merge</code>, to get the same number of reads for each replicate
+series (same samples, different replicates in each fasta file).</p>
+<ul>
+<li><a href="#fastainfo">fastainfo</a> is either a csv file, or a data
+frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv,
+sample, sample_type, habitat, replicate, fasta</li>
+<li><code>fasta_dir</code> is the directory containing the input fasta
+files</li>
+<li><code>n</code> the number of sequences to be taken randomly (without
+replcement)</li>
+</ul>
+<pre class="r"><code>randomseq_dir = paste(outdir, &quot;random_seq/&quot;, sep=&quot;&quot;)
+fastainfo_df &lt;- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)</code></pre>
+</div>
+<div id="history_by" class="section level3">
+<h3>history_by</h3>
+<p>This function scans the all files in the <code>dir</code> that starts
+by a number. (See file names of the output files of the different
+filtering steps). It will select all lines were the <code>feature</code>
+(asv_id/asv/sample/replicate) has a <code>value</code> we are looking
+for.</p>
+<p><strong>Examples</strong></p>
+<p>Get the history of ASV (<code>feature</code>) 915
+(<code>value</code>).</p>
+<pre class="r"><code>tmp_ASV_915 &lt;- history_by(dir=outdir, feature=&quot;asv_id&quot;, value=&quot;915&quot;, sep=sep)</code></pre>
+<p>Same search by using the sequence of the ASV (<code>feature</code>)
+CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
+(<code>value</code>).</p>
+<pre class="r"><code>tmp_replicate_1 &lt;- history_by(dir=outdir, feature=&quot;asv&quot;, value=&quot;CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT&quot;, sep=sep)</code></pre>
+<p>Get the history of sample (<code>feature</code>) tpos1
+(<code>value</code>).</p>
+<pre class="r"><code>tmp_sample_tpos1 &lt;- history_by(dir=outdir, feature=&quot;sample&quot;, value=&quot;tpos1&quot;, sep=sep)</code></pre>
+</div>
+<div id="summarize_by" class="section level3">
+<h3>summarize_by</h3>
+<p>This function scans all files in the <code>dir</code> that starts by
+a number. (See file names of the output files of the different filtering
+steps).</p>
+<p>It will group each file by a variable (asv/asv_id/sample/replicate)
+and summarize a <code>feature</code>
+(asv/asv_id/sample/replicate/read_count). If the <code>feature</code> is
+<code>read_count</code>, it will give the sum of the read counts for
+each value of the variable in each file. Otherwise, it returns the
+number of distinct values of the <code>feature</code> for each value of
+the variable in each file.</p>
+<p><strong>Examples</strong></p>
+<p>Get the number of reads of each sample after each filtering
+steps.</p>
+<p>From this data frame, we can see that the negative control sample
+become “clean” after the LFN filters, and there is a considerable
+variation among the number of reads of different real samples.</p>
+<pre class="r"><code>read_count_by_sample &lt;- summarize_by(dir=outdir, feature=&quot;read_count&quot;, grouped_by=&quot;sample&quot;)</code></pre>
+<p>Get the number asv for each sample after each filtering steps.</p>
+<p>From this data frame, we can see that the negative control sample
+become “clean” after the LFN filters, and the mock samples has 7 ASVs at
+the end which is very close to the expected 6.</p>
+<pre class="r"><code>asv_by_sample &lt;- summarize_by(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;sample&quot;)</code></pre>
+<p>Get the number asv_id for each replicate after each filtering
+steps.</p>
+<p>We can see that number of ASVs are comparable in different
+replicates.</p>
+<pre class="r"><code>asvid_by_replicate &lt;- summarize_by(dir=outdir, feature=&quot;asv_id&quot;, grouped_by=&quot;replicate&quot;)</code></pre>
+<p>Get the number of ASVs with x reads after each filtering steps.</p>
+<p>A large majority of the ASVs have very few reads before filtering.
+The number of singletons are reduced strongly by swarm, but still there
+are many of them.</p>
+<pre class="r"><code>asv_by_readcount &lt;- summarize_by(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;read_count&quot;)</code></pre>
+</div>
+<div id="pool_datasets" class="section level3">
+<h3>pool_datasets</h3>
+<p><strong>More than one overlapping marker</strong></p>
+<p>This function pools different data sets and it is particularly
+useful, if the results should be pooled from more than one overlapping
+markers. In that case, ASVs identical on their overlapping regions are
+pooled into groups, and different ASVs of the same group are represented
+by their centroid (longest ASV of the group). Pooling can take the mean
+the read counts of the ASV (<code>mean_over_markers</code>=T; default)
+or their sum (<code>mean_over_markers</code>=F).</p>
+<p>The function takes several input CSV files, each in long format
+containing <code>asv_id</code>, <code>sample</code>,
+<code>read_count</code> and <code>asv</code> columns. The file names
+should be organized in data frame, with the marker names for each
+file.</p>
+<ul>
+<li><code>outfile</code> contains the pooled data set in CSV format
+(<code>asv_id</code>, <code>sample</code>, <code>read_count</code>,
+<code>asv</code>); ASVs are grouped on the same line if identical in
+their overlapping region, and only the centroid appears in the
+<code>asv</code> column.</li>
+<li><code>asv_with_centroids</code> is an output CSV file containing
+each of the the original ASVs (with samples, markers, and read_count) as
+well as their centroids</li>
+<li>The data frame returned by the function corresponds to the
+<code>outfile</code>.</li>
+</ul>
+<pre class="r"><code>files &lt;- data.frame(file=c(&quot;vtamR_test/out_mfzr/14_PoolReplicates.csv&quot;, &quot;vtamR_test/out_zfzr/14_PoolReplicates.csv&quot;),
+                    marker=c(&quot;MFZR&quot;, &quot;MFZR&quot;))
+
+outfile &lt;- paste(outdir, &quot;Pooled_datasets.csv&quot;, sep=&quot;&quot;) 
+asv_with_centroids &lt;- paste(outdir, &quot;Pooled_datasets_asv_with_centroids.csv&quot;, sep=&quot;&quot;) 
+
+read_count_pool &lt;- pool_datasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)</code></pre>
+<p><strong>Only one marker</strong></p>
+<p>Pooling the results of different data sets of the same marker is very
+simple. Basically the long output format with <code>asv</code>,
+<code>asv_id</code>, <code>sample</code>, <code>read_count</code>
+columns are concatenated. The <code>pool_datasets</code> function also
+checks if sample names are unique. If not it sums the read count of the
+same sample and same ASV, but returns a warning.</p>
+<p>The output file or data frame can be rearranged to wide format bu the
+<a href="#print-output">WriteASVtable</a> function.</p>
+</div>
+<div id="count_reads_dir" class="section level3">
+<h3>count_reads_dir</h3>
+<p>Count the number of reads in <code>fasta</code> or <code>fastq</code>
+files found in the input directory. Input files can be gz compressed or
+uncompressed, but zip files are not supported.</p>
+<p>The <a href="#fastainfo">fastainfo</a> and the <a href="#sortedinfo">sortedinfo</a> files contain the number of reads
+after <code>Merge</code> or <code>SortReads</code>, so no need to run
+them separately. This function can be useful for counting the number of
+reads in the input <code>fastq</code> files.</p>
+<ul>
+<li><code>dir</code> Input directory containing the fasta of fastq
+files</li>
+<li><code>file_type</code> [fasta/fastq]</li>
+<li><code>pattern</code> Regular expression; Check only files for
+<code>pattern</code> in the file name</li>
+</ul>
+<pre class="r"><code>dir &lt;- &quot;vtamR_test/data&quot;
+df &lt;- count_reads_dir(dir, pattern=&quot;_fw.fastq.gz&quot;, file_type=&quot;fastq&quot;)</code></pre>
+</div>
+<div id="barplot_read_count_by_sample" class="section level3">
+<h3>barplot_read_count_by_sample</h3>
+<p>Make a bar plot of read counts by <a href="#glossary">sample</a>
+(<code>sample_replicate=F</code>) or <a href="#glossary">sample-replicate</a> (<code>sample_replicate=T</code>).
+Can use different colors for different sample types (<a href="#glossary">real/mock/negative</a>)</p>
+<ul>
+<li><a href="#read_count_df">read_count_df</a> Input data frame</li>
+<li><code>sample_types</code> data frame or CSV file containing info on
+sample types for each sample</li>
+</ul>
+<pre class="r"><code>sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
+barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)</code></pre>
+</div>
+<div id="histogram_read_count_by_variant" class="section level3">
+<h3>histogram_read_count_by_variant</h3>
+<p>Histogram of read counts by ASV</p>
+<ul>
+<li><a href="#read_count_df">read_count_df</a> Input data frame</li>
+<li><code>min_read_count</code> Ignore variants with read count bellow
+this value</li>
+<li><code>binwidth</code> Width of bins</li>
+</ul>
+<pre class="r"><code>histogram_read_count_by_variant(read_count_df, min_read_count=10, binwidth=1000)</code></pre>
+</div>
+<div id="renkonen-distances" class="section level3">
+<h3>Renkonen distances</h3>
+<p>Calculate the Renkonen distances among all replicates (compare=“all”)
+or among replicates of the same sample (compare=“within”) and plot
+them.</p>
+<ul>
+<li><a href="#read_count_df">read_count_df</a> Input data frame</li>
+<li><code>sample_types</code> data frame or CSV file containing info on
+sample types for each sample</li>
+</ul>
+<pre class="r"><code>renkonen_within_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;within&quot;)
+barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo)
+density_plot_renkonen_distance(renkonen_within_df)
+
+renkonen_all_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;all&quot;)
+density_plot_renkonen_distance(renkonen_all_df)</code></pre>
+</div>
 </div>
 <div id="input-and-output-filesdata-frames" class="section level2">
 <h2>Input and output files/data frames</h2>
 <div id="fastqinfo" class="section level3">
 <h3>fastqinfo</h3>
-<p>CSV file file with information on input files, primers, tags, samples
-with the following columns. Each line corresponds to a sample-replicate
-combination.</p>
+<p>CSV file file with information on input fastq files, primers, tags,
+samples with the following columns. Each line corresponds to a
+sample-replicate combination.</p>
 <ul>
 <li>tag_fw: Sequence tag on the 5’ of the fw read (NA if file is already
 demultiplexed)</li>
@@ -2246,8 +2423,50 @@ this information is used for detecting false positives. Use NA
 otherwise. Use also NA for negative controls.</li>
 <li>replicate: Numerical id of a replicate (e.g. Sample1 can have
 replicate 1 2 or 3)</li>
-<li>fastq_fw: Forward fastq file name (without path)</li>
-<li>fastq_rv: Reverse fastq file name (without path)</li>
+<li>fastq_fw: Forward fastq file</li>
+<li>fastq_rv: Reverse fastq file</li>
+</ul>
+</div>
+<div id="fastainfo" class="section level3">
+<h3>fastainfo</h3>
+<p>CSV file file with information on input fasta files, primers, tags,
+samples with the following columns. Each line corresponds to a
+sample-replicate combination.</p>
+<ul>
+<li>tag_fw: Sequence tag on the 5’ of the fw read (NA if file is already
+demultiplexed)</li>
+<li>primer_fw: Forward primer (NA if primer has been trimmed)</li>
+<li>tag_rv: Sequence tag on the 5’ of the fw read (NA if file is already
+demultiplexed)</li>
+<li>primer_rv: Reverse primer (NA if primer has been trimmed)</li>
+<li>sample: Name of the sample (alpha-numerical). Must be unique.</li>
+<li>sample_type: <a href="#glossary">real/mock/negative</a></li>
+<li>habitat: If real or mock samples are from different habitats, that
+cannot contain the same type of organisms (e.g. terrestrial vs. marine),
+this information is used for detecting false positives. Use NA
+otherwise. Use also NA for negative controls.</li>
+<li>replicate: Numerical id of a replicate (e.g. Sample1 can have
+replicate 1 2 or 3)</li>
+<li>fasta: Fasta file</li>
+<li>Read_count: Number of reads in the fasta file. Optional.</li>
+</ul>
+</div>
+<div id="sortedinfo" class="section level3">
+<h3>sortedinfo</h3>
+<p>CSV file file with information on demultiplexed and primer trimmed
+fasta files and samples with the following columns. Each line
+corresponds to a sample-replicate combination.</p>
+<ul>
+<li>sample: Name of the sample (alpha-numerical). Must be unique.</li>
+<li>sample_type: <a href="#glossary">real/mock/negative</a></li>
+<li>habitat: If real or mock samples are from different habitats, that
+cannot contain the same type of organisms (e.g. terrestrial vs. marine),
+this information is used for detecting false positives. Use NA
+otherwise. Use also NA for negative controls.</li>
+<li>replicate: Numerical id of a replicate (e.g. Sample1 can have
+replicate 1 2 or 3)</li>
+<li>fasta: Fasta file</li>
+<li>Read_count: Number of reads in the fasta file. Optional.</li>
 </ul>
 </div>
 <div id="asv_list" class="section level3">
@@ -2347,6 +2566,18 @@ caracterized by the numbre of reads in each sample-replicate.</li>
 <li><strong>taxIDs</strong>: Numerical taxonomic identifier. It can be a
 valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI taxID</a>, or
 arbitrary negative numbers for taxa not in NCBI</li>
+<li><strong>sample</strong> Name of the environmental or control
+sample</li>
+<li><strong>sample-replicate</strong> Each sample can have technical of
+biological replicates.</li>
+<li><strong>sample type</strong> [real/mock/negative]</li>
+<li><strong>real sample</strong> An environmental sample</li>
+<li><strong>mock sample</strong> An artificial mix of know organisms or
+DNA</li>
+<li><strong>negative sample</strong> Negative control</li>
+<li><strong>habitat</strong> Habitat type of the organisms in real or
+mock samples. Use this only if organisms of the different habitats
+cannot appear in another haditat of the dataset. Use NA otherwise.</li>
 </ul>
 </div>
 <div id="troubleshooting" class="section level2">

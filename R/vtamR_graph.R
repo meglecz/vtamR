@@ -147,7 +147,7 @@ barplot_renkonen_distance <- function(df, sample_types="", sep=",", x_axis_label
 
 #' density_plot_renkonen_distance
 #' 
-#' Create density plot with renkonen distances between pairs of sample-replicates
+#' Create density plot with Renkonen distances between pairs of sample-replicates
 #' 
 #' @param df data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by make_renkonen_distances)
 #' @export

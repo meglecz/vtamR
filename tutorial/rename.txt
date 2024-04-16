@@ -1,0 +1,33 @@
+history_by	HistoryBy
+summarize_by	SummarizeBy
+pool_datasets	PoolDatasets
+count_reads_dir	CountReadsDir
+barplot_read_count_by_sample	Barplot_ReadCountBySample
+histogram_read_count_by_variant	Histogram_ReadCountByVariant
+density_plot_renkonen_distance	DensityPlot_RenkonenDistance
+barplot_renkonen_distance	Barplot_RenkonenDistance
+make_renkonen_distances	MakeRenkonenDistances
+
+read_fastas_from_sortedinfo	ReadFastasSortedinfo	Dereplicate ?
+get_stat	GetStat
+
+FilterMinReplicateNumber	FilterMinReplicate
+
+LFN_sample_replicate	LFNsampleReplicate
+LFN_variant 	LFNvariant 
+LFN_read_count	LFNreadCount
+LFN_global_read_count	LFNglobalReadCount
+pool_LFN	PoolFilters
+
+
+OptimizePCRError	OptimizePCRerror
+OptimizeLFNsampleReplicate	OptimizeLFNsampleReplicate
+OptimizeLFNReadCountAndLFNvariant	OptimizeLFNreadCountLFNvariant
+
+test_Merge_and_SortReads	Test_MergeSortReads
+test_Filters	Test_Filters
+test_MakeKnownOccurrences	Test_MakeKnownOccurrences
+test_Optimize	Test_Optimize
+test_TaxAssign	Test_TaxAssign
+
+check_fileinfo	CheckFileinfo

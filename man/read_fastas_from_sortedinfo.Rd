@@ -15,7 +15,7 @@ read_fastas_from_sortedinfo(
 )
 }
 \arguments{
-\item{sortedinfo}{data frame or csv file with columns:  sample,  replicate, file name, (optional: sample_type(mock/negative/real), habitat)}
+\item{sortedinfo}{data frame or csv file with columns:  sample,  replicate, fasta, (optional: sample_type(mock/negative/real), habitat)}
 
 \item{dir}{name of the directory with fasta files}
 
