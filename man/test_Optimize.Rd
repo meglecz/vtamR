@@ -7,7 +7,8 @@
 Test_Optimize(
   test_dir = "vtamR_test/",
   vsearch_path = vsearch_path,
-  delete_tmp = T
+  delete_tmp = T,
+  sep = ","
 )
 }
 \arguments{

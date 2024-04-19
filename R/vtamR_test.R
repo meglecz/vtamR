@@ -9,7 +9,7 @@
 #' @export
 #'
 
-Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T){
+Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T, sep=','){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -526,7 +526,7 @@ Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tm
 #' @param delete_tmp [T/F]  Delete output folder
 #' @export
 #'
-Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T){
+Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T, sep=","){
   
   test_dir <- check_dir(test_dir)
 #  outdir <- paste(test_dir, "out/", sep="")

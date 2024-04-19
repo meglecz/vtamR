@@ -58,7 +58,7 @@ if(computer == "Bombyx"){
   cutadapt_path="C:/Users/Public/"
   vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
   blast_path="C:/Users/Public/blast-2.14.1+/bin/"
-  swarm_path <- "C:/swarm-3.1.4-win-x86_64/bin/"
+  swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin/"
   db_path="C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/"
 #  fastq_dir <- "C:/Users/emese/vtamR_private/fastq/"
   fastq_dir <- "vtamR_test/data/"

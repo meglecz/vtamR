@@ -1497,18 +1497,18 @@ border-radius: 0px;
 in R. It is a complete metabarcoding pipeline:</p>
 <ul>
 <li>Sequence analyses from raw fastq files of amplicon sequences till
-Amplicon Sequence Variant (ASV or variant) table of validated variants
-assigned to taxonomic groups.</li>
+Amplicon Sequence Variant (<a href="#glossary">ASV</a>) table of
+validated ASVs assigned to taxonomic groups.</li>
 <li>Handles technical or biological replicates of the same sample</li>
 <li>Uses positive and negative control samples to fine tune the
-filtering and reduce false positive and false negative occurrences.</li>
-<li>Can pool multiple data sets (resultas or earlier analyses)</li>
+filtering and reduce <a href="#glossary">false positive</a> and <a href="#glossary">false negative</a> occurrences.</li>
+<li>Can pool multiple data sets (results of earlier analyses)</li>
 <li>Can pool results from overlapping markers</li>
 </ul>
 <p><strong>Novelties compared to VTAM:</strong></p>
 <ul>
 <li>As it is a series of R functions, vramR is highly adaptable to
-include, exclude and order different steps of tha analyses</li>
+include/exclude and order different steps of the analyses</li>
 <li>Includes swarm for denoising</li>
 <li>Graphic options</li>
 <li>Include functions to get statistics of each filtering steps (read
@@ -1531,21 +1531,21 @@ al., 1990</a>) (v2.11.0+)</li>
 <li>swarm (<a href="https://peerj.com/articles/1420/">Mahé et al.,
 2015</a>) (v2.1.12)</li>
 </ul>
-<p>vtamR has been tested using the above mentioned versions. It should
-work with later versions, and it is also likely to work with older ones.
-vtamR was tested in Windows and Linux, and should work in all operating
-systems.</p>
+<p>vtamR has been tested using the above mentioned versions, but it
+should work with later versions. vtamR was tested on Windows and Linux,
+and should work in all operating systems.</p>
 <p>The help is available for all vtamR function by
-<code>?function_name</code> In most cases, the input data can be either
-a data frame or a csv file and most function return a data frame and can
-also write them into a file if a file name is provided.</p>
+<code>?function_name</code>.</p>
+<p>For most functions, the input data can be either a data frame or a
+csv file and they return a data frame that is also written to a csv file
+if a file name is provided.</p>
 </div>
 <div id="installation" class="section level2">
 <h2>Installation</h2>
 <div id="install-third-party-programs-on-linux" class="section level3">
 <h3>Install third party programs on Linux</h3>
 <ul>
-<li><code>vsearch</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/vsearch</a></li>
+<li><code>vsearch</code> <a href="https://github.com/torognes/vsearch">https://github.com/torognes/vsearch</a></li>
 <li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
 <li><code>cutadapt</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
 <li><code>swarm</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
@@ -1553,12 +1553,25 @@ also write them into a file if a file name is provided.</p>
 </div>
 <div id="install-third-party-programs-on-windows" class="section level3">
 <h3>Install third party programs on Windows</h3>
+<p>Download binaries and save it a convenient place on your computer
+(path without space, e.g. <code>C:/Users/Public/</code>)</p>
 <p><strong>vsearch</strong></p>
 <ul>
 <li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a></li>
 <li>Decompress the zip file</li>
 <li>The executable are found in
 <code>vsearch-x.xx.x-win-x86_64/bin/</code></li>
+</ul>
+<p><strong>cutadapt</strong></p>
+<ul>
+<li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases">https://github.com/marcelm/cutadapt/releases</a></li>
+</ul>
+<p><strong>swarm</strong></p>
+<ul>
+<li>Download binaries from <a href="https://github.com/torognes/swarm/releases">https://github.com/torognes/swarm/releases</a></li>
+<li>Decompress the zip file</li>
+<li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code>
+directory</li>
 </ul>
 <p><strong>BLAST</strong></p>
 <ul>
@@ -1567,23 +1580,9 @@ also write them into a file if a file name is provided.</p>
 <li>Double click on the .exe file, accept the license agreement and
 specify the install location when prompted. Attention! Do not accept the
 standard location (C:/Program Files/…) since it contains a space. Chose
-a directory with a path without space.</li>
+a directory with a path without space
+(e.g. <code>C:/Users/Public/</code>).</li>
 <li>The executables are found in <code>blast-x.xx.x+/bin/</code></li>
-</ul>
-<p><strong>cutadapt</strong></p>
-<ul>
-<li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases">https://github.com/marcelm/cutadapt/releases</a>
-and save it a convenient place on your computer (path without space,
-e.g. <code>C:/Users/Public/</code>)</li>
-</ul>
-<p><strong>swarm</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/swarm/releases">https://github.com/torognes/swarm/releases</a>
-and save it to a convenient place on your computer (path without space,
-e.g. <code>C:/Users/Public/</code>)</li>
-<li>Unzip file</li>
-<li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code>
-directory</li>
 </ul>
 </div>
 <div id="install-r-packages" class="section level3">
@@ -1605,7 +1604,7 @@ CPUs</strong></p>
 <pre class="r"><code>cutadapt_path &lt;- &quot;C:/Users/Public/&quot;
 vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path &lt;- &quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
-swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
+swarm_path &lt;- &quot;C:/Users/Public/swarm-3.1.4-win-x86_64/bin/&quot;
 num_threads &lt;- 4</code></pre>
 <p><strong>Load libraries</strong></p>
 <pre class="r"><code>library(&quot;devtools&quot;)
@@ -1619,11 +1618,11 @@ load_all(&quot;.&quot;)
 roxygenise()
 usethis::use_roxygen_md()</code></pre>
 <p><strong>Run test functions on test data</strong></p>
-<pre class="r"><code>test_Merge_and_SortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
-test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
-test_MakeKnownOccurrences()
-test_Optimize(vsearch_path=vsearch_path)
-test_TaxAssign(blast_path=blast_path, num_threads=num_threads)</code></pre>
+<pre class="r"><code>Test_MergeSortReads(vsearch_path=vsearch_path, cutadapt_path=cutadapt_path)
+Test_Filters(vsearch_path=vsearch_path, swarm_path=swarm_path)
+Test_MakeKnownOccurrences()
+Test_Optimize(vsearch_path=vsearch_path)
+Test_TaxAssign(blast_path=blast_path, num_threads=num_threads)</code></pre>
 <p>You should see “PASS” after the tested function names.</p>
 </div>
 </div>
@@ -1644,7 +1643,7 @@ usethis::use_roxygen_md()</code></pre>
 <pre class="r"><code>cutadapt_path &lt;- &quot;C:/Users/Public/&quot;
 vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/&quot;
 blast_path &lt;- &quot;C:/Users/Public/blast-2.14.1+/bin/&quot;
-swarm_path &lt;- &quot;C:/swarm-3.1.4-win-x86_64/bin/&quot;
+swarm_path &lt;- &quot;C:/Users/Public/swarm-3.1.4-win-x86_64/bin/&quot;
 num_threads &lt;- 4
 sep=&quot;,&quot;</code></pre>
 <p><strong>Set general parameters Bombyx</strong></p>
@@ -1674,8 +1673,8 @@ blast_db &lt;- &quot;~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam&quot;
 <ul>
 <li><code>taxonomy</code> CSV file file with taxonomic information</li>
 <li><code>blast_db</code> BLAST database</li>
-<li>Details are in <a href="#input-and-output-files">Input and output
-files section</a></li>
+<li>Details are in <a href="#reference-database-for-taxonomic-assignments">Reference database
+for taxonomic assignments section</a></li>
 </ul>
 <p><strong>Set input data</strong></p>
 <pre class="r"><code>fastq_dir &lt;- &quot;vtamR_test/data/&quot;
@@ -1687,69 +1686,84 @@ asv_list &lt;- &quot;vtamR_test/data/asv_list.csv&quot;</code></pre>
 <li><code>fastq_dir</code> Directory containing the input fastq
 files</li>
 <li><code>outdir</code> Name of the output directory</li>
-<li><code>fastqinfo</code> CSV file file with information on input
-files, primers, tags, samples</li>
-<li><code>mock_composition</code> CSV file file with expected ASVs in
-mock samples</li>
-<li><code>asv_list</code> CSV file file with ASVs from earlier data sets
-(if any)</li>
-<li>Details are in <a href="#input-and-output-files">Input and output
-files section</a></li>
+<li><a href="#fastqinfo">fastqinfo</a> CSV file file with information on
+input files, primers, tags, samples</li>
+<li><a href="#mock_composition">mock_composition</a> CSV file file with
+expected ASVs in mock samples; Can be created later</li>
+<li><a href="#asv_list">asv_list</a> CSV file file with ASVs from
+earlier data sets; Optional</li>
 </ul>
 <p><strong>Check the format of input files</strong></p>
-<p>The <code>check_fileinfo</code> function tests if all obligatory
+<p>The <code>CheckFileinfo</code> function tests if all obligatory
 columns are present, and makes some sanity checks. This can be helpful,
 since these files are produced by the users, and may contain errors
 difficult to spot by eye.</p>
-<pre class="r"><code>check_fileinfo(file=fastqinfo, dir=fastq_dir, file_type=&quot;fastqinfo&quot;)
-check_fileinfo(file=mock_composition, file_type=&quot;mock_composition&quot;)
-check_fileinfo(file=asv_list, file_type=&quot;asv_list&quot;)</code></pre>
+<pre class="r"><code>CheckFileinfo(file=fastqinfo, dir=fastq_dir, file_type=&quot;fastqinfo&quot;)
+CheckFileinfo(file=mock_composition, file_type=&quot;mock_composition&quot;)
+CheckFileinfo(file=asv_list, file_type=&quot;asv_list&quot;)</code></pre>
 </div>
 <div id="merge---demultiplex" class="section level2">
 <h2>Merge - Demultiplex</h2>
 <p>I suppose that you have <a href="#installation">installed third party
 programs and set path to them</a> and followed the <a href="#getting-started">Getting started section</a></p>
 <p>According to your wetlab and sequencing protocol fastq files can
-contain one or more sample-replicate, and sequences may or may not
-contain tags (for demultiplexing) and primer sequences. In the following
-sections I show 3 different scenarios to obtain the <a href="#input-and-output-files">read_count_df</a>, the input data frame
-to the filtering steps.</p>
+contain one or more <a href="#glossary">sample-replicates</a>, and
+sequences may or may not contain <a href="#glossary">tags</a> (for <a href="#glossary">demultiplexing</a>) and primer sequences. In the
+following sections I show 3 different scenarios to obtain the <a href="#read_count_df">read_count_df</a> data frame, which the input to
+the filtering steps.</p>
 <div id="one-sample-per-fastq---no-tag---no-primer" class="section level3">
 <h3>One sample per fastq - no tag - no primer</h3>
 <p>Read pairs should be quality filtered merged and written to fasta
-format. This can be done by the <code>Merge</code> function. See the
-help (<code>?Merge</code>) for setting the correct parameters for
-quality filtering.</p>
+format. This can be done by the <code>Merge</code> function.</p>
+<p>See the help (<code>?Merge</code>) for setting the correct parameters
+for quality filtering.</p>
 <ul>
-<li><a href="#input-and-output-files">fastqinfo</a> is either a csv
-file, or a data frame, with the following columns: tag_fw, primer_fw,
-tag_rv, primer_rv, sample, sample_type, habitat, replicate, fastq_fw,
-fastq_rv. The tag_fw, primer_fw, tag_rv, primer_rv are irrelevant in
-this case, just fill them with NA.</li>
+<li><a href="#fastqinfo">fastqinfo</a> is either a csv file, or a data
+frame. The key information for <code>Merge</code> is the list of the
+fastq file pairs that should be merged. The <code>tag_fw</code>,
+<code>primer_fw</code>, <code>tag_rv</code>, <code>primer_rv</code> are
+irrelevant in this case, just fill them with <code>NA</code>.</li>
 <li><code>fastq_dir</code> is the directory containing the input fastq
 files</li>
+<li><a href="#fastainfo">sortedinfo_df</a> is the output of
+<code>Merge</code>. It is the updated version of fastqinfo, where fastq
+file names have been replaced by fasta file names and the read counts
+are included for each file. Since no demultiplexing and primer trimming
+is necessary, this data frame and the files listed in it are the input
+of <code>Dereplicate</code>.</li>
 </ul>
 <pre class="r"><code>merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
-fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)</code></pre>
+sortedinfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)</code></pre>
 </div>
 <div id="one-sample-per-fastq---primer---no-tag" class="section level3">
 <h3>One sample per fastq - primer - no tag</h3>
-<p>Read pairs should be quality filtered merged and written to fasta
-format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous section</a>.
-The only difference is that you should fill the <code>primer_fw</code>
-and the <code>primer_rv</code> columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
+<p>Read pairs should be quality filtered, merged and written to fasta
+format by <code>Merge</code> function as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous
+section</a>.</p>
 <p>Then the <code>TrimPrimer</code> function will trim the primers from
 the reads. See the help (<code>?TrimPrimer</code>) for setting the
 correct parameters for primer trimming.</p>
 <ul>
-<li><a href="#input-and-output-files">fastainfo_df</a> is the output of
-<code>Merge</code></li>
-<li><code>fasta_dir</code> is the directory containing he input fasta
+<li><a href="#fastqinfo">fastqinfo</a> is either a csv file, or a data
+frame. The key information for <code>Merge</code> is the list of the
+fastq file pairs that should be merged. The <code>primer_fw</code>,
+<code>primer_rv</code> columns are irrelevant in this case, just fill
+them with <code>NA</code>.</li>
+<li><code>fastq_dir</code> is the directory containing the input fastq
 files</li>
+<li><a href="#fastainfo">fastainfo_df</a> is the output of
+<code>Merge</code>. It is the updated version of fastqinfo, where fastq
+file names have been replaced by fasta file names.</li>
+<li><code>fasta_dir</code> is the directory containing he input fasta
+files for <code>TrimPrimer</code>. This directory is created by
+<code>Merge</code>.</li>
 <li>If <code>check_reverse</code> is TRUE, <code>TrimPrimer</code>
-checks the reverse complementary stand as well (FALSE by default)</li>
+checks the reverse complementary stand as well.</li>
+<li><code>sortedinfo_df</code> is updated version of fastainfo. Since no
+demultiplexing is necessary, this data frame and the files listed in it
+are the input of <code>Dereplicate</code>.</li>
 </ul>
-<pre class="r"><code># merge an quality filter
+<pre class="r"><code># merge and quality filter
 merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
 fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
 
@@ -1760,21 +1774,30 @@ sortedinfo_df &lt;- TrimPrimer(fastainfo_df, fasta_dir=merged_dir, outdir=sorted
 <div id="several-samples-per-fastq---tags---primers" class="section level3">
 <h3>Several samples per fastq - tags - primers</h3>
 <p>Read pairs should be quality filtered, merged and written to fasta
-format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous sections</a>.
-The only difference is that you should fill the <code>tag_fw</code>,
-<code>primer_fw</code>, <code>tag_rv</code> and <code>primer_rv</code>
-columns of the <a href="#input-and-output-files">fastqinfo</a> file.</p>
-<p>Then the <code>SortReads</code> function will demultiplex the fasta
-files according to the tag combinations and trim the primers from the
-reads. See the help (<code>?SortReads</code>) for setting the correct
-parameters for demultiplexing and primer trimming:.</p>
+format as in the <a href="#one-sample-per-fastq---no-tag---no-primer">previous
+sections</a>.</p>
+<p>Then the <code>SortReads</code> function will <a href="#demultiplexing">demultiplex</a> the fasta files according to the
+<a href="#tag">tag</a> combinations and <a href="#trimming">trim</a> the
+primers from the reads. See the help (<code>?SortReads</code>) for
+setting the correct parameters for demultiplexing and primer
+trimming:</p>
 <ul>
-<li><a href="#input-and-output-files">fastainfo_df</a> is the output of
-<code>Merge</code></li>
-<li><code>fasta_dir</code> is the directory containing he input fasta
+<li><a href="#fastqinfo">fastqinfo</a> is either a csv file, or a data
+frame. The key information for <code>Merge</code> is the list of the
+fastq file pairs that should be merged.</li>
+<li><code>fastq_dir</code> is the directory containing the input fastq
 files</li>
+<li><a href="#fastainfo">fastainfo_df</a> is the output of
+<code>Merge</code>. It is the updated version of fastqinfo, where fastq
+file names have been replaced by fasta file names.</li>
+<li><code>fasta_dir</code> is the directory containing the input fasta
+files for <code>TrimPrimer</code>. This directory is created by
+<code>Merge</code>.</li>
 <li>If <code>check_reverse</code> is TRUE, <code>SortReads</code> checks
-the reverse complementary stand as well (FALSE by default)</li>
+the reverse complementary stand as well.</li>
+<li><code>sortedinfo_df</code> is updated version of fastainfo. This
+data frame and the files listed in it are the input of the
+<code>Dereplicate</code>.</li>
 </ul>
 <pre class="r"><code># merge and quality filter
 merged_dir &lt;- paste(outdir, &quot;merged/&quot;, sep=&quot;&quot;)
@@ -1782,32 +1805,33 @@ fastainfo_df &lt;- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_pa
 
 # demultiplex, trim tags and pimers
 sorted_dir &lt;- paste(outdir, &quot;sorted/&quot;, sep=&quot;&quot;)
-sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
+sortedinfo_df &lt;- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, check_reverse=TRUE, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)</code></pre>
 </div>
 </div>
 <div id="dereplicate" class="section level2">
 <h2>Dereplicate</h2>
 <p>I suppose that you have <a href="#installation">installed third party
 programs and set path to them</a> and followed the <a href="#getting-started">Getting started section</a>, and you have one
-fasta file per sample-replicate containing merged reads. Tags and
-primers have been removed from the reads.</p>
-<p>The fasta files then should be dereplicated and a numerical ID
-(asv_id) assigned to each ASV. The output is a data frame (<a href="#input-and-output-files">read_count_df</a>). This can also be
-written to a csv file if <code>outfile</code> is given. It is a good
-idea to write this file, since it is the starting point of data
-filtering. You can experiment with different filtering strategies
-starting from this file, without the need of re-running the long steps
-of merging and filtering.</p>
+fasta file per <a href="#glossary">sample-replicate</a> containing
+merged reads. Tags and primers have been removed from the reads.</p>
+<p>The fasta files then should be <a href="#glossary">dereplicated</a>
+and a numerical ID (<a href="#glossary">asv_id</a>) assigned to each <a href="#glossary">ASV</a>. The output is a data frame (<a href="#read_count_df">read_count_df</a>). This can also be written to a
+csv file if <code>outfile</code> is given. It is a good idea to write
+this file, since it is the starting point of data filtering. You can
+experiment with different filtering strategies starting from this file,
+without the need of re-running the long steps of <a href="#glossary">merging</a> and <a href="#glossary">demultiplexing</a>
+and <a href="#glossary">trimming</a> reads.</p>
 <p>If you want to keep the IDs of ASVs from earlier analyses, you can
-give a file containing earlier ASVs and their IDs (<a href="#input-and-output-files">asv_list</a>). The completed ASV list is
-written to <code>updated_asv_list</code> file.</p>
-<p>Giving only the file name to <code>updated_asv_list</code>, but not
-to <code>asv_list</code>, the function will write the complete list of
-ASVs. This can be useful later when analyzing subsequent data sets.</p>
+give a file containing earlier ASVs and their IDs (<a href="#asv_list">asv_list</a>). The completed ASV list is written to
+<code>updated_asv_list</code> file.</p>
+<p>When providing only the file name to <code>updated_asv_list</code>,
+but not to <code>asv_list</code>, the function will write the complete
+list of ASVs. This can be useful later when analyzing subsequent data
+sets to homogenize ASV IDs between data sets.</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;1_before_filter.csv&quot;, sep=&quot;&quot;)
 updated_asv_list &lt;- paste(outdir, &quot;ASV_list_with_IDs.csv&quot;, sep=&quot;&quot;)
 
-read_count_df &lt;- read_fastas_from_sortedinfo(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)</code></pre>
+read_count_df &lt;- Dereplicate(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)</code></pre>
 </div>
 <div id="filter" class="section level2">
 <h2>Filter</h2>
@@ -1817,91 +1841,95 @@ of technical or biological problems associated with metabarcoding. The
 different filters can be applied to the original data set and then the
 results pooled together (accepting only occurrences that pass all
 filters) or can be applied sequentially in the order defined according
-to your needs or constraints (like computing capacity).</p>
+to your needs.</p>
 <p>In this section I give an example using most filtering options. It is
 up to you to construct your own pipeline.</p>
 <p>Each function returns a data frame with the filtered output. You can
 also write the results to a csv file. This can be useful of tracking the
 presence/absence of some of the ASVs/samples throughout the analyses
-using different <a href="#helper-functions">helper functions</a>. I will
-start the names of the output files by a number to keep the order of the
-different steps and allow the <code>summarize_by</code> <a href="#helper-functions">helper function</a> to make final statistics at
-each step of the analyses.</p>
+using the <a href="#historyby">HistoryBy</a> and <a href="#summarizeby">SummarizeBy</a> functions. I will start the names of
+the output files by a number to keep the order of the different steps
+and allow the <a href="#summarizeby">SummarizeBy</a> function to make
+final statistics at each step of the analyses.</p>
 <p>We can also follow the evolution of the number of reads and ASVs
 remaining in the data set after each filtering steps. Let’s define a
 data frame (<code>stat_df</code>), that will contain this information,
-and we will complete after each step, and add line with information on
-the unfiltered data set.</p>
-<p><code>params</code> is a string containing the major parameters of
-each filtering steps.</p>
-<p><code>stage</code> is a string referring to the filtering step.</p>
+and we will complete it after each step, and add line with information
+on the unfiltered data set.</p>
+<ul>
+<li><code>params</code> is a string containing the major parameters of
+each filtering steps.</li>
+<li><code>stage</code> is a string referring to the filtering step.</li>
+</ul>
 <pre class="r"><code>stat_df &lt;- data.frame(parameters=character(),
                       asv_count=integer(),
                       read_count=integer(),
                       sample_count=integer(),
                       sample_replicate_count=integer())
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;Input&quot;, params=NA)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;Input&quot;, params=NA)</code></pre>
 <div id="denoising-by-swarm" class="section level3">
 <h3>Denoising by swarm</h3>
 <p>Swarm (<a href="https://peerj.com/articles/1420/">Mahé et al.,
 2015</a>) is a powerful and quick computer program to denoise the data
-set by clustering variants that are likely to be the result of
-sequencing errors to ASVs representing real biological sequences. It
-will considerably reduce the number of ASVs.</p>
-<p>By default, vtamR uses 1 as swam’s d and the fastidious algorithm.
-See <code>?Swarm</code> on how to change this. It is possible to run
-Swarm separately for each sample (<code>by_sample=TRUE</code>; default)
-or at once for the whole data set. This second option is more efficient
-in reducing the number of ASVs but can cluster very similar real
-sequences appearing in different samples. Is you are interested in
-intra-specific variability, I suggest <code>by_sample=TRUE</code>.</p>
+set by clustering ASVs that are likely to be the result of sequencing
+errors to ASVs representing real biological sequences. It will
+considerably reduce the number of ASVs.</p>
+<p>By default, vtamR uses 1 as swam’s <code>d</code> and the fastidious
+algorithm. See <code>?Swarm</code> on how to change this. It is possible
+to run <code>Swarm</code> separately for each sample
+(<code>by_sample=TRUE</code>; default) or at once for the whole data
+set. This second option is more efficient in reducing the number of ASVs
+but can cluster very similar real sequences appearing in different
+samples. If you are interested in intra-specific variability, I suggest
+<code>by_sample=TRUE</code>.</p>
 <pre class="r"><code>by_sample &lt;- TRUE
 outfile &lt;- paste(outdir, &quot;2_Swarm_by_sample.csv&quot;, sep=&quot;&quot;)
 
 read_count_df &lt;- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, by_sample=by_sample)
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;Swarm&quot;, params=by_sample)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;Swarm&quot;, params=by_sample)</code></pre>
 </div>
-<div id="lfn_global_read_count" class="section level3">
-<h3>LFN_global_read_count</h3>
+<div id="lfnglobalreadcount" class="section level3">
+<h3>LFNglobalReadCount</h3>
 <p>Although, swarm has reduced considerably the number of ASVs, there
-are still many ASVs with low read count. The LFN_global_read_count
-function filter out all ASVs with total read count bellow a
-threshold.</p>
-<p>Let’s eliminate singletons:</p>
+are still many ASVs with low read count. The LFNglobalReadCount function
+filter out all ASVs with total read count bellow a threshold.</p>
+<p>Let’s eliminate <a href="#glossary">singletons</a>:</p>
 <pre class="r"><code>global_read_count_cutoff = 2
-outfile &lt;- paste(outdir, &quot;3_LFN_global_read_count.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;3_LFNglobalReadCount.csv&quot;, sep=&quot;&quot;)
 
-read_count_df &lt;- LFN_global_read_count(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
+read_count_df &lt;- LFNglobalReadCount(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;LFN_global_read_count&quot;, params=global_read_count_cutoff)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;LFNglobalReadCount&quot;, params=global_read_count_cutoff)</code></pre>
 </div>
-<div id="filerindel" class="section level3">
-<h3>FilerIndel</h3>
+<div id="filterindel" class="section level3">
+<h3>FilterIndel</h3>
 <p>This filter is applicable only for coding sequences. The idea is that
 if the length of the ASV differs from the most frequent ASV length by a
-number that is not a multiple of 3, it is likely an erroneous sequence
-or a pseudo-gene.</p>
+number that is not a multiple of 3, it is likely to be an erroneous
+sequence or a pseudo-gene.</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;4_FilterIndel.csv&quot;, sep=&quot;&quot;)
 
 read_count_df &lt;- FilterIndel(read_count_df, outfile=outfile)
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterIndel&quot;)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilterIndel&quot;)</code></pre>
 </div>
 <div id="filtercodonstop" class="section level3">
 <h3>FilterCodonStop</h3>
 <p>This filter is applicable only for coding sequences. It checks the
-number of codon STOPs in all 3 reading frames, and eliminates ASV with
-STOP in all of them.</p>
+number of codon STOPs in all 3 reading frames, and eliminates ASVs with
+STOP in all three reading frames.</p>
 <p>The Genetic code can be chosen from <a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes">here</a>.
-By default, it is the invertebrate mitochondrial genetic code (5)</p>
+By default, it is the invertebrate mitochondrial genetic code (5), since
+the STOP codons of this genetic codes are STOP in almost all genetic
+codes.</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;5_FilterCodonStop.csv&quot;, sep=&quot;&quot;)
 genetic_code = 5
 
 read_count_df &lt;- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code)
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerCodonStop&quot;, params=genetic_code)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilerCodonStop&quot;, params=genetic_code)</code></pre>
 </div>
 <div id="filterchimera" class="section level3">
 <h3>FilterChimera</h3>
@@ -1911,8 +1939,10 @@ implemented in vsearch. It can be run sample by sample
 <code>by_sample=T</code>, ASVs are eliminated if they have been
 identified as chimeras in <code>sample_prop</code> proportion of the
 samples where they are present.</p>
-<p><code>abskew</code> A chimera must be at least abskew times less
-frequent that the parental ASVs</p>
+<ul>
+<li><code>abskew</code> A chimera must be at least <code>abskew</code>
+times less frequent that the parental ASVs</li>
+</ul>
 <pre class="r"><code>abskew=2
 by_sample = T
 sample_prop = 0.8
@@ -1921,7 +1951,7 @@ outfile &lt;- paste(outdir, &quot;6_FilterChimera.csv&quot;, sep=&quot;&quot;)
 read_count_df &lt;- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
 
 params &lt;- paste(abskew, by_sample, sample_prop, sep=&quot;;&quot;)
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterChimera&quot;, params=params)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilterChimera&quot;, params=params)</code></pre>
 </div>
 <div id="filterrenkonen" class="section level3">
 <h3>FilterRenkonen</h3>
@@ -1930,45 +1960,47 @@ replicates of the same sample.</p>
 <p>We will calculate the renkonen distance among all replicates within
 sample and plot them.</p>
 <pre class="r"><code># calculate renkonen distance among all replicates within sample 
-renkonen_within_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;within&quot;)
+renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;within&quot;)
 # density plot
-renkonen_density_plot &lt;- density_plot_renkonen_distance(renkonen_within_df)
+renkonen_density_plot &lt;- DensityPlot_RenkonenDistance(renkonen_within_df)
 print(renkonen_density_plot)
 # barplot
 sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep=&quot;&quot;)
-renkonen_barplot &lt;- barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
+renkonen_barplot &lt;- Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
 print(renkonen_barplot)</code></pre>
 <p>In this example, we have only a few distances, so the density plot is
 not very relevant. The barplot indicates that the replicate 1 of the
-tnegtag sample (negative control) is distant from the other two
-replicates. Lets, establish the Renkonen cutoff value to 0.4. We will
-filter out replicates that have Renkonen distances above this cutoff to
-most other replicates of the sample. In this case replicate 1 on the
-tnegtag sample will be eliminated</p>
+<code>tnegtag</code> sample (negative control) is distant from the other
+two replicates. Lets, establish the Renkonen cutoff value to 0.4. We
+will filter out replicates that have Renkonen distances above this
+cutoff to most other replicates of the sample. In this case replicate 1
+on the tnegtag sample will be eliminated</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;7_FilterRenkonen.csv&quot;, sep=&quot;&quot;)
 cutoff &lt;- 0.4
 
 read_count_df &lt;- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
 
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerRenkonen&quot;, params=cutoff)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilerRenkonen&quot;, params=cutoff)</code></pre>
 </div>
 <div id="make-mock_composition-file" class="section level3">
 <h3>Make mock_composition file</h3>
 <p>If you do not know the exact amplicon sequences of the individuals in
-your mock sample, this is the time to find them among the ASVs of
-<code>read_count_df</code>. This will be necessary for optimizing the
-Low Frequency Noise filters, and evaluate precision and accuracy of the
-filtering.</p>
+your <a href="#glossary">mock sample</a>, this is the time to find them
+among the ASVs of <code>read_count_df</code> and prepare the <a href="#mock_composition">mock_composition</a> file. This will be
+necessary for optimizing the <a href="#glossary">Low Frequency Noise</a>
+(LFN) filters, and evaluate precision and accuracy of the filtering.</p>
 <p><strong>Assign taxa to ASVs</strong> See details of taxonomic
-assignment <a href="#taxassign">here</a></p>
+assignment <a href="#taxassign">here</a>.</p>
 <pre class="r"><code>outfile &lt;- paste(outdir, &quot;ASV_taxa.csv&quot;, sep=&quot;&quot;)
 asv_tax &lt;- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads, outfile=outfile)</code></pre>
 <p><strong>Pool replicates by sample</strong></p>
 <pre class="r"><code>tmp_read_count_samples_df &lt;- PoolReplicates(read_count_df, digits=0, outfile=outfile, sep=sep)</code></pre>
 <p><strong>Make an ASV table with taxonomic assignments</strong></p>
-<p>We will add to the data frame the total number of reads for each ASV
-and the number of samples they are present. See details of
-<code>WriteAsVtable</code> <a href="#writeasvtable">here</a></p>
+<p>Make a data frame with ASVs and read counts in a wide format and add
+the total number of reads for each ASV, the number of samples they are
+present and their taxonomic assignment. This format is easier to read
+for humans, than the <code>read_count_df</code>.</p>
+<p>See details of <code>WriteASVtable</code> <a href="#print-output">here</a>.</p>
 <pre class="r"><code>sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
 tmp_asv_table &lt;- WriteASVtable(tmp_read_count_samples_df, sortedinfo=sortedinfo, add_sums_by_asv=T, asv_tax=asv_tax)</code></pre>
 <p>If there are many samples it might be better to select only mock
@@ -1978,7 +2010,7 @@ samples and pertinent columns.</p>
   filter(tpos1 &gt; 0) %&gt;%
   arrange(desc(tpos1))</code></pre>
 <p>Yous can now pick the correct sequences of the expected ASVs in each
-mock and make the <a href="#input-and-output-files">mock_composition</a>
+mock and make the <a href="#mock_composition">mock_composition</a>
 file</p>
 </div>
 <div id="filterpcrerror" class="section level3">
@@ -1986,94 +2018,95 @@ file</p>
 <p>If you have done the denoising step by swarm, this function is
 probably redundant. Let’s see, if there are still potential PCR errors
 in mock samples.</p>
-<p><strong>OptimizePCRError</strong></p>
-<p><code>OptimizePCRError</code>, will find all highly similar ASV pairs
+<p><strong>OptimizePCRerror</strong></p>
+<p><code>OptimizePCRerror</code>, will find all highly similar ASV pairs
 (<code>max_mismatch=1</code> by default) within a mock sample, where one
-ASV is expected, and the other is not. Their read_count ratio is printed
-in the output file.</p>
+ASV is expected, and the other is not. Their <code>read_count</code>
+ratio is printed in the output file.</p>
 <p>The function considers only ASVs with more then
-<code>min_read_count</code> reads in the sample to avoid count a ratio
-based on low read counts that are more influenced by stochastic events
-and will be probably filtered out anyway. See details using the help:
-<code>?OptimizePCRError</code></p>
-<pre class="r"><code>outfile &lt;- paste(outdir, &quot;OptimizePCRError.csv&quot;, sep=&quot;&quot;)
-OptimizePCRError_df &lt;- OptimizePCRError(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)</code></pre>
+<code>min_read_count</code> reads in the sample to avoid a ratio based
+on low read counts that are more influenced by stochastic events and
+will be probably filtered out anyway.</p>
+<p>See details using the help: <code>?OptimizePCRerror</code>.</p>
+<pre class="r"><code>outfile &lt;- paste(outdir, &quot;OptimizePCRerror.csv&quot;, sep=&quot;&quot;)
+OptimizePCRerror_df &lt;- OptimizePCRerror(read_count_df, mock_composition=mock_composition, outfile=outfile, max_mismatch=2, min_read_count=5)</code></pre>
 <p><strong>FilterPCRerror</strong></p>
 <p>It seems that Swarm has done a good job. The highest read count ratio
-is 0.03 which is way bellow the default value of
-<code>FilterPCRerror</code> (0.1). Let’s run
-<code>FilterPCRerror</code>. See the help for more detail
-<code>?FilterPCRerror</code>.</p>
-<pre class="r"><code>pcr_error_var_prop &lt;- 0.1
+is 0.03 in the output of <code>OptimizePCRerror</code>. This should be
+taken as a lower limit to <code>pcr_error_var_prop</code>. Let’s use
+0.05 for filtering out PCR errors sample by sample.</p>
+<p>See the help for more detail <code>?FilterPCRerror</code>.</p>
+<pre class="r"><code>pcr_error_var_prop &lt;- 0.05
 max_mismatch &lt;- 2
 outfile &lt;- paste(outdir, &quot;8_FilterPCRerror.csv&quot;, sep=&quot;&quot;)
 
 read_count_df &lt;- FilterPCRerror(read_count_df, outfile=outfile, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch)
 
 params &lt;- paste(pcr_error_var_prop, max_mismatch, by_sample, sep=&quot;;&quot;)
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilerPCRerror&quot;, params=params)</code></pre>
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilerPCRerror&quot;, params=params)</code></pre>
 </div>
-<div id="lfn_sample_replicate" class="section level3">
-<h3>LFN_sample_replicate</h3>
-<p><code>LFN_sample_replicate</code> will eliminate occurrences with
-very low read counts compared to the total number of reads in the
+<div id="lfnsamplereplicate" class="section level3">
+<h3>LFNsampleReplicate</h3>
+<p><code>LFNsampleReplicate</code> will eliminate occurrences with very
+low read counts compared to the total number of reads in the
 sample-replicate. The default cutoff proportion is 0.001. We can have an
 idea of the maximum value of this cutoff, by examining the proportions
 of expected ASVs in the mock samples using the
-<code>OptimizeLFNsampleReplicate</code> function</p>
+<code>OptimizeLFNsampleReplicate</code> function.</p>
 <p><strong>OptimizeLFNsampleReplicate</strong></p>
 <pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNsampleReplicate.csv&quot;, sep=&quot;&quot;)
 OptimizeLFNsampleReplicate_df &lt;- OptimizeLFNsampleReplicate(read_count=read_count_df, mock_composition=mock_composition, outfile=outfile)</code></pre>
-<p><strong>LFN_sample_replicate</strong></p>
+<p><strong>LFNsampleReplicate</strong></p>
 <p>We can see in the output, that the lowest proportion of an expected
 ASV is 0.005. Let’s use this cutoff for the
-<code>LFN_sample_replicate</code> filter</p>
+<code>LFNsampleReplicate</code> filter.</p>
 <pre class="r"><code>lfn_sample_replicate_cutoff &lt;- 0.005
-outfile &lt;- paste(outdir, &quot;9_LFN_sample_replicate.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;9_LFNsampleReplicate.csv&quot;, sep=&quot;&quot;)
 
-read_count_df_lnf_sample_replicate &lt;- LFN_sample_replicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
+read_count_df_lnf_sample_replicate &lt;- LFNsampleReplicate(read_count_df, cutoff=lfn_sample_replicate_cutoff, outfile=outfile)
 
-stat_df &lt;- get_stat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFN_sample_replicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
+stat_df &lt;- GetStat(read_count_df_lnf_sample_replicate, stat_df, stage=&quot;LFNsampleReplicate&quot;, params=lfn_sample_replicate_cutoff)</code></pre>
 </div>
-<div id="filterminreplicatenumber-1" class="section level3">
-<h3>FilterMinReplicateNumber 1</h3>
+<div id="filterminreplicate-1" class="section level3">
+<h3>FilterMinReplicate 1</h3>
 <p>To ensure repeatability, we can accept occurrences if they are
 present in at least <code>min_replicate_number</code> replicates of the
 sample (2 by default).</p>
-<pre class="r"><code>## LFN_variant
+<pre class="r"><code>## LFNvariant
 # Set parameter values
 min_replicate_number &lt;- 2
-outfile &lt;- paste(outdir, &quot;10_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;10_FilterMinReplicate.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
-read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
+read_count_df &lt;- FilterMinReplicate(read_count_df, min_replicate_number, outfile=outfile)
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilterMinReplicate&quot;, params=min_replicate_number)</code></pre>
 </div>
-<div id="lfn_variant-and-lfn_read_count" class="section level3">
-<h3>LFN_variant and LFN_read_count</h3>
-<p>The <code>LFN_variant</code> filter will eliminate occurrences with
+<div id="lfnvariant-and-lfnreadcount" class="section level3">
+<h3>LFNvariant and LFNreadCount</h3>
+<p>The <code>LFNvariant</code> filter will eliminate occurrences with
 very low read counts compared to the total number of reads of the ASV.
-The default cutoff proportion is 0.001. This is an important filter, to
-filter out occurrences present in the data set due to tag-jump.</p>
-<p>The <code>LFN_read_count</code> filter simply eliminates occurrences
-with less then <code>lfn_read_count_cutoff</code> reads (10 by
-default).</p>
+The default cutoff proportion is 0.001. This filter is designed to
+filter out occurrences present in the data set due to tag-jump or light
+inter sample contamination.</p>
+<p>The <code>LFNreadCount</code> filter simply eliminates occurrences
+with read count bellow a <code>cutoff</code> (10 by default).</p>
 <p>To find the best cutoff values for these filters, we will count the
 number of <a href="#glossary">false positive</a>, <a href="#glossary">false negative</a> and <a href="#glossary">true
 positive</a> occurrences using a series of combination of the cutoff
 values of these two filters.</p>
 <p><strong>MakeKnownOccurrences</strong></p>
-<p>The MakeKnownOccurrences function will identify <a href="#glossary">false positive</a>, <a href="#glossary">false
+<p>The <code>MakeKnownOccurrences</code> function will identify <a href="#glossary">false positive</a>, <a href="#glossary">false
 negative</a> and <a href="#glossary">true positive</a> occurrences in
 controls samples (mock and negative). Some false positives can also be
 identified in real samples if samples of different habitats are included
 in the data sets.</p>
 <p>The false positive and the true positive occurrences are written to
-the known_occurrences data frame (or file), false negatives to the
-missing_occurrences data frame (or file), and a performance_metrics data
-frame is also produced with the count of these occurrences. For details
-see <code>?MakeKnownOccurrences</code>.</p>
-<p>This function takes a read_count_samples data frame as an input,
-where the replicates of the same sample have been pooled (see
+the <code>known_occurrences</code> data frame (or file), false negatives
+to the <code>missing_occurrences</code> data frame (or file), and a
+<code>performance_metrics</code> data frame is also produced with the
+count of these occurrences. For details see
+<code>?MakeKnownOccurrences</code>.</p>
+<p>This function takes a <code>read_count_samples</code> data frame as
+an input, where the replicates of the same sample have been pooled (see
 <code>?PoolReplicates</code>)</p>
 <pre class="r"><code># Pool replicates
 read_count_samples_df &lt;- PoolReplicates(read_count_df)
@@ -2085,64 +2118,66 @@ results &lt;- MakeKnownOccurrences(read_count_samples = read_count_samples_df, s
 known_occurrences_df &lt;- results[[1]]
 missing_occurrences_df &lt;- results[[2]]
 performance_metrics_df &lt;- results[[3]]</code></pre>
-<p><strong>OptimizeLFNReadCountAndLFNvariant</strong></p>
-<p>The the <code>LFN_read_count</code> and <code>LFN_variant</code> is
-run for a series of cutoff value combinations of the two filters,
-followed by FilterMinReplicateNumber. For each parameter combination the
-number of FN, TP, and FP is reported. Chose the parameter setting that
-minimizes, FN and FP.</p>
+<p><strong>OptimizeLFNreadCountLFNvariant</strong></p>
+<p>The <code>LFNreadCount</code> and <code>LFNvariant</code> functions
+are run for a series of cutoff value combinations of the two filters,
+followed by <code>FilterMinReplicate</code>. For each parameter
+combination the number of FN, TP, and FP is reported. Chose the
+parameter setting that minimizes, FN and FP.</p>
 <p>Here we will use the default range of cutoffs to test, but you can
 set the minimum, the maximum and the increment for the cutoff values for
-both filters. (see <code>?OptimizeLFNReadCountAndLFNvariant</code>). We
-set <code>min_replicate_number</code> to 2 (1 by default), to eliminate
-non-repeatable occurrences among replicates of the sample.</p>
-<pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNReadCountAndLFNvariant.csv&quot;, sep=&quot;&quot;)
+both filters. (see <code>?OptimizeLFNreadCountLFNvariant</code>). We set
+<code>min_replicate_number</code> to 2, to eliminate non-repeatable
+occurrences among the Three replicates of each sample.</p>
+<pre class="r"><code>outfile = paste(outdir, &quot;OptimizeLFNreadCountLFNvariant.csv&quot;, sep=&quot;&quot;)
 
-OptimizeLFNReadCountAndLFNvariant_df &lt;- OptimizeLFNReadCountAndLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, min_replicate_number=2)</code></pre>
-<p><strong>LFN_variant, LFN_read_count</strong></p>
-<p>From the output, it we choose 0.001 for the cutoff of
-<code>LFN_variant</code> and 85 for <code>LFN_read_count</code>.</p>
+OptimizeLFNreadCountLFNvariant_df &lt;- OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences=known_occurrences_df, outfile= outfile, min_replicate_number=2)</code></pre>
+<p><strong>LFNvariant, LFNreadCount</strong></p>
+<p>From the output, we choose 0.001 for the cutoff of
+<code>LFNvariant</code> and 85 for <code>LFNreadCount</code>.</p>
 <p>We will run the two filters on the same input data frame (for which
 the parameters has been optimized), and pool the results by accepting
-only occurrences that pass both filters.</p>
-<p>See <code>?LFN_variant</code> for details.</p>
-<pre class="r"><code>## LFN_variant
+only occurrences that pass both filters by the <code>PoolFilters</code>
+function.</p>
+<p>See <code>?LFNvariant, ?LFNreadCount</code> and
+<code>?PoolFilters</code> for details.</p>
+<pre class="r"><code>## LFNvariant
 # Set parameter values
 lnf_variant_cutoff = 0.001
-outfile &lt;- paste(outdir, &quot;11_LFN_variant.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;11_LFNvariant.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
-read_count_df_lnf_variant &lt;- LFN_variant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
-stat_df &lt;- get_stat(read_count_df_lnf_variant, stat_df, stage=&quot;LFN_variant&quot;, params=lnf_variant_cutoff)
+read_count_df_lnf_variant &lt;- LFNvariant(read_count_df, cutoff=lnf_variant_cutoff, outfile=outfile)
+stat_df &lt;- GetStat(read_count_df_lnf_variant, stat_df, stage=&quot;LFNvariant&quot;, params=lnf_variant_cutoff)
 
-## LFN_read_count
+## LFNreadCount
 # Set parameter values
 lfn_read_count_cutoff &lt;- 85
-outfile &lt;- paste(outdir, &quot;12_LFN_read_count.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;12_LFNreadCount.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
-read_count_df_lfn_read_count &lt;- LFN_read_count(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
-stat_df &lt;- get_stat(read_count_df_lfn_read_count, stat_df, stage=&quot;LFN_read_count&quot;, params=lfn_read_count_cutoff)
+read_count_df_lfn_read_count &lt;- LFNreadCount(read_count_df, cutoff=lfn_read_count_cutoff, outfile=outfile)
+stat_df &lt;- GetStat(read_count_df_lfn_read_count, stat_df, stage=&quot;LFNreadCount&quot;, params=lfn_read_count_cutoff)
 
 ## Combine results
 # Set parameter values
-outfile &lt;- paste(outdir, &quot;13_pool_LFN.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;13_poolLFN.csv&quot;, sep=&quot;&quot;)
 # Combine results and get stats
-read_count_df &lt;- pool_LFN(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
+read_count_df &lt;- PoolFilters(read_count_df_lfn_read_count, read_count_df_lnf_variant, outfile=outfile)
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilterLFN&quot;)
 # delete temporary data frames
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)</code></pre>
 </div>
-<div id="filterminreplicatenumber-2" class="section level3">
-<h3>FilterMinReplicateNumber 2</h3>
-<p>Let’s run again FilterMinReplicateNumber to ensure repeatability
-among replicates of the sample (2 by default).</p>
-<pre class="r"><code>## LFN_variant
+<div id="filterminreplicate-2" class="section level3">
+<h3>FilterMinReplicate 2</h3>
+<p>Let’s run again FilterMinReplicate to ensure repeatability among
+replicates of the sample (2 by default).</p>
+<pre class="r"><code>## LFNvariant
 # Set parameter values
 min_replicate_number &lt;- 2
-outfile &lt;- paste(outdir, &quot;14_FilterMinReplicateNumber.csv&quot;, sep=&quot;&quot;)
+outfile &lt;- paste(outdir, &quot;14_FilterMinReplicate.csv&quot;, sep=&quot;&quot;)
 # Run filter and get stats
-read_count_df &lt;- FilterMinReplicateNumber(read_count_df, min_replicate_number, outfile=outfile)
-stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;FilterMinReplicateNumber&quot;, params=min_replicate_number)</code></pre>
+read_count_df &lt;- FilterMinReplicate(read_count_df, min_replicate_number, outfile=outfile)
+stat_df &lt;- GetStat(read_count_df, stat_df, stage=&quot;FilterMinReplicate&quot;, params=min_replicate_number)</code></pre>
 </div>
 </div>
 <div id="pool-taxassign-and-document" class="section level2">
@@ -2156,7 +2191,7 @@ replicates of the same sample.</p>
 outfile &lt;- paste(outdir, &quot;15_PoolReplicates.csv&quot;, sep=&quot;&quot;)
 read_count_samples_df &lt;- PoolReplicates(read_count_df, outfile=outfile)
 # Run function and get stats
-stat_df &lt;- get_stat(read_count_samples_df, stat_df, stage=&quot;PoolReplicates&quot;)</code></pre>
+stat_df &lt;- GetStat(read_count_samples_df, stat_df, stage=&quot;PoolReplicates&quot;)</code></pre>
 </div>
 <div id="get-performance-metrics" class="section level3">
 <h3>Get performance metrics</h3>
@@ -2224,12 +2259,12 @@ each step.</p>
 <h3>RandomSeq</h3>
 <p>Random select <code>n</code> sequences from each input fasta file. It
 can be used before or after demultiplexing (<code>SortReads</code>).
-However, if using <code>LFN_variant</code> and
-<code>LFN_read_count</code> which are partially based on the number of
-reads in negative controls, standardizing the number of reads among
-samples does not make sense. Thus I use <code>RandomSeq</code> after
-<code>Merge</code>, to get the same number of reads for each replicate
-series (same samples, different replicates in each fasta file).</p>
+However, if using <code>LFNvariant</code> and <code>LFNreadCount</code>
+which are partially based on the number of reads in negative controls,
+standardizing the number of reads among samples does not make sense.
+Thus I use <code>RandomSeq</code> after <code>Merge</code>, to get the
+same number of reads for each replicate series (same samples, different
+replicates in each fasta file).</p>
 <ul>
 <li><a href="#fastainfo">fastainfo</a> is either a csv file, or a data
 frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv,
@@ -2242,8 +2277,8 @@ replcement)</li>
 <pre class="r"><code>randomseq_dir = paste(outdir, &quot;random_seq/&quot;, sep=&quot;&quot;)
 fastainfo_df &lt;- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)</code></pre>
 </div>
-<div id="history_by" class="section level3">
-<h3>history_by</h3>
+<div id="historyby" class="section level3">
+<h3>HistoryBy</h3>
 <p>This function scans the all files in the <code>dir</code> that starts
 by a number. (See file names of the output files of the different
 filtering steps). It will select all lines were the <code>feature</code>
@@ -2252,17 +2287,17 @@ for.</p>
 <p><strong>Examples</strong></p>
 <p>Get the history of ASV (<code>feature</code>) 915
 (<code>value</code>).</p>
-<pre class="r"><code>tmp_ASV_915 &lt;- history_by(dir=outdir, feature=&quot;asv_id&quot;, value=&quot;915&quot;, sep=sep)</code></pre>
+<pre class="r"><code>tmp_ASV_915 &lt;- HistoryBy(dir=outdir, feature=&quot;asv_id&quot;, value=&quot;915&quot;, sep=sep)</code></pre>
 <p>Same search by using the sequence of the ASV (<code>feature</code>)
 CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
 (<code>value</code>).</p>
-<pre class="r"><code>tmp_replicate_1 &lt;- history_by(dir=outdir, feature=&quot;asv&quot;, value=&quot;CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT&quot;, sep=sep)</code></pre>
+<pre class="r"><code>tmp_replicate_1 &lt;- HistoryBy(dir=outdir, feature=&quot;asv&quot;, value=&quot;CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT&quot;, sep=sep)</code></pre>
 <p>Get the history of sample (<code>feature</code>) tpos1
 (<code>value</code>).</p>
-<pre class="r"><code>tmp_sample_tpos1 &lt;- history_by(dir=outdir, feature=&quot;sample&quot;, value=&quot;tpos1&quot;, sep=sep)</code></pre>
+<pre class="r"><code>tmp_sample_tpos1 &lt;- HistoryBy(dir=outdir, feature=&quot;sample&quot;, value=&quot;tpos1&quot;, sep=sep)</code></pre>
 </div>
-<div id="summarize_by" class="section level3">
-<h3>summarize_by</h3>
+<div id="summarizeby" class="section level3">
+<h3>SummarizeBy</h3>
 <p>This function scans all files in the <code>dir</code> that starts by
 a number. (See file names of the output files of the different filtering
 steps).</p>
@@ -2279,25 +2314,37 @@ steps.</p>
 <p>From this data frame, we can see that the negative control sample
 become “clean” after the LFN filters, and there is a considerable
 variation among the number of reads of different real samples.</p>
-<pre class="r"><code>read_count_by_sample &lt;- summarize_by(dir=outdir, feature=&quot;read_count&quot;, grouped_by=&quot;sample&quot;)</code></pre>
+<pre class="r"><code>read_count_by_sample &lt;- SummarizeBy(dir=outdir, feature=&quot;read_count&quot;, grouped_by=&quot;sample&quot;)</code></pre>
 <p>Get the number asv for each sample after each filtering steps.</p>
 <p>From this data frame, we can see that the negative control sample
 become “clean” after the LFN filters, and the mock samples has 7 ASVs at
 the end which is very close to the expected 6.</p>
-<pre class="r"><code>asv_by_sample &lt;- summarize_by(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;sample&quot;)</code></pre>
+<pre class="r"><code>asv_by_sample &lt;- SummarizeBy(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;sample&quot;)</code></pre>
 <p>Get the number asv_id for each replicate after each filtering
 steps.</p>
 <p>We can see that number of ASVs are comparable in different
 replicates.</p>
-<pre class="r"><code>asvid_by_replicate &lt;- summarize_by(dir=outdir, feature=&quot;asv_id&quot;, grouped_by=&quot;replicate&quot;)</code></pre>
+<pre class="r"><code>asvid_by_replicate &lt;- SummarizeBy(dir=outdir, feature=&quot;asv_id&quot;, grouped_by=&quot;replicate&quot;)</code></pre>
 <p>Get the number of ASVs with x reads after each filtering steps.</p>
 <p>A large majority of the ASVs have very few reads before filtering.
 The number of singletons are reduced strongly by swarm, but still there
 are many of them.</p>
-<pre class="r"><code>asv_by_readcount &lt;- summarize_by(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;read_count&quot;)</code></pre>
+<pre class="r"><code>asv_by_readcount &lt;- SummarizeBy(dir=outdir, feature=&quot;asv&quot;, grouped_by=&quot;read_count&quot;)</code></pre>
 </div>
-<div id="pool_datasets" class="section level3">
-<h3>pool_datasets</h3>
+<div id="updateasvlist" class="section level3">
+<h3>UpdateASVlist</h3>
+<p>Pools unique asv - asv_id combinations in the input data frame and
+asv - asv_id combinations in the input file (asv_list)</p>
+<p>The input file is typically a csv file containing ASVs seen in
+earlier data sets with their asv_id. If there is a conflict within or
+between the input data the function quits with a error message.
+Otherwise write the updated_asv_list with their asv_id to the
+outfile</p>
+<pre class="r"><code>updated_asv_list &lt;- paste(outdir, &quot;updated_ASV_list.csv&quot;, sep=&quot;&quot;)
+UpdateASVlist(read_count_df, asv_list=asv_list, outfile=updated_asv_list)</code></pre>
+</div>
+<div id="pooldatasets" class="section level3">
+<h3>PoolDatasets</h3>
 <p><strong>More than one overlapping marker</strong></p>
 <p>This function pools different data sets and it is particularly
 useful, if the results should be pooled from more than one overlapping
@@ -2329,19 +2376,19 @@ well as their centroids</li>
 outfile &lt;- paste(outdir, &quot;Pooled_datasets.csv&quot;, sep=&quot;&quot;) 
 asv_with_centroids &lt;- paste(outdir, &quot;Pooled_datasets_asv_with_centroids.csv&quot;, sep=&quot;&quot;) 
 
-read_count_pool &lt;- pool_datasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)</code></pre>
+read_count_pool &lt;- PoolDatasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)</code></pre>
 <p><strong>Only one marker</strong></p>
 <p>Pooling the results of different data sets of the same marker is very
 simple. Basically the long output format with <code>asv</code>,
 <code>asv_id</code>, <code>sample</code>, <code>read_count</code>
-columns are concatenated. The <code>pool_datasets</code> function also
+columns are concatenated. The <code>PoolDatasets</code> function also
 checks if sample names are unique. If not it sums the read count of the
 same sample and same ASV, but returns a warning.</p>
 <p>The output file or data frame can be rearranged to wide format bu the
 <a href="#print-output">WriteASVtable</a> function.</p>
 </div>
-<div id="count_reads_dir" class="section level3">
-<h3>count_reads_dir</h3>
+<div id="countreadsdir" class="section level3">
+<h3>CountReadsDir</h3>
 <p>Count the number of reads in <code>fasta</code> or <code>fastq</code>
 files found in the input directory. Input files can be gz compressed or
 uncompressed, but zip files are not supported.</p>
@@ -2357,10 +2404,10 @@ files</li>
 <code>pattern</code> in the file name</li>
 </ul>
 <pre class="r"><code>dir &lt;- &quot;vtamR_test/data&quot;
-df &lt;- count_reads_dir(dir, pattern=&quot;_fw.fastq.gz&quot;, file_type=&quot;fastq&quot;)</code></pre>
+df &lt;- CountReadsDir(dir, pattern=&quot;_fw.fastq.gz&quot;, file_type=&quot;fastq&quot;)</code></pre>
 </div>
-<div id="barplot_read_count_by_sample" class="section level3">
-<h3>barplot_read_count_by_sample</h3>
+<div id="barplot_readcountbysample" class="section level3">
+<h3>Barplot_ReadCountBySample</h3>
 <p>Make a bar plot of read counts by <a href="#glossary">sample</a>
 (<code>sample_replicate=F</code>) or <a href="#glossary">sample-replicate</a> (<code>sample_replicate=T</code>).
 Can use different colors for different sample types (<a href="#glossary">real/mock/negative</a>)</p>
@@ -2370,10 +2417,10 @@ Can use different colors for different sample types (<a href="#glossary">real/mo
 sample types for each sample</li>
 </ul>
 <pre class="r"><code>sortedinfo &lt;- paste(sorted_dir, &quot;sortedinfo.csv&quot;, sep =&quot;&quot;)
-barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)</code></pre>
+Barplot_ReadCountBySample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)</code></pre>
 </div>
-<div id="histogram_read_count_by_variant" class="section level3">
-<h3>histogram_read_count_by_variant</h3>
+<div id="histogram_readcountbyvariant" class="section level3">
+<h3>Histogram_ReadCountByVariant</h3>
 <p>Histogram of read counts by ASV</p>
 <ul>
 <li><a href="#read_count_df">read_count_df</a> Input data frame</li>
@@ -2381,7 +2428,7 @@ barplot_read_count_by_sample(read_count_df=read_count_df, sample_replicate=F, sa
 this value</li>
 <li><code>binwidth</code> Width of bins</li>
 </ul>
-<pre class="r"><code>histogram_read_count_by_variant(read_count_df, min_read_count=10, binwidth=1000)</code></pre>
+<pre class="r"><code>Histogram_ReadCountByVariant(read_count_df, min_read_count=10, binwidth=1000)</code></pre>
 </div>
 <div id="renkonen-distances" class="section level3">
 <h3>Renkonen distances</h3>
@@ -2393,16 +2440,16 @@ them.</p>
 <li><code>sample_types</code> data frame or CSV file containing info on
 sample types for each sample</li>
 </ul>
-<pre class="r"><code>renkonen_within_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;within&quot;)
-barplot_renkonen_distance(renkonen_within_df, sample_types=sortedinfo)
-density_plot_renkonen_distance(renkonen_within_df)
+<pre class="r"><code>renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;within&quot;)
+Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
+DensityPlot_RenkonenDistance(renkonen_within_df)
 
-renkonen_all_df &lt;- make_renkonen_distances(read_count_df, compare=&quot;all&quot;)
-density_plot_renkonen_distance(renkonen_all_df)</code></pre>
+renkonen_all_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;all&quot;)
+DensityPlot_RenkonenDistance(renkonen_all_df)</code></pre>
 </div>
 </div>
-<div id="input-and-output-filesdata-frames" class="section level2">
-<h2>Input and output files/data frames</h2>
+<div id="input-and-output-files-and-data-frames" class="section level2">
+<h2>Input and output files and data frames</h2>
 <div id="fastqinfo" class="section level3">
 <h3>fastqinfo</h3>
 <p>CSV file file with information on input fastq files, primers, tags,
@@ -2467,6 +2514,24 @@ otherwise. Use also NA for negative controls.</li>
 replicate 1 2 or 3)</li>
 <li>fasta: Fasta file</li>
 <li>Read_count: Number of reads in the fasta file. Optional.</li>
+</ul>
+</div>
+<div id="mock_composition" class="section level3">
+<h3>mock_composition</h3>
+<p>CSV file file with the following columns.</p>
+<ul>
+<li>sample: Name of the <a href="#glossary">mock</a> sample</li>
+<li>action:
+<ul>
+<li>keep: Expected ASV in the mock, that should be kept in the data
+set</li>
+<li>tolerate: ASV that can be present in a mock, but it is not essential
+to keep it in the data set (e.g. badly amplified organism)</li>
+</ul></li>
+<li><a href="#glossary">asv</a>: sequence of the ASV</li>
+<li>taxon: Optional; Name of organism</li>
+<li>asv_id”: Optional; ASV_id. If there is a conflict between asv and
+asv_id, the asv_id is ignored</li>
 </ul>
 </div>
 <div id="asv_list" class="section level3">
@@ -2552,39 +2617,63 @@ terminal as possible. TRUE by default.</p></li>
 <div id="glossary" class="section level2">
 <h2>Glossary</h2>
 <ul>
+<li><strong>ASV</strong>: Amplicon Sequence Variant. Unique sequnece,
+caracterized by the numbre of reads in each sample-replicate.</li>
+<li><strong>asv_id</strong>: Unique numerical ID of ASV</li>
+<li><strong>demultiplexing</strong>: Sorting reads in a fasta (or fastq)
+file to different sample-replicates according to the tags present at
+their extremities.</li>
+<li><strong>dereplication</strong>: The merged reads contain many
+identical sequenes. The dereplication reduces the data set to unique
+sequences (ASV), and count the number of read for each ASV in in each
+sample-replicate.</li>
+<li><strong>False negative occurrence</strong>: An expected ASV in a
+mock sample, not found in the data.</li>
 <li><strong>False positive occurrence</strong>: Un expected presence an
 ASV in a Sample. It can be all occurreces in all negative contols,
 unexpected occurrences in mock samples, and presence of an ASV in an
 incompatible habitat (e.g. ASV with high read count in samples of
 habitat 1 and low read count in habitat 2).</li>
-<li><strong>False negative occurrence</strong>: An expected ASV in a
-mock sample, not found in the data.</li>
-<li><strong>True positive occurrence</strong>: An expected occurrence in
-a mock sample</li>
-<li><strong>ASV</strong>: Amplicon Sequence Variant. Unique sequnece,
-caracterized by the numbre of reads in each sample-replicate.</li>
-<li><strong>taxIDs</strong>: Numerical taxonomic identifier. It can be a
-valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI taxID</a>, or
-arbitrary negative numbers for taxa not in NCBI</li>
+<li><strong>habitat</strong>: Habitat type of the organisms in real or
+mock samples. Use this only if organisms of the different habitats
+cannot appear in another haditat of the dataset. Use NA otherwise.</li>
+<li><strong>Low Frequency Noise (LFN)</strong>: ASVs present in low
+frequency, likely to be do to errors.</li>
+<li><strong>merge</strong>: Assemble each forward and reverse read pair
+to one single sequence.</li>
+<li><strong>mock sample</strong>: An artificial mix of know organisms or
+DNA</li>
+<li><strong>negative sample</strong>: Negative control</li>
+<li><strong>real sample</strong>: An environmental sample</li>
+<li><strong>replicate</strong>: Technical or biological replicate of a
+sample. Replicates must have numerical identifiers. (e.g. sample tops1
+have replicate 1, 2 and 3).</li>
 <li><strong>sample</strong> Name of the environmental or control
 sample</li>
 <li><strong>sample-replicate</strong> Each sample can have technical of
-biological replicates.</li>
-<li><strong>sample type</strong> [real/mock/negative]</li>
-<li><strong>real sample</strong> An environmental sample</li>
-<li><strong>mock sample</strong> An artificial mix of know organisms or
-DNA</li>
-<li><strong>negative sample</strong> Negative control</li>
-<li><strong>habitat</strong> Habitat type of the organisms in real or
-mock samples. Use this only if organisms of the different habitats
-cannot appear in another haditat of the dataset. Use NA otherwise.</li>
+biological replicates. sample-replicate refers to one replicate of a
+given sample.</li>
+<li><strong>sample_type</strong>: [real/mock/negative]</li>
+<li><strong>singleton</strong>: ASV with a single read in the whole data
+set.</li>
+<li><strong>tag</strong> Short sequence attaches to the extremity of the
+amplicon in order to identify the sample-replicate the read comes from
+at the demultiplexing step</li>
+<li><strong>taxIDs</strong>: Numerical taxonomic identifier. It can be a
+valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI taxID</a>, or
+arbitrary negative numbers for taxa not in NCBI</li>
+<li><strong>trimming</strong>: Cut the extremities of the sequences. It
+can be based of sequences quality, or on the detection of a tag or
+primer.</li>
+<li><strong>True positive occurrence</strong>: An expected occurrence in
+a mock sample</li>
 </ul>
 </div>
 <div id="troubleshooting" class="section level2">
 <h2>Troubleshooting</h2>
-<div id="lfn_variant-eliminate-most-occurrences-of-a-frequent-asv" class="section level3">
-<h3>LFN_variant eliminate most occurrences of a frequent ASV</h3>
-<p><code>LFN_variant</code> will filter out all occurrences where</p>
+<div id="lfnvariant-eliminate-most-occurrences-of-a-frequent-asv" class="section level3">
+<h3>LFNvariant eliminate most occurrences of a frequent ASV</h3>
+<p><code>LFNvariant</code> will filter out all occurrences where</p>
 <p>(number of reads of the ASV in a sample-replicate) / (total number of
 read of the ASV) &lt; cutoff</p>
 <p>As a consequence, if an ASV is present in most samples, there are
@@ -2596,7 +2685,7 @@ to the input is less than <code>min_read_count_prop</code>, vtamR prints
 out a Warning. Take a close look at the variant. It can be the result of
 a general contamination, and in this case, the whole ASV could/should be
 eliminated from the data set. Otherwise, you might want to reduce the
-cutoff value for <code>LFN_variant</code>.</p>
+cutoff value for <code>LFNvariant</code>.</p>
 </div>
 <div id="memory-issues-for-running-swarm-on-the-whole-dataset" class="section level3">
 <h3>Memory issues for running swarm on the whole dataset</h3>
@@ -2618,7 +2707,7 @@ analyses can get through.</p>
 <h3>Files to keep</h3>
 <p>At the first steps (Merge, RandomSeq, Sortreads), many files are
 produced, and some of them can be very large, especially before the
-dereplication (before <code>read_fastas_from_sortedinfo</code>).</p>
+dereplication (before <code>Dereplicate</code>).</p>
 <p>Compressing and decompressing between the different steps can take a
 while and can have memory issues in some cases (especially on Windows).
 Therefore, vtamR uses by default uncompressed files. This behavior can
@@ -2633,17 +2722,17 @@ ensure reproducibility in case of re-analyse.</li>
 <li><code>SortReads</code>: Delete the output fasta files, but keep
 <code>sortedinfo.csv</code> for information on read counts after
 <code>SortReads</code>.</li>
-<li><code>read_fastas_from_sortedinfo</code>: Write the dereplicated
-info to a file (<code>1_before_filter.csv</code> in the tutorial) and
-compress it after the analyses. This is an important file, since you can
-restart the analyses from here, without re-doing the longest merging,
-and demultiplexing steps. Compress and keep the updated ASV list
+<li><code>Dereplicate</code>: Write the dereplicated info to a file
+(<code>1_before_filter.csv</code> in the tutorial) and compress it after
+the analyses. This is an important file, since you can restart the
+analyses from here, without re-doing the longest merging, and
+demultiplexing steps. Compress and keep the updated ASV list
 (<code>ASV_list_with_IDs.csv</code> in the tutorial), since this can be
 used when analyzing subsequent data sets to homogenize the asv_ids.</li>
 <li>Output of different filtering steps: Compress them if they are too
 large. They are useful for tracing back the history of a sample or an
-ASV (see <a href="#history_by">history_by</a>) or making summary files
-(see <a href="#summarize_by">summarize_by</a>).</li>
+ASV (see <a href="#historyby">HistoryBy</a>) or making summary files
+(see <a href="#summarizeby">SummarizeBy</a>).</li>
 </ul>
 </div>
 </div>
