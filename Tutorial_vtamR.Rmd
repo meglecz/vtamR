@@ -760,7 +760,7 @@ Random select `n` sequences from each input fasta file. It can be used before or
 
 * [fastainfo](#fastainfo) is either a csv file, or a data frame, with the following columns: tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fasta
 * `fasta_dir` is the directory containing the input fasta files
-* `n` the number of sequences to be taken randomly (without replcement)
+* `n` the number of sequences to be taken randomly (without replacement)
 
 
 ```{r}
@@ -771,21 +771,21 @@ fastainfo_df <- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir,
 
 ###  HistoryBy
 
-This function scans the all files in the `dir` that starts by a number. (See file names of the output files of the different [filtering steps](#filter)). It will select all lines were the `feature` (asv_id/asv/sample/replicate) has a `value` we are looking for.
+This function scans all files in the `dir` that starts by a number. (See file names of the output files of the different [filtering steps](#filter)). It will select all lines were the `feature` (asv_id/asv/sample/replicate) has a `value` we are looking for.
 
 **Examples**
 
-Get the history of asv_id (`feature`) 915 (`value`).
+*Get the history of asv_id (`feature`) 915 (`value`).*
 ```{r}
 tmp_ASV_915 <- HistoryBy(dir=outdir, feature="asv_id", value="915")
 ```
 
-Same search by using the sequence of the ASV  (`feature`) CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT (`value`).
+*Same search by using the sequence of the ASV  (`feature`).*
 ```{r}
 tmp_replicate_1 <- HistoryBy(dir=outdir, feature="asv", value="CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT")
 ```
 
-Get the history of sample (`feature`) tpos1 (`value`).
+*Get the history of sample (`feature`) tpos1 (`value`).*
 ```{r}
 tmp_sample_tpos1 <- HistoryBy(dir=outdir, feature="sample", value="tpos1")
 ```
@@ -800,7 +800,7 @@ If the `feature` is `read_count`, it will give the sum of the read counts for ea
 
 **Examples**
 
-Get the number of reads of each sample after each filtering steps.
+*Get the number of reads of each sample after each filtering steps.*
 
 From this data frame, we can see that the negative control sample become "clean" after the LFN filters, and there is a considerable variation among the number of reads of different real samples.
 ```{r}
@@ -808,7 +808,7 @@ read_count_by_sample <- SummarizeBy(dir=outdir, feature="read_count", grouped_by
 ```
 
 
-Get the number asv for each sample after each filtering steps.
+*Get the number asv for each sample after each filtering steps.*
 
 From this data frame, we can see that the negative control sample become "clean" after the LFN filters, and the mock samples has 10 ASVs at the end.
 ```{r}
@@ -816,7 +816,7 @@ asv_by_sample <- SummarizeBy(dir=outdir, feature="asv", grouped_by="sample")
 ```
 
 
-Get the number asv_id for each replicate after each filtering steps.
+*Get the number asv_id for each replicate after each filtering steps.*
 
 We can see that number of ASVs are comparable in different replicates.
 ```{r}
@@ -824,7 +824,7 @@ asvid_by_replicate <- SummarizeBy(dir=outdir, feature="asv_id", grouped_by="repl
 ```
 
 
-Get the number of ASVs with x reads after each filtering steps.
+*Get the number of ASVs with x reads after each filtering steps.*
 
 A large majority of the ASVs have very few reads before filtering. The number of singletons are reduced strongly by swarm, but still there are many of them.
 ```{r}
@@ -838,9 +838,9 @@ Pools unique `asv` - `asv_id` combinations in the input data frame (`read_count_
 The input file is typically a csv file containing ASVs seen in earlier data sets with their `asv_id`s.
 If there is a conflict within or between the input data the function quits with a error message. Otherwise writes the `updated_asv_list` to the outfile.
 
-The safest option of avoiding incoherence between `asv_ids` of earlier and present runs is to use the `asv_list` and `updated_asv_list` parameters in the `Dereplicate` function as it is done in the [tutorial](#dereplicate). This will homogenize the `asv_id`s in this run with earlier ones, and writes an updated file with all ASV from earlier and the present data set. In this case, the `UpdateASVlist` function is not necessary it is automatically called from `Dereplicate`. 
+The safest option of avoiding incoherence between `asv_ids` of earlier and present runs is to use the `asv_list` and `updated_asv_list` parameters in the `Dereplicate` function as it is done in the [tutorial](#dereplicate). This will synchronize the `asv_id`s in this run with earlier ones, and writes an updated file with all ASV from earlier and the present data set. In this case, the `UpdateASVlist` function is not necessary it is automatically called from `Dereplicate`. 
 
-However, if your are analyzing a large number of very large data sets, the complete `asv_list` will grow quickly, and might cause memory issues. Most of the ASVs in this list are singletons, and filtered out during the analyses. Therefore, you can opt for homogenizing the `asv_id`s with earlier runs by the `Dereplicate` function, without writing an `updated_asv_list`. Then update the `asv_list` after the fist steps of filtering (e.g. `Swarm`, `LFNglobalReadCount`) to keep only ASVs that are more frequent and more likely to appear in future data sets. It is still a quite safe option, and reduces greatly the number of ASVs kept in this file.
+However, if you are analyzing a large number of very large data sets, the complete `asv_list` will grow quickly, and might cause memory issues. Most of the ASVs in this list are singletons, and filtered out during the analyses. Therefore, you can opt for homogenizing the `asv_id`s with earlier runs by the `Dereplicate` function, without writing an `updated_asv_list`. Then update the `asv_list` after the first steps of filtering (e.g. `Swarm`, `LFNglobalReadCount`) to keep only ASVs that are more frequent and more likely to appear in future data sets. It is still a quite safe option, and reduces greatly the number of ASVs kept in this file.
 
 
 ```{r}
@@ -852,11 +852,11 @@ UpdateASVlist(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 
 **More than one overlapping marker**
 
-This function pools different data sets and it is particularly useful, if the results should be pooled from more than one overlapping markers. In that case, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are represented by their centroid (longest ASV of the group). Pooling can take the mean read counts of the ASVs (`mean_over_markers`=T; default) or their sum (`mean_over_markers`=F).
+This function pools different data sets and it is particularly useful, if the results should be pooled from more than one overlapping markers. In that case, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are represented by their centroid (longest ASV of the group). Pooling can take the mean read counts of the ASVs (`mean_over_markers=T`; default) or their sum (`mean_over_markers=F`).
 
-The function takes several input CSV files, each in long format containing `asv_id`, `sample`, `read_count` and `asv` columns. The file names should be organized in data frame, with the marker names for each file.
+The function takes several input CSV files, each in [long format](#glossary) containing `asv_id`, `sample`, `read_count` and `asv` columns. The file names should be organized in data frame, with the marker names for each file.
 
-* `outfile` contains the pooled data set in CSV format (`asv_id`, `sample`, `read_count`, `asv`); ASVs are grouped on the same line if identical in their overlapping region, and only the centroid appears in the `asv` column.
+* `outfile` contains the pooled data set in CSV format (`asv_id`, `sample`, `read_count`, `asv`); ASVs are grouped to the same line if identical in their overlapping region, and only the centroid appears in the `asv` column.
 * `asv_with_centroids` is an output CSV file containing each of the the original ASVs (with samples, markers, and read_count) as well as their centroids
 * The data frame returned by the function corresponds to the `outfile`.
 
@@ -872,9 +872,9 @@ read_count_pool <- PoolDatasets(files, outfile=outfile, asv_with_centroids=asv_w
 
 **Only one marker**
 
-Pooling the results of different data sets of the same marker is very simple. Basically the long output format with `asv`, `asv_id`, `sample`, `read_count` columns are concatenated. The `PoolDatasets` function also  checks if sample names are unique. If not it sums the read count of the same sample and same ASV, but returns a warning.
+Pooling the results of different data sets of the same marker is very simple. Basically, the input files (in [long format](#glossary) with `asv`, `asv_id`, `sample`, `read_count` columns) are concatenated. The `PoolDatasets` function also  checks if sample names are unique. If not, it sums the read count of the same sample and same ASV, but returns a warning.
 
-The output file or data frame can be rearranged to wide format by the [WriteASVtable](#print-output) function.
+The output file or data frame can be rearranged to [wide format](#glossary) by the [WriteASVtable](#print-output) function.
 
 ### CountReadsDir
 
@@ -947,10 +947,10 @@ CSV file file with information on input fastq files, primers, tags, samples with
  * primer_fw: Forward primer (NA if primer has been trimmed)
  * tag_rv: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
  * primer_rv: Reverse primer (NA if primer has been trimmed)
- * sample: Name of the sample (alpha-numerical). Must be unique.
+ * sample: Name of the sample (alpha-numerical)
  * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats, that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use also NA for negative controls.
- * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
+ * habitat: If real or mock samples are from different habitats that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use NA for negative controls.
+ * replicate: Numerical id of a replicate within sample (e.g. Sample1 can have replicate 1, 2 or 3)
  * fastq_fw: Forward fastq file
  * fastq_rv: Reverse fastq file
 
@@ -963,9 +963,9 @@ CSV file file with information on input fasta files, primers, tags, samples with
  * primer_fw: Forward primer (NA if primer has been trimmed)
  * tag_rv: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
  * primer_rv: Reverse primer (NA if primer has been trimmed)
- * sample: Name of the sample (alpha-numerical). Must be unique.
+ * sample: Name of the sample (alpha-numerical)
  * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats, that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use also NA for negative controls.
+ * habitat: If real or mock samples are from different habitats that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use NA for negative controls.
  * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
  * fasta: Fasta file
  * Read_count: Number of reads in the fasta file. Optional.
@@ -974,9 +974,9 @@ CSV file file with information on input fasta files, primers, tags, samples with
 
 CSV file file with information on demultiplexed and primer trimmed fasta files and samples with the following columns. Each line corresponds to a sample-replicate combination.
 
- * sample: Name of the sample (alpha-numerical). Must be unique.
+ * sample: Name of the sample (alpha-numerical)
  * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats, that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use also NA for negative controls.
+ * habitat: If real or mock samples are from different habitats that cannot contain the same type of organisms (e.g. terrestrial vs. marine), this information is used for detecting false positives. Use NA otherwise. Use NA for negative controls.
  * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
  * fasta: Fasta file
  * Read_count: Number of reads in the fasta file. Optional.
@@ -990,7 +990,7 @@ CSV file with the following columns.
       * keep: Expected ASV in the mock, that should be kept in the data set
       * tolerate: ASV that can be present in a mock, but it is not essential to keep it in the data set (e.g. badly amplified organism)
  * [asv](#glossary): sequence of the ASV
- * taxon: Optional; Name of organism
+ * taxon: Optional; Name of the organism
  * [asv_id](#glossary): Optional; If there is a conflict between asv and asv_id, the asv_id is ignored
 
 ### known_occurrences
@@ -1005,7 +1005,7 @@ CSV file or data frame with the following columns.
  
 ### asv_list
 
-This file lists ASVs and their IDs from earlier data sets. When provided (optional), identical ASVs in the present and earlier data sets have the same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list. It is CSV file with the following columns:
+This file lists ASVs and their IDs from earlier data sets. When provided (optional), identical ASVs in the present and earlier data sets have the same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list. It is a CSV file with the following columns:
 
  * [asv_id](#glossary): Unique numerical ID of the ASV
  * [asv](#glossary): ASV sequence
@@ -1019,7 +1019,7 @@ Data frame with the following columns:
  * [asv_id](#glossary): Numerical ID of the ASV
  * [sample](#glossary): Sample name
  * [replicate](#glossary): Replicate within sample (Numerical)
- * read_count: Number of read of the ASV in the Sample-Replicate
+ * read_count: Number of reads of the ASV in the Sample-Replicate
 
 ### Reference database for taxonomic assignments
 
@@ -1035,7 +1035,7 @@ makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] 
  * TAXID_FILE is a tab separated file with sequence IDs and the corresponding numerical [taxIDs](#glossary)
  * DB_NAME is the name of the newly created BLAST database.
 
-`taxonomy` is a tab separated csv file with the following columns:
+`taxonomy` is a *tab separated** csv file with the following columns:
 
  * tax_id: Numerical Taxonomic ID. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), or arbitrary negative numbers for taxa not in NCBI
  * parent_tax_id: taxID of the closest parent of tax_id
@@ -1065,44 +1065,51 @@ makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] 
 ## Glossary
 
 
-* **ASV**: Amplicon Sequence Variant. Unique sequnece, caracterized by the numbre of reads in each sample-replicate.
-* **asv_id**: Unique numerical ID of ASV
+* **ASV**: Amplicon Sequence Variant. Unique sequnece, caracterized by the number of reads in each sample-replicate.
+* **asv_id**: Unique numerical ID of an ASV.
 * **demultiplexing**: Sorting reads in a fasta (or fastq) file to different sample-replicates according to the tags present at their extremities.
-* **dereplication**: The merged reads contain many identical sequenes. The dereplication reduces the dataset to unique sequences (ASV), and count the number of read for each ASV in in each sample-replicate.
-* **data frame in long format**: The read_count_df contains one line for each occurrence with asv_id, asv, sample, replicate, read_count columns. This is the standard format of keeping occurrences throughout the analyses, and it is smaller than the wide format, if there are many ASVs present in only one or few samples.
-* **data frame in wide format**: The read_count_df can be rearranged in wide format, where lines are ASVs, columns are sample(-replicates) and cells contain read counts. It is a more human friendly format and it is the base of writing an ASV table, where this information can be completed by taxonomic assignments and other informations.
-* **false negative occurrence**: An expected ASV in a mock sample, not found in the data.
-* **false positive occurrence**: Un expected presence an ASV in a Sample. It can be all occurreces in all negative contols, unexpected occurrences in mock samples, and presence of an ASV in an incompatible habitat (e.g. ASV with high read count in samples of habitat 1 and low read count in habitat 2).
+* **dereplication**: The merged reads contain many identical sequenes. The dereplication reduces the dataset to unique sequences (ASV), and count the number of reads for each ASV in each sample-replicate.
+* **data frame (or csv) in long format**: The read_count_df contains one line for each occurrence with asv_id, asv, sample, replicate, read_count columns. This is the standard format of keeping occurrences throughout the analyses, and it is smaller than the wide format, if there are many ASVs present in only one or few samples.
+* **data frame (or csv) in wide format**: The read_count_df can be rearranged in wide format, where lines are ASVs, columns are sample(-replicates) and cells contain read counts. It is a more human friendly format and it is the base of writing an ASV table, where this information can be completed by taxonomic assignments and other informations.
+* **false negative occurrence**: An expected ASV in a mock sample that is not found in the data.
+* **false positive occurrence**: Un expected presence an ASV in a Sample.
+    * all occurrences in all negative contols, 
+    * unexpected occurrences in mock samples
+    * presence of an ASV in an incompatible habitat (e.g. ASV with high read count in samples of habitat 1 and low read count in habitat 2 is considered as FP in habitat 2).
 * **habitat**: Habitat type of the organisms in real or mock samples. Use this only if organisms of the different habitats cannot appear in another haditat of the dataset. Use NA otherwise.
 * **Low Frequency Noise (LFN)**: ASVs present in low frequencies, likely to be do to errors.
-* **merge**: Assemble each forward and reverse read pair to one single sequence.
-* **mock sample**: An artificial mix of know organisms or DNA
-* **negative sample**: Negative control
-* **real sample**: An environmental sample
+* **merge**: Assemble a forward and reverse read pair to one single sequence.
+* **mock sample**: An artificial mix of DNA of know organisms.
+* **negative sample**: Negative control.
+* **real sample**: An environmental sample.
 * **replicate**: Technical or biological replicate of a sample. Replicates must have numerical identifiers. (e.g. sample tops1 have replicate 1, 2 and 3).
-* **sample** Name of the environmental or control sample
+* **sample** Name of the environmental or control sample.
 * **sample-replicate** Each sample can have technical of biological replicates. sample-replicate refers to one replicate of a given sample.
-* **sample_type**: [real/mock/negative] 
+* **sample_type**: [real/mock/negative](#glossary)
 * **singleton**: ASV with a single read in the whole data set.
-* **tag** Short sequence attaches to the extremity of the amplicon in order to identify the sample-replicate  the read comes from at the demultiplexing step
-* **taxIDs**: Numerical taxonomic identifier. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), or arbitrary negative numbers for taxa not in NCBI
+* **tag** Short sequence at the extremity of the amplicon. It is used at the demultiplexing step to identify the sample-replicate, where the read comes from.
+* **taxIDs**: Numerical taxonomic identifier. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), or arbitrary negative numbers for taxa not in NCBI.
 * **trimming**: Cut the extremities of the sequences. It can be based of sequences quality, or on the detection of a tag or primer.
-* **true positive occurrence**: An expected occurrence in a mock sample
+* **true positive occurrence**: An expected occurrence in a mock sample.
 
 
 
 
 ## Troubleshooting
 
+### tmp_FunctionName_######## in vtamR directory
+
+These are temporary directories, that are automatically deleted at the end of the function. In some cases, if the function ends prematurely due to an error, the directory id not deleted. Just delete them manually.
+
 ### LFNvariant eliminate most occurrences of a frequent ASV
 
 `LFNvariant` will filter out all occurrences where
 
-(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff 
+`(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff` 
 
 As a consequence, if an ASV is present in most samples, there are many samples in the data set and the cutoff is relatively high, most occurrences can fall bellow the cutoff and the total read count of the ASV will decrease strongly at this step.
 
-If the proportion of the read count of a ASV in the output compared to the input is less than `min_read_count_prop`, vtamR prints out a Warning. Take a close look at the variant. It can be the result of a general contamination, and in this case, the whole ASV could/should be eliminated from the data set. Otherwise, you might want to reduce the cutoff value for `LFNvariant`.
+If the proportion of the read count of an ASV in the output compared to the input is less than `min_read_count_prop`, vtamR prints out a Warning. Take a close look at the variant. It can be the result of a general contamination, and in this case, the whole ASV could/should be eliminated from the data set. Otherwise, you might want to reduce the cutoff value for `LFNvariant`.
 
 ### Memory issues for running swarm on the whole dataset
 
@@ -1129,7 +1136,7 @@ Here is a list of files I would tend to keep, delete or compress.
 * `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for information on read counts after `Merge`.
 * `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility in case of re-analyse.
 * `SortReads`: Delete the output fasta files, but keep `sortedinfo.csv` for information on read counts after `SortReads`. 
-* `Dereplicate`: Write the dereplicated info to a file (`1_before_filter.csv` in the tutorial) and compress it after the analyses. This is an important file, since you can restart the analyses from here, without re-doing the longest merging, and demultiplexing steps. Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), since this can be used when analyzing subsequent data sets to homogenize the asv_ids.
+* `Dereplicate`: Write the dereplicated info to a file (`1_before_filter.csv` in the tutorial) and compress it after the analyses. This is an important file, since you can restart the analyses from here, without re-doing the longest merging, and demultiplexing steps. Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), since this can be used when analyzing subsequent data sets to synchronyse the asv_ids.
 * Output of different filtering steps: Compress them if they are too large. They are useful for tracing back the history of a sample or an ASV (see [HistoryBy](#historyby)) or making summary files (see [SummarizeBy](#summarizeby)).
 
 
