@@ -2,16 +2,26 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{read_fasta_seq}
 \alias{read_fasta_seq}
-\title{read_fasta_seq}
+\title{Read sequences from fasta}
 \usage{
 read_fasta_seq(filename = filename, dereplicate = F)
 }
 \arguments{
-\item{filename}{name of the input file including full path}
+\item{filename}{Character string: input fasta file name including full path.}
 
-\item{dereplicate}{\link{T/F} if T, return asvs with read counts}
+\item{dereplicate}{Boolean: If TRUE, return ASVs with read counts.}
+}
+\value{
+Data frame with one read in each line (dereplicate==F), or a data frame with
+asv and read_count columns (dereplicate==T).
 }
 \description{
-Read sequences from a fasta file. Fasta can be gz compressed or uncompressed
-Returns either a data frame with reads in a line, or a data frame with asv and read counts (if dereplicate==T)
+Read sequences from a fasta file.
+}
+\details{
+Input fasta can be gzip compressed or uncompressed.
+}
+\examples{
+read_df <- read_fasta_seq(filename="data/test.fasta", dereplicate=F)
+asv_df <- read_fasta_seq(filename="data/test.fasta", dereplicate=T)
 }

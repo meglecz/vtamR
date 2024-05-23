@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{TrimPrimer}
 \alias{TrimPrimer}
-\title{TrimPrimer}
+\title{Trim primers from fasta files}
 \usage{
 TrimPrimer(
   fastainfo,
@@ -20,32 +20,44 @@ TrimPrimer(
 )
 }
 \arguments{
-\item{fastainfo}{csv file of data frame with the following columns: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count}
+\item{fastainfo}{Data frame of csv file with the following columns:
+tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count}
 
-\item{fasta_dir}{name of the directory with the fasta files to be trimmed}
+\item{fasta_dir}{Character string: directory of the fasta files to be trimmed}
 
-\item{outdir}{name of the directory for the trimmed fasta files to be trimmed}
+\item{outdir}{Character string: output directory for the trimmed fasta files.}
 
-\item{compress}{\link{T/F}; compress output to gzip format; Default=F}
+\item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{cutadapt_path}{path to cutadapt executable}
+\item{cutadapt_path}{Character string: path to cutadapt executables. Can be empty if cutadapt in the the PATH.}
 
-\item{vsearch_path}{path to vsearch executable}
+\item{vsearch_path}{Character string: path to vsearch executables. Can be empty if vsearch in the the PATH.}
 
-\item{check_reverse}{\link{T/F} if TRUE, check the reverse complementary sequences of the input fasta as well; default: F}
+\item{check_reverse}{Boolean: if TRUE, check the reverse complementary sequences
+of the input fasta as well.}
 
-\item{primer_to_end}{primers follow directly the tags (no heterogeneity spacer); default: T}
+\item{primer_to_end}{Boolean: primers follow directly the tags (no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1}
+\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+between primers and reads (for tags, exact match is required).}
 
-\item{cutadapt_minimum_length}{minimum length of the trimmed sequence; default: 50}
+\item{cutadapt_minimum_length}{Positive integer: minimum length of the
+trimmed sequence.}
 
-\item{cutadapt_maximum_length}{maximum length of the merged sequence; default: 500}
+\item{cutadapt_maximum_length}{Positive integer: maximum length of the
+trimmed sequence.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+fastainfo_df the input data frame, with updated files names and sequence counts.
 }
 \description{
-Trim primers from each fasta file in input fastainfo csv file of data frame. Keep only trimmed reads.
-Can check both orientation
-Count the number of reads in the output files
+Trim primers from each fasta file in input fastainfo data frame or csv file.
+Keep only trimmed reads.
+Can check both orientations.
+Count the number of reads in the output files.
+}
+\examples{
+fastainfo_df <- TrimPrimer(fastainfo, fasta_dir="data/fasta", outdir="out", compress=T, check_reverse=T, primer_to_end=F, cutadapt_error_rate=0.1, cutadapt_minimum_length=300, cutadapt_maximum_length=350, quiet=T)
 }

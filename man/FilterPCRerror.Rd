@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{FilterPCRerror}
 \alias{FilterPCRerror}
-\title{FilerPCRerror}
+\title{Filter PCR error}
 \usage{
 FilterPCRerror(
   read_count,
@@ -16,22 +16,40 @@ FilterPCRerror(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{vsearch_path}{path to vsearch executable; can be empty if vsearch in the the PATH}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{pcr_error_var_prop}{if the proportion of read_counts of two similar ASVs is less or equal to pcr_error_var_prop, the less abundant is flagged as a PCR error}
+\item{pcr_error_var_prop}{Real (0-1): if the proportion of read_counts of
+two similar ASVs is less or equal to \code{pcr_error_var_prop},
+the less abundant is flagged as a PCR error.}
 
-\item{max_mismatch}{maximum number of mismatches (gaps included) to consider two ASVs as similar}
+\item{max_mismatch}{Positive integer: maximum number of mismatches
+(gaps included) to consider two ASVs as similar}
 
-\item{by_sample}{T/F, if T ASVs are flagged as an PCR error separately for each sample}
+\item{by_sample}{Boolean: if TRUE ASVs are flagged as an PCR error
+separately for each sample.}
 
-\item{sample_prop}{if by_sample=T, the ASV must be flagged as an PCRerror in sample_prop of the cases to be eliminated}
+\item{sample_prop}{Real (0-1): if by_sample=TRUE, the ASV must be
+flagged as a PCRerror in \code{sample_prop} of the samples to be eliminated.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Filter out an ASVs if it is very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop).
-The whole data set can be analyzed at once (by_sample=F) or sample by sample.
-Returns the filtered read_count_df data frame.
+Filter out an ASVs if it is very similar (\code{max_mismatch}) to another
+more frequent ASV (\code{pcr_error_var_prop}).
+}
+\details{
+The whole data set can be analyzed at once (\code{by_sample=F})
+or sample by sample.
+}
+\examples{
+filtered_read_count_df <- FilterPCRerror(read_count_df, vsearch_path=vsearch_path, pcr_error_var_prop=0.2, max_mismatch=2, by_sample=T, sample_prop=0.8)
+filtered_read_count_df <- FilterPCRerror(read_count_df, vsearch_path=vsearch_path, pcr_error_var_prop=0.2, max_mismatch=2, by_sample=F)
 }

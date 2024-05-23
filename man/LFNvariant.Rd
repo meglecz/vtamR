@@ -14,21 +14,39 @@ LFNvariant(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{minimum proportion for an occurrence within an asv or an asv-replicate; default=0.001}
+\item{cutoff}{Real (0-1): minimum proportion of the read count of
+an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
+the occurrence is deleted.}
 
-\item{by_replicate}{T/F; default=FALSE}
+\item{by_replicate}{Boolean: Compare read count of the occurrence to the
+read counts of the ASV-replicate.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{min_read_count_prop}{If the proportion of the read count of a variant in the output compared to the input is less then min_read_count_prop, print out a warning, since it suggest a to high cutoff value; default: 0.7}
+\item{min_read_count_prop}{Real (0-1): If the proportion of the read count
+of a variant in the output compared to the input is less then
+\code{min_read_count_prop}, prints out a warning, since it suggest a
+to high cutoff value}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-If by_replicate=F: Eliminate occurrences where the read_count/sum(read_count of the asv) is less than cutoff.
-If by_replicate=T: Eliminate occurrences where the read_count/sum(read_count of the asv in its replicate) is less than cutoff.
-Returns the filtered read_count_df data frame.
-Issues a warning if the total read count of an ASV has been reduced bellow min_read_count_prop, since it can indicate a to high cutoff value
+If by_replicate=F: Eliminate occurrences where the
+\verb{read_count/read_count of the asv in the data set} is less than cutoff.
+If by_replicate=T: Eliminate occurrences where the
+\verb{read_count/read_count of the asv in its replicate} is less than cutoff.
+}
+\details{
+Issues a warning if the total read count of an ASV has been reduced
+bellow \code{min_read_count_prop}, since it can indicate a to high cutoff value.
+}
+\examples{
+filtered_read_count_df <- LFNvariant(read_count_df, cutoff=0.005, min_read_count_prop=0.8)
 }

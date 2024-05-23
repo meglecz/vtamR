@@ -6,8 +6,8 @@
 \usage{
 MakeKnownOccurrences(
   read_count_samples,
-  sortedinfo = "",
-  mock_composition = "",
+  sortedinfo,
+  mock_composition,
   sep = ",",
   known_occurrences = "",
   missing_occurrences = "",
@@ -16,27 +16,56 @@ MakeKnownOccurrences(
 )
 }
 \arguments{
-\item{read_count_samples}{data frame or csv file with the following variables: asv_id, plate, marker, sample, read_count, asv}
+\item{read_count_samples}{Data frame or csv file with the following variables:
+asv_id, plate, marker, sample, read_count, asv.}
 
-\item{sortedinfo}{data frame or csv file with columns: sample, sample_type(mock/negative/real), habitat, replicate, (optional: file)}
+\item{sortedinfo}{Data frame or csv file with columns:
+sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}
 
-\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{Data frame or csv file with columns:
+sample, action (keep/tolerate), asv.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{known_occurrences}{name of the output file containing known occurrences (expected occurrences in mock, and FP)}
+\item{known_occurrences}{Character string: csv file containing
+known occurrences (expected occurrences in mock, and FP).
+If empty, no file is written.}
 
-\item{missing_occurrences}{name of the output file containing the missing occurrences (FN); file is written if only the name has been specified}
+\item{missing_occurrences}{Character string: csv file containing
+the missing occurrences (FN). If empty, no file is written.}
 
-\item{performance_metrics}{name of the output file containing performance metrics}
+\item{performance_metrics}{Character string: csv file containing performance
+metrics. If empty, no file is written.}
 
-\item{habitat_proportion}{for each asv, if the proportion of reads in a habitat is below this cutoff, it is considered as an artifact in all samples of the habitat}
+\item{habitat_proportion}{Real (between 0-1): for each asv, if the proportion
+of reads in a habitat is below this cutoff,
+it is considered as an artifact in all samples of the habitat.}
+}
+\value{
+List of data frames:
+\itemize{
+\item known_occurrences_df: sample, action, asv_id, asv
+\item missing_occurrences_df: sample, action, asv, asv_id
+\item performance_metrics_df: TP, FP, FN, Precision, Sensitivity
+}
 }
 \description{
-Prepare three data frames and if file names are given they are also write to files
+Prepare three data frames:
 \itemize{
-\item known_occurrences list all occurrences that are expected in mock or FP (unexpected variants in mocks, all variants in negative control samples, variants present in a wrong habitat)
-\item missing_occurrences list all FN (expected occurrences in mock samples that are missing)
-\item performance_metrics Number of TP (expected in mock and present), FP (unexpected but present), FN  (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN))
+\item known_occurrences: Lists all occurrences that are expected in mock
+(True Positives) or
+False positives (unexpected variants in mocks, all variants in negative
+control samples, variants present in a wrong habitat).
+\item missing_occurrences: Lists all False Negatives (expected occurrences
+in mock samples that are missing).
+\item performance_metrics: Number of TP (expected in mock and present),
+FP (unexpected but present),
+FN (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN)).
 }
+}
+\examples{
+results MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo_df, mock_composition="data/mock_composition.csv", habitat_proportion=0.7)
+known_occurrences_df <- results[[1]]
+missing_occurrences_df <- results[[2]]
+performance_metrics_df <- results[[3]]
 }

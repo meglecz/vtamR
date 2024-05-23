@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{SortReads_no_reverse}
 \alias{SortReads_no_reverse}
-\title{SortReads_no_reverse}
+\title{Demultiplex and trim off tags and primers without checking reverse strand}
 \usage{
 SortReads_no_reverse(
   fastainfo,
@@ -20,35 +20,52 @@ SortReads_no_reverse(
 )
 }
 \arguments{
-\item{fasta_dir}{directory with input fasta files (listed in fastainfo_df$fasta)}
+\item{fastainfo}{Data frame or csv file with columns:
+tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
 
-\item{outdir}{output directory}
+\item{fasta_dir}{Character string: directory with input fasta files
+(listed in the fasta columns of fastainfo).}
 
-\item{cutadapt_path}{path to cutadapt executables}
+\item{outdir}{Character string: output directory.}
 
-\item{tag_to_end}{tags are at the extremity of the reads (starting at the first base); default: T}
+\item{cutadapt_path}{Character string: path to cutadapt executables. Can be empty if cutadapt in the the PATH.}
 
-\item{primer_to_end}{primers follow directly the tags (no heterogeneity spacer); default: T}
+\item{tag_to_end}{Boolean: tags are at the extremity of the reads
+(starting at the first base).}
 
-\item{cutadapt_error_rate}{maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1}
+\item{primer_to_end}{Boolean: primers follow directly the tags
+(no heterogeneity spacer).}
 
-\item{cutadapt_minimum_length}{minimum length of the trimmed sequence; default: 50}
+\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+between primers and reads (for tags, exact match is required).}
 
-\item{cutadapt_maximum_length}{maximum length of the merged sequence; default: 500}
+\item{cutadapt_minimum_length}{Positive integer: minimum length of the
+trimmed sequence.}
 
-\item{sep}{separator in input and output csv files; default: ","}
+\item{cutadapt_maximum_length}{Positive integer: maximum length of the
+trimmed sequence.}
 
-\item{compress}{\link{T/F}; compress output to gzip files.}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{fastainfo_df}{data frame with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame corresponding to the output sortedinfo.csv file
+and one fasta file for each tag combination for each input fasta file,
+containing trimmed reads.
 }
 \description{
 Same as SortReads, but do not check the reverse complement of the sequences.
-Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads.
+Demultiplex each input fasta file using the tag combinations
+at the extremities of the merged reads.
 Trim primers from demultiplexed reads.
-Output fasta files can be compressed if compress option is used.
-The output sortedinfo.csv file is similar to the fastainfo file, but the but do not have tag and primer columns.
-Returns data frame of corresponding to the output csv file.
+}
+\details{
+The output sortedinfo.csv file is similar to the fastainfo file,
+but the but do not have tag and primer columns.
+}
+\examples{
+fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, fasta_dir="data/fasta", outdir="data/sorted", tag_to_end=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=350, sep=",")
 }

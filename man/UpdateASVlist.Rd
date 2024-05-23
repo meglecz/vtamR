@@ -2,21 +2,36 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{UpdateASVlist}
 \alias{UpdateASVlist}
-\title{UpdateASVlist}
+\title{Update ASV list}
 \usage{
-UpdateASVlist(read_count_df, asv_list = asv_list, outfile = "", sep = ",")
+UpdateASVlist(df, asv_list, outfile, sep = ",")
 }
 \arguments{
-\item{read_count_df}{data frame with columns:  asv_id, sample,  replicate, read_count, asv}
+\item{df}{Data frame with columns:
+asv_id,asv}
 
-\item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
+\item{asv_list}{Character string: name of the input CSV file with columns:
+asv_id,asv.}
 
-\item{outfile}{Name of the output file; if empty, write a new file using the name asv_list, completed by the number of seconds from 01/01/1970}
+\item{outfile}{Character string: output csv file name.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Updated csv file with all unique asv_id - asv pairs
+in the input data frame and csv file.
+If there is a conflict within or between the input data stops with
+an error message.
 }
 \description{
-Pools unique asv - asv_id combinations in the input data frame and asv - asv_id combinations in the input file (asv_list)
-The input file is typically a csv file containing asv seen in earlier runs with their asv_id.
-If there is a conflict within or between the input data quits with a error message. Otherwise write the updated asv list with their asv_id to the outfile
+Pools unique asv - asv_id pairs in the input data frame
+and in the input file (asv_list).
+}
+\details{
+The input file is typically a csv file containing ASVs with their asv_ids
+seen in earlier data sets. This function is used to homogenize
+asv_ids between different data sets.
+}
+\examples{
+UpdateASVlist(df=read_count_df, asv_list="data/asv_list.csv", outfile="out/updated_asv_list.csv")
 }

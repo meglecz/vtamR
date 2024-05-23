@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{run_swarm}
 \alias{run_swarm}
-\title{run_swarm}
+\title{Run Swarm on one file}
 \usage{
 run_swarm(
   read_count_df,
@@ -14,19 +14,37 @@ run_swarm(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with the following variables: asv, plate, marker, sample, replicate, read_count}
+\item{swarm_path}{Character string: path to swarm executables.
+Can be empty if swarm is in the PATH.}
 
-\item{swarm_path}{Path to th swarm executable (Default: TRUE)}
+\item{num_threads}{Positive integer: Number of CPUs.}
 
-\item{num_threads}{Number of CPUs}
+\item{swarm_d}{Positive integer: d parameter for swarm.
+Maximum number of differences allowed between two ASVs,
+meaning that two ASVs will be grouped if they have d (or less) differences.}
 
-\item{swarm_d}{positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.}
+\item{fastidious}{Boolean: when working with d = 1, perform a second
+clustering pass to reduce the number of small clusters.}
 
-\item{fastidious}{\link{T/F} when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{read_count}{Data frame or csv file with the following variables:
+asv, plate, marker, sample, replicate, read_count.}
+}
+\value{
+Data frame with the same structure as the input, but ASVs of
+the same cluster pooled to one row.
 }
 \description{
-Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
-Return a data frame with the same structure as the input
+Runs swarm \url{https://github.com/torognes/swarm}
+on input read_count data frame or csv file.
+Pools variants of the same cluster and sums read counts of the
+underlying ASVs.
+}
+\details{
+\code{run_swarm} runs swarm on the whole data set in one go, while
+\code{Swarm} can run swarm sample by sample or in one go.
+}
+\examples{
+run_swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4)
 }

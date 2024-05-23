@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{Merge}
 \alias{Merge}
-\title{Merge}
+\title{Merge forward and reverse reads}
 \usage{
 Merge(
   fastqinfo,
@@ -26,45 +26,67 @@ Merge(
 )
 }
 \arguments{
-\item{fastqinfo}{data frame or csv file with column: tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fastq_fw,fastq_rv}
+\item{fastqinfo}{Data frame or csv file with columns: tag_fw,primer_fw,tag_rv,
+primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,
+fastq_fw,fastq_rv}
 
-\item{fastq_dir}{directory with input fastq files (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv)}
+\item{fastq_dir}{Character string: directory with input fastq files
+(listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
 
-\item{vsearch_path}{path to vsearch executables}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{outdir}{output directory}
+\item{outdir}{Character string: output directory.}
 
-\item{fastq_ascii}{\link{33/64} ASCII character number used as the basis for the FASTQ quality score; default: 33}
+\item{fastq_ascii}{ASCII character number (33 or 64) used as the basis for
+the FASTQ quality score.}
 
-\item{fastq_maxdiffs}{maximum number of non-matching nucleotides allowed in the overlap region; default:10}
+\item{fastq_maxdiffs}{Maximum number of non-matching nucleotides allowed in
+the overlapping region (positive integer).}
 
-\item{fastq_maxee}{discard sequences with more than the specified number of expected errors; default:}
+\item{fastq_maxee}{Discard sequences with more than the specified number of
+expected error (positive integer).}
 
-\item{fastq_minlen}{discard sequences with less than fastq_minlen bases; default: 50}
+\item{fastq_minlen}{Discard sequences with less than fastq_minlen bases
+(positive integer).}
 
-\item{fastq_maxlen}{discard sequences with more than fastq_maxlen bases; default: 500}
+\item{fastq_maxlen}{Discard sequences with more than fastq_maxlen bases
+(positive integer).}
 
-\item{fastq_minmergelen}{minimum length of the merged sequence; default: 50}
+\item{fastq_minmergelen}{Minimum length of the merged sequence
+(positive integer).}
 
-\item{fastq_maxmergelen}{maximum length of the merged sequence; default: 1000}
+\item{fastq_maxmergelen}{Maximum length of the merged sequence
+(positive integer).}
 
-\item{fastq_maxns}{discard sequences with more than fastq_maxns of N’s; default: 0}
+\item{fastq_maxns}{Discard sequences with more than fastq_maxns of N’s
+(positive integer).}
 
-\item{fastq_truncqual}{truncate sequences starting from the first base with fastq_truncqual base quality score value or lower; default: 10}
+\item{fastq_truncqual}{Truncate sequences starting from the first base with
+fastq_truncqual base quality score or lower (positive integer).}
 
-\item{fastq_minovlen}{minimum overlap between the merged reads; default: 50}
+\item{fastq_minovlen}{Minimum overlap between the merged reads
+(positive integer).}
 
-\item{fastq_allowmergestagger}{\link{T/F} allow to merge staggered read pairs. Staggered pairs are pairs where the 3’ end of the reverse read has an overhang to the left of the 5’ end of the forward read; default: F}
+\item{fastq_allowmergestagger}{Boolean to allow to merge staggered read pairs.
+Staggered pairs are pairs where the 3’ end of the reverse read has an
+overhang to the left of the 5’ end of the forward read.}
 
-\item{sep}{separator in input and output csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{compress}{\link{T/F}; Compress output file to gzip format; Default=F}
+\item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame corresponding to the output fastainfo.csv file
 }
 \description{
-Merge forward are reverse fastq read pairs to fasta.
+Merge forward are reverse fastq read pairs and transform the files to fasta.
 Output fasta files can be compressed if compress option is used.
-The output fastainfo.csv file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files
-Returns data frame corresponding to the output csv file
+The output fastainfo.csv file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files.
+}
+\examples{
+Merge(fastqinfo_df, fastq_dir="data/fastqdir", vsearch_path="C:/Users/Public", outdir="data/fastadir", compress=T, quiet=F)
+Merge(fastqinfo_df, fastq_dir="data/fastqdir", outdir="data/fastadir", fastq_maxdiffs=5, fastq_maxee=2, fastq_minlen=60, fastq_maxlen=100, fastq_minmergelen=80, fastq_maxmergelen=100, fastq_maxns=1, fastq_truncqual=20, fastq_minovlen=20, fastq_allowmergestagger=T)
 }

@@ -2,25 +2,39 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{CheckFileinfo}
 \alias{CheckFileinfo}
-\title{CheckFileinfo}
+\title{Check File formats}
 \usage{
 CheckFileinfo(file, dir = "", file_type = "fastqinfo", sep = ",")
 }
 \arguments{
-\item{file}{input file name or df to be checked}
+\item{file}{Character string: name of the input file to be checked of
+data frame with the content of the input file.}
 
-\item{dir}{directory name containing the files in fastq_fw, fastq_rv and fasta columns in the input file}
+\item{dir}{Character string: Name of the directory containing the files
+in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 
-\item{file_type}{\link{fastqinfo/fastainfo/sortedinfo/mock_composition/known_occurrences/read_count/read_count_sample/asv_list}}
+\item{file_type}{Character string with the following possible values:
+"fastqinfo", "fastainfo", "sortedinfo", "mock_composition", "known_occurrences",
+"read_count", "read_count_sample", "asv_list".}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Error message if problem with the files and stop the prorgam.
 }
 \description{
 Check the format and coherence of different file types:
-Check if all obligatory columns are present (all file_type)
-Check sample type, habitat homogeneity across replicates (fastqinfo, fastainfo, sortedinfo)
-Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)
-Check if tag combinations are unique within a file(pair) (fastqinfo, fastainfo)
-Check action (mock_composition, known_occurrences)
-Check if 1 to 1 relation between asv_id ad asv (read_count,read_count_sample,asv_list)
+\itemize{
+\item Check if all obligatory columns are present (all file_type)
+\item Check sample type, habitat homogeneity across replicates
+(fastqinfo, fastainfo, sortedinfo)
+\item Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)
+\item Check if tag combinations are unique within a file(pair)s (fastqinfo, fastainfo)
+\item Check action (mock_composition, known_occurrences)
+\item Check if 1 to 1 relation between asv_id ad asv (read_count,read_count_sample,asv_list)
+}
+}
+\examples{
+CheckFileinfo(file="input/sortedinfo.csv", dir="fasta", file_type="sortedinfo")
+CheckFileinfo(file=sortedinfo_df, dir="fasta", file_type="read_count_sample")
 }

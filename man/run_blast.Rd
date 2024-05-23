@@ -2,36 +2,43 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{run_blast}
 \alias{run_blast}
-\title{run_blast}
+\title{Run BLAST}
 \usage{
 run_blast(
   df,
-  blast_db = "",
+  blast_db,
   blast_path = "",
   outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
-  num_threads = 8,
+  num_threads = 1,
   quiet = T
 )
 }
 \arguments{
-\item{df}{a data frame containing and asv column}
+\item{df}{Data frame containing and asv column.}
 
-\item{blast_db}{BLAST DB incuding path}
+\item{blast_db}{BLAST DB including path.}
 
-\item{blast_path}{path to BLAST executables}
+\item{blast_path}{Character string: path to BLAST executables.
+Can be empty if BLAST in the the PATH.}
 
-\item{outdir}{output directory}
+\item{outdir}{Character string: output directory.}
 
-\item{qcov_hsp_perc}{minimum query coverage}
+\item{qcov_hsp_perc}{Real between 0 and 100: minimum query coverage.}
 
-\item{perc_identity}{minimum percentage of identity}
+\item{perc_identity}{Real between 0 and 100: minimum percentage of identity.}
 
-\item{num_threads}{number of threads}
+\item{num_threads}{Positive integer: number of threads.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+data frame with the BLAST results: qseqid,pident,qcovhsp,staxids
 }
 \description{
-Run BLAST
+Run BLAST using ASVs of the input data fram as queries.
+}
+\examples{
+run_blast(df=read_count_df, blast_db="xxxxxxxx", blast_path="", qcov_hsp_perc=80, perc_identity=00, num_threads=4)
 }

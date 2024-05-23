@@ -2,19 +2,30 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{flag_from_mock}
 \alias{flag_from_mock}
-\title{flag_from_mock}
+\title{Flag occurrences in mock samples}
 \usage{
-flag_from_mock(occurrence_df, mock_composition = "", sep = ",")
+flag_from_mock(occurrence_df, mock_composition, sep = ",")
 }
 \arguments{
-\item{occurrence_df}{data frame with the following variables: asv_id, sample, read_count, asv, sample_type, habitat, action}
+\item{occurrence_df}{Data frame with the following variables:
+asv_id, sample, read_count, asv, sample_type, habitat, action.}
 
-\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{Data frame or csv file with columns:
+sample, action (keep/tolerate), asv.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Data fram with the following columns:
+asv_id, sample, read_count, asv, sample_type, habitat, action.
 }
 \description{
 Flag all occurrences in mock samples.
 Expected variants as 'keep', unexpected ASVs as 'delete', tolerate ASVs as NA.
-Tolerate ASVs are ASVs that can be in the mock, but the filtering should not be optimized to keep them. (e.g. badly amplified species present in the mock)
+Tolerate ASVs are ASVs that can be in the mock, but the filtering
+should not be optimized to keep them
+(e.g. badly amplified species present in the mock).
+}
+\examples{
+flag_from_mock(occurrence_df=occurrence_df, mock_composition="data/mock_composition.csv")
 }

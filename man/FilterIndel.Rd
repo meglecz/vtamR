@@ -7,10 +7,19 @@
 FilterIndel(read_count, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Filter out all ASVs, if the modulo 3 of their length is not the same as that of the majority of the ASVs
+Filter out all ASVs, if the modulo 3 of their length is not the same as
+that of the majority of the ASVs.
+}
+\examples{
+filtered_read_count_df <-FilterIndel(read_count_df)
 }

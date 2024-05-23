@@ -2,15 +2,21 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{expand_rows}
 \alias{expand_rows}
-\title{expand_rows}
+\title{Expand Rows}
 \usage{
 expand_rows(row)
 }
 \arguments{
-\item{row}{a row of a data frame with the following columns: qseqid,pident,qcovhsp,staxids}
+\item{row}{Row of a data frame with the following columns:
+qseqid,pident,qcovhsp,staxids}
+}
+\value{
+Data frame with the following columns: qseqid,pident,qcovhsp,staxids
 }
 \description{
-split he taxid column to different taxids in the input dataframe
-Make one line for each taxid
-Return a data frame with the following columns: "qseqid","pident","qcovhsp","staxids"
+Split the taxid column to different taxids in the input data frame.
+Make one line for each taxid.
+}
+\examples{
+expand_rows(row)
 }

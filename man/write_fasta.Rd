@@ -2,17 +2,25 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_fasta}
 \alias{write_fasta}
-\title{write_fasta}
+\title{Write fasta file}
 \usage{
 write_fasta(sequences, filename, seq_as_id = F)
 }
 \arguments{
-\item{sequences}{list of sequences}
+\item{sequences}{Vector of sequences.}
 
-\item{filename}{output file name, including path}
+\item{filename}{Character string: name of the output fasta file.}
 
-\item{seq_as_id}{T/F; It TRUE, use sequences as seqID (FALSE by default)}
+\item{seq_as_id}{Boolean: Use sequences as seqID.}
+}
+\value{
+fasta file
 }
 \description{
-Write a fasta file using the sequences as ID
+Write a vector of sequeces to a fasta file using
+either the sequences as ID (seq_as_id==TRUE), or arbitrary sequence IDs
+(seq_as_id==FALSE)
+}
+\examples{
+write_fasta(sequences=read_count_df$asv, filename="out/seq.fasta", seq_as_id=T)
 }

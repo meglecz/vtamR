@@ -2,29 +2,42 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{add_ids}
 \alias{add_ids}
-\title{add_ids}
+\title{Add ids to ASVs}
 \usage{
 add_ids(
   read_count_df,
-  asv_list = asv_list,
+  asv_list = "",
   updated_asv_list = "",
   sep = ",",
   quiet = T
 )
 }
 \arguments{
-\item{read_count_df}{data frame with columns:  asv, sample,  replicate, read_count}
+\item{read_count_df}{Data frame with columns: asv,sample,replicate,read_count}
 
-\item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
+\item{asv_list}{Character string: file with asv - asv_id pairs
+from earlier analyses. Optional. It is used to homogenize asv_ids between
+different data sets.}
 
-\item{updated_asv_list}{name of the output file, containing the updated ASVs. Optional.}
+\item{updated_asv_list}{Character string: output file with
+the updated asv - asv_id pairs. Optional.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame with asv_id column added to the input data frame.
 }
 \description{
-Add asv_ids to a data frame that have an asv column. Can take into account already existing asv and asv_id (from earlier data set) present in asv_list file
-If updated_asv_list file name is given, the input asv_list is completed by new asvs and asv_ids
-Returns a data frame with asv_id column added to the input data frame.
+Add asv_ids to a data frame that have an asv column.
+Can take into account already existing asv - asv_id pairs
+(from earlier data sets) present in asv_list file.
+}
+\details{
+If updated_asv_list file name is given, the input asv_list is
+completed by new asvs and asv_ids.
+}
+\examples{
+add_ids <- function(read_count_df, asv_list=asv_list)
 }

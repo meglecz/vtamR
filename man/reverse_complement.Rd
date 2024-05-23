@@ -2,13 +2,19 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{reverse_complement}
 \alias{reverse_complement}
-\title{reverse_complement}
+\title{Reverse Complement a sequence}
 \usage{
 reverse_complement(sequence)
 }
 \arguments{
-\item{sequence}{DNA sequence}
+\item{sequence}{Character string: DNA sequence.}
+}
+\value{
+The reverse complement of the input sequence.
 }
 \description{
 Reverse complement a DNA sequence. IUPAC codes are accepted
+}
+\examples{
+reverse_complement(sequence="AAATGCRC")
 }

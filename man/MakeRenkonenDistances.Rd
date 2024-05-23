@@ -2,16 +2,24 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{MakeRenkonenDistances}
 \alias{MakeRenkonenDistances}
-\title{MakeRenkonenDistances}
+\title{Make Renkonen Distances}
 \usage{
-MakeRenkonenDistances(read_count_df, compare = "all")
+MakeRenkonenDistances(read_count_df, compare_all = FALSE)
 }
 \arguments{
-\item{read_count_df}{data frame with asv, sample, replicate, and read_count columns}
+\item{read_count_df}{Data frame with asv, sample, replicate, and read_count columns.}
 
-\item{compare}{\link{all/within} calculate the Renkonen distance among all pairs of sample-replicates (all), only between replicates of the same sample (within)}
+\item{compare_all}{Boolean: if TRUE calculate the Renkonen distance among all pairs
+of sample-replicates. Only between replicates of the same sample otherwise.}
+}
+\value{
+Data frame with the following columns:
+sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp
+(within, if sample1 and sample2 are identical, between otherwise).
 }
 \description{
-Calculate the Renkonen distance between pairs of sample-replicates
-Returns a data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp (within, if sample1 and sample2 are identical, between otherwise)
+Calculate the Renkonen distance between pairs of sample-replicates.
+}
+\examples{
+MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 }

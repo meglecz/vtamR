@@ -2,18 +2,27 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_df_to_fasta}
 \alias{write_df_to_fasta}
-\title{write_df_to_fasta}
+\title{Write data frame to fasta}
 \usage{
 write_df_to_fasta(df, out, compress = F)
 }
 \arguments{
-\item{df}{input data frame with the following columns: header, sequence}
+\item{df}{input data frame with the following columns: header, sequence.}
 
-\item{out}{out fasta filename; modified according to compress}
+\item{out}{Character string: name of the output file.}
 
-\item{compress}{\link{T/F} is TRUE, the output file will be compressed}
+\item{compress}{Boolean: Compress output files to gzip format.}
+}
+\value{
+Character string: name of the output file updated according to the compression.
 }
 \description{
-Writes input data frame to a fasta file. Can produce gz compressed file or uncompressed files.
-The output filename extention is corrected according to the compression
+Writes input data frame to a fasta file. Can produce gz compressed file
+or uncompressed files.
+The output file name's extension is corrected according to the
+compression if necessary.
+}
+\examples{
+df <- data.frame(header=c("seq1", "seq2"),sequence=c("AACTTGTTGTCACTGTAAACTGATGTA", "AACTTGTTGTCACTGTTTGACTGATGTA"))
+write_df_to_fasta(df, out="out/test.fasta", compress=T)
 }

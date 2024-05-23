@@ -2,10 +2,16 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{is_linux}
 \alias{is_linux}
-\title{is_linux}
+\title{Test if OS is Linux-like}
 \usage{
 is_linux()
 }
+\value{
+TRUE if "sysname" returned by Sys.info() starts with linux, sunos, darwin, gnu or unix
+}
 \description{
-Returns TRUE if operating system is linux or macOS, FALSE otherwise
+Returns TRUE if operating system is linux-like.
+}
+\examples{
+os_linux <- is_linux()
 }

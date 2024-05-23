@@ -6,10 +6,10 @@
 \usage{
 TaxAssign(
   asv,
-  ltg_params = "",
-  taxonomy = "",
-  blast_db = "",
+  taxonomy,
+  blast_db,
   blast_path = "",
+  ltg_params = "",
   outfile = "",
   num_threads = 1,
   tax_sep = "\\t",
@@ -18,28 +18,62 @@ TaxAssign(
 )
 }
 \arguments{
-\item{ltg_params}{csv file or data frame with a list of percentage of identity values (pid) and associated parameters (pcov,phit,taxn,seqn,refres,ltgres)}
+\item{asv}{Data frame or csv file containing and asv column.}
 
-\item{taxonomy}{file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been mered to tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)}
+\item{taxonomy}{TSV file containing the following columns:
+tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been merged to tax_id),
+taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
+2: kingdom, 1: superkingdom, 0: root).}
 
-\item{blast_db}{BLAST database}
+\item{blast_db}{Character string naming the BLAST database.}
 
-\item{blast_path}{path to BLAST executable}
+\item{blast_path}{Character string: path to BLAST executable.
+Can be empty if BLAST in the the PATH.}
 
-\item{outfile}{Name of the output csv file with the following columns: asv,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres; if no file name provided, only a data frame is returned}
+\item{ltg_params}{Data frame or csv file with a list of
+percentage of identity values (pid) and associated parameters
+(pcov,phit,taxn,seqn,refres,ltgres).}
 
-\item{num_threads}{Number of CPUs}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{tax_sep}{separator used in taxonomy file}
+\item{num_threads}{Positive integer: number of CPUs.}
 
-\item{sep}{separator used in csv files}
+\item{tax_sep}{Field separator character used in taxonomy file.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{df}{csv file or data frame containing and asv column}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 
-\item{outdir}{name of the output directory}
+\item{outdir}{Character string: output directory.}
+}
+\value{
+Data frame with the following columns:
+asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
+superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
+phylum_taxid,phylum,class_taxid,class,order_taxid,order,
+family_taxid,family,genus_taxid,genus,species_taxid,species,
+pid,pcov,phit,taxn,seqn,refres,ltgres,asv
 }
 \description{
-Find LTG for each asv in the input dataframe
+Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
+}
+\details{
+TaxAssign uses the mkLTG algorithm described
+in \href{https://rdcu.be/dxABF}{Meglécz, 2024} and
+\url{https://github.com/meglecz/mkLTG}.
+This is a BLAST based method using a series of identity percentage of cutoff
+values to validate BLAST hits and each cutoff is associated with
+further parameters:
+\itemize{
+\item pcov: Percentage of coverage
+\item phit: Perentage of the validated hits to be included in LTG
+\item taxn: Minimum number of taxa among the validated hits
+\item seqn: Minimum number of sequences among the validated hits
+\item refres: Minimum resolution of the hit to be validated
+\item ltgres: Maximum resolution of the LTG.
+}
+}
+\examples{
+TaxAssign(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
 }

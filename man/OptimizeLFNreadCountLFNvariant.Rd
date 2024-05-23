@@ -6,7 +6,7 @@
 \usage{
 OptimizeLFNreadCountLFNvariant(
   read_count,
-  known_occurrences = "",
+  known_occurrences,
   sep = ",",
   outfile = "",
   min_lfn_read_count_cutoff = 10,
@@ -21,38 +21,57 @@ OptimizeLFNreadCountLFNvariant(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{known_occurrences}{data frame or file produced by MakeKnownOccurrences function, with known FP and TP}
+\item{known_occurrences}{Data frame or file produced by
+\code{MakeKnownOccurrences} function, with known False Positives and True Positives.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{outfile}{name of the output file; Optional; If empty the results are not written to a file}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{min_lfn_read_count_cutoff}{the lowest cutoff value for LFNreadCount function (10 by default).}
+\item{min_lfn_read_count_cutoff}{Positive integer: the lowest cutoff value for
+\code{LFNreadCount} function.}
 
-\item{max_lfn_read_count_cutoff}{the highest cutoff value for LFNreadCount function (100 by default).}
+\item{max_lfn_read_count_cutoff}{Positive integer: the highest cutoff value
+for \code{LFNreadCount} function.}
 
-\item{increment_lfn_read_count_cutoff}{values from min_lfn_read_count_cutoff to max_lfn_read_count_cutoff are tested by increment_lfn_read_count_cutoff increment (5 by default).}
+\item{increment_lfn_read_count_cutoff}{Positive integer: values from
+\code{min_lfn_read_count_cutoff} to \code{max_lfn_read_count_cutoff}
+are tested by \code{increment_lfn_read_count_cutof} of increment.}
 
-\item{min_lnf_variant_cutoff}{the lowest cutoff value for LFNvariant function (0.001 by default).}
+\item{min_lnf_variant_cutoff}{Real (0-1): the lowest cutoff value for
+\code{LFNvariant} function.}
 
-\item{max_lnf_variant_cutoff}{the highest value for LFNvariant function (0.01 by default).}
+\item{max_lnf_variant_cutoff}{Real (0-1): the highest value for \code{LFNvariant}
+function.}
 
-\item{increment_lnf_variant_cutoff}{values from min_lnf_variant_cutoff to max_lnf_variant_cutoff are tested by increment_lnf_variant_cutoff increment (0.001 by default).}
+\item{increment_lnf_variant_cutoff}{Real (0-1): values from
+\code{min_lnf_variant_cutoff} to \code{max_lnf_variant_cutoff} are tested by
+\code{increment_lnf_variant_cutoff} increment.}
 
-\item{by_replicate}{T/F (False by default); see LFNvariant function}
+\item{by_replicate}{Boolean: : compare read count of the occurrence to the
+read counts of the ASV-replicate in \code{LFNvariant} function.}
 
-\item{min_replicate_number}{for FilterMinReplicate (see FilterMinReplicate function; default 1)}
+\item{min_replicate_number}{Positive integer: minimum number of replicates
+for \code{FilterMinReplicate}.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+data frame with the following columns:
+lfn_read_count_cutoff, lnf_variant_cutoff, FN, TP, FP.
 }
 \description{
-Suggest optimal parameters for lfn_read_count_cutoff and lnf_variant_cutoff
-The the LFNreadCount and LFNvariant is run for a series of parameter value combinations followed by FilterMinReplicate.
-For each parameter combination the number of FN, TP, and FP is reported.
-}
-\details{
-The results are written to data frame and to an outfile if the filename is given.
+Suggest optimal parameters for \code{lfn_read_count_cutoff} and \code{lnf_variant_cutoff}
+functions.
+The the \code{LFNreadCount} and \code{LFNvariant} is run for a series of parameter value
+combinations followed by \code{FilterMinReplicate}.
+For each parameter combination, the number of FN, TP, and FP is reported.
 Users should chose the parameter setting that minimizes, FN and FP.
+}
+\examples{
+OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences="data/known_occurrences.csv", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.005, increment_lnf_variant_cutoff=0.001)
 }

@@ -2,20 +2,29 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{flag_from_habitat}
 \alias{flag_from_habitat}
-\title{flag_from_habitat}
+\title{Flag occurrences based on habitat}
 \usage{
-flag_from_habitat(occurrence_df, sortedinfo_df, habitat_proportion = 0.5)
+flag_from_habitat(occurrence_df, habitat_proportion = 0.5)
 }
 \arguments{
-\item{occurrence_df}{data frame with the following variables: asv, plate, marker, sample, read_count, sample_type, habitat, action}
+\item{occurrence_df}{Data frame with the following variables:
+asv, plate, marker, sample, read_count, sample_type, habitat, action.}
 
-\item{sortedinfo_df}{csv file with columns: plate, marker, sample, sample_type(mock/negative/real), habitat}
-
-\item{habitat_proportion}{For each of ASVs, if the proportion of reads in a habitat is below this cutoff it is considered as an artifact in all samples of the habitat.}
+\item{habitat_proportion}{For each of ASVs, if the proportion
+of reads in a habitat is below this cutoff, it is considered as an
+artifact in all samples of the habitat.}
+}
+\value{
+The updated input data frame, with some occurrences flagged as
+delete in the action column.
 }
 \description{
-Flag FP occurrences in samples based on the habitat the samples are from.
+Flag False Positive occurrences based on the habitat of the samples.
 All ASVs present in more than one habitat are checked.
-For each of these ASVs, if the proportion of reads in a habitat is below a cutoff (habitat_proportion),
+For each of these ASVs, if the proportion of reads in a habitat is below
+a cutoff (\code{habitat_proportion}),
 it is considered as an artifact in all samples of the habitat.
+}
+\examples{
+flag_from_habitat(occurrence_df, habitat_proportion=0.7)
 }

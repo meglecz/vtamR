@@ -4,29 +4,37 @@
 \alias{SummarizeBy}
 \title{SummarizeBy}
 \usage{
-SummarizeBy(
-  dir,
-  sep = ",",
-  outfile = "",
-  feature = "asv",
-  grouped_by = "sample"
-)
+SummarizeBy(dir, feature, grouped_by, outfile = "", sep = ",")
 }
 \arguments{
-\item{dir}{directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFNsampleReplicate.csv)}
+\item{dir}{Character string: directory containing the output files
+of intermediate filtering steps. File names should start with a number
+followed by an underscore (e.g. 5_LFNsampleReplicate.csv).}
 
-\item{sep}{separator used in csv files}
+\item{feature}{Character string with the following possible values:
+"asv_id", "asv", "sample", "replicate", "read_count".}
 
-\item{outfile}{name of the output file; optional, it is not given results are returned in a data frame, but no file is written}
+\item{grouped_by}{Character string with the following possible values:
+"asv_id", "asv", "sample", "replicate". Group data by this variable.}
 
-\item{feature}{\link{asv_id/asv/sample/replicate/read_count} if read_count, get the total number of reads for each of the grouped values, otherwise get the number of distinct values of feature}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{grouped_by}{\link{asv_id/asv/sample/replicate} group data by this variable}
-
-\item{value}{values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Data frame with input file names in columns, \code{grouped_by} values in
+lines, and the number of features or the read counts in the cells.
 }
 \description{
 Summarizes the output of each intermediate filtering steps.
-Takes all files in the dir, that start with a number.
-For each file, groups the lines by grouped_by variable, and gets the number of distinct values of feature for each group, or if feature is read_count, gets the total number of reads of each group
+Takes all files in the directory, that start with a number.
+For each file, groups the lines by \code{grouped_by} variable,
+and gets the number of distinct values of \code{feature} for
+each group, or if \code{feature} is \code{read_count}, gets the total
+number of reads of each group.
+}
+\examples{
+SummarizeBy(dir="vtamR_test/out_mfzr", feature="asv", grouped_by="sample")
+SummarizeBy(dir="vtamR_test/out_mfzr", feature="read_count", grouped_by="sample")
 }

@@ -13,15 +13,27 @@ FilterRenkonen(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{cutoff}{\link{0-1}  Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample}
+\item{cutoff}{Real (0-1):  Filter out all replicates that have
+renkonen distances above cutoff to most other replicates of the same sample.}
 
-\item{renkonen_distance_quantile}{If cutoff value is not given, use the renkonen_distance_quantile to determine cutoff value (e.g. with 0.9 as renkonen_distance_quantile, 90\% of the distances are bellow cutoff)}
+\item{renkonen_distance_quantile}{Real (0-1): if cutoff value is not given,
+use the \code{renkonen_distance_quantile} to determine cutoff value
+(e.g. with 0.9 as \code{renkonen_distance_quantile}, 90\% of the distances are bellow cutoff)}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Filter out all replicates that have renkonen distances above cutoff to most other replicates of the sample.
-Returns the filtered read_count_df data frame
+Filter out all replicates that have renkonen distances above \code{cutoff}
+to most other replicates of the same sample.
+}
+\examples{
+filtered_read_count_df <- FilterRenkonen(read_count_df, cutoff = 0.6)
+filtered_read_count_df <- FilterRenkonen(read_count_df, renkonen_distance_quantile=0.9)
 }

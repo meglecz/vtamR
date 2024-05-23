@@ -2,33 +2,46 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{CountReadsDir}
 \alias{CountReadsDir}
-\title{CountReadsDir}
+\title{Count reads in directory}
 \usage{
 CountReadsDir(
   dir,
-  pattern = ".fastq",
-  file_type = "",
+  pattern = ".",
+  file_type = "fasta",
   outfile = "",
   sep = ",",
   quiet = T
 )
 }
 \arguments{
-\item{dir}{name of the input directory}
+\item{dir}{Character string: name of the input directory.}
 
-\item{pattern}{take files from input dir, if patter (regular expression) is present in the file name}
+\item{pattern}{Regular expression: pattern in the name of the files in the
+input directory. Read only files with pattern in their names.}
 
-\item{file_type}{\link{fasta/fastq} if not specified, the number of lines is returned, otherwise the nulber of sequences}
+\item{file_type}{Character string with the following values: "fasta", "fastq".
+For all other values, the number of lines is returned.}
 
-\item{outfile}{name of the output file; optional, it is not given results are returned in a data frame, but no file is written}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame with 2 columns: filename, read_count.
 }
 \description{
-For all files in input directory, where the file name contains pattern,
-count the number of sequences in a fasta or fastq file, or  he number of line in other files
-Efficient in linux-like systems, but slow on Windows for large files
-Can handle gz compressed and uncompressed files, but not zipped files
+Counts the number of sequences in fasta or fastq files, or the number of
+lines in other files. Reads all files in the input directory with
+\code{pattren} in their names.
+}
+\details{
+Efficient in linux-like systems, but slow on Windows for large files.
+Can handle gz compressed and uncompressed files, but not zip files.
+}
+\examples{
+CountReadsDir(dir="out", pattern=".fastq", file_type="fastq")
+CountReadsDir(dir="out", pattern="^mfzr", file_type="fasta")
 }

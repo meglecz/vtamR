@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{Dereplicate}
 \alias{Dereplicate}
-\title{Read all fasta files in sortedinfo file to a data frame}
+\title{Read all fasta files to a data frame and dereplicate}
 \usage{
 Dereplicate(
   sortedinfo,
@@ -15,25 +15,43 @@ Dereplicate(
 )
 }
 \arguments{
-\item{sortedinfo}{data frame or csv file with columns:  sample,  replicate, fasta, (optional: sample_type(mock/negative/real), habitat)}
+\item{sortedinfo}{Data frame or csv file with columns:
+sample,replicate,fasta, optional: sample_type,habitat.
+The fasta column contains the names of the fasta file to be dereplicated.}
 
-\item{dir}{name of the directory with fasta files}
+\item{dir}{Character string naming of the directory with input fasta files.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv for the output data frame
+(asv_id, sample, replicate, read_count). If empty, no file is written.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{asv_list}{name of the file, containing asvs and asv_ids from earlier analyses. Optional. It is used to homogenize asv_ids between different data sets}
+\item{asv_list}{Character string: file with asvs and asv_ids
+from earlier analyses. Optional. It is used to homogenize asv_ids
+between different data sets.}
 
-\item{updated_asv_list}{name of the output file, containing the updated ASVs. Optional.}
+\item{updated_asv_list}{Character string naming of the output file
+with updated asv_id - asv pairs. Optional.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame with the following columns:
+asv_id,sample,replicate,read_count,asv
 }
 \description{
-Read all fasta file in sortedinfo_df data frame (sample	replicate	file name).
+Read all fasta files in the fasta columns of sortedinfo data frame (or csv file).
 Dereplicate reads to ASVs.
-Count the number of reads of each ASVs in each sample-replicate.
-Add a unique asv_id to each asv. If asv_list is given (containing earlier asv and asv_ids), uses already existing asv_id when possible, and adds new uniq asv_id, if asv is new
-If updated_asv_list is given, writes an updated file containing all asv and asv_id is asv_list and sortedinfo_df
-Returns a df ("asv_id", "sample", "replicate", "read_count", asv)
+Count the number of reads of each ASV in each input file.
+Add a unique asv_id to each asv.
+}
+\details{
+If asv_list is given (containing earlier asv and asv_id pairs),
+uses already existing asv_id when possible for the present data
+and adds new unique asv_id, to new ASVs.
+If updated_asv_list is given, writes an updated file containing
+all asv - asv_id pairs.
+}
+\examples{
+Dereplicate(sortedinfo=sortedinfo, dir="data/sorted", asv_list="data/asv_list.csv")
 }

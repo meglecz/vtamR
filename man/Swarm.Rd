@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{Swarm}
 \alias{Swarm}
-\title{Swarm}
+\title{Run swarm}
 \usage{
 Swarm(
   read_count,
@@ -17,26 +17,44 @@ Swarm(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv, plate, marker, sample, replicate, read_count}
+\item{read_count}{Data frame or csv file with the following variables:
+asv, plate, marker, sample, replicate, read_count.}
 
-\item{outfile}{name of the output file with asv_id, sample, replicate, read_count and asv columns; Optional; If empty the results are not written to a file}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{swarm_path}{Path to th swarm executable (Default: TRUE)}
+\item{swarm_path}{Character string: path to swarm executables.
+Can be empty if swarm is in the PATH.}
 
-\item{num_threads}{Number of CPUs}
+\item{num_threads}{Positive integer: Number of CPUs.}
 
-\item{swarm_d}{positive integer, d parameter for swarm (1 by default); maximum number of differences allowed between two amplicons, meaning that two amplicons will be grouped if they have d (or less) differences.}
+\item{swarm_d}{Positive integer: d parameter for swarm.
+Maximum number of differences allowed between two ASVs,
+meaning that two ASVs will be grouped if they have d (or less) differences.}
 
-\item{fastidious}{\link{T/F} when working with d = 1, perform a second clustering pass to reduce the number of small clusters (Default: TRUE)}
+\item{fastidious}{Boolean: when working with d = 1, perform a second
+clustering pass to reduce the number of small clusters.}
 
-\item{sep}{separator for the output file}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{by_sample}{\link{T/F}, if TRUE, swarm run separately for each sample}
+\item{by_sample}{Boolean: run swarm separately for each sample.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame with the same structure as the input, but ASVs of
+the same cluster pooled to one row.
 }
 \description{
-Run swarm (https://github.com/torognes/swarm) on input read_count_df data frame, pool variants of the same cluster sum reads of the underlying ASVs
-Return a data frame with the same structure as the input
-Swarm can be run sample by sample (by_sample=T) or for the whole data set in ine go
+Runs swarm \url{https://github.com/torognes/swarm}
+on input read_count data frame or csv file.
+Pools variants of the same cluster and sums read counts of the
+underlying ASVs.
+}
+\details{
+Swarm can be run sample by sample (by_sample=T) or for the whole data set
+in one go.
+}
+\examples{
+Swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4, by_sample=T)
 }

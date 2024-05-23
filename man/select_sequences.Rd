@@ -2,17 +2,26 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{select_sequences}
 \alias{select_sequences}
-\title{select_sequences}
+\title{Select sequences randomly}
 \usage{
 select_sequences(file, n = 100, randseed = 0)
 }
 \arguments{
-\item{file}{input fasta file; can be  uncompressed or compressed in gz format (zip files are not supported)}
+\item{file}{Character string: name of the input fasta file.
+Can be  uncompressed or compressed in gz format (zip files are not supported).}
 
-\item{n}{number of sequences to be selected}
+\item{n}{Positive integer: the number of sequences to be selected.}
 
-\item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
+\item{randseed}{Positive integer: seed for random sampling.
+0 by default means to use a pseudo-random seed.
+A given non-zero seed produces always the same result.}
+}
+\value{
+Data frame with two columns: headers and sequences.
 }
 \description{
-Select n random sequences from the input file and returns a data frame with two columns, headers and sequences.
+Selects \code{n} random sequences from the input fasta file.
+}
+\examples{
+select_sequences(file="data/test.fasta", n=100, randseed=563)
 }

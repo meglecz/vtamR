@@ -2,14 +2,14 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{RandomSeq}
 \alias{RandomSeq}
-\title{RandomSeq}
+\title{Select random sequences}
 \usage{
 RandomSeq(
   fastainfo,
+  n,
   fasta_dir = "",
   outdir = "",
   vsearch_path = "",
-  n,
   randseed = 0,
   compress = F,
   sep = ",",
@@ -17,25 +17,38 @@ RandomSeq(
 )
 }
 \arguments{
-\item{fastainfo}{data frame or csv file with a 'fasta' column containing input file names; files can be compressed in gz and zip format}
+\item{fastainfo}{Data frame or csv file with a fasta column containing input
+fasta file names. Files can be gzip compressed.}
 
-\item{fasta_dir}{directory that contains the input fasta files}
+\item{n}{Positive integer: the number of randomly selected sequences from each input file.}
 
-\item{outdir}{directory for the output files}
+\item{fasta_dir}{Character string: directory that contains the
+input fasta files}
 
-\item{vsearch_path}{path to vsearch}
+\item{outdir}{Character string: output directory.}
 
-\item{n}{integer; the number of randomly selected sequences}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
+\item{randseed}{Positive integer: seed for random sampling.
+0 (default value) means to use a pseudo-random seed.
+A given non-zero seed produces always the same result.}
 
-\item{compress}{\link{T/F}; If TRUE, output files are compressed in the same format as the input. Otherwise the output is uncompressed;}
+\item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{separator}{used un csv files; "," by default}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+The input data frame with updated file names and read counts.
 }
 \description{
 Random select n sequences from each input fasta file.
+}
+\details{
 Do not work on Windows! If using Windows, please, use RandomSeqWindows
+}
+\examples{
+fastainfo_df <- RandomSeq(fastainfo, fasta_dir="data/fasta", outdir="data/randomseq")
 }

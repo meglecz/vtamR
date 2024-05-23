@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{PoolDatasets}
 \alias{PoolDatasets}
-\title{PoolDatasets}
+\title{Pool Datasets}
 \usage{
 PoolDatasets(
   files,
@@ -15,24 +15,39 @@ PoolDatasets(
 )
 }
 \arguments{
-\item{files}{data frame with the following variables: file (name of input files), marker; Input files must have asv, sample and read_count columns}
+\item{files}{Data frame with the following variables: file (name of input files), marker.
+Input files must have asv, sample and read_count columns.}
 
-\item{outfile}{name of the output file with asv_id, sample, read_count and asv columns, after pooling ASVs identical on their corresponding regions together; Optional}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{asv_with_centroids}{name of the output file containing the same information as the concatenated input files, completed by centroid_id and centroid columns; Optional}
+\item{asv_with_centroids}{Character string: csv file name of the output file
+containing the same information as the concatenated input files,
+completed by centroid_id and centroid columns.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{mean_over_markers}{\link{T/F} If TRUE, the mean read count is calculated over different ASVs of each cluster. Sum otherwise. Default: TRUE}
+\item{mean_over_markers}{Boolean: If TRUE, the mean read count is calculated
+over different ASVs of each cluster. Sum otherwise.}
 
-\item{vsearch_path}{path to vsearch executables}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+Data frame with asv_id, sample, read_count, asv columns.
 }
 \description{
-Take several input files, each in long format containing asv_id, sample, read_count and asv columns
-Pool the different data sets, if all have the same marker
-If more than one markers, ASVs identical on their overlapping regions are pooled into groups, and different ASVs of the same group are pooled under the centroid (longest ASV of the group).
+Take several input files, each in long format containing
+asv_id, sample, read_count and asv columns.
+Pool the different data sets, if all have the same marker.
+If more than one markers, ASVs identical on their overlapping
+regions are pooled into groups, and different ASVs of the same group
+are pooled under the centroid (longest ASV of the group).
 Pooling can take the mean of the read counts of the ASV (default) or their sum.
-Return a pooled data frame.
+}
+\examples{
+files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),marker=c("MFZR", "ZFZR"))
+PoolDatasets(files, vsearch_path=vsearch_path)
 }

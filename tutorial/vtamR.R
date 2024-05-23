@@ -2,6 +2,8 @@ install.packages("devtools")
 install.packages("roxygen2")
 install.packages("seqinr")
 install.packages("tidyr")
+#install.packages("Rtools")
+
 
 library("devtools")
 library("roxygen2")
@@ -10,6 +12,15 @@ library("dplyr")
 library("tidyr") # gather for read_asv_table; pivot_wider in WriteAsVtable and stat_sample !!sym
 #library("utils") # to handle zipped files
 library("ggplot2") 
+#library("Rtools")
+#install_github("meglecz/vtamR")
+#devtools::install_github("CalCOFI/rCRUX", build_vignettes = TRUE)
+
+vignette("rd")
+vignette("rd-other")
+vignette("rd-formatting")
+vignette("reuse")
+vignette("namespace")
 
 #library("Biostrings")
 

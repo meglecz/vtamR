@@ -2,17 +2,28 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{make_ltg}
 \alias{make_ltg}
-\title{make_ltg}
+\title{Make LTG}
 \usage{
 make_ltg(taxids, lineages, phit = 70)
 }
 \arguments{
-\item{taxids}{vector taxIDs (taxonomic IDs); there can be duplicated values}
+\item{taxids}{Vector of taxIDs (taxonomic IDs).
+There can be duplicated values.}
 
-\item{lineages}{data frame: taxids in the first column followed by their lineages represented by taxids (starting at the lowest resolution)}
+\item{lineages}{Data frame: taxids in the first column followed by
+their lineages represented by taxids (starting at the lowest resolution).}
 
-\item{phit}{Percentage of hit that should be included to the LTG; 70 by default}
+\item{phit}{Integer between 0 and 100: Percentage of taxids that should
+be included to the LTG.}
+}
+\value{
+Numerical taxid of the LTG, or NA if LTG cannot be defined.
 }
 \description{
-Determine the Lowest Taxonomic Group (LTG) that contains phit percentage of the input taxids
+Determine the Lowest Taxonomic Group (LTG) that contains
+phit percentage of the input taxids.
+}
+\examples{
+taxids <- c(9593,9606,9606,9606,9606,9606,9606,9606,9606)
+make_ltg(taxids, lineages=lineages, phit=80)
 }

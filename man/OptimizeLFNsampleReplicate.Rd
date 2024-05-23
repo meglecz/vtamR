@@ -12,16 +12,29 @@ OptimizeLFNsampleReplicate(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, plate, marker, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, plate, marker, sample, replicate, read_count, asv.}
 
-\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{Data frame or csv file with columns:
+sample, action (keep/tolerate), asv.}
 
-\item{sep}{separator used csv files}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{outfile}{name of the output file; Optional; If empty the results are not written to a file}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
+}
+\value{
+Data frame with the following columns: sample, replicate, action,
+asv_id, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff,
+asv
 }
 \description{
-Prepare a data frame that lists all expected occurrences in all mock sample replicates their read_counts and the proportion of
-read_counts to the total number of reads in the sample-replicate.
-The LFNvariant_replicate parameter should be bellow the smallest proportion in order to keep all expected ASVs in the data set.
+Prepare a data frame that lists all expected occurrences in all mock
+sample-replicates their read_counts and the proportion of
+their read_counts to the total number of reads in the sample-replicate.
+The LFNvariant_replicate parameter should be bellow the smallest
+proportion in order to keep all expected ASVs in the data set.
+}
+\examples{
+OptimizeLFNsampleReplicate(read_count_df, mock_composition="data/mock_composition.csv")
 }

@@ -7,13 +7,21 @@
 PoolReplicates(read_count, digits = 0, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{digits}{round the mean read counts to digits}
+\item{digits}{Positive integer: round the mean read counts to digits.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
+}
+\value{
+Data frame with the following columns:
+asv, plate, marker, sample, read_count (over replicates)
 }
 \description{
 Take the mean non-zero read counts over replicates for each sample and asv.
-Returns a data frame with the following columns: asv, plate, marker, sample, read_count (over replicates)
+}
+\examples{
+PoolReplicates(read_count_df)
 }

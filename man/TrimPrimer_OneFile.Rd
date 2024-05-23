@@ -2,13 +2,13 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{TrimPrimer_OneFile}
 \alias{TrimPrimer_OneFile}
-\title{TrimPrimer_OneFile}
+\title{Trim primers}
 \usage{
 TrimPrimer_OneFile(
   fasta,
-  outfile = "",
-  primer_fw = "",
-  primer_rv = "",
+  outfile,
+  primer_fw,
+  primer_rv,
   cutadapt_path = "",
   vsearch_path = "",
   check_reverse = F,
@@ -20,30 +20,47 @@ TrimPrimer_OneFile(
 )
 }
 \arguments{
-\item{fasta}{input fasta file (icluding path);  can be uncompressed or gz, bz2 compressed}
+\item{fasta}{Character string: input fasta file (icluding path).}
 
-\item{outfile}{input fasta file (icluding path); can be uncompressed  or gz compressed, the other compression types are not supported}
+\item{outfile}{Character string: output fasta file (icluding path).}
 
-\item{primer_fw}{forward primer (IUPAC ambiguity codes are accepted)}
+\item{primer_fw}{Character string: forward primer (IUPAC ambiguity codes are accepted).}
 
-\item{primer_rv}{reverse primer (IUPAC ambiguity codes are accepted)}
+\item{primer_rv}{Character string: reverse primer (IUPAC ambiguity codes are accepted).}
 
-\item{cutadapt_path}{path to cutadapt executables}
+\item{cutadapt_path}{Character string: path to cutadapt executables.
+Can be empty if cutadapt in the the PATH.}
 
-\item{vsearch_path}{path to vsearch executables}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{check_reverse}{\link{T/F} if TRUE, ckeck the reverse comlementary sequences of the input fasta as well; default: F}
+\item{check_reverse}{Boolean: if TRUE, check the reverse complementary
+sequences of the input fasta as well.}
 
-\item{primer_to_end}{primers follow directly the tags (no heterogeneity spacer); default: T}
+\item{primer_to_end}{Boolean: primers follow directly the tags
+(no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{maximum proportion of errors between primers and reads (for tags, exact match is required); default: 0.1}
+\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+between primers and reads (for tags, exact match is required).}
 
-\item{cutadapt_minimum_length}{minimum length of the trimmed sequence; default: 50}
+\item{cutadapt_minimum_length}{Positive integer: minimum length of the
+trimmed sequence.}
 
-\item{cutadapt_maximum_length}{maximum length of the merged sequence; default: 500}
+\item{cutadapt_maximum_length}{Positive integer: maximum length of the
+trimmed sequence.}
 
-\item{quiet}{\link{T/F}; TRUE by default print only warnings and error to STDOUT}
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+}
+\value{
+NA; Produces an output fasta file.
 }
 \description{
 Trim primers from the input fasta file
+}
+\details{
+Input fasta can be uncompressed or gzip, bz2 compressed file,
+but other compression types are not supported.
+}
+\examples{
+TrimPrimer_OneFile(fasta="data/test.fasta", outfile="out/test_trimmed.fasta", primer_fw="TCCACTAATCACAARGATATTGGTAC", primer_rv="WACTAATCAATTWCCAAATCCTCC", check_reverse=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=400)
 }

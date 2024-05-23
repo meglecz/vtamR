@@ -7,15 +7,26 @@
 LFNsampleReplicate(read_count, cutoff = 0.001, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{minimum proportion for an occurrence within a sample-replicate; default=0.001}
+\item{cutoff}{Real (0-1): minimum proportion of the read count of an
+occurrence within the reads of its sample-replicate. Bellow this cutoff
+the occurrence is deleted.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Eliminate occurrences where the read_count/sum(read_count of the sample-replicate) is less than cutoff.
-Returns the filtered read_count_df data frame.
+Eliminate occurrences (presence of the ASV in a sample-replicate)
+where the \verb{read_count / sum(read_count of the sample-replicate)} is less than
+cutoff.
+}
+\examples{
+filtered_read_count_df <- LFNsampleReplicate(read_count_df, cutoff=0.005)
 }

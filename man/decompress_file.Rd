@@ -2,15 +2,22 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{decompress_file}
 \alias{decompress_file}
-\title{decompress_file}
+\title{Decompress a gzipped file}
 \usage{
 decompress_file(filename = "", remove_input = F)
 }
 \arguments{
-\item{filename}{name of the gzipped file, including path}
+\item{filename}{Character string: gzip compressed input file.}
 
-\item{remove_input}{\link{T/F} If TRUE the input file is deleted}
+\item{remove_input}{Boolean: Remove the input compressed file.}
+}
+\value{
+Character string: output decompressed file.
 }
 \description{
-Decompress the input gzipped file. Returns the output filename
+Decompress the input gzipped file.
+If remove_input is TRUE, deleted the compressed input file.
+}
+\examples{
+outfile <- decompress_file(filename="data/test.fasta.gz", remove_input=T)
 }

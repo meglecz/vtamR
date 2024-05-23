@@ -7,13 +7,21 @@
 FilterMinReplicate(read_count, cutoff = 2, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{Minimum number of replicates; default=2}
+\item{cutoff}{Positive integer: minimum number of replicates.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Filter out all occurrences where the asv in not present in at least cutoff number of replicates.
-Returns the filtered read_count_df data frame.
+Filter out all occurrences where the asv in not present in at least
+\code{cutoff} number of replicates of the sample.
+}
+\examples{
+filtered_read_count_df <- FilterMinReplicate(read_count_df, cutoff=3)
 }

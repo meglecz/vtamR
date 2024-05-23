@@ -14,19 +14,35 @@ OptimizePCRerror(
 )
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{mock_composition}{data frame or csv file with columns: sample, action (keep/tolerate), asv}
+\item{mock_composition}{Data frame or csv file with columns:
+sample, action (keep/tolerate), asv.}
 
-\item{sep}{separator used in mock_composition}
+\item{sep}{Field separator character in input and output csv files.}
 
-\item{outfile}{name of the output file; Optional; If empty the results are not written to a file}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{max_mismatch}{maximum number of mismatches allowed between two asv where one of the asvs is considered as a PCRerror}
+\item{max_mismatch}{Positive integer: maximum number of mismatches
+allowed between two asv to be compared.}
 
-\item{min_read_count}{occurrences under this read_count limits are ignored}
+\item{min_read_count}{Positive integer: occurrences with fewer
+reads are ignored.}
+}
+\value{
+Data frame with the following columns: sample,expected_read_count,
+unexpected_read_count,pcr_error_var_prop,expected_asv_id,unexpected_asv_id,
+expected_asv,unexpected_asv
 }
 \description{
-Prepare a data frame that lists pairs of expected and unexpected ASVs in mock samples maximum max_mismatch difference between them.
-The pcr_error_var_prop parameter should be above the highest pcr_error_var_prop  (unexpected_read_count/expected_read_count) value in the table.
+Prepare a data frame that lists pairs of expected and unexpected ASVs
+in mock samples with maximum \code{max_mismatch} difference between them.
+The \code{pcr_error_var_prop} parameter should be above the highest
+\code{pcr_error_var_prop} (unexpected_read_count/expected_read_count)
+value in the table.
+}
+\examples{
+OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", max_mismatch=2, min_read_count=5)
 }

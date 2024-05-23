@@ -7,9 +7,15 @@
 check_dir(dir)
 }
 \arguments{
-\item{dir}{directory name}
+\item{dir}{Character string naming a directory.}
+}
+\value{
+Character string naming a directory appended by slash if necessary.
 }
 \description{
-Create dir if does not exists.
+Create directory if does not exists.
 Add slash to the end of the directory name.
+}
+\examples{
+check_dir(dir="data")
 }

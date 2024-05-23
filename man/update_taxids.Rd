@@ -2,15 +2,22 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{update_taxids}
 \alias{update_taxids}
-\title{update_taxids}
+\title{Update taxids}
 \usage{
 update_taxids(df, old_taxid)
 }
 \arguments{
-\item{df}{data frame with the following columns: qseqid,pident,qcovhsp,staxids}
+\item{df}{Data frame with the following columns: qseqid,pident,qcovhsp,staxids}
 
-\item{old_taxid}{data frame with the following columns:  tax_id,old_tax_id}
+\item{old_taxid}{Data frame with the following columns:  tax_id,old_tax_id}
+}
+\value{
+Data frame with the following columns: qseqid,pident,qcovhsp,staxids,
+where the merged taxids has been replaced by the up to date ones.
 }
 \description{
-Replaces old taxids by valid ones
+Replaces old taxids (merged to other taxIDs in NCBI taxonomy) by valid ones.
+}
+\examples{
+update_taxids(df=blastout_df, old_taxid=old_taxid_df)
 }

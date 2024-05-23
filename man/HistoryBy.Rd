@@ -2,19 +2,33 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{HistoryBy}
 \alias{HistoryBy}
-\title{HistoryBy}
+\title{History By}
 \usage{
-HistoryBy(dir, feature = "", value = "", sep = ",")
+HistoryBy(dir, feature, value, sep = ",")
 }
 \arguments{
-\item{dir}{directory containing the output files of intermediate filtering steps; file names should start with a number followed by an underscore (e.g. 5_LFNsampleReplicate.csv)}
+\item{dir}{Character string: directory containing the output files
+of intermediate filtering steps. File names should start with a number
+followed by an underscore (e.g. 5_LFNsampleReplicate.csv).}
 
-\item{feature}{\link{asv_id/asv/sample/replicate/asv_id}}
+\item{feature}{Character string with the following possible values:
+"asv_id", "asv", "sample", "replicate", "read_count".}
 
-\item{value}{values of feature that should selected. That output data frame contains all lines where value is present in feature in the input files}
+\item{value}{Character string: values of feature that should selected.
+The output data frame contains all lines where value is present
+in feature in the input files.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Data frame with the selected lines of the input files.
 }
 \description{
-Filters a feature (asv_id/asv/sample/replicate), in all output files of intermediate filtering steps to retain only lines corresponding a value
+Filters a feature (asv_id/asv/sample/replicate),
+in all output files of intermediate filtering steps to retain only
+lines corresponding a value.
+}
+\examples{
+HistoryBy(dir="out", feature="asv_id", value=1)
+HistoryBy(dir="out", feature="sample", value="tpos1")
 }

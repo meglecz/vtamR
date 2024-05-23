@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2024-03-21" />
+<meta name="date" content="2024-05-23" />
 
 <title>vtamR Documentation</title>
 
@@ -1485,7 +1485,7 @@ border-radius: 0px;
 
 
 <h1 class="title toc-ignore">vtamR Documentation</h1>
-<h4 class="date">2024-03-21</h4>
+<h4 class="date">2024-05-23</h4>
 
 </div>
 
@@ -1963,7 +1963,7 @@ replicates of the same sample.</p>
 <p>We will calculate the renkonen distances among all pairs of
 replicates within sample and plot them.</p>
 <pre class="r"><code># calculate renkonen distance among all replicates within sample 
-renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;within&quot;)
+renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 # density plot
 renkonen_density_plot &lt;- DensityPlot_RenkonenDistance(renkonen_within_df)
 print(renkonen_density_plot)
@@ -2301,7 +2301,7 @@ files</li>
 replacement)</li>
 </ul>
 <pre class="r"><code>randomseq_dir = paste(outdir, &quot;random_seq/&quot;, sep=&quot;&quot;)
-fastainfo_df &lt;- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)</code></pre>
+fastainfo_df &lt;- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)</code></pre>
 </div>
 <div id="historyby" class="section level3">
 <h3>HistoryBy</h3>
@@ -2310,9 +2310,9 @@ a number. (See file names of the output files of the different <a href="#filter"
 <code>feature</code> (asv_id/asv/sample/replicate) has a
 <code>value</code> we are looking for.</p>
 <p><strong>Examples</strong></p>
-<p><em>Get the history of asv_id (<code>feature</code>) 915
+<p><em>Get the history of asv_id (<code>feature</code>)
 (<code>value</code>).</em></p>
-<pre class="r"><code>tmp_ASV_915 &lt;- HistoryBy(dir=outdir, feature=&quot;asv_id&quot;, value=&quot;915&quot;)</code></pre>
+<pre class="r"><code>tmp_ASV_27 &lt;- HistoryBy(dir=outdir, feature=&quot;asv_id&quot;, value=&quot;27&quot;)</code></pre>
 <p><em>Same search by using the sequence of the ASV
 (<code>feature</code>).</em></p>
 <pre class="r"><code>tmp_replicate_1 &lt;- HistoryBy(dir=outdir, feature=&quot;asv&quot;, value=&quot;CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT&quot;)</code></pre>
@@ -2415,7 +2415,7 @@ well as their centroids</li>
 <li>The data frame returned by the function corresponds to the
 <code>outfile</code>.</li>
 </ul>
-<pre class="r"><code>files &lt;- data.frame(file=c(&quot;vtamR_test/out_mfzr/14_PoolReplicates.csv&quot;, &quot;vtamR_test/out_zfzr/14_PoolReplicates.csv&quot;),
+<pre class="r"><code>files &lt;- data.frame(file=c(&quot;vtamR_test/out_mfzr/15_PoolReplicates.csv&quot;, &quot;vtamR_test/out_zfzr/14_PoolReplicates.csv&quot;),
                     marker=c(&quot;MFZR&quot;, &quot;MFZR&quot;))
 
 outfile &lt;- paste(outdir, &quot;Pooled_datasets.csv&quot;, sep=&quot;&quot;) 
@@ -2477,19 +2477,19 @@ this value</li>
 </div>
 <div id="renkonen-distances" class="section level3">
 <h3>Renkonen distances</h3>
-<p>Calculate the Renkonen distances among all replicates (compare=“all”)
-or among replicates of the same sample (compare=“within”) and plot
-them.</p>
+<p>Calculate the Renkonen distances among all replicates
+(compare_all=TRUE) or among replicates of the same sample
+(compare_all=FALSE) and plot them.</p>
 <ul>
 <li><a href="#read_count_df">read_count_df</a> Input data frame</li>
 <li><code>sample_types</code> data frame or CSV file containing info on
 sample types for each sample</li>
 </ul>
-<pre class="r"><code>renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;within&quot;)
+<pre class="r"><code>renkonen_within_df &lt;- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
 DensityPlot_RenkonenDistance(renkonen_within_df)
 
-renkonen_all_df &lt;- MakeRenkonenDistances(read_count_df, compare=&quot;all&quot;)
+renkonen_all_df &lt;- MakeRenkonenDistances(read_count_df, compare_all=TRUE)
 DensityPlot_RenkonenDistance(renkonen_all_df)</code></pre>
 </div>
 </div>
@@ -2767,7 +2767,7 @@ manually.</p>
 many samples in the data set and the cutoff is relatively high, most
 occurrences can fall bellow the cutoff and the total read count of the
 ASV will decrease strongly at this step.</p>
-<p>If the proportion of the read count of a ASV in the output compared
+<p>If the proportion of the read count of an ASV in the output compared
 to the input is less than <code>min_read_count_prop</code>, vtamR prints
 out a Warning. Take a close look at the variant. It can be the result of
 a general contamination, and in this case, the whole ASV could/should be
@@ -2815,7 +2815,8 @@ the analyses. This is an important file, since you can restart the
 analyses from here, without re-doing the longest merging, and
 demultiplexing steps. Compress and keep the updated ASV list
 (<code>ASV_list_with_IDs.csv</code> in the tutorial), since this can be
-used when analyzing subsequent data sets to homogenize the asv_ids.</li>
+used when analyzing subsequent data sets to synchronyse the
+asv_ids.</li>
 <li>Output of different filtering steps: Compress them if they are too
 large. They are useful for tracing back the history of a sample or an
 ASV (see <a href="#historyby">HistoryBy</a>) or making summary files

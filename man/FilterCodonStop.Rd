@@ -7,13 +7,21 @@
 FilterCodonStop(read_count, outfile = "", genetic_code = 5, sep = ",")
 }
 \arguments{
-\item{read_count}{data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{genetic_code}{genetic code number from https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}
+\item{genetic_code}{Positive integer: genetic code number from \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-Filter out all ASVs, if there is a codon stop in all three frames of the direct strand.
-Returns the filtered read_count_df data frame.
+Filter out all ASVs, if there is a codon stop in all three reading
+frames of the direct strand.
+}
+\examples{
+filtered_read_count_df <- FilterCodonStop(read_count_df, genetic_code=5)
 }

@@ -2,33 +2,48 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{RandomSeqWindows}
 \alias{RandomSeqWindows}
-\title{RandomSeqWindows}
+\title{Random Sequences Windows}
 \usage{
 RandomSeqWindows(
   fastainfo,
+  n,
   fasta_dir = "",
   outdir = "",
-  n,
   randseed = 0,
   compress = T,
   sep = ","
 )
 }
 \arguments{
-\item{fastainfo}{data frame or csv file with a 'fasta' column containing input file names; files can be compressed in gz and zip format}
+\item{fastainfo}{Data frame or csv file with a \code{fasta} column
+containing input file names. Files can be compressed in gz format.}
 
-\item{fasta_dir}{directory that contains the input fasta files}
+\item{n}{Positive integer: the number of randomly selected sequences.}
 
-\item{outdir}{directory for the output files}
+\item{fasta_dir}{Character string: directory that contains the input fasta files.}
 
-\item{n}{integer; the number of randomly selected sequences}
+\item{outdir}{Character string: output directory.}
 
-\item{randseed}{positive integer; seed for random sampling; 0 by default means to use a pseudo-random seed, a given non-zero seed produce always the same result}
+\item{randseed}{Positive integer: seed for random sampling.
+0 by default means to use a pseudo-random seed.
+A given non-zero seed produces always the same result.}
 
-\item{compress}{\link{T/F} is TRUE, the output file will be compressed}
+\item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{sep}{separator used in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Updated input data frame with file name extensions adjusted,
+if necessary and read_counts updated.
 }
 \description{
-Random select n sequences from each input fasta file. The output is the same compression type (if any) as the input
+Random select n sequences from each input fasta file.
+The output is the same compression type (if any) as the input.
+}
+\details{
+This function can work on any operating systems, but it is relatively slow.
+Check out the \code{RandomSeq} function on linux-like systems.
+}
+\examples{
+RandomSeqWindows(fastainfo=fastainfo_df, n=100, fasta_dir="out/fasta", outdir="out/radomseq", randseed=2261, compress=T)
 }

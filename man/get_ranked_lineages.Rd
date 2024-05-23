@@ -2,17 +2,30 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{get_ranked_lineages}
 \alias{get_ranked_lineages}
-\title{get_ranked_lineages}
+\title{Get Ranked Lineages}
 \usage{
 get_ranked_lineages(taxids, tax_df)
 }
 \arguments{
-\item{taxids}{vector of taxIDs}
+\item{taxids}{Vector of taxIDs.}
 
-\item{tax_df}{data frame with the following columns: tax_id, parent_tax_id, rank, name_txt, taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)}
+\item{tax_df}{Data frame with the following columns:
+tax_id, parent_tax_id, rank, name_txt, taxlevel
+(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
+2: kingdom, 1: superkingdom, 0: root).}
+}
+\value{
+Data frame with the ranked lineages of taxids.
+Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
+superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,
+class_taxid,class,order_taxid,order,family_taxid,family,
+genus_taxid,genus,species_taxid,species).
 }
 \description{
-Returns  a data frame with the ranked lineages of taxids (columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,
-family_taxid,family,genus_taxid,genus,species_taxid,species,)
+For each input taxid, get the major taxonomic ranks of their lineage.
+}
+\examples{
+taxids <- c(9593,9606)
+tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
+get_ranked_lineages(taxids, tax_df)
 }

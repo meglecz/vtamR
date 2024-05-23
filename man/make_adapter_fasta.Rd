@@ -2,19 +2,28 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{make_adapter_fasta}
 \alias{make_adapter_fasta}
-\title{make_adapter_fasta}
+\title{Make a fasta file with adapters}
 \usage{
-make_adapter_fasta(fastainfo_df, fasta_file, tag_to_end, outdir)
+make_adapter_fasta(fastainfo_df, fasta_file, tag_to_end = T, outdir = "")
 }
 \arguments{
-\item{fastainfo_df}{data frame with column: tag_fw,tag_rv,fasta}
+\item{fastainfo_df}{Data frame with columns: tag_fw,tag_rv,fasta}
 
-\item{fasta_file}{name of the fasta file for wich tag-combination should be written to a tags.fasta file}
+\item{fasta_file}{Character string: fasta file that needs
+to be demultiplexed (present in the fasta column of fastainfo_df).}
 
-\item{tag_to_end}{\link{T/F} if T use anchored search (tags are at the extremity of the sequence)}
+\item{tag_to_end}{Boolean: tags are at the extremity of the reads.}
 
-\item{outdir}{output directory}
+\item{outdir}{Character string: output directory.}
+}
+\value{
+tags.fasta file containing the tag combinations present in fasta_file.
+NA if all tags are NA in fastainfo_df for fasta_file.
 }
 \description{
-Make a fasta file with tag combinations
+Make a fasta file with tag combinations using cutadapt syntax.
+This will be used in SortReads to demultiplex the input fasta file.
+}
+\examples{
+make_adapter_fasta(fastainfo_df=fastainfo_df, fasta_file="test.fasta", tag_to_end=F, outdir="data/out")
 }

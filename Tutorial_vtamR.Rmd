@@ -1,7 +1,7 @@
 ---
 title: "vtamR Documentation"
 auhor: Emese Meglecz
-date: "2024-03-21"
+date: "2024-05-23"
 output:
   html_document:
     toc: true
@@ -438,7 +438,7 @@ We will calculate the renkonen distances among all pairs of replicates within sa
 
 ```{r}
 # calculate renkonen distance among all replicates within sample 
-renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare="within")
+renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 # density plot
 renkonen_density_plot <- DensityPlot_RenkonenDistance(renkonen_within_df)
 print(renkonen_density_plot)
@@ -765,7 +765,7 @@ Random select `n` sequences from each input fasta file. It can be used before or
 
 ```{r}
 randomseq_dir = paste(outdir, "random_seq/", sep="")
-fastainfo_df <- RandomSeq(fastainfo, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)
+fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)
 ```
 
 
@@ -775,9 +775,9 @@ This function scans all files in the `dir` that starts by a number. (See file na
 
 **Examples**
 
-*Get the history of asv_id (`feature`) 915 (`value`).*
+*Get the history of asv_id (`feature`)  (`value`).*
 ```{r}
-tmp_ASV_915 <- HistoryBy(dir=outdir, feature="asv_id", value="915")
+tmp_ASV_27 <- HistoryBy(dir=outdir, feature="asv_id", value="27")
 ```
 
 *Same search by using the sequence of the ASV  (`feature`).*
@@ -861,7 +861,7 @@ The function takes several input CSV files, each in [long format](#glossary) con
 * The data frame returned by the function corresponds to the `outfile`.
 
 ```{r}
-files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
+files <- data.frame(file=c("vtamR_test/out_mfzr/15_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
                     marker=c("MFZR", "MFZR"))
 
 outfile <- paste(outdir, "Pooled_datasets.csv", sep="") 
@@ -921,17 +921,17 @@ Histogram_ReadCountByVariant(read_count_df, min_read_count=10, binwidth=1000)
 
 ### Renkonen distances
 
-Calculate the Renkonen distances among all replicates (compare="all") or among replicates of the same sample (compare="within") and plot them.
+Calculate the Renkonen distances among all replicates (compare_all=TRUE) or among replicates of the same sample (compare_all=FALSE) and plot them.
 
 * [read_count_df](#read_count_df) Input data frame
 * `sample_types` data frame or CSV file containing info on sample types for each sample
 
 ```{r}
-renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare="within")
+renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
 DensityPlot_RenkonenDistance(renkonen_within_df)
 
-renkonen_all_df <- MakeRenkonenDistances(read_count_df, compare="all")
+renkonen_all_df <- MakeRenkonenDistances(read_count_df, compare_all=TRUE)
 DensityPlot_RenkonenDistance(renkonen_all_df)
 ```
 

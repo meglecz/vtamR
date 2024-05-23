@@ -2,19 +2,24 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{check_heading}
 \alias{check_heading}
-\title{check_heading}
+\title{Check heading of a files}
 \usage{
 check_heading(list1, list2, file = "")
 }
 \arguments{
-\item{list1}{vector}
+\item{list1, list2}{Vectors: \code{list1} is a heading of file,
+\code{list2} is the expected heading for the file.}
 
-\item{list2}{vector}
-
-\item{file}{file name to write to error message. Optional}
-
-\item{outfile}{name of the output file; optional, it is not given results are returned in a data frame, but no file is written}
+\item{file}{Character string: name of the file.}
+}
+\value{
+Error message with elements of \code{list1} that are not on \code{list2}.
 }
 \description{
-Compare the 2 input vectors, and returns elements of list1 that are not on list2
+Compare the heading of files to an input vector.
+}
+\examples{
+list1 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fasta")
+list2 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fastq_fw","fastq_rv")
+check_heading(list1, list2)
 }

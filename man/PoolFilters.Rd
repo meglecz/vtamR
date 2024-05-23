@@ -7,12 +7,21 @@
 PoolFilters(..., outfile = "", sep = ",")
 }
 \arguments{
-\item{...}{a list of data frames}
+\item{...}{Data frames with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{outfile}{Name of the output csv file with asv_id, sample, replicate, read_count and asv as columns; if no file name provided, only a data frame is returned}
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 
-\item{sep}{separator in csv files; default: ","}
+\item{sep}{Field separator character in input and output csv files.}
+}
+\value{
+Filtered read_count_df data frame.
 }
 \description{
-pool all count_read_df data frames, and keep only occurrences present in all filters
+Pool all count_read_df data frames, and keep only occurrences
+present in all filters.
+}
+\examples{
+filtered_read_count_df <- PoolFilters(read_count_df1, read_count_df2)
 }

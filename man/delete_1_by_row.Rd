@@ -7,8 +7,15 @@
 delete_1_by_row(row)
 }
 \arguments{
-\item{row}{vector}
+\item{row}{Vector of taxids.}
+}
+\value{
+Vector of taxids.
 }
 \description{
-Delete all 1 from the beginning of a raw , shift the other values and replace de missing ones at the end by NA
+Delete all 1 from the beginning of a raw, shift the other values and
+replace de missing ones at the end by NA
+}
+\examples{
+delete_1_by_row(row)
 }

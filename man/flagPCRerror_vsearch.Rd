@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{flagPCRerror_vsearch}
 \alias{flagPCRerror_vsearch}
-\title{flagPCRerror_vsearch}
+\title{Flag PCR error using vsearch}
 \usage{
 flagPCRerror_vsearch(
   unique_asv_df,
@@ -12,15 +12,32 @@ flagPCRerror_vsearch(
 )
 }
 \arguments{
-\item{unique_asv_df}{data frame with the following variables: asv, read_count; ASVs should be unique}
+\item{unique_asv_df}{Data frame with the following variables:
+asv, read_count. ASVs must be unique.}
 
-\item{vsearch_path}{path to vsearch executable; can be empty if vsearch in the the PATH}
+\item{vsearch_path}{Character string: path to vsearch executables.
+Can be empty if vsearch in the the PATH.}
 
-\item{pcr_error_var_prop}{if the proportion of read_counts of two similar ASVs is bellow pcr_error_var_prop, the less abundant is flagged as a PCR error}
+\item{pcr_error_var_prop}{Real (0-1): if the proportion of read counts
+of two similar ASVs is bellow \code{pcr_error_var_prop}, the less abundant
+is flagged as a PCR error.}
 
-\item{max_mismatch}{maximum number of mismatches (gaps included) to consider two ASVs as similar}
+\item{max_mismatch}{Positive integer: maximum number of mismatches
+(gaps included) to consider two ASVs as similar.}
+}
+\value{
+Input data frame completed by a PCRerror column
+(1 if potential PCR error, 0 otherwise).
 }
 \description{
-Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in a data frame.
-Adds a column to the input data frame, with 1 if sequence is a probable PCR error, and 0 otherwise
+Identify potential PCRerrors: ASVs very similar (\code{max_mismatch}) to another
+more frequent ASV (\code{pcr_error_var_prop}) in the input data frame.
+Adds a column to the input data frame, with 1 if sequence is a
+probable PCR error, and 0 otherwise.
+}
+\examples{
+unique_asv_df <- read_count_df \%>\%
+  group_by(asv) \%>\%
+  summarize(read_count = sum(read_count))
+unique_asv_df_flagged <- flagPCRerror_vsearch(unique_asv_df, vsearch_path=vsearch_path, pcr_error_var_prop=0,2, max_mismatch=2)
 }
