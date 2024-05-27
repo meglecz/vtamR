@@ -169,7 +169,7 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
     # vsearch can accept gz files in linux, but not on windows, the outfile is always uncompressed
     vsearch <- paste(vsearch_path, "vsearch --fastq_mergepairs ", fw_fastq, " --reverse ", rv_fastq ," --fastaout ",outfile," --quiet --fastq_ascii ",fastq_ascii," --fastq_maxdiffs ", fastq_maxdiffs, " --fastq_maxee ", fastq_maxee, " --fastq_minlen ", fastq_minlen, " --fastq_maxlen ",fastq_maxlen, " --fastq_minmergelen ",fastq_minmergelen," --fastq_maxmergelen ",fastq_maxmergelen," --fastq_maxns ", fastq_maxns, " --fastq_truncqual ", fastq_truncqual, " --fastq_minovlen ", fastq_minovlen, sep="")
     if(fastq_allowmergestagger){ # if reads are longer than the amplicon
-      paste(vsearch, " --fastq_allowmergestagger", sep="")
+      vsearch <- paste(vsearch, " --fastq_allowmergestagger", sep="")
     }
     if(!quiet){
       print(vsearch)
@@ -1155,7 +1155,11 @@ add_ids <- function(read_count_df, asv_list="", updated_asv_list="", sep=",", qu
   asv_uniq <- unique(read_count_df$asv)
   # list of unique asvs, not in the asv_df
   new_asvs <- asv_uniq[!asv_uniq %in% asv_df$asv]
-  max_id <- max(asv_df$asv_id)
+  if(nrow(asv_df)>0){
+    max_id <- max(asv_df$asv_id)
+  }else{
+    max_id <- 0
+  }
   new_ids <- seq(from =max_id+1, to = (max_id + length(new_asvs)), by=1)
   new_asvs_df <- data.frame(
     "asv_id" = new_ids, "asv"=new_asvs)

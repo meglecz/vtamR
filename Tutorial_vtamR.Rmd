@@ -93,6 +93,7 @@ Download binaries and save it a convenient place on your computer (path without 
 TODO: make an R package for vtamR and adapt the installation procedure
 
 ```{r install_pck}
+#sudo apt-get install r-cran-devtools
 install.packages("devtools")
 install.packages("roxygen2")
 install.packages("seqinr")
