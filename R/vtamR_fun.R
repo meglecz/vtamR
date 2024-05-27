@@ -136,8 +136,8 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
     fastqinfo_df <- fastqinfo
   }
   CheckFileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep)
-
   
+  fastq_dir <- check_dir(fastq_dir)
   vsearch_path<- check_dir(vsearch_path)
   outdir<- check_dir(outdir)
   # get unique list of fastq file pairs
@@ -729,6 +729,9 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
   }else{
     fastainfo_df <- fastainfo
   }
+  fasta_dir <- check_dir(fasta_dir)
+  cutadapt_path<- check_dir(cutadapt_path)
+  outdir<- check_dir(outdir)
   CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   #########
@@ -862,6 +865,10 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
   }else{
     fastainfo_df <- fastainfo
   }
+  
+  fasta_dir <- check_dir(fasta_dir)
+  cutadapt_path<- check_dir(cutadapt_path)
+  outdir<- check_dir(outdir)
   
   # upper case for all primers and tags
   fastainfo_df$tag_fw <- toupper(fastainfo_df$tag_fw)
