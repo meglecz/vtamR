@@ -1,23 +1,8 @@
----
-title: "vtamR Installation"
-auhor: Emese Meglecz
-date: "2024-05-28"
-output:
-  html_document:
-    toc: true
-    toc_float: true
----
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
-```
+# vtamR
 
 vtamR is functional and ready to be tested, but the R package has not yet been released.
 
 At the moment, you have to clone de [github repository](https://github.com/meglecz/vtamR) and install third party programs. Please, report bugs and add comments in the [issues](https://github.com/meglecz/vtamR/issues). The release of a package its on it way.
-
-[Tutorial](Tutorial_vtamR.html)
 
 
 ## Install third party programs 
@@ -121,7 +106,6 @@ Test_MakeKnownOccurrences()
 Test_Optimize(vsearch_path=vsearch_path)
 Test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
 ```
-
 You should see "PASS" after the tested function names.
 
 ## Troubleshooting
@@ -132,5 +116,4 @@ You should see "PASS" after the tested function names.
 Most of the time you need to install separately some of the dependencies using `install.packages("pkg_name")` commands.
 On linux systems, sometimes it is necessary to install applications in a 
 terminal and not in R.
-
 
