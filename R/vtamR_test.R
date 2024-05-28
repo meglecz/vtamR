@@ -6,10 +6,11 @@
 #' @param vsearch_path path to vsearch executables
 #' @param cutadapt_path path to cutadapt executables
 #' @param delete_tmp [T/F]  Delete output folder
+#' @param quiet Boolean: print only warnings and errors to STDOUT.
 #' @export
 #'
 
-Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T, sep=','){
+Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadapt_path="", delete_tmp=T, sep=',', quiet=T){
   
   merge_pass <- F
   sortreads_pass <- F
@@ -39,7 +40,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   compress <- T
   merged_dir <- paste(outdir, "merged/", sep="")
   print("Runnig Merge")
-  fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress, quiet=T)
+  fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress, quiet=quiet)
   
   ### compare results to precomputed files by vtam
   vtam_out <- "vtam/merged/"
@@ -70,6 +71,8 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
       }
     }
     merge_pass <- T
+#    tmp <- paste("merge test", merge_pass, sep=" ")
+#    print(tmp)
   }else{
     setwd(backup_wd)
     stop("Different number of output files for vtam and vtamR")
@@ -86,7 +89,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   cutadapt_maximum_length <- 500 # -M in cutadapt
   compress <- T
   print("Runnig SortReads")
-  sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress)
+  sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress, quiet=quiet)
   vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
   ### compare output
   vtam_out <-  "vtam/sorted/"
@@ -147,10 +150,11 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
 #' @param vsearch_path path to vsearch executables
 #' @param sep separator of the csv files
 #' @param delete_tmp [T/F] Delete output folder
+#' @param quiet Boolean: print only warnings and errors to STDOUT.
 #' @export
 #'
 
-Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T){
+Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T, quiet=T){
   
   test_dir <- check_dir(test_dir)
   outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
@@ -167,7 +171,7 @@ Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   test_input_file_swarm <- paste(test_dir, "test/test_file_asv_id.csv", sep="")
   input_df_swarm <- read_asv_table(filename=test_input_file_swarm, sep=sep) %>% 
     rename("asv_id"=seq_id)
-  swarm_out_df <- Swarm(input_df_swarm, swarm_path=swarm_path, by_sample=T)
+  swarm_out_df <- Swarm(input_df_swarm, swarm_path=swarm_path, by_sample=T, quiet=quiet)
   swarm_out_df$replicate <- as.integer(swarm_out_df$replicate)
   swarm_exp_df = read.csv(file=paste(test_dir, "test/test_file_asv_id_swarm_out.csv", sep=""), sep=",")
   comp_swarm <- compare_df(swarm_out_df, swarm_exp_df, step="Swarm")
@@ -403,10 +407,11 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @param blast_db BLAST database
 #' @param blast_path path to BLAST executable
 #' @param num_threads Number of CPUs
+#' @param quiet Boolean: print only warnings and errors to STDOUT.
 #' @export
 #'
 
-Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1){
+Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1, quiet=T){
   
   test_dir <- check_dir(test_dir)
   input <- paste(test_dir, "test/input_taxassign.csv", sep="")
@@ -416,7 +421,7 @@ Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
   input_df <- input_df %>%
     select(asv_id, asv)
   
-  asv_tax <- TaxAssign(input_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads)
+  asv_tax <- TaxAssign(input_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads, quiet=quiet)
   
   expected_asv_tax <- read.table(expeted_output, sep="\t", header=T)
   expected_asv_tax <- expected_asv_tax %>%
@@ -444,10 +449,11 @@ Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param sep separator in csv files
 #' @param delete_tmp [T/F]  Delete output folder
+#' @param quiet Boolean: print only warnings and errors to STDOUT.
 #' @export
 #'
 
-Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T){
+Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T, quiet=T){
   # input dirs and files
   test_dir <- check_dir(test_dir)
   mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
@@ -524,9 +530,10 @@ Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tm
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param vsearch_path path to vsearch executable
 #' @param delete_tmp [T/F]  Delete output folder
+#' @param quiet Boolean: print only warnings and errors to STDOUT.
 #' @export
 #'
-Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T, sep=","){
+Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T, sep=",", quiet=T){
   
   test_dir <- check_dir(test_dir)
 #  outdir <- paste(test_dir, "out/", sep="")
@@ -591,7 +598,7 @@ Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, del
   }
   
   ### OptimizeLFNreadCountLFNvariant
-  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, quiet=T)
+  OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences=known_occurrences, min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.02, increment_lnf_variant_cutoff=0.005, by_replicate=TRUE, min_replicate_number=2, quiet=quiet)
   OptimizeLFNReadCountAndLFNvariant_df <- OptimizeLFNReadCountAndLFNvariant_df %>%
     select(lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
     arrange(lfn_read_count_cutoff, lnf_variant_cutoff)

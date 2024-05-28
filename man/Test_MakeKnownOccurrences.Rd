@@ -4,7 +4,12 @@
 \alias{Test_MakeKnownOccurrences}
 \title{Test_MakeKnownOccurrences}
 \usage{
-Test_MakeKnownOccurrences(test_dir = "vtamR_test/", sep = ",", delete_tmp = T)
+Test_MakeKnownOccurrences(
+  test_dir = "vtamR_test/",
+  sep = ",",
+  delete_tmp = T,
+  quiet = T
+)
 }
 \arguments{
 \item{test_dir}{directory of the test files (Default "~/vtamR/vtamR_test/")}
@@ -12,6 +17,8 @@ Test_MakeKnownOccurrences(test_dir = "vtamR_test/", sep = ",", delete_tmp = T)
 \item{sep}{separator in csv files}
 
 \item{delete_tmp}{\link{T/F}  Delete output folder}
+
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
 Run MakeKnownOccurrences on a test file and compare the output to expected results

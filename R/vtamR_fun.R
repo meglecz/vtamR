@@ -128,6 +128,10 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 
 Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=33, fastq_maxdiffs=10, fastq_maxee=1, fastq_minlen=50, fastq_maxlen=500, fastq_minmergelen=50, fastq_maxmergelen=1000, fastq_maxns=0, fastq_truncqual=10, fastq_minovlen=50, fastq_allowmergestagger=F, sep=",", compress=F, quiet=T){
   
+  fastq_dir <- check_dir(fastq_dir)
+  vsearch_path<- check_dir(vsearch_path)
+  outdir<- check_dir(outdir)
+  
   # can accept df or file as an input
   if(is.character(fastqinfo)){
     # read known occurrences
@@ -137,9 +141,6 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
   }
   CheckFileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep)
   
-  fastq_dir <- check_dir(fastq_dir)
-  vsearch_path<- check_dir(vsearch_path)
-  outdir<- check_dir(outdir)
   # get unique list of fastq file pairs
   tmp <- fastqinfo_df %>%
     select(fastq_fw, fastq_rv)
@@ -545,6 +546,8 @@ count_seq <- function(file) {
 #' 
 TrimPrimer_OneFile <- function(fasta, outfile, primer_fw, primer_rv, cutadapt_path="", vsearch_path="", check_reverse=F, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, quiet=T){
   
+  cutadapt_path <- check_dir(cutadapt_path)
+  vsearch_path <- check_dir(vsearch_path)
   if(fasta == outfile){
     msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
     stop(msg)
@@ -640,6 +643,11 @@ TrimPrimer_OneFile <- function(fasta, outfile, primer_fw, primer_rv, cutadapt_pa
 #' 
 TrimPrimer <- function(fastainfo, fasta_dir="", outdir="", compress=F, cutadapt_path="", vsearch_path="", check_reverse=F, primer_to_end=T, cutadapt_error_rate=0.1, cutadapt_minimum_length=50, cutadapt_maximum_length=500, quiet=T){
   
+  fasta_dir <- check_dir(fasta_dir)
+  outdir <- check_dir(outdir)
+  cutadapt_path <- check_dir(cutadapt_path)
+  vsearch_path <- check_dir(vsearch_path)
+  
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -722,6 +730,11 @@ TrimPrimer <- function(fastainfo, fasta_dir="", outdir="", compress=F, cutadapt_
 
 SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch_path="", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F, quiet=T){
   
+  fasta_dir <- check_dir(fasta_dir)
+  cutadapt_path<- check_dir(cutadapt_path)
+  vsearch_path<- check_dir(vsearch_path)
+  outdir<- check_dir(outdir)
+  
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -729,9 +742,7 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
   }else{
     fastainfo_df <- fastainfo
   }
-  fasta_dir <- check_dir(fasta_dir)
-  cutadapt_path<- check_dir(cutadapt_path)
-  outdir<- check_dir(outdir)
+  
   CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep)
   
   #########
@@ -769,7 +780,7 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
       plus <- paste(outdir, files[i], sep="")
       minus <- paste(rc_dir, files[i], sep="")
       minus_rc <- paste(rc_dir, "rc_", files[i], sep="")
-      if(file.size(minus) > 0){
+      if(file.exists(minus) && file.size(minus) > 0){
         # reverse complement sequences in minus file
         rev_comp_cmd <- paste(vsearch_path, "vsearch --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
         if(!quiet){
@@ -858,6 +869,10 @@ return(df)
 SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="", tag_to_end=T, primer_to_end=T, cutadapt_error_rate=0.1,cutadapt_minimum_length=50,cutadapt_maximum_length=500, sep=",",  compress=F, quiet=T){
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
   
+  fasta_dir <- check_dir(fasta_dir)
+  cutadapt_path<- check_dir(cutadapt_path)
+  outdir<- check_dir(outdir)
+  
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -865,10 +880,6 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
   }else{
     fastainfo_df <- fastainfo
   }
-  
-  fasta_dir <- check_dir(fasta_dir)
-  cutadapt_path<- check_dir(cutadapt_path)
-  outdir<- check_dir(outdir)
   
   # upper case for all primers and tags
   fastainfo_df$tag_fw <- toupper(fastainfo_df$tag_fw)
@@ -1268,7 +1279,10 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' @export
 #' 
 Swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=1, fastidious=T, sep=",", by_sample=T, quiet=T){
-  # can accept df or file as an input
+ 
+  swarm_path <- check_dir(swarm_path)
+  
+   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -1338,9 +1352,11 @@ Swarm <- function(read_count, outfile="", swarm_path="", num_threads=1, swarm_d=
 #' 
 run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fastidious=T, quiet=T){
   
+  swarm_path <- check_dir(swarm_path)
+  
   tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   tmp_dir <- check_dir(tmp_dir)
-  swarm_path <- check_dir(swarm_path)
+  
   
   ### make df with unique asv and read_count
   df_unique <- read_count_df %>%
@@ -1528,8 +1544,8 @@ LFNglobalReadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
   
   df <- read_count_df %>%
     group_by(asv) %>%
-    summarize(read_count=sum(read_count)) %>%
-    filter(read_count > cutoff) %>%
+    summarize(read_count_all=sum(read_count)) %>%
+    filter(read_count_all > cutoff) %>%
     ungroup()
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
@@ -2102,6 +2118,9 @@ flagPCRerror_vsearch <- function(unique_asv_df, vsearch_path="", pcr_error_var_p
 #' @export
 #' 
 FilterPCRerror <- function(read_count, outfile="", vsearch_path="", pcr_error_var_prop=0.1, max_mismatch=1, by_sample=T, sample_prop=0.8, sep=","){
+  
+  vsearch_path <- check_dir(vsearch_path)
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2214,7 +2233,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="", abskew=2){
   system(vsearch)
   
   # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs
-  if(file.size(vsearch_out) == 0){
+  if(!file.exists(vsearch_out) || file.size(vsearch_out) == 0){
     unique_asv_df$chimera <- rep(0, length(unique_asv_df$asv))
     # Delete the temp directory
     unlink(outdir_tmp, recursive = TRUE)
@@ -2264,6 +2283,9 @@ flagChimera <- function(unique_asv_df, vsearch_path="", abskew=2){
 #' @export
 #' 
 FilterChimera <- function(read_count, outfile="", vsearch_path="", by_sample=T, sample_prop=0.8, abskew=2, sep=","){
+  
+  vsearch_path <- check_dir(vsearch_path)
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2589,6 +2611,9 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' @export
 #'
 TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", outfile="", num_threads=1, tax_sep="\t", sep=",", quiet=T){
+  
+  blast_path <- check_dir(blast_path)
+  
   # can accept df or file as an input
   if(is.character(asv)){
     asv_df <- read.csv(asv, header=T, sep=sep)
@@ -2715,7 +2740,9 @@ TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", out
 #' @export
 #'
 run_blast <- function(df, blast_db, blast_path="", outdir="", qcov_hsp_perc=70, perc_identity=70, num_threads=1, quiet=T){
-  # outdir <- "tmp_TaxAssign_170833221377/"
+
+  outdir<- check_dir(outdir)
+  
   # make fasta file with unique reads; use numbers as ids  
   seqs <- unique(df$asv)
   fas <- paste(outdir, 'unique.fas', sep="")
@@ -3265,11 +3292,12 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
 #' The `pcr_error_var_prop` parameter should be above the highest 
 #' `pcr_error_var_prop` (unexpected_read_count/expected_read_count) 
 #' value in the table.
-#'  
+#' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
 #' @param mock_composition Data frame or csv file with columns: 
 #' sample, action (keep/tolerate), asv.
+#' @param vsearch_path Character string: path to vsearch executables.
 #' @param sep Field separator character in input and output csv files.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
@@ -3281,12 +3309,13 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
 #' unexpected_read_count,pcr_error_var_prop,expected_asv_id,unexpected_asv_id,
 #' expected_asv,unexpected_asv
 #' @examples
-#' OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", max_mismatch=2, min_read_count=5)
+#' OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", vsearch_path=vsearch_path, max_mismatch=2, min_read_count=5)
 #' @export
 #'
 
-OptimizePCRerror <- function(read_count, mock_composition="", sep=",", outfile="", max_mismatch=1, min_read_count=2){
+OptimizePCRerror <- function(read_count, mock_composition="", vsearch_path= "", sep=",", outfile="", max_mismatch=1, min_read_count=2){
   
+  vsearch_path <- check_dir(vsearch_path)
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3365,7 +3394,7 @@ OptimizePCRerror <- function(read_count, mock_composition="", sep=",", outfile="
       #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
       system(vsearch)
 
-      if(file.size(vsearch_out) > 0){
+      if(file.exists(vsearch_out) && file.size(vsearch_out) > 0){
         # read vsearch results
         results_vsearch<- read.csv(vsearch_out, header = FALSE, sep="\t")
         colnames(results_vsearch) <- c("query","target","nb_ids","aln")

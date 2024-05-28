@@ -9,7 +9,8 @@ Test_MergeSortReads(
   vsearch_path = "",
   cutadapt_path = "",
   delete_tmp = T,
-  sep = ","
+  sep = ",",
+  quiet = T
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ Test_MergeSortReads(
 \item{cutadapt_path}{path to cutadapt executables}
 
 \item{delete_tmp}{\link{T/F}  Delete output folder}
+
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
 Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam

@@ -8,7 +8,8 @@ Test_Optimize(
   test_dir = "vtamR_test/",
   vsearch_path = vsearch_path,
   delete_tmp = T,
-  sep = ","
+  sep = ",",
+  quiet = T
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ Test_Optimize(
 \item{vsearch_path}{path to vsearch executable}
 
 \item{delete_tmp}{\link{T/F}  Delete output folder}
+
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
 Run OptimizePCRerror, OptimizeLFNsampleReplicate and OptimizeLFNreadCountLFNvariant on a test file and compare the output to expected results

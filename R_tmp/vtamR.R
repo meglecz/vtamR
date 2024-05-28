@@ -15,6 +15,8 @@ library("ggplot2")
 #library("Rtools")
 #install_github("meglecz/vtamR")
 #devtools::install_github("CalCOFI/rCRUX", build_vignettes = TRUE)
+#sudo apt-get install r-cran-devtools
+#devtools::install_github("meglecz/vtamR", build_vignettes = TRUE)
 
 vignette("rd")
 vignette("rd-other")
@@ -537,3 +539,72 @@ start_time <- Sys.time()
 end_time <- Sys.time()  # Record the end time
 runtime <- end_time - start_time  # Calculate the run time
 print(runtime)
+
+
+
+**Set general parameters Windows**
+
+  
+```{r set_path, eval=TRUE}
+cutadapt_path <- "C:/Users/Public"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin"
+blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin"
+vtam_dir <- "C:/Users/emese/vtamR"
+setwd(vtam_dir)
+num_threads <- 4
+sep <- ","
+```
+
+**Set general parameters Bombyx**
+  ```{r, eval=TRUE}
+cutadapt_path="/home/meglecz/miniconda3/envs/vtam_2/bin/"
+vsearch_path = ""
+blast_path="~/ncbi-blast-2.11.0+/bin/"
+swarm_path <- ""
+num_threads <- 8
+sep <- ","
+```
+
+
+**Set general parameters Endoume**
+  ```{r, eval=TRUE}
+cutadapt_path="/home/emese/miniconda3/bin/"
+vsearch_path = ""
+blast_path=""
+swarm_path <- ""
+num_threads <- 8
+sep <- ","
+```
+
+* Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
+* `num_threads` is the number of CPUs for multithreaded programs
+* `sep` is the separator used in csv files
+
+
+**TaxAssign reference data base**
+  
+  You can download a ready to use, comprehensive COI database from [OSF](https://osf.io/vrfwz/) ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)). Set the path to the database and the accompanying taxonomy file.
+
+```{r, eval=TRUE}
+taxonomy <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
+```
+
+**TaxAssign reference data base Bombyx**
+  ```{r, eval=TRUE}
+taxonomy <- "~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db <- "~/mkLTG/COInr_for_vtam_2022_05_06_dbV5/COInr_for_vtam"
+```
+
+
+**TaxAssign reference data base Endoume**
+  ```{r, eval=TRUE}
+taxonomy <- "~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db <- "~/mkCOInr/COInr/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
+```
+
+* `taxonomy` CSV file file with taxonomic information
+* `blast_db` BLAST database
+* Details are in [Reference database for taxonomic assignments section](#reference-database-for-taxonomic-assignments)
+  

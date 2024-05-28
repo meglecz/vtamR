@@ -7,6 +7,7 @@
 OptimizePCRerror(
   read_count,
   mock_composition = "",
+  vsearch_path = "",
   sep = ",",
   outfile = "",
   max_mismatch = 1,
@@ -19,6 +20,8 @@ asv_id, sample, replicate, read_count, asv.}
 
 \item{mock_composition}{Data frame or csv file with columns:
 sample, action (keep/tolerate), asv.}
+
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
@@ -44,5 +47,5 @@ The \code{pcr_error_var_prop} parameter should be above the highest
 value in the table.
 }
 \examples{
-OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", max_mismatch=2, min_read_count=5)
+OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", vsearch_path=vsearch_path, max_mismatch=2, min_read_count=5)
 }

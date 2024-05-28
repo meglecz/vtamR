@@ -9,7 +9,8 @@ Test_Filters(
   vsearch_path = "",
   swarm_path = "",
   sep = ",",
-  delete_tmp = T
+  delete_tmp = T,
+  quiet = T
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ Test_Filters(
 \item{sep}{separator of the csv files}
 
 \item{delete_tmp}{\link{T/F} Delete output folder}
+
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
 Run different filtering steps on a test input and compare results to expected (pre-computed) output

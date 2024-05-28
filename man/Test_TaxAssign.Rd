@@ -10,7 +10,8 @@ Test_TaxAssign(
   blast_path = blast_path,
   blast_db = "vtamR_test/test/db_test/COInr_reduced",
   taxonomy = "vtamR_test/test/db_test/taxonomy_reduced.tsv",
-  num_threads = 1
+  num_threads = 1,
+  quiet = T
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ Test_TaxAssign(
 \item{taxonomy}{file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id (has been merged to another tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)}
 
 \item{num_threads}{Number of CPUs}
+
+\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
 Run TaxAssign on a test file and compare the output to mkLTG results
