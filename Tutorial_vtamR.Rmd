@@ -102,9 +102,9 @@ blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
 
 ```{r, eval=TRUE}
 fastq_dir <- "vtamR_test/data/"
-outdir <- "vtamR_test/out_zfzr/"
-fastqinfo <- "vtamR_test/data/fastqinfo_zfzr.csv"
-mock_composition <- "vtamR_test/data/mock_composition_zfzr.csv"
+outdir <- "vtamR_test/out_mfzr/"
+fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
+mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
 asv_list <- "vtamR_test/data/asv_list.csv"
 ```
 
