@@ -1,0 +1,16 @@
+# Install
+
+## Clone github repository
+
+Add: Open a terminal and execute de following commands
+
+## Tutorial
+
+### Filter
+Add more emphasis on paralelle filter and pool or sequential
+
+Output i file and dataframes.
+
+Doc LFNglobalReadCount
+by_replicate: Boolean: : compare read count of the occurrence to the read counts of the ASV-replicate in LFNvariant function.
+=>Boolean: if TRUE : compare read count of the occurrence to the read counts of the ASV-replicate in LFNvariant function.
