@@ -2613,6 +2613,8 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", outfile="", num_threads=1, tax_sep="\t", sep=",", quiet=T){
   
   blast_path <- check_dir(blast_path)
+  outdir <- dirname(outfile)
+  outdir <- check_dir(outdir)
   
   # can accept df or file as an input
   if(is.character(asv)){
@@ -2641,7 +2643,8 @@ TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", out
   
   #### Read taxonomy info 
   # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
-  tax_df <- read.delim(taxonomy, header=T, sep=tax_sep, fill=T, quote="")
+  tax_df <- read.delim(taxonomy, header=T, sep=tax_sep, fill=T, quote="") %>%
+    select(tax_id, parent_tax_id, rank, name_txt, old_tax_id, taxlevel)
   # make data frame with old taxids as line numbers and taxids in a columns
   old_taxid <- tax_df %>%
     filter(!is.na(old_tax_id)) %>%
