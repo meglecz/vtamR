@@ -14,6 +14,8 @@ asv_id, sample, replicate, read_count, asv.}
 frame if necessary. If empty, no file is written.}
 
 \item{genetic_code}{Positive integer: genetic code number from \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.}
+
+\item{sep}{Field separator character in input and output csv files.}
 }
 \value{
 Filtered read_count_df data frame.

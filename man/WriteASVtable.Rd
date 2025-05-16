@@ -47,7 +47,7 @@ for each ASV, and another with the number of samples, where the ASV is present.}
 \item{add_expected_asv}{Boolean: add a column for each mock sample in which
 keep and tolerate ASVs are flagged.}
 
-\item{mock_composition}{CSV file with the following columns:
+\item{mock_composition}{Data frame or CSV file with the following columns:
 sample,action,asv. Action can take the following values: keep/tolerate.
 Only necessary if add_expected_asv==T.}
 

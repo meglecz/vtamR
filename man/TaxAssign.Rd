@@ -14,7 +14,8 @@ TaxAssign(
   num_threads = 1,
   tax_sep = "\\t",
   sep = ",",
-  quiet = T
+  quiet = T,
+  fill_lineage = TRUE
 )
 }
 \arguments{
@@ -44,6 +45,11 @@ frame if necessary. If empty, no file is written.}
 \item{sep}{Field separator character in input and output csv files.}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+
+\item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
+in the lineage using the name of the next known lower-level taxon, prefixed
+by the current taxonomic level
+(e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).}
 
 \item{outdir}{Character string: output directory.}
 }

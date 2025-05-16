@@ -1803,6 +1803,7 @@ FilterMinReplicate <- function(read_count, cutoff=2, outfile="", sep=","){
 #' asv_id, sample, replicate, read_count, asv.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
 #' @returns Filtered read_count_df data frame.
 #' @examples
 #' filtered_read_count_df <-FilterIndel(read_count_df)
@@ -1897,6 +1898,7 @@ codon_stops_from_genetic_code <- function(genetic_code=5){
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @param genetic_code Positive integer: genetic code number from [NCBI](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes).
+#' @param sep Field separator character in input and output csv files.
 #' @returns Filtered read_count_df data frame.
 #' @examples
 #' filtered_read_count_df <- FilterCodonStop(read_count_df, genetic_code=5)
@@ -2594,6 +2596,10 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' @param blast_path Character string: path to BLAST executable. 
 #' Can be empty if BLAST in the the PATH.
 #' @param outdir Character string: output directory.
+#' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
+#' in the lineage using the name of the next known lower-level taxon, prefixed 
+#' by the current taxonomic level 
+#' (e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).
 #' @param num_threads Positive integer: number of CPUs.
 #' @param tax_sep Field separator character used in taxonomy file.
 #' @param sep Field separator character in input and output csv files.
@@ -2610,117 +2616,120 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' TaxAssign(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
 #' @export
 #'
-TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", outfile="", num_threads=1, tax_sep="\t", sep=",", quiet=T){
-  
-  blast_path <- check_dir(blast_path)
-  outdir <- dirname(outfile)
-  outdir <- check_dir(outdir)
-  
-  # can accept df or file as an input
-  if(is.character(asv)){
-    asv_df <- read.csv(asv, header=T, sep=sep)
-  }else{
-    asv_df <- asv
-  }
+#'
+TaxAssign <- function(asv, taxonomy, blast_db, blast_path="", ltg_params="", outfile="", num_threads=1, tax_sep="\t", sep=",", quiet=T, fill_lineage=TRUE){
 
-  if (is.character(ltg_params)){ 
-    if(ltg_params == ""){ # default value for ltg_params_df
-      ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
-                                  pcov=c(70,70,70,70,70,70),
-                                  phit=c(70,70,70,70,70,70),
-                                  taxn=c(1,1,2,3,4,4),
-                                  seqn=c(1,1,2,3,4,4),
-                                  refres=c(8,8,8,7,6,6),
-                                  ltgres=c(8,8,8,8,7,7)
-                                  )
-    }else{ # read params from file
-      ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
-    }
-  } else{ # ltg_params is df
-    ltg_params_df <- ltg_params
+blast_path <- check_dir(blast_path)
+outdir <- dirname(outfile)
+outdir <- check_dir(outdir)
+
+# can accept df or file as an input
+if(is.character(asv)){
+  asv_df <- read.csv(asv, header=T, sep=sep)
+}else{
+  asv_df <- asv
+}
+
+if (is.character(ltg_params)){ 
+  if(ltg_params == ""){ # default value for ltg_params_df
+    ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
+                                pcov=c(70,70,70,70,70,70),
+                                phit=c(70,70,70,70,70,70),
+                                taxn=c(1,1,2,3,4,4),
+                                seqn=c(1,1,2,3,4,4),
+                                refres=c(8,8,8,7,6,6),
+                                ltgres=c(8,8,8,8,7,7)
+    )
+  }else{ # read params from file
+    ltg_params_df <- read.csv(ltg_params, header=T, sep=sep)
   }
-  
-  
-  #### Read taxonomy info 
-  # read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
-  tax_df <- read.delim(taxonomy, header=T, sep=tax_sep, fill=T, quote="") %>%
-    select(tax_id, parent_tax_id, rank, name_txt, old_tax_id, taxlevel)
-  # make data frame with old taxids as line numbers and taxids in a columns
-  old_taxid <- tax_df %>%
-    filter(!is.na(old_tax_id)) %>%
-    select(tax_id, old_tax_id)
-  # delete old_tax_ids from tax_df and make taxids unique
-  tax_df <- tax_df %>%
-    select(-old_tax_id)
-  tax_df <- unique(tax_df)
-  
-  ####
-  # create a tmp directory for temporary files using time and a random number
-  outdir_tmp <- paste('tmp_TaxAssign_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir_tmp <- check_dir(outdir_tmp)
-  
-  ### run blast and clean/complete results
-  # run blast and read read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
-  blast_res <- run_blast(asv_df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=num_threads, quiet=quiet)
-  # add update old taxids to valid ones
-  blast_res <- update_taxids(blast_res, old_taxid)
-  # add taxlevel
-  blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
-    select(-parent_tax_id, -rank, -name_txt)
-  
-  ### make a lineage for each taxid in blastres
-  lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
-  # initialize data frame with asv and NA for all other cells
-  unique_asv_df <- asv_df %>%
-    ungroup() %>%
-    select(asv_id, asv) %>%
-    unique()
-  taxres_df <- data.frame(asv_id = unique_asv_df$asv_id, ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA, asv = unique_asv_df$asv)
-  for(i in 1:nrow(taxres_df)){ # go through all sequences 
-    for(p in 1:nrow(ltg_params_df)){ # for each pid
-      pidl <- ltg_params_df[p,"pid"]
-      pcovl <- ltg_params_df[p,"pcov"]
-      phitl <- ltg_params_df[p,"phit"]
-      taxnl <- ltg_params_df[p,"taxn"]
-      seqnl <- ltg_params_df[p,"seqn"]
-      refresl <- ltg_params_df[p,"refres"]
-      ltgresl <- ltg_params_df[p,"ltgres"]
-      
-      # filter the blastres according to  pid, pcov, refres
-      df_intern <- blast_res %>%
-        filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
-      
-      # check if enough taxa and seq among validated hits
-      tn <- length(unique(df_intern$staxids))
-      if(tn >= taxnl & nrow(df_intern) >= seqnl ){
-        # make ltg if all conditions are met
-        ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
-        # fill out line with the ltg and the parmeters that were used to get it
-        taxres_df[i,2:(ncol(taxres_df)-1)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
-        break
-      } # end if
-    } # end p (pids)
-  } # end i (asvs)
-  
-  # get the ranked lineage for each taxid in taxres_df
-  ranked_lineages <- get_ranked_lineages(unique(taxres_df$ltg_taxid), tax_df)
-  # add lineage to taxres_df
-  taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
-    select(asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
-  # adjust resolution if it is higher than ltgres
-  taxres_df <- adjust_ltgres(taxres_df, tax_df)
-  # taxres_df data frame with the following columns: asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
-  # superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
-  # pcov,phit,taxn,seqn,refres,ltgres,asv
-  
-  # delete temporary  dir
-  unlink(outdir_tmp, recursive = TRUE)
-  
-  if(outfile != ""){
-    write.table(taxres_df, file = outfile,  row.names = F, sep=sep)
-  }
-  
-  return(taxres_df)
+} else{ # ltg_params is df
+  ltg_params_df <- ltg_params
+}
+
+
+#### Read taxonomy info 
+# read taxonomy file; quote="" is important, since some of the taxon names have quotes and this should be ignored
+tax_df <- read.delim(taxonomy, header=T, sep=tax_sep, fill=T, quote="") %>%
+  select(tax_id, parent_tax_id, rank, name_txt, old_tax_id, taxlevel)
+
+# make data frame with old taxids as line numbers and taxids in a columns
+old_taxid <- tax_df %>%
+  filter(!is.na(old_tax_id)) %>%
+  select(tax_id, old_tax_id)
+# delete old_tax_ids from tax_df and make taxids unique
+tax_df <- tax_df %>%
+  select(-old_tax_id)
+tax_df <- unique(tax_df)
+
+####
+# create a tmp directory for temporary files using time and a random number
+outdir_tmp <- paste('tmp_TaxAssign_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+outdir_tmp <- check_dir(outdir_tmp)
+
+### run blast and clean/complete results
+# run blast and read read results to data frame (blast_res columns: "qseqid","pident","qcovhsp","staxids")
+blast_res <- run_blast(asv_df, blast_db=blast_db, blast_path=blast_path, outdir=outdir_tmp, qcov_hsp_perc=min(ltg_params_df$pcov), perc_identity=min(ltg_params_df$pid), num_threads=num_threads, quiet=quiet)
+# add update old taxids to valid ones
+blast_res <- update_taxids(blast_res, old_taxid)
+# add taxlevel
+blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
+  select(-parent_tax_id, -rank, -name_txt) # "qseqid"   "pident"   "qcovhsp"  "staxids"  "taxlevel"
+
+### make a lineage for each taxid in blastres
+lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
+# initialize data frame with asv and NA for all other cells
+unique_asv_df <- asv_df %>%
+  ungroup() %>%
+  select(asv_id, asv) %>%
+  unique()
+taxres_df <- data.frame(asv_id = unique_asv_df$asv_id, ltg_taxid = NA, pid=NA, pcov=NA, phit=NA, taxn=NA, seqn=NA, refres=NA, ltgres=NA, asv = unique_asv_df$asv)
+
+for(i in 1:nrow(taxres_df)){ # go through all sequences 
+  for(p in 1:nrow(ltg_params_df)){ # for each pid
+    pidl <- ltg_params_df[p,"pid"]
+    pcovl <- ltg_params_df[p,"pcov"]
+    phitl <- ltg_params_df[p,"phit"]
+    taxnl <- ltg_params_df[p,"taxn"]
+    seqnl <- ltg_params_df[p,"seqn"]
+    refresl <- ltg_params_df[p,"refres"]
+    ltgresl <- ltg_params_df[p,"ltgres"]
+    
+    # filter the blastres according to  pid, pcov, refres
+    df_intern <- blast_res %>%
+      filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
+    
+    # check if enough taxa and seq among validated hits
+    tn <- length(unique(df_intern$staxids))
+    if(tn >= taxnl & nrow(df_intern) >= seqnl ){
+      # make ltg if all conditions are met
+      ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
+      # fill out line with the ltg and the parmeters that were used to get it
+      taxres_df[i,2:(ncol(taxres_df)-1)] <- c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
+      break
+    } # end if
+  } # end p (pids)
+} # end i (asvs)
+
+# get the ranked lineage for each taxid in taxres_df
+ranked_lineages <- get_ranked_lineages(unique(taxres_df$ltg_taxid), tax_df, fill_lineage= TRUE)
+# add lineage to taxres_df
+taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
+  select(asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,domain_taxid,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
+# adjust resolution if it is higher than ltgres
+taxres_df <- adjust_ltgres(taxres_df, tax_df)
+# taxres_df data frame with the following columns: asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
+# superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
+# pcov,phit,taxn,seqn,refres,ltgres,asv
+
+# delete temporary  dir
+unlink(outdir_tmp, recursive = TRUE)
+
+if(outfile != ""){
+  write.table(taxres_df, file = outfile,  row.names = F, sep=sep)
+}
+
+return(taxres_df)
 }
 
 
@@ -3004,6 +3013,10 @@ make_ltg <- function(taxids, lineages, phit=70){
 #' tax_id, parent_tax_id, rank, name_txt, taxlevel 
 #' (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 
 #' 2: kingdom, 1: superkingdom, 0: root).
+#' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
+#' in the lineage using the name of the next known lower-level taxon, prefixed 
+#' by the current taxonomic level 
+#' (e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).
 #' @returns Data frame with the ranked lineages of taxids. 
 #' Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
 #' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,
@@ -3015,7 +3028,8 @@ make_ltg <- function(taxids, lineages, phit=70){
 #' get_ranked_lineages(taxids, tax_df)
 #' @export
 #'
-get_ranked_lineages <- function(taxids, tax_df){
+
+get_ranked_lineages <- function(taxids, tax_df, fill_lineage=TRUE){
   
   # taxids is a vector of taxids; there can be duplicated values
   ranked_lineages <- as.data.frame(taxids)%>%
@@ -3033,7 +3047,7 @@ get_ranked_lineages <- function(taxids, tax_df){
     select(ltg_taxid, ltg_name, ltg_rank, ltg_rank_index)
   # add columns for each major taxlevel (taxid and name)
   now_cols <- c(
-    "superkingdom_taxid", "superkingdom",
+    "domain_taxid", "domain",
     "kingdom_taxid", "kingdom",
     "phylum_taxid", "phylum",
     "class_taxid", "class",
@@ -3044,8 +3058,8 @@ get_ranked_lineages <- function(taxids, tax_df){
   )
   ranked_lineages[now_cols] <- NA
   
-  # get linegaes of each taxid
   i <- 1
+  # get linegaes of each taxid
   while(i < 100){
     # get the tax name, and tax rank for each taxid
     tmp <- left_join(tmp, tax_df, by="tax_id")
@@ -3076,8 +3090,58 @@ get_ranked_lineages <- function(taxids, tax_df){
       }
     }
   }
+  
+  ### if NA in a high level taxon and non NA in lower level taxon, replace NA by taxlevel_lower_level_taxon
+  if(fill_lineage){
+    ranked_lineages <- fill_NA_in_lineage(ranked_lineages)
+  }
+  
   return(ranked_lineages)
 }
+
+#' Fill in missing higher-level taxa
+#' 
+#' Fill in missing higher-level taxa in the lineage using the name of the 
+#' next known lower-level taxon, prefixed by the current taxonomic level 
+#'  
+#' @param df A data frame containing taxonomic lineages. Major taxonomic levels 
+#' are located in every second column, starting from column 6 (e.g. 6: domain, 
+#' 8: kingdom, 10: phylum, 12: class, 14: order, 16:family, 18: genus, 20 species).
+#' @returns Input data frame with missing taxon names replaced by the 
+#' next known lower-level taxon, prefixed by the current taxonomic level
+#' @examples
+#' df <- data.frame(
+#' id = 1:3,
+#' name = c("OTU1", "OTU2", "OTU3"),
+#' sample1 = c(10, 5, 0),
+#' sample2 = c(3, 7, 2),
+#' domain_taxid = c(2, 2759, 2759),
+#' domain = c("Bacteria", "Eukaryota", "Eukaryota"),
+#' phylum_taxid = c(1224, 4762, NA),
+#' phylum = c("Pseudomonadota", "Oomycota", NA),
+#' class_taxid = c(1236, NA, 2825),
+#' class = c("Gammaproteobacteria", NA, "Chrysophyceae"))
+#' df1 <- fill_NA_in_lineage(df)
+#' @export
+#'
+fill_NA_in_lineage <- function(df) {
+  
+  taxonomic_levels <- colnames(df)
+  # Loop through the taxonomic levels from highest to second-lowest
+  indices <- seq(from=6, to=(ncol(df)-2), by=2)
+  
+  for (i in indices) {
+    current_level <- taxonomic_levels[i]
+    for (j in seq(from=i+2, to=length(taxonomic_levels), by=2)) {
+      lower_level <- taxonomic_levels[j]
+      # Replace NA in current_level with paste0(current_level, "_", lower_level_value), if lower_level is not NA
+      missing <- is.na(df[[current_level]]) & !is.na(df[[lower_level]])
+      df[[current_level]][missing] <- paste0(current_level, "_", df[[lower_level]][missing])
+    }
+  }
+  return(df)
+}
+
 
 #' Adjust the resolution of LTG
 #' 
@@ -3160,7 +3224,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' for each ASV, and another with the number of samples, where the ASV is present.
 #' @param add_expected_asv Boolean: add a column for each mock sample in which 
 #' keep and tolerate ASVs are flagged.
-#' @param mock_composition CSV file with the following columns: 
+#' @param mock_composition Data frame or CSV file with the following columns: 
 #' sample,action,asv. Action can take the following values: keep/tolerate.
 #' Only necessary if add_expected_asv==T.
 #' @param sep Field separator character in input and output csv files.
@@ -3248,11 +3312,17 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
     
     # keep only keep and tolerate action, in case the file contains other lines 
     CheckFileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
-    mock_asv <- read.csv(mock_composition, header=T, sep=sep)%>%
+    
+    if(is.character(mock_composition)){
+      mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
+    }else{
+      mock_asv <- mock_composition
+    }
+    mock_asv <- mock_asv%>%
       filter(action=="keep" | action=="tolerate")
 
 
-    # add a column for each mock samples with keep or tolerate if relevent for each ASV 
+    # add a column for each mock samples with keep or tolerate if relevant for each ASV 
     for(mock in mock_samples){
       # make a df containing only data for a given mock sample
       df <- mock_asv %>%
@@ -3273,7 +3343,7 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
     }
       asv_tax$asv_id <- as.character(asv_tax$asv_id)
       wide_read_count_df$asv_id <- as.character(wide_read_count_df$asv_id)
-      wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by=c("asv", "asv_id"))
+      wide_read_count_df <- left_join(wide_read_count_df, asv_tax, by=c("asv_id", "asv"))
   }
   
   # put the asv column at the end
@@ -4900,4 +4970,182 @@ check_heading <- function(list1, list2, file="") {
     msg <- paste("The following column(s) are missing from", file, ":", col, sep = " ")
     tryCatch(stop(msg), error = function(e) message(msg))
   }
+}
+
+#' Cluster_size
+#' 
+#' Cluster ASV in input data frame with the cluster_size command of vsearch. Replace ASV by their centroids and regroup lines by centroid and sample.
+#'  
+#' @param read_count_samples Data frame or csv file with the following variables: 
+#' asv_id, sample, read_count, asv.
+#' @param id Real; Minimum identity between asv and centroid.
+#' @param vsearch_path Character string: path to vsearch executables.
+#'  Can be empty if vsearch in the the PATH.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @returns read_count_sample data frame, with ASV of the same cluster and sample grouped to the same line
+#' @examples
+#' clustered_df <- Cluster_size(read_count_samples_df, id=0.97)
+#' @export
+#' 
+Cluster_size <- function(read_count_samples, id=0.97, vsearch_path="", outfile="", sep=",") {
+  
+  # can accept df or file as an input
+  if(is.character(read_count_samples)){
+    # read known occurrences
+    read_count_samples_df <- read.csv(read_count_samples, header=T, sep=sep)
+  }else{
+    read_count_samples_df <- read_count_samples
+  }
+  vsearch_path <- check_dir(vsearch_path)
+  
+  outdir_tmp <- paste('tmp_cluster_size_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  outdir_tmp <- check_dir(outdir_tmp)
+  
+  fasta <- paste(outdir_tmp, 'asv.fasta', sep="")
+  blast6_file <- paste(outdir_tmp, 'blast6.tsv', sep="")
+  
+  # get unique list of asv with read_count and asv_id
+  asv_rc <- read_count_samples_df %>%
+    group_by(asv) %>%
+    summarize(
+      read_count = sum(read_count), 
+      asv_id = first(asv_id) 
+    ) %>%
+    arrange(desc(read_count))
+  # make fasta file with abundances
+  write_fasta_rc(asv_rc, fasta)
+  # run vsearch cluster_size
+  cmd <- paste(vsearch_path, 'vsearch --cluster_size ', fasta,' --blast6out ', blast6_file, ' --id ', id, sep="")
+  print(cmd)
+  system(cmd)
+  
+  # read clustering results to df: merged_id (inculde to a cluster), centroid_id (most abundant asv_id of the cluster)
+  df_centroids <- read_blast4out(blast6_file)
+  # add centroids to all asv_ids 
+  read_count_samples_df <- left_join(read_count_samples_df, df_centroids, by=c("asv_id" = "merged_id")) %>%
+    mutate(centroid_id = if_else(is.na(centroid_id), asv_id, centroid_id)) # if sequence is not in a cluster or if it is a centroid, merged is NA => change to asv_id
+  # colnames(read_count_samples_df): "asv_id"      "sample"      "read_count"  "asv"         "centroid_id"
+  
+  asv_rc <- asv_rc %>%
+    select(-read_count) # colnames(asv_rc):asv, asv_id
+  
+  read_count_samples_df <- read_count_samples_df %>%
+    left_join(asv_rc, by=c("centroid_id" = "asv_id"))
+  #  colnames(read_count_samples_df): "asv_id"      "sample"      "read_count"  "asv.x"       "centroid_id" "asv.y" 
+  
+  # replace asv of merged sequences by asv of the centroid
+  read_count_samples_df <- read_count_samples_df %>%
+    rename(asv = asv.y) %>%
+    select(centroid_id, sample, read_count, asv) %>%
+    rename(asv_id = centroid_id)
+  # colnames(read_count_samples_df): "asv_id"     "sample"     "read_count" "asv"       
+  
+  # regroup by asv (replaced by centroid) and sample
+  read_count_samples_df <- read_count_samples_df %>%
+    group_by(asv_id, sample) %>% 
+    summarize(
+      sample = first(sample),
+      read_count = sum(read_count),
+      asv = first(asv)
+    )
+  
+  if(outfile !=""){
+    write.table(read_count_samples_df, file = outfile,  row.names = F, sep=sep)
+  }
+  # Delete the temp directory
+  unlink(outdir_tmp, recursive = TRUE)
+  return(read_count_samples_df)
+}
+
+#' read_blast4out
+#' 
+#' read output of vsearch --cluster_size to df
+#'  
+#' @param filename Tab separeted file with merged and centroid asv_ids in the first 2 columns
+#' @returns data frame with merged_id and centroid_id
+#' @export
+#' 
+
+read_blast4out <- function(filename) {
+  
+  df <- read.table(filename, header=FALSE, sep="\t")
+  df <- df[,1:2]
+  colnames(df) <- c("merged_id","centroid_id")
+  df$merged_id <- gsub(';size=[0-9]+', '', df$merged_id)
+  df$centroid_id <- gsub(';size=[0-9]+', '', df$centroid_id)
+  
+  df$merged_id <- as.integer(df$merged_id)
+  df$centroid_id <- as.integer(df$centroid_id)
+  
+  return(df)
+}
+
+#' write_fasta_rc
+#' 
+#' Write a fasta file with definition lines in >label;size=### format
+#'  
+#' @param df Data frame with asv_id, read_count and asv columns
+#' @param outfile haracter string: output fasta file name
+#' @returns outfile fasta file with definition lines in >label;size=### format
+#' @export
+#' 
+write_fasta_rc <- function(df, outfile) {
+  # Open the file for writing
+  file <- file(outfile, "w")
+  # Iterate over the sequences and write them to the file
+  for (i in seq_along(df$asv)) {
+    seq <- df$asv[i]
+    count <- df$read_count[i]
+    seqid <- df$asv_id[i]
+    header <- paste0(">", seqid, ';size=', count)
+    writeLines(c(header, seq, ""), file)
+  }
+  # Close the file
+  close(file)
+}
+
+#' write_fasta_df
+#' 
+#' Write a fasta file with definition lines in >label;size=### format
+#'  
+#' @param df Data frame with asv_id, asv and read_count (optional) columns
+#' @param outfile character string: output fasta file name
+#' @param read_count Boolean; If TRUE  definition line is >label;size=### format
+#' @returns outfile fasta file with definition lines in >label;size=### format or >label format
+#' @export
+#' 
+write_fasta_df <- function(df, outfile, read_count=FALSE) {
+  # Open the file for writing
+  
+  if(read_count){
+    df <- df %>%
+      group_by(asv_id) %>%
+      summarize(
+        read_count = sum(read_count),
+        asv = first(asv)
+        ) 
+
+  }else{
+    df <- df %>%
+      select(asv_id, asv) %>%
+      distinct()
+  }
+  
+  file <- file(outfile, "w")
+  # Iterate over the sequences and write them to the file
+  for (i in seq_along(df$asv)) {
+    seq <- df$asv[i]
+    seqid <- df$asv_id[i]
+    if(read_count){
+      count <- df$read_count[i]
+      header <- paste0(">", seqid, ';size=', count)
+    }else{
+      header <- paste0(">", seqid)
+    }
+    writeLines(c(header, seq, ""), file)
+  }
+  # Close the file
+  close(file)
 }
