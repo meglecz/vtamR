@@ -4,3 +4,6 @@ vtamR_test/out*
 .Rhistory
 backup
 local*
+.Rproj.user
+Protocol*
+TAS*
