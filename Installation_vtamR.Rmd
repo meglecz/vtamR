@@ -65,6 +65,10 @@ Download binaries and save it a convenient place on your computer (path without 
 
 ## Clone github repository
 
+- Open a terminal
+- Go to directory where you want to install vtamR (e.g. `cd c:/Users/YOUR_USER_NAME`, or `cd ~`)
+- Execute de following commands:
+
 ```{bash clone}
 git clone https://github.com/meglecz/vtamR.git
 cd vtamR
@@ -88,7 +92,7 @@ install.packages("ggplot2")
 
 Adapt the paths according to your installation.
 
-```{r set_path, eval=TRUE}
+```{r set_path}
 cutadapt_path <- "C:/Users/Public"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin"
 blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
@@ -132,5 +136,13 @@ You should see "PASS" after the tested function names.
 Most of the time you need to install separately some of the dependencies using `install.packages("pkg_name")` commands.
 On linux systems, sometimes it is necessary to install applications in a 
 terminal and not in R.
+
+### Update vtamR
+
+```{r update_vtamR}
+cd vtamR
+git pull
+```
+
 
 

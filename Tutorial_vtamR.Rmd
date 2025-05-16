@@ -56,7 +56,7 @@ Follow the [installation guide](Installation_vtamR.html) for installing vtamR an
 
 **Load libraries and local packages**
 
-```{r load_packages, warning = FALSE, message=FALSE, eval=TRUE}
+```{r load_packages, warning = FALSE, message=FALSE}
 library("devtools")
 library("roxygen2")
 library("seqinr")
@@ -70,7 +70,7 @@ usethis::use_roxygen_md()
 
 **Set general parameters and working directory**
 
-```{r set_path, eval=TRUE}
+```{r set_path}
 cutadapt_path <- "C:/Users/Public"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin"
 blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
@@ -89,7 +89,7 @@ sep <- ","
 
 You can download a ready to use, comprehensive COI database from [OSF](https://osf.io/vrfwz/) ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)). Set the path to the database and the accompanying taxonomy file.
 
-```{r, eval=TRUE}
+```{r}
 taxonomy <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
 blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
 ```
@@ -100,7 +100,7 @@ blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
 
 **Set input data**
 
-```{r, eval=TRUE}
+```{r}
 fastq_dir <- "vtamR_test/data/"
 outdir <- "vtamR_test/out_mfzr/"
 fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
@@ -222,13 +222,18 @@ read_count_df <- Dereplicate(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv
 
 ### Filter
 
-vtamR has a large number of functions to filter out ASVs or occurrences of ASVs in a given sample-replicate, which are the results of technical or biological problems associated with metabarcoding. The different filters can be applied to the original data set and then the results pooled together by using the `PoolFilters` function (accepting only occurrences that pass all filters) or can be applied sequentially in the order defined according to your needs.
+vtamR has a large number of functions to **filter out ASVs or occurrences of ASVs** in a given sample-replicate, which are the results of technical or biological problems associated with metabarcoding. 
+
+The different filters 
+
+- can be applied to the original data set and then the results pooled together by using the `PoolFilters` function (accepting only occurrences that pass all filters) 
+- or can be applied sequentially in the order defined according to your needs.
 
 In this section, I give an example using most filtering options. It is up to you to construct your own pipeline.
 
 Each function returns a data frame with the filtered output. You can also write the results to a csv file. This can be useful for tracking the presence/absence of some of the ASVs/samples throughout the analyses using the [HistoryBy](#historyby) and [SummarizeBy](#summarizeby) functions. I will start the names of the output files by a number to keep the order of the different steps and allow the [SummarizeBy](#summarizeby) function to make final statistics at each step of the analyses.
 
-We can also follow the evolution of the number of reads and ASVs remaining in the data set after each filtering steps. Let's define a data frame (`stat_df`), that will contain this information, and we will complete it after each step. Then and add a line with information on the unfiltered data set.
+We can also **follow the evolution of the number of reads and ASVs** remaining in the data set after each filtering steps. Let's define a data frame (`stat_df`), that will contain this information, and we will complete it after each step. Then and add a line with information on the unfiltered data set.
 
 * `params` String containing the major parameters of each filtering steps.
 * `stage` String referring to the filtering step.
@@ -470,7 +475,6 @@ stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=lf
 To ensure repeatability, we can accept occurrences if they are present in at least `min_replicate_number` replicates of the sample (2 by default).
 
 ```{r}
-## LFNvariant
 # Set parameter values
 min_replicate_number <- 2
 outfile <- paste(outdir, "10_FilterMinReplicate.csv", sep="")
@@ -564,7 +568,6 @@ rm(read_count_df_lnf_variant)
 Let's run again `FilterMinReplicate` to ensure repeatability among replicates of the sample (2 by default).
 
 ```{r}
-## LFNvariant
 # Set parameter values
 min_replicate_number <- 2
 outfile <- paste(outdir, "14_FilterMinReplicate.csv", sep="")

@@ -31,21 +31,21 @@ frame if necessary. If empty, no file is written.}
 
 \item{min_read_count_prop}{Real (0-1): If the proportion of the read count
 of a variant in the output compared to the input is less then
-\code{min_read_count_prop}, prints out a warning, since it suggest a
+min_read_count_prop, prints out a warning, since it suggest a
 to high cutoff value}
 }
 \value{
 Filtered read_count_df data frame.
 }
 \description{
-If by_replicate=F: Eliminate occurrences where the
-\verb{read_count/read_count of the asv in the data set} is less than cutoff.
-If by_replicate=T: Eliminate occurrences where the
-\verb{read_count/read_count of the asv in its replicate} is less than cutoff.
+If by_replicate is FALSE: Eliminate occurrences where the
+(read_count/read_count of the asv in the data set) is less than cutoff.
+If by_replicate is TRUE: Eliminate occurrences where the
+(read_count/read_count of the asv in its replicate) is less than cutoff.
 }
 \details{
 Issues a warning if the total read count of an ASV has been reduced
-bellow \code{min_read_count_prop}, since it can indicate a to high cutoff value.
+bellow min_read_count_prop, since it can indicate a to high cutoff value.
 }
 \examples{
 filtered_read_count_df <- LFNvariant(read_count_df, cutoff=0.005, min_read_count_prop=0.8)

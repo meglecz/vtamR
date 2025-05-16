@@ -1634,13 +1634,13 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 
 #' LFNvariant
 #' 
-#' If by_replicate=F: Eliminate occurrences where the 
-#' `read_count/read_count of the asv in the data set` is less than cutoff.
-#' If by_replicate=T: Eliminate occurrences where the 
-#' `read_count/read_count of the asv in its replicate` is less than cutoff.
+#' If by_replicate is FALSE: Eliminate occurrences where the 
+#' (read_count/read_count of the asv in the data set) is less than cutoff.
+#' If by_replicate is TRUE: Eliminate occurrences where the 
+#' (read_count/read_count of the asv in its replicate) is less than cutoff.
 #' 
 #' Issues a warning if the total read count of an ASV has been reduced 
-#' bellow `min_read_count_prop`, since it can indicate a to high cutoff value.
+#' bellow min_read_count_prop, since it can indicate a to high cutoff value.
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
@@ -1654,7 +1654,7 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' @param sep Field separator character in input and output csv files.
 #' @param min_read_count_prop Real (0-1): If the proportion of the read count 
 #' of a variant in the output compared to the input is less then 
-#' `min_read_count_prop`, prints out a warning, since it suggest a 
+#' min_read_count_prop, prints out a warning, since it suggest a 
 #' to high cutoff value
 #' @returns Filtered read_count_df data frame.
 #' @examples
@@ -3531,7 +3531,7 @@ OptimizePCRerror <- function(read_count, mock_composition="", vsearch_path= "", 
 #' Prepare a data frame that lists all expected occurrences in all mock 
 #' sample-replicates their read_counts and the proportion of 
 #' their read_counts to the total number of reads in the sample-replicate. 
-#' The LFNvariant_replicate parameter should be bellow the smallest 
+#' The cutoff parameter in LFNsampleReplicate should be bellow the smallest 
 #' proportion in order to keep all expected ASVs in the data set.
 #'  
 #' @param read_count Data frame or csv file with the following variables: 
