@@ -17,7 +17,7 @@ tax_id, parent_tax_id, rank, name_txt, taxlevel
 \item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
 in the lineage using the name of the next known lower-level taxon, prefixed
 by the current taxonomic level
-(e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).}
+(e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).}
 }
 \value{
 Data frame with the ranked lineages of taxids.

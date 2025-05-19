@@ -2599,7 +2599,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
 #' in the lineage using the name of the next known lower-level taxon, prefixed 
 #' by the current taxonomic level 
-#' (e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).
+#' (e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).
 #' @param num_threads Positive integer: number of CPUs.
 #' @param tax_sep Field separator character used in taxonomy file.
 #' @param sep Field separator character in input and output csv files.
@@ -3016,7 +3016,7 @@ make_ltg <- function(taxids, lineages, phit=70){
 #' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
 #' in the lineage using the name of the next known lower-level taxon, prefixed 
 #' by the current taxonomic level 
-#' (e.g., kingdom_Chrysophyceae if kingdom is missing but class is known).
+#' (e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).
 #' @returns Data frame with the ranked lineages of taxids. 
 #' Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
 #' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,
@@ -3136,7 +3136,7 @@ fill_NA_in_lineage <- function(df) {
       lower_level <- taxonomic_levels[j]
       # Replace NA in current_level with paste0(current_level, "_", lower_level_value), if lower_level is not NA
       missing <- is.na(df[[current_level]]) & !is.na(df[[lower_level]])
-      df[[current_level]][missing] <- paste0(current_level, "_", df[[lower_level]][missing])
+      df[[current_level]][missing] <- paste0("No_", current_level, "_", df[[lower_level]][missing])
     }
   }
   return(df)
