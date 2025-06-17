@@ -1,1 +1,5 @@
 Rename LFNvariant to FilterLFNvariant ???
+
+Print message for CheckFileinfo
+
+Check the use of asv_id in taxassign. If not asv_id, error message. Make sure that the asv_id and asv are kept coherently

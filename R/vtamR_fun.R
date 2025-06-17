@@ -1173,16 +1173,22 @@ add_ids <- function(read_count_df, asv_list="", updated_asv_list="", sep=",", qu
   asv_uniq <- unique(read_count_df$asv)
   # list of unique asvs, not in the asv_df
   new_asvs <- asv_uniq[!asv_uniq %in% asv_df$asv]
-  if(nrow(asv_df)>0){
-    max_id <- max(asv_df$asv_id)
-  }else{
-    max_id <- 0
+  
+  if(length(new_asvs) > 0){ #There are new ASVs
+      
+    if(nrow(asv_df)>0){
+      max_id <- max(asv_df$asv_id)
+    }else{
+      max_id <- 0
+    }
+    new_ids <- seq(from =max_id+1, to = (max_id + length(new_asvs)), by=1)
+    new_asvs_df <- data.frame(
+      "asv_id" = new_ids, "asv"=new_asvs)
+    # add new asvs to asv_df
+    asv_df <- rbind(asv_df, new_asvs_df)
   }
-  new_ids <- seq(from =max_id+1, to = (max_id + length(new_asvs)), by=1)
-  new_asvs_df <- data.frame(
-    "asv_id" = new_ids, "asv"=new_asvs)
-  # add new asvs to asv_df
-  asv_df <- rbind(asv_df, new_asvs_df)
+  
+  
   # add asv_id to read_count_df
   read_count_df <- left_join(read_count_df, asv_df, by="asv") %>%
     select(asv_id, sample, replicate, read_count, asv)
@@ -2584,7 +2590,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' * refres: Minimum resolution of the hit to be validated
 #' * ltgres: Maximum resolution of the LTG.
 #'  
-#' @param asv Data frame or csv file containing and asv column.
+#' @param asv Data frame or csv file containing an asv column.
 #' @param ltg_params Data frame or csv file with a list of 
 #' percentage of identity values (pid) and associated parameters 
 #' (pcov,phit,taxn,seqn,refres,ltgres).
@@ -3310,14 +3316,14 @@ WriteASVtable <- function(read_count_samples_df, outfile="", asv_tax=NULL, sorte
     # make a vector with all unique samples in the sortedinfo
     mock_samples <-unique(sortedinfo_df$sample)
     
-    # keep only keep and tolerate action, in case the file contains other lines 
-    CheckFileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
     
     if(is.character(mock_composition)){
       mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
+      CheckFileinfo(file=mock_composition, file_type="mock_composition", sep=sep)
     }else{
       mock_asv <- mock_composition
     }
+    # keep only keep and tolerate action, in case the file contains other lines 
     mock_asv <- mock_asv%>%
       filter(action=="keep" | action=="tolerate")
 
