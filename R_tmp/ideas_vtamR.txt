@@ -1,5 +1,95 @@
-Rename LFNvariant to FilterLFNvariant ???
+# Ideas for vtamR
 
-Print message for CheckFileinfo
+## Better gestion of path
+	Use file.path() instead of paste() for file paths:
+	fasta <- file.path(outdir_tmp, "asv.fasta")
+	blast6_file <- file.path(outdir_tmp, "blast6.tsv")
+	
+	In progress 
+	All this is done on a new develop branch
+	check_dir => creates dir, but do not add /
+	paste replaced by file.path in fun and test
+	
+	use tempdir() to get temp_dire names => if multiple runs of the sam commans, make new subdir for each run and delete it afterwards
+	Fonctions modified:
+		-SortReads
+		SortReads_no_reverse
+		run_swarm
+		PoolDatasets
+		flagPCRerror_vsearch
+		flagChimera
+		TaxAssign
+		OptimizePCRerror
+		Cluster_size
+		
+	Check path to executables. How to hable coherentl the last/
 
-Check the use of asv_id in taxassign. If not asv_id, error message. Make sure that the asv_id and asv are kept coherently
+## Generally, better gestion of the wd
+	setwd pour test ne change par de repertoir en test_Merge 
+	Check slash at the end of dir names in all cases. Check is missing in MakeKnownOccurrences
+	
+## Protect against failure in system calls:
+	status <- system(cmd)
+	if (status != 0) {
+	  stop("vsearch failed. Check if the command and paths are correct.")
+	}
+	learn more abou system and system2
+	
+## Temporary directories: 
+	Consider using tempdir() or tempfile() for more robust temp file creation.
+
+## clustering
+	Add cluster vsearch à la fin into tuto
+	Clustering by fixes threshold => DONE Cluster_size function
+	
+## Remote BLAST in mkLTG
+	filter out incorrect names on the fly
+
+## check input df or csv in every function and same for output
+
+	Merge return csv ou df
+	asv_list : it is a filename. Maybe it could be also a data frame.
+	Mock_composition : it is a filename. Maybe it could be also a data frame.
+
+
+## SortRedas pas de Read count in output, check whu
+
+## Taxassing avant LFN faire uniqument pour mock (tuto)
+
+## PCR error => dire que c'est la demo (tuto)
+
+## Check obligatory heading in doc for known_occurrences (tuto)
+
+## Check the use of asv_id in taxassign. If not asv_id, error message (this is corrected 2025/06/17). Make sure that the asv_id and asv are kept coherently
+
+## make useable examples
+
+## make a package
+
+
+
+
+# DONE 
+
+## 2025/05/06
+- Add sep to params in FilterIndel, FilterCodonStop
+- Add Cluster_size function and its internal functions to cluster ASVs to mOTU with fixed limit
+- Allow df or CSV for mock_composition in WriteASVtable
+- Complete lineage of Taxassign if missing taxlevels above resolution => Done, argument fill_lineage is added
+
+## 2025/06/17
+
+- Print message for CheckFileinfo => DONE; 
+	- quiet option is added (default FALSE)
+	- if quiet == TRUE, there are no 'OK' messages (just to say that a test is done and everythin is OK). It is to use when cjhecking file info from within another function.
+	- if quiet == FALSE, there are 'OK' messages. It is usefull when run directly by the users.
+
+## Ignore
+
+- Rename LFNvariant to FilterLFNvariant => NO. All LFN filters starts by LFN. Names are already very long, do not add anything on top.
+
+
+
+
+
+

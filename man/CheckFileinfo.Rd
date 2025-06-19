@@ -4,10 +4,16 @@
 \alias{CheckFileinfo}
 \title{Check File formats}
 \usage{
-CheckFileinfo(file, dir = "", file_type = "fastqinfo", sep = ",")
+CheckFileinfo(
+  file,
+  dir = "",
+  file_type = "fastqinfo",
+  sep = ",",
+  quiet = FALSE
+)
 }
 \arguments{
-\item{file}{Character string: name of the input file to be checked of
+\item{file}{Character string: name of the input file to be checked or
 data frame with the content of the input file.}
 
 \item{dir}{Character string: Name of the directory containing the files
@@ -18,6 +24,8 @@ in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 "read_count", "read_count_sample", "asv_list".}
 
 \item{sep}{Field separator character in input and output csv files.}
+
+\item{quiet}{Boolean: print only errors.}
 }
 \value{
 Error message if problem with the files and stop the prorgam.

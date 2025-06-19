@@ -92,14 +92,26 @@ install.packages("ggplot2")
 
 Adapt the paths according to your installation.
 
-```{r set_path}
-cutadapt_path <- "C:/Users/Public"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin"
-blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
-swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin"
-num_threads <- 4
-vtam_dir <- "C:/Users/emese/vtamR"
+vtam_dir <- "C:/Users/emese/vtamR/"
 setwd(vtam_dir)
+
+```{r set_path}
+### windows
+cutadapt_path <- "C:/Users/Public/"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
+blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin/"
+num_threads <- 4
+sep <- ","
+
+### Bombyx
+cutadapt_path <- "~/miniconda3/envs/vtam/bin/" # v3.4
+vsearch_path <- "~/miniconda3/envs/vtam/bin/" # v2.15.1
+blast_path <- "~/miniconda3/envs/vtam/bin/" # v2.10.1+
+swarm_path <- "" # v2.1.12
+
+num_threads <- 8
+sep <- ","
 ```
 
 

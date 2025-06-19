@@ -21,7 +21,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   fastqinfo_df <- read.csv("data/fastqinfo_test.csv", header=T, sep=sep)
   fastq_dir <- "data/"
   outdir <-paste('out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir <- check_dir(outdir)
+  check_dir(outdir)
   
   ###
   # run Merge using the same parameters as vtam
@@ -38,7 +38,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   fastq_allowmergestagger <- F #
   sep <- ","
   compress <- T
-  merged_dir <- paste(outdir, "merged/", sep="")
+  merged_dir <- file.path(outdir, "merged")
   print("Runnig Merge")
   fastainfo_df <- Merge(fastqinfo=fastqinfo_df, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir, fastq_ascii=fastq_ascii, fastq_maxdiffs=fastq_maxdiffs, fastq_maxee=fastq_maxee, fastq_minlen=fastq_minlen, fastq_maxlen=fastq_maxlen, fastq_minmergelen=fastq_minmergelen, fastq_maxmergelen=fastq_maxmergelen, fastq_maxns=fastq_maxns, fastq_truncqual=fastq_truncqual, fastq_minovlen=fastq_minovlen, fastq_allowmergestagger=fastq_allowmergestagger, sep=sep, compress=compress, quiet=quiet)
   
@@ -51,8 +51,8 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   if(length(vtamfiles) == length(vtamRfiles)){# same number of files
     
     for(vtamf in vtamfiles){ # go through all files in vtamf
-      vtamRf <- paste(merged_dir, vtamf, sep="")
-      vtamf <- paste(vtam_out, vtamf, sep="")
+      vtamRf <- file.path(merged_dir, vtamf)
+      vtamf <- file.path(vtam_out, vtamf)
       if(file.exists(vtamRf)){ # corresponding file exists for vtamR
         
         vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate = T)
@@ -71,8 +71,6 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
       }
     }
     merge_pass <- T
-#    tmp <- paste("merge test", merge_pass, sep=" ")
-#    print(tmp)
   }else{
     setwd(backup_wd)
     stop("Different number of output files for vtam and vtamR")
@@ -80,7 +78,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   
   ###
   # run Sortreads using the same parameters as vtam
-  sorted_dir <- paste(outdir, "sorted/", sep="")
+  sorted_dir <- file.path(outdir, "sorted")
   check_reverse <- T
   tag_to_end <- F
   primer_to_end <-F
@@ -90,7 +88,7 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   compress <- T
   print("Runnig SortReads")
   sortedinfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=check_reverse, tag_to_end=tag_to_end, primer_to_end=primer_to_end, cutadapt_error_rate=cutadapt_error_rate, cutadapt_minimum_length=cutadapt_minimum_length, cutadapt_maximum_length=cutadapt_maximum_length, sep=sep, compress=compress, quiet=quiet)
-  vtamR_csv <-  paste(sorted_dir, "fastainfo.csv", sep="")
+  vtamR_csv <-  file.path(sorted_dir, "fastainfo.csv")
   ### compare output
   vtam_out <-  "vtam/sorted/"
   vtam_csv <-  "vtam/sorted/sortedinfo.tsv"
@@ -114,8 +112,8 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
   
 
   for(i in 1:nrow(df)){
-    vtamRf <- paste(sorted_dir, df$fasta[i], sep="")
-    vtamf <- paste(vtam_out, df$sortedfasta[i], sep="")
+    vtamRf <- file.path(sorted_dir, df$fasta[i])
+    vtamf <- file.path(vtam_out, df$sortedfasta[i])
     
     vtamRseq <- read_fasta_seq(filename=vtamRf, dereplicate=T)
     vtamRseq <- vtamRseq %>% arrange(asv)
@@ -156,31 +154,31 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/", vsearch_path="", cutadap
 
 Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="", sep=",", delete_tmp=T, quiet=T){
   
-  test_dir <- check_dir(test_dir)
-  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir <- check_dir(outdir)
+  check_dir(test_dir)
+  outdir <-paste(test_dir, '/out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  check_dir(outdir)
   
-#  outdir <- paste(test_dir, "out", sep="")
-  test_input_file <- paste(test_dir, "test/test_file.csv", sep="")
+#  outdir <- file.path(test_dir, "out")
+  test_input_file <- file.path(test_dir, "test/test_file.csv")
   
   ### make input df
   input_df <- read_asv_table(filename=test_input_file, sep=sep) %>% 
     rename("asv_id"=seq_id)
   
   #Swarm
-  test_input_file_swarm <- paste(test_dir, "test/test_file_asv_id.csv", sep="")
+  test_input_file_swarm <- file.path(test_dir, "test/test_file_asv_id.csv")
   input_df_swarm <- read_asv_table(filename=test_input_file_swarm, sep=sep) %>% 
     rename("asv_id"=seq_id)
   swarm_out_df <- Swarm(input_df_swarm, swarm_path=swarm_path, by_sample=T, quiet=quiet)
   swarm_out_df$replicate <- as.integer(swarm_out_df$replicate)
-  swarm_exp_df = read.csv(file=paste(test_dir, "test/test_file_asv_id_swarm_out.csv", sep=""), sep=",")
+  swarm_exp_df = read.csv(file=file.path(test_dir, "test/test_file_asv_id_swarm_out.csv"), sep=",")
   comp_swarm <- compare_df(swarm_out_df, swarm_exp_df, step="Swarm")
   
   
   #LFNglobalReadCount
   global_read_count_cutoff = 50
   global_read_count_cutoff_df <- LFNglobalReadCount(input_df, global_read_count_cutoff, sep=sep)
-  global_read_count_cutoff_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_global_read_count50_out.csv", sep=""), sep=sep)
+  global_read_count_cutoff_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_global_read_count50_out.csv"), sep=sep)
   comp_LFN_global_read_count <- compare_df(global_read_count_cutoff_df, global_read_count_cutoff_exp_df, step="LFNglobalReadCount")
   
   
@@ -190,40 +188,40 @@ Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   # LFNreadCount
   lfn_read_count_cutoff <- 10
   lfn_read_count_df <- LFNreadCount(input_df_tmp, cutoff=lfn_read_count_cutoff, sep=sep)
-  lfn_read_count_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_min_read_count_out.csv", sep=""), sep=sep)
+  lfn_read_count_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_min_read_count_out.csv"), sep=sep)
   comp_LFN_read_count <- compare_df(lfn_read_count_df, lfn_read_count_exp_df, step="LFNreadCount")
   
   # LFNsampleReplicate (by column)
   lfn_sample_replicate_cutoff <- 0.001
   lnf_sample_replicate_df <- LFNsampleReplicate(input_df_tmp, cutoff=lfn_sample_replicate_cutoff, sep=sep)
-  lnf_sample_replicate_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_sample_replicate_out.csv", sep=""), sep=sep)
+  lnf_sample_replicate_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_sample_replicate_out.csv"), sep=sep)
   comp_LFN_sample_replicate <- compare_df(lnf_sample_replicate_df, lnf_sample_replicate_exp_df, step="LFNsampleReplicate")
   
   # LFNvariant_replicate (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = TRUE
   lnf_variant_replicate_df <- LFNvariant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
-  lnf_variant_replicate_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant_replicate002_out.csv", sep=""), sep=sep)
+  lnf_variant_replicate_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_variant_replicate002_out.csv"), sep=sep)
   comp_LFN_variant_replicate <- compare_df(lnf_variant_replicate_df, lnf_variant_replicate_exp_df, step="LFNvariant_replicate")
   
   # LFNvariant (by line)
   lnf_variant_cutoff = 0.002
   by_replicate = FALSE
   lnf_variant_df <- LFNvariant(input_df, cutoff=lnf_variant_cutoff, by_replicate=by_replicate, sep=sep, min_read_count_prop=0.7)
-  lnf_variant_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_variant002_out.csv", sep=""), sep=sep)
+  lnf_variant_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_variant002_out.csv"), sep=sep)
   comp_LFN_variant <- compare_df(lnf_variant_df, lnf_variant_exp_df, step="LFNvariant")
   
   
   # pool the results of the different filterLFN to one data frame; keep only occurrences that passed all filters
   lfn_pool_df <- PoolFilters(lfn_read_count_df, lnf_sample_replicate_df, lnf_variant_df, sep=sep)
-  lnf_pool_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_pool_LFN_out.csv", sep=""), sep=sep)
+  lnf_pool_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_pool_LFN_out.csv"), sep=sep)
   comp_LFN_variant <- compare_df(lfn_pool_df, lnf_pool_exp_df, step="PoolFilters")
   
   
   ### keep repeatable occurrences
   min_replicate_number <- 2
   FilterMinReplicateNumber_df <- FilterMinReplicate(input_df, min_replicate_number, sep=sep)
-  FilterMinReplicateNumber_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_repeat_out.csv", sep=""), sep=sep)
+  FilterMinReplicateNumber_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_repeat_out.csv"), sep=sep)
   comp_FilterMinReplicateNumber <- compare_df(FilterMinReplicateNumber_df, FilterMinReplicateNumber_exp_df, step="FilterMinReplicate")
   
   
@@ -233,7 +231,7 @@ Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   by_sample <- T
   sample_prop <- 0.3
   FilterPCRerror_df1 <- FilterPCRerror(input_df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
-  FilterPCRerror_exp_df1 = read_asv_table(filename=paste(test_dir, "test/test_file_pcr1_03_out.csv", sep=""), sep=sep)
+  FilterPCRerror_exp_df1 = read_asv_table(filename=file.path(test_dir, "test/test_file_pcr1_03_out.csv"), sep=sep)
   comp_FilterPCRerror1 <- compare_df(FilterPCRerror_df1, FilterPCRerror_exp_df1, step="FilterPCRerror")
   
   pcr_error_var_prop <- 0.1
@@ -241,7 +239,7 @@ Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   by_sample <- T
   sample_prop <- 0.6
   FilterPCRerror_df1_6 <- FilterPCRerror(input_df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
-  FilterPCRerror_exp_df1_6 = read_asv_table(filename=paste(test_dir, "test/test_file_pcr1_06_out.csv", sep=""), sep=sep)
+  FilterPCRerror_exp_df1_6 = read_asv_table(filename=file.path(test_dir, "test/test_file_pcr1_06_out.csv"), sep=sep)
   comp_FilterPCRerror1_6 <- compare_df(FilterPCRerror_df1_6, FilterPCRerror_exp_df1_6, step="FilterPCRerror")
   
   
@@ -250,52 +248,52 @@ Test_Filters <- function(test_dir="vtamR_test/", vsearch_path="", swarm_path="",
   by_sample <- T
   sample_prop <- 0.3
   FilterPCRerror_df2 <- FilterPCRerror(input_df, vsearch_path=vsearch_path, pcr_error_var_prop=pcr_error_var_prop, max_mismatch=max_mismatch, by_sample=by_sample, sample_prop=sample_prop, sep=sep)
-  FilterPCRerror_exp_df2 = read_asv_table(filename=paste(test_dir, "test/test_file_pcr2_03_out.csv", sep=""), sep=sep)
+  FilterPCRerror_exp_df2 = read_asv_table(filename=file.path(test_dir, "test/test_file_pcr2_03_out.csv"), sep=sep)
   comp_FilterPCRerror_2 <- compare_df(FilterPCRerror_df2, FilterPCRerror_exp_df2, step="FilterPCRerror")
   
   ### FilterChimera
-  test_input_file_cim <- paste(test_dir, "test/test_file2.csv", sep="")
+  test_input_file_cim <- file.path(test_dir, "test/test_file2.csv")
   input_df_chim <- read_asv_table(filename=test_input_file_cim, sep=sep)
   abskew=10
   by_sample = T
   sample_prop = 0.3
   FilterChimera_10_03_df <- FilterChimera(input_df_chim, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
-  FilterChimera_10_03_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_chimera_out_03_10.csv", sep=""), sep=sep)
+  FilterChimera_10_03_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_chimera_out_03_10.csv"), sep=sep)
   comp_FilterChimera_10_03 <- compare_df(FilterChimera_10_03_df, FilterChimera_10_03_exp_df, step="FilterChimera")
   
   abskew=10
   by_sample = T
   sample_prop = 0.6
   FilterChimera_10_06_df <- FilterChimera(input_df_chim, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew, sep=sep)
-  FilterChimera_10_06_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_chimera_out_06_10.csv", sep=""), sep=sep)
+  FilterChimera_10_06_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_chimera_out_06_10.csv"), sep=sep)
   comp_FilterChimera_10_06 <- compare_df(FilterChimera_10_06_df, FilterChimera_10_06_exp_df, step="FilterChimera")
   
   ### FilterRenkonen
   renkonen_distance_quantile = 0.9
   FilterRenkonen_df <- FilterRenkonen(input_df, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
-  FilterRenkonen_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_FilterRenkonen_09_out.csv", sep=""), sep=sep)
+  FilterRenkonen_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_FilterRenkonen_09_out.csv"), sep=sep)
   comp_FilterRenkonen <- compare_df(FilterRenkonen_df, FilterRenkonen_exp_df, step="FilerRenkonen")
   
   renkonen_distance_quantile = 0.8
   FilterRenkonen_df <- FilterRenkonen(input_df, renkonen_distance_quantile=renkonen_distance_quantile, sep=sep)
-  FilterRenkonen_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_FilterRenkonen_08_out.csv", sep=""), sep=sep)
+  FilterRenkonen_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_FilterRenkonen_08_out.csv"), sep=sep)
   comp_FilterRenkonen <- compare_df(FilterRenkonen_df, FilterRenkonen_exp_df, step="FilerRenkonen")
   
   ### FilerIndel
   FilterIndel_df <- FilterIndel(input_df, sep=sep)
-  FilterIndel_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_indel_out.csv", sep=""), sep=sep)
+  FilterIndel_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_indel_out.csv"), sep=sep)
   comp_FilterIndel <- compare_df(FilterIndel_df, FilterIndel_exp_df, step="FilterIndel")
   
   ### FilerCodonStop
   genetic_code = 5
   FilterCodonStop_df <- FilterCodonStop(input_df, genetic_code=genetic_code, sep=sep)
-  FilterCodonStop_exp_df = read_asv_table(filename=paste(test_dir, "test/test_file_stop_out.csv", sep=""), sep=sep)
+  FilterCodonStop_exp_df = read_asv_table(filename=file.path(test_dir, "test/test_file_stop_out.csv"), sep=sep)
   comp_FilterCodonStop <- compare_df(FilterCodonStop_df, FilterCodonStop_exp_df, step="FilterCodonStop")
   
   ### PoolReplicates
   digits = 0
   PoolReplicates_df <- PoolReplicates(input_df, digits=digits, sep=sep)
-  PoolReplicates_exp_df <- read_asv_table_sample(filename=paste(test_dir, "test/test_file_pool_replicate_out.csv", sep=""), sep=sep)
+  PoolReplicates_exp_df <- read_asv_table_sample(filename=file.path(test_dir, "test/test_file_pool_replicate_out.csv"), sep=sep)
   PoolReplicates_exp_df <- PoolReplicates_exp_df %>% rename("asv_id"=seq_id)
   comp_PoolReplicates <- compare_df_sample(PoolReplicates_df, PoolReplicates_exp_df, step="PoolReplicates")
   
@@ -413,9 +411,9 @@ compare_df_sample<- function(df1, df2, step=""){
 
 Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_path, blast_db="vtamR_test/test/db_test/COInr_reduced", taxonomy="vtamR_test/test/db_test/taxonomy_reduced.tsv", num_threads=1, quiet=T){
   
-  test_dir <- check_dir(test_dir)
-  input <- paste(test_dir, "test/input_taxassign.csv", sep="")
-  expeted_output <- paste(test_dir, "test/test_taxassign_out.tsv", sep="")
+  check_dir(test_dir)
+  input <- file.path(test_dir, "test/input_taxassign.csv")
+  expeted_output <- file.path(test_dir, "test/test_taxassign_out.tsv")
 
   input_df <- read.csv(input) 
   input_df <- input_df %>%
@@ -455,10 +453,10 @@ Test_TaxAssign <- function(test_dir="vtamR_test/", sep=",", blast_path=blast_pat
 
 Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tmp=T, quiet=T){
   # input dirs and files
-  test_dir <- check_dir(test_dir)
-  mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
-  sortedinfo <- paste(test_dir, "test/sortedinfo.csv", sep= "")
-  input_mock_composition <- paste(test_dir, "test/input_test_known_occurrences.csv", sep="")
+  check_dir(test_dir)
+  mock_composition <- file.path(test_dir, "test/mock_composition_test.csv")
+  sortedinfo <- file.path(test_dir, "test/sortedinfo.csv")
+  input_mock_composition <- file.path(test_dir, "test/input_test_known_occurrences.csv")
   # read data for data frame
   read_count_samples_df <- read.csv(input_mock_composition, sep=sep)
   ### Add asv_id to read_count_samples_df
@@ -470,24 +468,23 @@ Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tm
   ###
   
   # output dirs and filenames
-  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir <- check_dir(outdir)
-#  outdir <- paste(test_dir, "out/", sep="")
+  outdir <-paste(test_dir, '/out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  check_dir(outdir)
 
-  known_occurrences <- paste(outdir, "known_occurrences.csv", sep= "")
-  missing_occurrences <- paste(outdir, "missing_occurrences.csv", sep= "")
+  known_occurrences <- file.path(outdir, "known_occurrences.csv")
+  missing_occurrences <- file.path(outdir, "missing_occurrences.csv")
   # params
   habitat_proportion= 0.5 # for each asv, if the proportion of reads in a habitat is below this cutoff, is is considered as an artifact in all samples of the habitat
   # run MakeKnownOccurrences
   TP_df <- MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo, mock_composition=mock_composition, sep=sep, known_occurrences=known_occurrences, missing_occurrences=missing_occurrences, habitat_proportion=habitat_proportion)
   
   # expected results
-  expected_known_occurrences <- paste(test_dir, "test/test_known_occurrences_out.csv", sep="")
+  expected_known_occurrences <- file.path(test_dir, "test/test_known_occurrences_out.csv")
   expected_known_occurrences_df = read.csv(expected_known_occurrences, sep=sep)
   expected_known_occurrences_df <- expected_known_occurrences_df %>%
     arrange(sample,action,asv)
   
-  expected_missing_occurrences <- paste(test_dir, "test/test_missing_occurrences_out.csv", sep="")
+  expected_missing_occurrences <- file.path(test_dir, "test/test_missing_occurrences_out.csv")
   expected_missing_occurrences_df = read.csv(expected_missing_occurrences, sep=sep)
   expected_missing_occurrences_df <- expected_missing_occurrences_df %>%
     arrange(sample,action,asv)
@@ -535,31 +532,30 @@ Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/", sep=",", delete_tm
 #'
 Test_Optimize <- function(test_dir="vtamR_test/", vsearch_path=vsearch_path, delete_tmp=T, sep=",", quiet=T){
   
-  test_dir <- check_dir(test_dir)
-#  outdir <- paste(test_dir, "out/", sep="")
-  outdir <-paste(test_dir, 'out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  outdir <- check_dir(outdir)
+  check_dir(test_dir)
+  outdir <-paste(test_dir, '/out_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  check_dir(outdir)
   # Attention, if optimize function is modified seriously, the expected output should be checked
-  expected_OptimizePCRError <- paste(test_dir, "test/OptimizePCRError.csv", sep="")
+  expected_OptimizePCRError <- file.path(test_dir, "test/OptimizePCRError.csv")
   expected_OptimizePCRError_df <- read.csv(expected_OptimizePCRError, sep=",", header=TRUE) %>%
     arrange(expected_asv, unexpected_asv)
   
-  expected_OptimizeLFNsampleReplicate <- paste(test_dir, "test/OptimizeLFNsampleReplicate.csv", sep="")
+  expected_OptimizeLFNsampleReplicate <- file.path(test_dir, "test/OptimizeLFNsampleReplicate.csv")
   expected_OptimizeLFNsampleReplicate_df <- read.csv(expected_OptimizeLFNsampleReplicate, sep=",", header=TRUE) %>%
     select(sample, replicate, action, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff, asv, taxon) %>%
     arrange(asv, sample, replicate)
   
-  expected_OptimizeLFNReadCountAndLFNvariant <- paste(test_dir, "test/OptimizeLFNReadCountAndLFNvariant.csv", sep="")
+  expected_OptimizeLFNReadCountAndLFNvariant <- file.path(test_dir, "test/OptimizeLFNReadCountAndLFNvariant.csv")
   expected_OptimizeLFNReadCountAndLFNvariant_df <- read.csv(expected_OptimizeLFNReadCountAndLFNvariant, sep=",", header=TRUE) %>%
     select(lfn_sample_replicate_cutoff,pcr_error_var_prop,lfn_read_count_cutoff,lnf_variant_cutoff,FN,TP,FP) %>%
     arrange(lfn_read_count_cutoff, lnf_variant_cutoff)
   
   # read input info
-  input_test_optimize <- paste(test_dir, "test/input_test_optimize.csv", sep="")
-  sortedinfo <- paste(test_dir, "test/sortedinfo.csv", sep="")
+  input_test_optimize <- file.path(test_dir, "test/input_test_optimize.csv")
+  sortedinfo <- file.path(test_dir, "test/sortedinfo.csv")
   sortedinfo_df <- read.csv(sortedinfo, sep=sep)
-  mock_composition <- paste(test_dir, "test/mock_composition_test.csv", sep="")
-  known_occurrences <- paste(test_dir, "test/known_occurrences.csv", sep="")
+  mock_composition <- file.path(test_dir, "test/mock_composition_test.csv")
+  known_occurrences <- file.path(test_dir, "test/known_occurrences.csv")
   read_count_df <- read.table(input_test_optimize, sep=sep, header=T)
   ### Add asv_id to read_count_df
   asv_unique <- read_count_df %>%

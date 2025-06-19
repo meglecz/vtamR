@@ -1,7 +1,7 @@
 ---
 title: "vtamR Documentation"
 auhor: Emese Meglecz
-date: "2024-06-18"
+date: "2024-05-23"
 output:
   html_document:
     toc: true
@@ -10,47 +10,9 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval=TRUE, chache=TRUE )
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
-## Summary
-
-**vtamR** is a revised, completed version of [VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) (Validation and Taxonomic Assignation of Metabarcoding Data) rewritten in R. It is a complete metabarcoding pipeline:
-
-* Sequence analyses from raw fastq files of amplicon sequences till Amplicon Sequence Variant ([ASV](#glossary)) table of validated ASVs assigned to taxonomic groups.
-* Handles technical or biological replicates of the same sample
-* Uses positive and negative control samples to fine tune the filtering and reduce [false positive](#glossary) and [false negative](#glossary) occurrences.
-* Can pool multiple data sets (results of earlier analyses)
-* Can pool results from overlapping markers
-
-**Novelties compared to VTAM:**
-
-* As it is a series of R functions, vramR is highly adaptable to include/exclude and order different steps of the analyses
-* Includes swarm for denoising
-* Graphic options
-* Include functions to get statistics of each filtering steps (read and variant count etc.)
-* The notion of marker and run has been dropped to simplify the analyses
-
-
-## Implementation
-
-The heavy lifting of sequence analyses are done by the following third party programs. They should be installed on your computer:
-
-* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
-* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
-* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
-* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-
-vtamR has been tested using the above mentioned versions, but it should work with later versions.
-vtamR was tested on Windows and Linux, and should work in all operating systems.
-
-The help is available for all vtamR function by `?function_name`.
-
-For most functions, the input data can be either a data frame or a csv file and they return a data frame that is also written to a csv file if a file name is provided.
-
-Follow the [installation guide](Installation_vtamR.html) for installing vtamR and its dependencies.
-
-## Tutorial
 
 ### Getting started
 
@@ -70,43 +32,21 @@ usethis::use_roxygen_md()
 
 **Set general parameters and working directory**
 
-vtam_dir <- "C:/Users/emese/vtamR"
-vtam_dir <- "~/vtamR"
+vtam_dir <- "~/vtamR" # clone from https://github.com/meglecz/vtamR
 setwd(vtam_dir)
 
-```{r set_path_win, eval=FALSE}
-# Windows
-cutadapt_path <- "C:/Users/Public/"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
-blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
-swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin/"
-num_threads <- 4
-sep <- ","
-```
-
-```{r set_path_linux}
-# Bombyx
+```{r set_path}
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/" # v3.4
 vsearch_path <- "~/miniconda3/envs/vtam/bin/" # v2.15.1
 blast_path <- "~/miniconda3/envs/vtam/bin/" # v2.10.1+
 swarm_path <- "" # v2.1.12
+
 num_threads <- 8
 sep <- ","
 ```
 
-* Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
-* `num_threads` is the number of CPUs for multithreaded programs
-* `sep` is the separator used in csv files
-
-**TaxAssign reference data base**
-
-You can download a ready to use, comprehensive COI database from [OSF](https://osf.io/vrfwz/) ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)). Set the path to the database and the accompanying taxonomy file.
 
 ```{r}
-taxonomy <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
-blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
-
-## Bombyx
 taxonomy <- "~/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
 blast_db <- "~/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
 ```
@@ -121,6 +61,7 @@ blast_db <- "~/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
 fastq_dir <- "vtamR_test/data"
 outdir <- "vtamR_test/out_mfzr"
 fastqinfo <- "vtamR_test/data/fastqinfo_mfzr.csv"
+
 mock_composition <- "vtamR_test/data/mock_composition_mfzr.csv"
 asv_list <- "vtamR_test/data/asv_list.csv"
 ```
@@ -146,74 +87,18 @@ CheckFileinfo(file=asv_list, file_type="asv_list")
 
 ### Merge - Demultiplex
 
-I suppose that you have [installed third party programs](Installation_vtamR.html) and followed the [Getting started section](#getting-started).
-
-According to your wetlab and sequencing protocol fastq files can contain one or more [sample-replicates](#glossary), and sequences may or may not contain [tags](#glossary) (for [demultiplexing](#glossary)) and primer sequences. In the following sections I show 3 different scenarios to obtain the [read_count_df](#read_count_df) data frame, which the input to the filtering steps.
-
-#### One sample per fastq - no tag - no primer
-
-Read pairs should be quality filtered merged and written to fasta format.
-This can be done by the `Merge` function. 
-
-See the help (`?Merge`) for setting the correct parameters for quality filtering.
-
-* [fastqinfo](#fastqinfo) is either a csv file, or a data frame. The key information for `Merge` is the list of the fastq file pairs that should be merged. The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, just fill them with `NA`.
-* `fastq_dir` is the directory containing the input fastq files.
-* [sortedinfo_df](#fastainfo) is the output of `Merge`. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names and the read counts are included for each file. Since no demultiplexing and primer trimming is necessary, this data frame and the files listed in it are the input for `Dereplicate`.
-
-
-```{r}
-merged_dir <- file.path(outdir, "merged")
-sortedinfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
-```
-
-
-#### One sample per fastq - primer - no tag
-
-Read pairs should be quality filtered, merged and written to fasta format by `Merge` function as in the [previous section](#one-sample-per-fastq---no-tag---no-primer).
-
-Then the `TrimPrimer` function will trim the primers from the reads. 
-See the help (`?TrimPrimer`) for setting the correct parameters for primer trimming.
-
-* [fastqinfo](#fastqinfo) Either a csv file, or a data frame.  The key information for `Merge` is the list of the fastq file pairs that should be merged. The `primer_fw`, `primer_rv` columns are irrelevant in this case, just fill them with `NA`.
-* `fastq_dir` Directory containing the input fastq files.
-* [fastainfo_df](#fastainfo) is the output of `Merge`. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names.
-* `fasta_dir` Directory containing he input fasta files for `TrimPrimer`. This directory is created by `Merge`.
-* If `check_reverse` is TRUE, `TrimPrimer` checks the reverse complementary stand as well.
-* `sortedinfo_df` is  updated version of fastainfo. Since no demultiplexing is necessary, this data frame and the files listed in it are the input for `Dereplicate`.
-
 ```{r}
 # merge and quality filter
 merged_dir <- file.path(outdir, "merged")
 fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
 
-# trim primers
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo_df <- TrimPrimer(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, check_reverse=T)
-```
-
-#### Several samples per fastq - tags - primers
-
-Read pairs should be quality filtered, merged and written to fasta format as in the [previous sections](#one-sample-per-fastq---no-tag---no-primer).
-
-Then the `SortReads` function will [demultiplex](#demultiplexing) the fasta files according to the [tag](#tag) combinations and [trim](#trimming) the primers from the reads. See the help (`?SortReads`) for setting the correct parameters for demultiplexing and primer trimming:
-
-* [fastqinfo](#fastqinfo) Either a csv file, or a data frame. The key information for `Merge` is the list of the fastq file pairs that should be merged.
-* `fastq_dir` Directory containing the input fastq files.
-* [fastainfo_df](#fastainfo) is the output of `Merge`. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names.
-* `fasta_dir` Directory containing the input fasta files for `TrimPrimer`. This directory is created by `Merge`.
-* If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
-* `sortedinfo_df` is  updated version of fastainfo. This data frame and the files listed in it are the input of the `Dereplicate`.
-
-
-```{r}
-# merge and quality filter
-merged_dir <- file.path(outdir, "merged")
-fastainfo_df <- Merge(fastqinfo, fastq_dir=fastq_dir, vsearch_path=vsearch_path, outdir=merged_dir)
+CheckFileinfo(file=fastainfo_df, dir=merged_dir, file_type="fastainfo")
 
 # demultiplex, trim tags and pimers
 sorted_dir <- file.path(outdir, "sorted")
-sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, check_reverse=TRUE, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path)
+sortedinfo_df <- SortReads(fastainfo_df, fasta_dir=merged_dir, outdir=sorted_dir, check_reverse=TRUE, cutadapt_path=cutadapt_path, vsearch_path=vsearch_path, quiet=TRUE)
+
+CheckFileinfo(file=sortedinfo_df, dir=sorted_dir, file_type="sortedinfo")
 ```
 
 
@@ -230,8 +115,8 @@ When providing only the file name to `updated_asv_list`, but not to `asv_list`, 
 
 
 ```{r}
-outfile <- file.path(outdir, "1_before_filter.csv")
-updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
+outfile <- paste(outdir, "1_before_filter.csv", sep="")
+updated_asv_list <- paste(outdir, "ASV_list_with_IDs.csv", sep="")
 
 read_count_df <- Dereplicate(sortedinfo_df, dir=sorted_dir, outfile=outfile, asv_list=asv_list, updated_asv_list=updated_asv_list)
 ```
@@ -275,7 +160,7 @@ It is possible to run `Swarm` separately for each sample (`by_sample=TRUE`; defa
 
 ```{r}
 by_sample <- TRUE
-outfile <- file.path(outdir, "2_Swarm_by_sample.csv")
+outfile <- paste(outdir, "2_Swarm_by_sample.csv", sep="")
 
 read_count_df <- Swarm(read_count_df, outfile=outfile, swarm_path=swarm_path, num_threads=num_threads, by_sample=by_sample)
 
@@ -290,7 +175,7 @@ Let's eliminate [singletons](#glossary):
 
 ```{r}
 global_read_count_cutoff = 2
-outfile <- file.path(outdir, "3_LFNglobalReadCount.csv")
+outfile <- paste(outdir, "3_LFNglobalReadCount.csv", sep="")
 
 read_count_df <- LFNglobalReadCount(read_count_df, cutoff=global_read_count_cutoff, outfile=outfile)
 
@@ -302,7 +187,7 @@ stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=gl
 This filter is **applicable only for coding sequences**. The idea is that if the length of the ASV differs from the most frequent ASV length by a number that is not a multiple of 3, it is likely to be an erroneous sequence or a pseudo-gene.
 
 ```{r}
-outfile <- file.path(outdir, "4_FilterIndel.csv")
+outfile <- paste(outdir, "4_FilterIndel.csv", sep="")
 
 read_count_df <- FilterIndel(read_count_df, outfile=outfile)
 
@@ -318,7 +203,7 @@ The numerical id of the genetic code can be chosen from [NCBI](https://www.ncbi.
 
 
 ```{r}
-outfile <- file.path(outdir, "5_FilterCodonStop.csv")
+outfile <- paste(outdir, "5_FilterCodonStop.csv", sep="")
 genetic_code = 5
 
 read_count_df <- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code)
@@ -340,7 +225,7 @@ FilterChimera will eliminate ASVs detected as chimeras when running on the whole
 abskew=2
 by_sample = T
 sample_prop = 0.8
-outfile <- file.path(outdir, "6_FilterChimera.csv")
+outfile <- paste(outdir, "6_FilterChimera.csv", sep="")
 
 read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
 
@@ -369,7 +254,7 @@ print(renkonen_barplot)
 In this example, we have only a few distances, so the density plot is not very relevant. The barplot indicates that the replicate 1 of the `tnegtag` sample (negative control) is distant from the other two replicates. Lets, establish the Renkonen cutoff value to 0.4. We will filter out replicates that have Renkonen distances above this cutoff to most other replicates of the sample. In this case, replicate 1 of the tnegtag sample will be eliminated.
 
 ```{r}
-outfile <- file.path(outdir, "7_FilterRenkonen.csv")
+outfile <- paste(outdir, "7_FilterRenkonen.csv", sep="")
 cutoff <- 0.4
 
 read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
@@ -680,7 +565,7 @@ Random select `n` sequences from each input fasta file. It can be used before or
 
 
 ```{r}
-randomseq_dir = file.path(outdir, "random_seq")
+randomseq_dir = paste(outdir, "random_seq/", sep="")
 fastainfo_df <- RandomSeq(fastainfo_df, fasta_dir=merged_dir, outdir=randomseq_dir, vsearch_path=vsearch_path, n=10000)
 ```
 
@@ -752,7 +637,7 @@ However, if you are analyzing a large number of very large data sets, the comple
 
 
 ```{r}
-updated_asv_list <- file.path(outdir, "updated_ASV_list.csv")
+updated_asv_list <- paste(outdir, "updated_ASV_list.csv", sep="")
 UpdateASVlist(read_count_df, asv_list=asv_list, outfile=updated_asv_list)
 ```
 
@@ -772,8 +657,8 @@ The function takes several input CSV files, each in [long format](#glossary) con
 files <- data.frame(file=c("vtamR_test/out_mfzr/15_PoolReplicates.csv", "vtamR_test/test/15_PoolReplicates_ZFZR.csv"),
                     marker=c("MFZR", "ZFZR"))
 
-outfile <- file.path(outdir, "Pooled_datasets.csv") 
-asv_with_centroids <- file.path(outdir, "Pooled_datasets_asv_with_centroids.csv") 
+outfile <- paste(outdir, "Pooled_datasets.csv", sep="") 
+asv_with_centroids <- paste(outdir, "Pooled_datasets_asv_with_centroids.csv", sep="") 
 
 read_count_pool <- PoolDatasets(files, outfile=outfile, asv_with_centroids=asv_with_centroids, mean_over_markers=T, vsearch_path=vsearch_path)
 ```
@@ -809,7 +694,7 @@ Can use different colors for different sample types ([real/mock/negative](#gloss
 * `sample_types` data frame or CSV file containing info on sample types for each sample
 
 ```{r}
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+sortedinfo <- paste(sorted_dir, "sortedinfo.csv", sep ="")
 Barplot_ReadCountBySample(read_count_df=read_count_df, sample_replicate=F, sample_types=sortedinfo)
 ```
 
@@ -935,7 +820,7 @@ A data base is composed of two elements. A BLAST database (`blast_db`) and a `ta
 
 `blast_db` can be produced using the `makeblastdb` command of BLAST:
 
-```{bash, eval=FALSE}
+```{bash}
 makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]
 ```
 
