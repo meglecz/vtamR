@@ -99,8 +99,8 @@ setwd(vtam_dir)
 ### windows
 cutadapt_path <- "C:/Users/Public/"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
-blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
-swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin/"
+blast_path <- "C:/Users/Public/blast-2.16.0+/bin/"
+swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/"
 num_threads <- 4
 sep <- ","
 

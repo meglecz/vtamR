@@ -78,8 +78,8 @@ setwd(vtam_dir)
 # Windows
 cutadapt_path <- "C:/Users/Public/"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
-blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
-swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin/"
+blast_path <- "C:/Users/Public/blast-2.16.0+/bin/"
+swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/"
 num_threads <- 4
 sep <- ","
 ```
@@ -103,8 +103,8 @@ sep <- ","
 You can download a ready to use, comprehensive COI database from [OSF](https://osf.io/vrfwz/) ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)). Set the path to the database and the accompanying taxonomy file.
 
 ```{r}
-taxonomy <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam_taxonomy.tsv"
-blast_db <- "C:/Users/Public/COInr_for_vtam_2023_05_03_dbV5/COInr_for_vtam"
+taxonomy <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
 
 ## Bombyx
 taxonomy <- "~/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
