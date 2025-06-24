@@ -187,7 +187,7 @@ Merge <- function(fastqinfo, fastq_dir, vsearch_path="", outdir="", fastq_ascii=
     }
     
     # vsearch can accept gz files in linux, but not on windows, the outfile is always uncompressed
-    vsearch <- paste(vsearch_path, "vsearch --fastq_mergepairs ", fw_fastq, " --reverse ", rv_fastq ," --fastaout ",outfile," --quiet --fastq_ascii ",fastq_ascii," --fastq_maxdiffs ", fastq_maxdiffs, " --fastq_maxee ", fastq_maxee, " --fastq_minlen ", fastq_minlen, " --fastq_maxlen ",fastq_maxlen, " --fastq_minmergelen ",fastq_minmergelen," --fastq_maxmergelen ",fastq_maxmergelen," --fastq_maxns ", fastq_maxns, " --fastq_truncqual ", fastq_truncqual, " --fastq_minovlen ", fastq_minovlen, sep="")
+    vsearch <- paste(vsearch_path, " --fastq_mergepairs ", fw_fastq, " --reverse ", rv_fastq ," --fastaout ",outfile," --quiet --fastq_ascii ",fastq_ascii," --fastq_maxdiffs ", fastq_maxdiffs, " --fastq_maxee ", fastq_maxee, " --fastq_minlen ", fastq_minlen, " --fastq_maxlen ",fastq_maxlen, " --fastq_minmergelen ",fastq_minmergelen," --fastq_maxmergelen ",fastq_maxmergelen," --fastq_maxns ", fastq_maxns, " --fastq_truncqual ", fastq_truncqual, " --fastq_minovlen ", fastq_minovlen, sep="")
     if(fastq_allowmergestagger){ # if reads are longer than the amplicon
       vsearch <- paste(vsearch, " --fastq_allowmergestagger", sep="")
     }
@@ -421,7 +421,7 @@ RandomSeq <- function(fastainfo, n, fasta_dir="", outdir="", vsearch_path="", ra
     # enough seq => resample
     options(scipen=100) # do not transform large numbers to scentific forms, since it would lead to an error in vsearch
     output_fasta_p <- gsub(".gz", "", output_fasta_p) # vsearch makes decompressed files
-    vsearch_cmd <- paste(vsearch_path, "vsearch --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
+    vsearch_cmd <- paste(vsearch_path, " --fastx_subsample ", input_fasta_p, " --fastaout ", output_fasta_p, " --sample_size ", n, " --randseed ", randseed, sep="")
     if(!quiet){
       print(vsearch_cmd)
     }
@@ -581,9 +581,9 @@ TrimPrimer_OneFile <- function(fasta, outfile, primer_fw, primer_rv, cutadapt_pa
   
   primer_rv_rc <- reverse_complement(primer_rv)
   if(primer_to_end){
-    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", outfile, " ", fasta, sep="")
+    primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", outfile, " ", fasta, sep="")
   } else{
-    primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', outfile, " ", fasta, sep="")
+    primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', outfile, " ", fasta, sep="")
   }
   if(!quiet){
     print(primer_trim_cmd)
@@ -598,9 +598,9 @@ TrimPrimer_OneFile <- function(fasta, outfile, primer_fw, primer_rv, cutadapt_pa
     out_rv <- sub("\\.", "_rv.", outfile)
     
     if(primer_to_end){
-      primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", out_rv, " ", fasta, sep="")
+      primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fw, "...", primer_rv_rc, "$ --output ", out_rv, " ", fasta, sep="")
     } else{
-      primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', out_rv, " ", fasta, sep="")
+      primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ", cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fw, ';min_overlap=',nchar(primer_fw),'...', primer_rv_rc,  ';min_overlap=',nchar(primer_rv_rc),'" --output ', out_rv, " ", fasta, sep="")
     }
     if(!quiet){
       print(primer_trim_cmd)
@@ -611,7 +611,7 @@ TrimPrimer_OneFile <- function(fasta, outfile, primer_fw, primer_rv, cutadapt_pa
     if(file.size(out_rv) > 0){ # there are sequences in the reverse trimmed file
       # reverse complement sequences in out_rv file
       out_rv_rc <- sub("\\.", "_rc.", out_rv)
-      rev_comp_cmd <- paste(vsearch_path, "vsearch --fastx_revcomp ", out_rv, " --fastaout ", out_rv_rc, " --quiet", sep="")
+      rev_comp_cmd <- paste(vsearch_path, " --fastx_revcomp ", out_rv, " --fastaout ", out_rv_rc, " --quiet", sep="")
       if(!quiet){
         print(rev_comp_cmd)
       }
@@ -796,7 +796,7 @@ SortReads <- function(fastainfo, fasta_dir, outdir="", cutadapt_path="" ,vsearch
       minus_rc <- file.path(rc_dir, minus_rc)
       if(file.exists(minus) && file.size(minus) > 0){
         # reverse complement sequences in minus file
-        rev_comp_cmd <- paste(vsearch_path, "vsearch --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
+        rev_comp_cmd <- paste(vsearch_path, " --fastx_revcomp ", minus, " --fastaout ", minus_rc, " --quiet", sep="")
         if(!quiet){
           print(rev_comp_cmd)
         }
@@ -929,7 +929,7 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
      # add path
     fasta_file <- file.path(fasta_dir, fasta_file)
     # demultiplex fasta, write output to tmp file
-    demultiplex_cmd = paste(cutadapt_path, "cutadapt --cores=0 --quiet -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", tmp_dir_fasta, "/tagtrimmed-{name}.fasta ", fasta_file, sep="")
+    demultiplex_cmd = paste(cutadapt_path, " --cores=0 --quiet -e 0 --no-indels --trimmed-only -g file:", tag_file," -o ", tmp_dir_fasta, "/tagtrimmed-{name}.fasta ", fasta_file, sep="")
     if(!quiet){
       print(demultiplex_cmd)
     }
@@ -953,10 +953,10 @@ SortReads_no_reverse <- function(fastainfo, fasta_dir, outdir="", cutadapt_path=
         tag_trimmed_file <- paste("tagtrimmed-", df[f,"tag_fw"], "-", df[f,"tag_rv"], ".fasta", sep="")
         tag_trimmed_file <- file.path(tmp_dir_fasta, tag_trimmed_file)
         if(primer_to_end){
-          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
+          primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, " -g ^", primer_fwl, "...", primer_rvl_rc, "$ --output ", primer_trimmed_file, " ", tag_trimmed_file, sep="")
         }
         else{
-          primer_trim_cmd <- paste(cutadapt_path, "cutadapt --cores=0 --quiet -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fwl, ';min_overlap=',nchar(primer_fwl),'...', primer_rvl_rc,  ';min_overlap=',nchar(primer_rvl_rc),'" --output ', primer_trimmed_file, " ", tag_trimmed_file, sep="")
+          primer_trim_cmd <- paste(cutadapt_path, " --cores=0 --quiet -e ",cutadapt_error_rate ," --no-indels --trimmed-only --minimum-length ", cutadapt_minimum_length ," --maximum-length ", cutadapt_maximum_length, ' -g "', primer_fwl, ';min_overlap=',nchar(primer_fwl),'...', primer_rvl_rc,  ';min_overlap=',nchar(primer_rvl_rc),'" --output ', primer_trimmed_file, " ", tag_trimmed_file, sep="")
         }
         if(!quiet){
           print(primer_trim_cmd)
@@ -1391,7 +1391,7 @@ run_swarm <- function(read_count_df, swarm_path="", num_threads=1, swarm_d=1, fa
   ### run swarm
   #  representatives <- file.path(tmp_dir, "representatives.fasta")
   clusters <- file.path(tmp_dir, "clusters.txt")
-  swarm <- paste(swarm_path, "swarm -d ",swarm_d," -t ", num_threads, " -o ", clusters, sep="")
+  swarm <- paste(swarm_path, " -d ",swarm_d," -t ", num_threads, " -o ", clusters, sep="")
   if(fastidious){
     swarm <- paste(swarm, "-f", sep=" ")
   }
@@ -2056,7 +2056,7 @@ flagPCRerror_vsearch <- function(unique_asv_df, vsearch_path="", pcr_error_var_p
   write_fasta(unique_asv_df$asv, fas, seq_as_id=T)
   # vsearch --usearch_global to find highly similar sequence pairs
   vsearch_out <- file.path(outdir_tmp, 'unique_vsearch_out.out')
-  vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas, " --db ", fas, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
+  vsearch <- paste(vsearch_path, " --usearch_global ", fas, " --db ", fas, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
   #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
   system(vsearch)
   
@@ -2245,7 +2245,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="", abskew=2){
   
   # vsearch --usearch_global to find highly similar sequence pairs
   vsearch_out <- file.path(outdir_tmp, 'unique_vsearch_out.out')
-  vsearch <- paste(vsearch_path, "vsearch --uchime3_denovo ", fas, " --quiet --abskew ", abskew ," --uchimeout  ", vsearch_out, sep="")
+  vsearch <- paste(vsearch_path, " --uchime3_denovo ", fas, " --quiet --abskew ", abskew ," --uchimeout  ", vsearch_out, sep="")
   system(vsearch)
   
   # no vsearch hit => return unique_asv_df completed with a PCRerror, with 0 for all ASVs
@@ -2780,7 +2780,7 @@ run_blast <- function(df, blast_db, blast_path="", outdir="", qcov_hsp_perc=70, 
   max_target_seqs=500
   
   #  blast <- paste(blast_path, "blastn -task ", task, " -db ",blast_db ," -query ",fas," -evalue ",e," -out ",blast_out," -outfmt '6 qseqid pident qcovhsp staxids' -dust ",dust," -qcov_hsp_perc ",qcov_hsp_perc," -perc_identity ",perc_identity," -num_threads ",num_threads," -max_target_seqs ",max_target_seqs, sep="")
-  blast <- paste(blast_path, "blastn -task ", task, " -db ",blast_db ," -query ",fas," -evalue ",e," -out ",blast_out,' -outfmt "6 qseqid pident qcovhsp staxids" -dust ',dust," -qcov_hsp_perc ",qcov_hsp_perc," -perc_identity ",perc_identity," -num_threads ",num_threads," -max_target_seqs ",max_target_seqs, sep="")
+  blast <- paste(blast_path, " -task ", task, " -db ",blast_db ," -query ",fas," -evalue ",e," -out ",blast_out,' -outfmt "6 qseqid pident qcovhsp staxids" -dust ',dust," -qcov_hsp_perc ",qcov_hsp_perc," -perc_identity ",perc_identity," -num_threads ",num_threads," -max_target_seqs ",max_target_seqs, sep="")
   if(!quiet){
     print(blast)
   }
@@ -3477,7 +3477,7 @@ OptimizePCRerror <- function(read_count, mock_composition="", vsearch_path= "", 
       vsearch_out <- paste(mock, 'vsearch_out.out', sep="_")
       vsearch_out <- file.path(outdir_tmp, vsearch_out)
       #    vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, " --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields 'query+target+ids+aln' --userout ", vsearch_out, sep="")
-      vsearch <- paste(vsearch_path, "vsearch --usearch_global ", fas_delete, " --db ", fas_keep, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
+      vsearch <- paste(vsearch_path, " --usearch_global ", fas_delete, " --db ", fas_keep, ' --quiet --iddef 1 --self --id 0.90 --maxaccepts 0 --maxrejects 0 --userfields "query+target+ids+aln" --userout ', vsearch_out, sep="")
       #https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system
       system(vsearch)
 
@@ -4137,7 +4137,7 @@ PoolDatasets <- function(files, outfile="", asv_with_centroids="", sep=",", mean
     # cluster using cluster_smallmem and 1 as identity limit
     centroids_file <- file.path(tmp_dir, "consout.txt")
     blastout_file <- file.path(tmp_dir, "blastout.tsv")  #query sequences are shorter than subjects => centroids are in the subjects column
-    vsearch_cmd <- paste(vsearch_path, "vsearch --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
+    vsearch_cmd <- paste(vsearch_path, " --cluster_smallmem ", fasta, " --consout ",centroids_file," --blast6out ", blastout_file," --id 1", sep="")
     if(!quiet){
       print(vsearch_cmd)
     }
@@ -5061,7 +5061,7 @@ Cluster_size <- function(read_count_samples, id=0.97, vsearch_path="", outfile="
   # make fasta file with abundances
   write_fasta_rc(asv_rc, fasta)
   # run vsearch cluster_size
-  cmd <- paste(vsearch_path, 'vsearch --cluster_size ', fasta,' --blast6out ', blast6_file, ' --id ', id, sep="")
+  cmd <- paste(vsearch_path, ' --cluster_size ', fasta,' --blast6out ', blast6_file, ' --id ', id, sep="")
   print(cmd)
   system(cmd)
   

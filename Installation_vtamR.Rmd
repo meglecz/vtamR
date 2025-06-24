@@ -97,23 +97,42 @@ setwd(vtam_dir)
 
 ```{r set_path}
 ### windows
-cutadapt_path <- "C:/Users/Public/"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/"
-blast_path <- "C:/Users/Public/blast-2.16.0+/bin/"
-swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/"
+cutadapt_path <- "C:/Users/Public/cutadapt"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
+swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
+
 num_threads <- 4
 sep <- ","
 
 ### Bombyx
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/" # v3.4
-vsearch_path <- "~/miniconda3/envs/vtam/bin/" # v2.15.1
-blast_path <- "~/miniconda3/envs/vtam/bin/" # v2.10.1+
-swarm_path <- "" # v2.1.12
+cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
+vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
+blast_path <- "~/miniconda3/envs/vtam/bin/blastn" # v2.10.1+
+swarm_path <- "swarm" # v2.1.12
 
 num_threads <- 8
 sep <- ","
 ```
 
+Check if path to binaries are correct
+```{r}
+check_path <- function(path="")
+{
+  # in case ~ is used for home
+    path <- path.expand(path)
+  if (Sys.which(path) == "") {
+    stop("Binary not found at: ", path)
+  }else{
+     cat(path, "OK")
+  }
+}
+
+check_path(path=vsearch_path)
+check_path(path=cutadapt_path)
+check_path(path=swarm_path)
+check_path(path=blast_path)
+```
 
 **Load libraries**
 ```{r load_libraries}
