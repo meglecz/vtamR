@@ -19,5 +19,7 @@ where the merged taxids has been replaced by the up to date ones.
 Replaces old taxids (merged to other taxIDs in NCBI taxonomy) by valid ones.
 }
 \examples{
+\dontrun{
 update_taxids(df=blastout_df, old_taxid=old_taxid_df)
+}
 }

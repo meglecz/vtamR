@@ -25,5 +25,7 @@ Filtered read_count_df data frame.
 Eliminate ASVs with less than cutoff reads in the data set.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- LFNglobalReadCount(read_count_df, cutoff=2)
+}
 }

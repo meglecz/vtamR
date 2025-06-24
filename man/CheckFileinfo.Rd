@@ -43,6 +43,8 @@ Check the format and coherence of different file types:
 }
 }
 \examples{
+\dontrun{
 CheckFileinfo(file="input/sortedinfo.csv", dir="fasta", file_type="sortedinfo")
 CheckFileinfo(file=sortedinfo_df, dir="fasta", file_type="read_count_sample")
+}
 }

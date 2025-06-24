@@ -25,5 +25,11 @@ Make a fasta file with tag combinations using cutadapt syntax.
 This will be used in SortReads to demultiplex the input fasta file.
 }
 \examples{
-make_adapter_fasta(fastainfo_df=fastainfo_df, fasta_file="test.fasta", tag_to_end=F, outdir="data/out")
+\dontrun{
+make_adapter_fasta(fastainfo_df=fastainfo_df, 
+    fasta_file="test.fasta", 
+    tag_to_end=F, 
+    outdir="data/out"
+    )
+}
 }

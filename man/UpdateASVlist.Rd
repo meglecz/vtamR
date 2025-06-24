@@ -33,5 +33,10 @@ seen in earlier data sets. This function is used to homogenize
 asv_ids between different data sets.
 }
 \examples{
-UpdateASVlist(df=read_count_df, asv_list="data/asv_list.csv", outfile="out/updated_asv_list.csv")
+\dontrun{
+UpdateASVlist(df=read_count_df, 
+asv_list="data/asv_list.csv", 
+outfile="out/updated_asv_list.csv"
+)
+}
 }

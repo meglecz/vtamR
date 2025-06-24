@@ -10,7 +10,7 @@ PoolDatasets(
   asv_with_centroids = "",
   sep = ",",
   mean_over_markers = T,
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   quiet = T
 )
 }
@@ -30,8 +30,7 @@ completed by centroid_id and centroid columns.}
 \item{mean_over_markers}{Boolean: If TRUE, the mean read count is calculated
 over different ASVs of each cluster. Sum otherwise.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
@@ -48,6 +47,10 @@ are pooled under the centroid (longest ASV of the group).
 Pooling can take the mean of the read counts of the ASV (default) or their sum.
 }
 \examples{
-files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", "vtamR_test/out_zfzr/14_PoolReplicates.csv"),marker=c("MFZR", "ZFZR"))
+\dontrun{
+files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", 
+    "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
+    marker=c("MFZR", "ZFZR"))
 PoolDatasets(files, vsearch_path=vsearch_path)
+}
 }

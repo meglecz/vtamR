@@ -16,5 +16,7 @@ The reverse complement of the input sequence.
 Reverse complement a DNA sequence. IUPAC codes are accepted
 }
 \examples{
+\dontrun{
 reverse_complement(sequence="AAATGCRC")
+}
 }

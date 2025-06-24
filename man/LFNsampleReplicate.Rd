@@ -28,5 +28,7 @@ where the \verb{read_count / sum(read_count of the sample-replicate)} is less th
 cutoff.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- LFNsampleReplicate(read_count_df, cutoff=0.005)
+}
 }

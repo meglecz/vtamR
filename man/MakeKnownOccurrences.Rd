@@ -64,8 +64,14 @@ FN (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN)).
 }
 }
 \examples{
-results MakeKnownOccurrences(read_count_samples_df, sortedinfo=sortedinfo_df, mock_composition="data/mock_composition.csv", habitat_proportion=0.7)
+\dontrun{
+results <- MakeKnownOccurrences(read_count_samples_df, 
+sortedinfo=sortedinfo_df, 
+mock_composition="data/mock_composition.csv", 
+habitat_proportion=0.7
+)
 known_occurrences_df <- results[[1]]
 missing_occurrences_df <- results[[2]]
 performance_metrics_df <- results[[3]]
+}
 }

@@ -6,7 +6,7 @@
 \usage{
 flagPCRerror_vsearch(
   unique_asv_df,
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   pcr_error_var_prop = 0.1,
   max_mismatch = 1
 )
@@ -15,8 +15,7 @@ flagPCRerror_vsearch(
 \item{unique_asv_df}{Data frame with the following variables:
 asv, read_count. ASVs must be unique.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{pcr_error_var_prop}{Real (0-1): if the proportion of read counts
 of two similar ASVs is bellow \code{pcr_error_var_prop}, the less abundant
@@ -36,8 +35,14 @@ Adds a column to the input data frame, with 1 if sequence is a
 probable PCR error, and 0 otherwise.
 }
 \examples{
+\dontrun{
 unique_asv_df <- read_count_df \%>\%
   group_by(asv) \%>\%
   summarize(read_count = sum(read_count))
-unique_asv_df_flagged <- flagPCRerror_vsearch(unique_asv_df, vsearch_path=vsearch_path, pcr_error_var_prop=0,2, max_mismatch=2)
+unique_asv_df_flagged <- flagPCRerror_vsearch(unique_asv_df, 
+     vsearch_path=vsearch_path, 
+     pcr_error_var_prop=0,2, 
+     max_mismatch=2
+     )
+}
 }

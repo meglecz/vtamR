@@ -7,7 +7,7 @@
 OptimizePCRerror(
   read_count,
   mock_composition = "",
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   sep = ",",
   outfile = "",
   max_mismatch = 1,
@@ -47,5 +47,12 @@ The \code{pcr_error_var_prop} parameter should be above the highest
 value in the table.
 }
 \examples{
-OptimizePCRerror(read_count=read_count_df, mock_composition="data/mock_composition.csv", vsearch_path=vsearch_path, max_mismatch=2, min_read_count=5)
+\dontrun{
+OptimizePCRerror(read_count=read_count_df, 
+    mock_composition="data/mock_composition.csv", 
+    vsearch_path=vsearch_path, 
+    max_mismatch=2, 
+    min_read_count=5
+    )
+}
 }

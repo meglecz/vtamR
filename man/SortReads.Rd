@@ -8,8 +8,8 @@ SortReads(
   fastainfo,
   fasta_dir,
   outdir = "",
-  cutadapt_path = "",
-  vsearch_path = "",
+  cutadapt_path = "cutadapt",
+  vsearch_path = "vsearch",
   check_reverse = F,
   tag_to_end = T,
   primer_to_end = T,
@@ -23,16 +23,17 @@ SortReads(
 }
 \arguments{
 \item{fastainfo}{Data frame or csv file with columns:
-tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,fasta}
+tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),
+habitat(optional),replicate,fasta}
 
 \item{fasta_dir}{Character string: directory with input fasta files
 (listed in the fasta columns of fastainfo).}
 
 \item{outdir}{Character string: output directory.}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables. Can be empty if cutadapt in the the PATH.}
+\item{cutadapt_path}{Character string: path to cutadapt executables.}
 
-\item{vsearch_path}{Character string: path to vsearch executables. Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{check_reverse}{Boolean: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}
@@ -73,5 +74,16 @@ The output sortedinfo.csv file is similar to the input fastainfo,
 but the but do not have tag and primer columns.
 }
 \examples{
-fastainfo_df <- SortReads(fastainfo=fastainfo_df, fasta_dir="data/fasta", outdir="data/sorted", check_reverse=F, tag_to_end=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=350, sep=",")
+\dontrun{
+fastainfo_df <- SortReads(fastainfo=fastainfo_df, 
+     fasta_dir="data/fasta", 
+     outdir="data/sorted", 
+     check_reverse=F, 
+     tag_to_end=T, 
+     primer_to_end=T, 
+     cutadapt_minimum_length=300,
+     cutadapt_maximum_length=350, 
+     sep=","
+     )
+}
 }

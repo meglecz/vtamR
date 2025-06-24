@@ -20,5 +20,7 @@ Input can be uncompressed or gzip compressed file,
 but other compression types are not supported.
 }
 \examples{
+\dontrun{
 n <- count_seq2(file="data/test.fasta")
+}
 }

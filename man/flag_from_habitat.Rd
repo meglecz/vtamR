@@ -26,5 +26,7 @@ a cutoff (\code{habitat_proportion}),
 it is considered as an artifact in all samples of the habitat.
 }
 \examples{
+\dontrun{
 flag_from_habitat(occurrence_df, habitat_proportion=0.7)
+}
 }

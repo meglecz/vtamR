@@ -9,7 +9,7 @@ RandomSeq(
   n,
   fasta_dir = "",
   outdir = "",
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   randseed = 0,
   compress = F,
   sep = ",",
@@ -27,8 +27,7 @@ input fasta files}
 
 \item{outdir}{Character string: output directory.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{randseed}{Positive integer: seed for random sampling.
 0 (default value) means to use a pseudo-random seed.
@@ -50,5 +49,10 @@ Random select n sequences from each input fasta file.
 Do not work on Windows! If using Windows, please, use RandomSeqWindows
 }
 \examples{
-fastainfo_df <- RandomSeq(fastainfo, fasta_dir="data/fasta", outdir="data/randomseq")
+\dontrun{
+fastainfo_df <- RandomSeq(fastainfo, 
+   fasta_dir="data/fasta", 
+   outdir="data/randomseq"
+   )
+}
 }

@@ -23,5 +23,7 @@ Data frame with two columns: headers and sequences.
 Selects \code{n} random sequences from the input fasta file.
 }
 \examples{
+\dontrun{
 select_sequences(file="data/test.fasta", n=100, randseed=563)
+}
 }

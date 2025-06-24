@@ -45,5 +45,12 @@ This function can work on any operating systems, but it is relatively slow.
 Check out the \code{RandomSeq} function on linux-like systems.
 }
 \examples{
-RandomSeqWindows(fastainfo=fastainfo_df, n=100, fasta_dir="out/fasta", outdir="out/radomseq", randseed=2261, compress=T)
+\dontrun{
+RandomSeqWindows(fastainfo=fastainfo_df, 
+    n=100, 
+    fasta_dir="out/fasta", 
+    outdir="out/radomseq", 
+    randseed=2261, 
+    compress=T)
+}
 }

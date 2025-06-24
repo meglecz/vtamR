@@ -7,7 +7,7 @@
 FilterChimera(
   read_count,
   outfile = "",
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   by_sample = T,
   sample_prop = 0.8,
   abskew = 2,
@@ -21,8 +21,7 @@ asv_id, sample, replicate, read_count, asv.}
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{by_sample}{Boolean: ASVs are flagged as chimera separately
 for each sample.}
@@ -33,6 +32,8 @@ samples among the sample they are present.}
 
 \item{abskew}{Positive integer: a chimera must be at least \code{abskew}
 times less frequent that the parental ASVs.}
+
+\item{sep}{Field separator character in input and output csv files.}
 }
 \value{
 Filtered read_count_df data frame.
@@ -41,6 +42,17 @@ Filtered read_count_df data frame.
 Filter out Chimeras.
 }
 \examples{
-filtered_read_count_df <- FilterChimera(read_count_df, vsearch_path=vsearch_path, by_sample=T, sample_prop=0.7, abskew=4)
-filtered_read_count_df <- FilterChimera(read_count_df, vsearch_path=vsearch_path, by_sample=F, abskew=4)
+\dontrun{
+filtered_read_count_df <- FilterChimera(read_count_df, 
+     vsearch_path=vsearch_path, 
+     by_sample=T, 
+     sample_prop=0.7, 
+     abskew=4
+     )
+filtered_read_count_df <- FilterChimera(read_count_df,
+     vsearch_path=vsearch_path, 
+     by_sample=F, 
+     abskew=4
+     )
+}
 }

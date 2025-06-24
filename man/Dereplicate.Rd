@@ -53,5 +53,7 @@ If updated_asv_list is given, writes an updated file containing
 all asv - asv_id pairs.
 }
 \examples{
+\dontrun{
 Dereplicate(sortedinfo=sortedinfo, dir="data/sorted", asv_list="data/asv_list.csv")
+}
 }

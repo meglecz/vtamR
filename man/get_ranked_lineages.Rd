@@ -30,7 +30,9 @@ genus_taxid,genus,species_taxid,species).
 For each input taxid, get the major taxonomic ranks of their lineage.
 }
 \examples{
+\dontrun{
 taxids <- c(9593,9606)
 tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
 get_ranked_lineages(taxids, tax_df)
+}
 }

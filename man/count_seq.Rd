@@ -22,5 +22,7 @@ For linux-like systems, uses the bash commands grep and wc and it is quick.
 For other operating systems it uses count.fields, and it is slower.
 }
 \examples{
+\dontrun{
 n <- count_seq(file="data/test.fasta")
+}
 }

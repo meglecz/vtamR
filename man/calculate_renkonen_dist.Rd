@@ -16,6 +16,7 @@ Renkonen distance (Real; 0-1) between the two date frames.
 Calculate renkonen distance between two data frames with ASVs and read counts.
 }
 \examples{
+\dontrun{
 df1 <- read_count_df \%>\%
   filter(sample=="tpos1") \%>\%
   group_by(asv) \%>\%
@@ -25,4 +26,5 @@ df2 <- read_count_df \%>\%
   group_by(asv) \%>\%
   summarize(read_count = sum(read_count))
 calculate_renkonen_dist(df1, df2)
+}
 }

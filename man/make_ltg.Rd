@@ -24,6 +24,8 @@ Determine the Lowest Taxonomic Group (LTG) that contains
 phit percentage of the input taxids.
 }
 \examples{
+\dontrun{
 taxids <- c(9593,9606,9606,9606,9606,9606,9606,9606,9606)
 make_ltg(taxids, lineages=lineages, phit=80)
+}
 }

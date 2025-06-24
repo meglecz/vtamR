@@ -21,5 +21,7 @@ sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp
 Calculate the Renkonen distance between pairs of sample-replicates.
 }
 \examples{
+\dontrun{
 MakeRenkonenDistances(read_count_df, compare_all=FALSE)
+}
 }

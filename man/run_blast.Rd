@@ -7,7 +7,7 @@
 run_blast(
   df,
   blast_db,
-  blast_path = "",
+  blast_path = "blastn",
   outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
@@ -20,8 +20,7 @@ run_blast(
 
 \item{blast_db}{BLAST DB including path.}
 
-\item{blast_path}{Character string: path to BLAST executables.
-Can be empty if BLAST in the the PATH.}
+\item{blast_path}{Character string: path to BLAST executables.}
 
 \item{outdir}{Character string: output directory.}
 
@@ -40,5 +39,13 @@ data frame with the BLAST results: qseqid,pident,qcovhsp,staxids
 Run BLAST using ASVs of the input data fram as queries.
 }
 \examples{
-run_blast(df=read_count_df, blast_db="xxxxxxxx", blast_path="", qcov_hsp_perc=80, perc_identity=00, num_threads=4)
+\dontrun{
+run_blast(df=read_count_df, 
+    blast_db="xxxxxxxx", 
+    blast_path="blastn", 
+    qcov_hsp_perc=80, 
+    perc_identity=00, 
+    num_threads=4
+    )
+}
 }

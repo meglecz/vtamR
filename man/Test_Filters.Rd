@@ -6,8 +6,8 @@
 \usage{
 Test_Filters(
   test_dir = "vtamR_test/",
-  vsearch_path = "",
-  swarm_path = "",
+  vsearch_path = "vsearch",
+  swarm_path = "swarm",
   sep = ",",
   delete_tmp = T,
   quiet = T
@@ -18,12 +18,15 @@ Test_Filters(
 
 \item{vsearch_path}{path to vsearch executables}
 
+\item{swarm_path}{Character string: path to swarm executables.}
+
 \item{sep}{separator of the csv files}
 
-\item{delete_tmp}{\link{T/F} Delete output folder}
+\item{delete_tmp}{Boolean. Delete output folder}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
-Run different filtering steps on a test input and compare results to expected (pre-computed) output
+Run different filtering steps on a test input and compare results to expected
+(pre-computed) output
 }

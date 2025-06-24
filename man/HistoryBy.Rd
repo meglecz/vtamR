@@ -29,6 +29,8 @@ in all output files of intermediate filtering steps to retain only
 lines corresponding a value.
 }
 \examples{
+\dontrun{
 HistoryBy(dir="out", feature="asv_id", value=1)
 HistoryBy(dir="out", feature="sample", value="tpos1")
+}
 }

@@ -27,5 +27,7 @@ should not be optimized to keep them
 (e.g. badly amplified species present in the mock).
 }
 \examples{
+\dontrun{
 flag_from_mock(occurrence_df=occurrence_df, mock_composition="data/mock_composition.csv")
+}
 }

@@ -22,6 +22,8 @@ Read sequences from a fasta file.
 Input fasta can be gzip compressed or uncompressed.
 }
 \examples{
+\dontrun{
 read_df <- read_fasta_seq(filename="data/test.fasta", dereplicate=F)
 asv_df <- read_fasta_seq(filename="data/test.fasta", dereplicate=T)
+}
 }

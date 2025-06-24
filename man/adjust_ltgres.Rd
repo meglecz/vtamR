@@ -26,6 +26,8 @@ If the LTG has a higher resolution than the ltgres parameter,
 adjust the LTG and stop lineage at ltgres level.
 }
 \examples{
+\dontrun{
 tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
 adjust_ltgres(taxres_df, tax_df)
+}
 }

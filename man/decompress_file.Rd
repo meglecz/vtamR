@@ -19,5 +19,7 @@ Decompress the input gzipped file.
 If remove_input is TRUE, deleted the compressed input file.
 }
 \examples{
+\dontrun{
 outfile <- decompress_file(filename="data/test.fasta.gz", remove_input=T)
+}
 }

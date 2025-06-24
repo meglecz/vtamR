@@ -12,7 +12,9 @@ Barplot_RenkonenDistance(
 )
 }
 \arguments{
-\item{df}{data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by make_renkonen_distance_matrix)}
+\item{df}{data frame with the following columns:
+sample1,sample2,replicate1,replicate2,renkonen_d
+(can be produced by make_renkonen_distance_matrix)}
 
 \item{sample_types}{file with sample and sample_type (real/mock/negative) columns}
 

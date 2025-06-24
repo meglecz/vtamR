@@ -19,7 +19,11 @@ Error message with elements of \code{list1} that are not on \code{list2}.
 Compare the heading of files to an input vector.
 }
 \examples{
-list1 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fasta")
-list2 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample","sample_type","habitat","replicate","fastq_fw","fastq_rv")
+\dontrun{
+list1 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample",
+"sample_type","habitat","replicate","fasta")
+list2 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample",
+"sample_type","habitat","replicate","fastq_fw","fastq_rv")
 check_heading(list1, list2)
+}
 }

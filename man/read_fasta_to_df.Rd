@@ -24,6 +24,8 @@ Data frame with two columns:
 Read a fasta file to a data frame
 }
 \examples{
+\dontrun{
 read_fasta_to_df(file="data/test.fasta", dereplicate=F)
 read_fasta_to_df(file="data/test.fasta", dereplicate=T)
+}
 }

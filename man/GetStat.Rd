@@ -7,13 +7,17 @@
 GetStat(read_count, stat_df, stage = "", params = NA, outfile = "")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables: asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate, read_count, asv.}
 
-\item{stat_df}{Data frame with the following variables: parameters, asv_count, read_count, read_count, sample_count, sample_replicate_count.}
+\item{stat_df}{Data frame with the following variables: parameters,
+asv_count, read_count, read_count, sample_count, sample_replicate_count.}
 
-\item{stage}{Character string: name of the filtering step. It is used as row name in the stat_df.}
+\item{stage}{Character string: name of the filtering step. It is used as
+row name in the stat_df.}
 
-\item{params}{Character string of concatenated parameter values used for the filtering step.}
+\item{params}{Character string of concatenated parameter values used for
+the filtering step.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
@@ -26,6 +30,17 @@ Get read, variant, sample and replicate counts.
 Complete the stat_df with the above statistics.
 }
 \examples{
-GetStat(read_count_df, stat_df, stage="LFNvariant", params="0.002;by_replicate=TRUE")
-GetStat(read_count_df, stat_df, stage="FilterIndel", params="0.002;by_replicate=TRUE", outfile="out/ReadCount_stat.csv")
+\dontrun{
+GetStat(read_count_df, 
+   stat_df, 
+   stage="LFNvariant", 
+   params="0.002;by_replicate=TRUE"
+   )
+GetStat(read_count_df, 
+   stat_df, 
+   stage="FilterIndel", 
+   params="0.002;by_replicate=TRUE", 
+   outfile="out/ReadCount_stat.csv"
+   )
+}
 }

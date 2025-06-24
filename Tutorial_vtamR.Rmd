@@ -63,9 +63,12 @@ library("seqinr")
 library("dplyr")
 library("tidyr")
 library("ggplot2") 
+### before release
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
+### after release
+library("vtamR")
 ```
 
 **Set general parameters and working directory**

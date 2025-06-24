@@ -6,7 +6,7 @@
 \usage{
 run_swarm(
   read_count_df,
-  swarm_path = "",
+  swarm_path = "swarm",
   num_threads = 1,
   swarm_d = 1,
   fastidious = T,
@@ -14,8 +14,10 @@ run_swarm(
 )
 }
 \arguments{
-\item{swarm_path}{Character string: path to swarm executables.
-Can be empty if swarm is in the PATH.}
+\item{read_count_df}{Data frame with the following variables:
+asv, plate, marker, sample, replicate, read_count.}
+
+\item{swarm_path}{Character string: path to swarm executables.}
 
 \item{num_threads}{Positive integer: Number of CPUs.}
 
@@ -27,9 +29,6 @@ meaning that two ASVs will be grouped if they have d (or less) differences.}
 clustering pass to reduce the number of small clusters.}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
-
-\item{read_count}{Data frame or csv file with the following variables:
-asv, plate, marker, sample, replicate, read_count.}
 }
 \value{
 Data frame with the same structure as the input, but ASVs of
@@ -46,5 +45,7 @@ underlying ASVs.
 \code{Swarm} can run swarm sample by sample or in one go.
 }
 \examples{
+\dontrun{
 run_swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4)
+}
 }

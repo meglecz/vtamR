@@ -27,5 +27,7 @@ Eliminate occurrences (presence of the ASV in a sample-replicate)
 with less than cutoff reads.
 }
 \examples{
+\dontrun{
 filtered_read_count <- LFNreadCount(read_count_df, cutoff=20)
+}
 }

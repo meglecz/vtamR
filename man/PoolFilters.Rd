@@ -23,5 +23,7 @@ Pool all count_read_df data frames, and keep only occurrences
 present in all filters.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- PoolFilters(read_count_df1, read_count_df2)
+}
 }

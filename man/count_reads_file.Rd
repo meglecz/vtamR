@@ -25,6 +25,8 @@ Efficient in linux-like systems, but slow on Windows for large files.
 Can handle gz compressed and uncompressed files, but not zip files.
 }
 \examples{
+\dontrun{
 count_reads_file(file="data/test.fasta", file_type="fasta")
 count_reads_file(file="data/test.fasta", file_type="")
+}
 }

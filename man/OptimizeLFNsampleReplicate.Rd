@@ -36,5 +36,7 @@ The cutoff parameter in LFNsampleReplicate should be bellow the smallest
 proportion in order to keep all expected ASVs in the data set.
 }
 \examples{
+\dontrun{
 OptimizeLFNsampleReplicate(read_count_df, mock_composition="data/mock_composition.csv")
+}
 }

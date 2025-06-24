@@ -14,6 +14,8 @@ asv_id, sample, replicate, read_count, asv.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
+
+\item{sep}{Field separator character in input and output csv files.}
 }
 \value{
 Data frame with the following columns:
@@ -23,5 +25,7 @@ asv, plate, marker, sample, read_count (over replicates)
 Take the mean non-zero read counts over replicates for each sample and asv.
 }
 \examples{
+\dontrun{
 PoolReplicates(read_count_df)
+}
 }

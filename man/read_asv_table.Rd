@@ -7,7 +7,8 @@
 read_asv_table(filename, sep = ",")
 }
 \arguments{
-\item{filename}{name of the input file including full path; columns: asv, seq_id, plate.marker.sample.replicate columns containing read counts}
+\item{filename}{name of the input file including full path;
+columns: asv, seq_id, plate.marker.sample.replicate columns containing read counts}
 
 \item{sep}{separator; default ","}
 }

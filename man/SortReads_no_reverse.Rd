@@ -8,7 +8,7 @@ SortReads_no_reverse(
   fastainfo,
   fasta_dir,
   outdir = "",
-  cutadapt_path = "",
+  cutadapt_path = "cutadapt",
   tag_to_end = T,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -28,7 +28,7 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat
 
 \item{outdir}{Character string: output directory.}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables. Can be empty if cutadapt in the the PATH.}
+\item{cutadapt_path}{Character string: path to cutadapt executables.}
 
 \item{tag_to_end}{Boolean: tags are at the extremity of the reads
 (starting at the first base).}
@@ -67,5 +67,7 @@ The output sortedinfo.csv file is similar to the fastainfo file,
 but the but do not have tag and primer columns.
 }
 \examples{
+\dontrun{
 fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, fasta_dir="data/fasta", outdir="data/sorted", tag_to_end=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=350, sep=",")
+}
 }

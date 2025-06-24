@@ -22,5 +22,7 @@ either the sequences as ID (seq_as_id==TRUE), or arbitrary sequence IDs
 (seq_as_id==FALSE)
 }
 \examples{
+\dontrun{
 write_fasta(sequences=read_count_df$asv, filename="out/seq.fasta", seq_as_id=T)
+}
 }

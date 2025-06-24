@@ -62,5 +62,16 @@ other information according to the input parameters.
 Write csv file with samples in columns, ASVs in lines, read_counts in cells.
 }
 \examples{
-WriteASVtable(read_count_samples_df, outfile="out/asv_table.csv", asv_tax=asv_tax, sortedinfo=sortedinfo_df, add_empty_samples=T, add_sums_by_sample=T, add_sums_by_asv=T, add_expected_asv=T, mock_composition="data/mock_compostion.csv")
+\dontrun{
+WriteASVtable(read_count_samples_df, 
+    outfile="out/asv_table.csv", 
+    asv_tax=asv_tax, 
+    sortedinfo=sortedinfo_df,
+    add_empty_samples=T, 
+    add_sums_by_sample=T,
+    add_sums_by_asv=T, 
+    add_expected_asv=T,
+    mock_composition="data/mock_compostion.csv"
+    )
+}
 }

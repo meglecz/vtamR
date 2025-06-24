@@ -13,5 +13,7 @@ check_dir(dir)
 Check if directory exists, and create it if not.
 }
 \examples{
+\dontrun{
 check_dir(dir="data")
+}
 }

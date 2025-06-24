@@ -6,7 +6,7 @@
 \usage{
 Test_Optimize(
   test_dir = "vtamR_test/",
-  vsearch_path = vsearch_path,
+  vsearch_path = "vsearch",
   delete_tmp = T,
   sep = ",",
   quiet = T
@@ -17,10 +17,13 @@ Test_Optimize(
 
 \item{vsearch_path}{path to vsearch executable}
 
-\item{delete_tmp}{\link{T/F}  Delete output folder}
+\item{delete_tmp}{Boolean.  Delete output folder}
+
+\item{sep}{Field separator character in input and output csv files.}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
-Run OptimizePCRerror, OptimizeLFNsampleReplicate and OptimizeLFNreadCountLFNvariant on a test file and compare the output to expected results
+Run OptimizePCRerror, OptimizeLFNsampleReplicate and
+OptimizeLFNreadCountLFNvariant on a test file and compare the output to expected results
 }

@@ -9,8 +9,8 @@ TrimPrimer(
   fasta_dir = "",
   outdir = "",
   compress = F,
-  cutadapt_path = "",
-  vsearch_path = "",
+  cutadapt_path = "cutadapt",
+  vsearch_path = "vsearch",
   check_reverse = F,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -29,9 +29,9 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,rea
 
 \item{compress}{Boolean: Compress output files to gzip format.}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables. Can be empty if cutadapt in the the PATH.}
+\item{cutadapt_path}{Character string: path to cutadapt executables.}
 
-\item{vsearch_path}{Character string: path to vsearch executables. Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{check_reverse}{Boolean: if TRUE, check the reverse complementary sequences
 of the input fasta as well.}
@@ -59,5 +59,17 @@ Can check both orientations.
 Count the number of reads in the output files.
 }
 \examples{
-fastainfo_df <- TrimPrimer(fastainfo, fasta_dir="data/fasta", outdir="out", compress=T, check_reverse=T, primer_to_end=F, cutadapt_error_rate=0.1, cutadapt_minimum_length=300, cutadapt_maximum_length=350, quiet=T)
+\dontrun{
+fastainfo_df <- TrimPrimer(fastainfo, 
+    fasta_dir="data/fasta", 
+    outdir="out", 
+    compress=T, 
+    check_reverse=T, 
+    primer_to_end=F, 
+    cutadapt_error_rate=0.1, 
+    cutadapt_minimum_length=300, 
+    cutadapt_maximum_length=350, 
+    quiet=T
+    )
+}
 }

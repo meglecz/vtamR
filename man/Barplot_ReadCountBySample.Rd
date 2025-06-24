@@ -17,7 +17,8 @@ Barplot_ReadCountBySample(
 
 \item{sample_types}{file with sample and sample_type (real/mock/negative) columns}
 
-\item{sample_replicate}{\link{T/F} if true barplot is made by sample-replicates, by sample otherwise}
+\item{sample_replicate}{Boolean. If TRUE barplot is made by sample-replicates,
+by sample otherwise}
 
 \item{sep}{separator used in csv files}
 

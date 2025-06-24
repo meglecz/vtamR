@@ -7,7 +7,7 @@
 Swarm(
   read_count,
   outfile = "",
-  swarm_path = "",
+  swarm_path = "swarm",
   num_threads = 1,
   swarm_d = 1,
   fastidious = T,
@@ -23,8 +23,7 @@ asv, plate, marker, sample, replicate, read_count.}
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
-\item{swarm_path}{Character string: path to swarm executables.
-Can be empty if swarm is in the PATH.}
+\item{swarm_path}{Character string: path to swarm executables.}
 
 \item{num_threads}{Positive integer: Number of CPUs.}
 
@@ -56,5 +55,7 @@ Swarm can be run sample by sample (by_sample=T) or for the whole data set
 in one go.
 }
 \examples{
+\dontrun{
 Swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4, by_sample=T)
+}
 }

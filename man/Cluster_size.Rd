@@ -7,7 +7,7 @@
 Cluster_size(
   read_count_samples,
   id = 0.97,
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   outfile = "",
   sep = ","
 )
@@ -18,8 +18,7 @@ asv_id, sample, read_count, asv.}
 
 \item{id}{Real; Minimum identity between asv and centroid.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
@@ -27,11 +26,15 @@ frame if necessary. If empty, no file is written.}
 \item{sep}{Field separator character in input and output csv files.}
 }
 \value{
-read_count_sample data frame, with ASV of the same cluster and sample grouped to the same line
+read_count_sample data frame, with ASV of the same cluster
+and sample grouped to the same line
 }
 \description{
-Cluster ASV in input data frame with the cluster_size command of vsearch. Replace ASV by their centroids and regroup lines by centroid and sample.
+Cluster ASV in input data frame with the cluster_size command of vsearch.
+Replace ASV by their centroids and regroup lines by centroid and sample.
 }
 \examples{
+\dontrun{
 clustered_df <- Cluster_size(read_count_samples_df, id=0.97)
+}
 }

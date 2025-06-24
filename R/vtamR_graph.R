@@ -1,3 +1,16 @@
+#' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
+#' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
+#' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
+#' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
+#' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
+#' @importFrom utils read.csv write.table read.table read.delim count.fields
+#' @importFrom tidyr everything pivot_wider gather separate 
+#' @importFrom tidyselect where
+#' @importFrom rlang sym :=
+#' @importFrom magrittr %>%
+#' @importFrom seqinr splitseq
+NULL
+
 #' Barplot_ReadCountBySample
 #' 
 #' Create barplot with the number of reads in each sample or sample-replicate;
@@ -6,12 +19,18 @@
 #' @param read_count_df data frame with sample, read_count and replicate (optional) columns
 #' @param sample_types file with sample and sample_type (real/mock/negative) columns
 #' @param sep separator used in csv files
-#' @param sample_replicate [T/F] if true barplot is made by sample-replicates, by sample otherwise
+#' @param sample_replicate Boolean. If TRUE barplot is made by sample-replicates,
+#' by sample otherwise
 #' @param x_axis_label_size size of labels in x axis
 #' @export
 #' 
 #' 
-Barplot_ReadCountBySample <- function(read_count_df, sample_types="", sample_replicate=T, sep=",", x_axis_label_size=6){
+Barplot_ReadCountBySample <- function(read_count_df, 
+                                      sample_types="", 
+                                      sample_replicate=T, 
+                                      sep=",", 
+                                      x_axis_label_size=6
+                                      ){
   
   if(sample_types != ""){
     sample_types_df <- read.csv(sample_types, sep=sep)
@@ -21,7 +40,9 @@ Barplot_ReadCountBySample <- function(read_count_df, sample_types="", sample_rep
       unique()
   }else{
     sample_types_df <- data.frame(sample=unique(read_count_df$sample),
-                               sample_type=rep("sample_type", length(unique(read_count_df$sample)))
+                               sample_type=rep("sample_type", 
+                                               length(unique(read_count_df$sample))
+                                               )
                                  )
   }
   
@@ -43,7 +64,8 @@ Barplot_ReadCountBySample <- function(read_count_df, sample_types="", sample_rep
            x = "Sample-Replicate",
            y = "Read Count",
            fill = "Sample Type") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+      # Rotate x-axis labels by 45 degrees
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  
             plot.title = element_text(hjust = 0.5)) + # Center the title
             scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
     
@@ -63,7 +85,8 @@ Barplot_ReadCountBySample <- function(read_count_df, sample_types="", sample_rep
            x = "Sample",
            y = "Read Count",
            fill = "Sample Type") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+      # Rotate x-axis labels by 45 degrees
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  
             plot.title = element_text(hjust = 0.5)) + # Center the title
       scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
   }
@@ -76,7 +99,8 @@ Barplot_ReadCountBySample <- function(read_count_df, sample_types="", sample_rep
 #' If information is given on sample types, bars are colored in function of them
 #' 
 #' @param read_count_df data frame with asv and read_count columns
-#' @param min_read_count filter out ASVs with less than min_read_count reads, before making the graph
+#' @param min_read_count filter out ASVs with less than min_read_count reads, 
+#' before making the graph
 #' @param binwidth width of the read count intervals 
 #' @export
 #' 
@@ -92,7 +116,8 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
 
   
   p <- ggplot(df, aes(x = Number_of_reads)) +
-      geom_histogram(binwidth = binwidth, fill = "blue", color = "blue", aes(y = after_stat(count))) +
+      geom_histogram(binwidth = binwidth, fill = "blue", color = "blue", 
+                     aes(y = after_stat(count))) +
       labs(title = "Distribution of Read Counts",
            x = "Read Count",
            y = "Frequency") +
@@ -105,13 +130,19 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
 #' Create barplot with renkonen distances between pairs of sample-replicates
 #' If information is given on sample types, bars are colored in function of them
 #' 
-#' @param df data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by make_renkonen_distance_matrix)
+#' @param df data frame with the following columns: 
+#' sample1,sample2,replicate1,replicate2,renkonen_d 
+#' (can be produced by make_renkonen_distance_matrix)
 #' @param sample_types file with sample and sample_type (real/mock/negative) columns
 #' @param sep separator used in csv files
 #' @param x_axis_label_size size of labels in x axis
 #' @export
 #' 
-Barplot_RenkonenDistance <- function(df, sample_types="", sep=",", x_axis_label_size=6){
+Barplot_RenkonenDistance <- function(df, 
+                                     sample_types="", 
+                                     sep=",", 
+                                     x_axis_label_size=6
+                                     ){
   #  df <- renkonen_within_df
   
   if(sample_types != ""){
@@ -122,8 +153,10 @@ Barplot_RenkonenDistance <- function(df, sample_types="", sep=",", x_axis_label_
       unique()
   }else{
     sample_types_df <- data.frame(sample=unique(read_count_df$sample),
-                                  sample_type=rep("sample_type", length(unique(read_count_df$sample)))
-    )
+                                  sample_type=rep("sample_type", 
+                                                  length(unique(read_count_df$sample))
+                                                  )
+                                )
   }
   
   df <- left_join(df, sample_types_df, by=c("sample1"="sample")) %>%
@@ -139,7 +172,8 @@ Barplot_RenkonenDistance <- function(df, sample_types="", sep=",", x_axis_label_
          x = "Replicate pair",
          y = "Renkonen distance",
          fill = "Sample Type") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  # Rotate x-axis labels by 45 degrees
+    # Rotate x-axis labels by 45 degrees
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size), 
           plot.title = element_text(hjust = 0.5)) +  # Center the title
     scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
   return(p)
@@ -149,7 +183,9 @@ Barplot_RenkonenDistance <- function(df, sample_types="", sep=",", x_axis_label_
 #' 
 #' Create density plot with Renkonen distances between pairs of sample-replicates
 #' 
-#' @param df data frame with the following columns: sample1,sample2,replicate1,replicate2,renkonen_d (can be produced by MakeRenkonenDistances)
+#' @param df data frame with the following columns: 
+#' sample1,sample2,replicate1,replicate2,renkonen_d 
+#' (can be produced by MakeRenkonenDistances)
 #' @export
 #' 
 DensityPlot_RenkonenDistance <- function(df){

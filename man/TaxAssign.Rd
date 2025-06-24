@@ -8,7 +8,7 @@ TaxAssign(
   asv,
   taxonomy,
   blast_db,
-  blast_path = "",
+  blast_path = "blastn",
   ltg_params = "",
   outfile = "",
   num_threads = 1,
@@ -28,8 +28,7 @@ taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
 
 \item{blast_db}{Character string naming the BLAST database.}
 
-\item{blast_path}{Character string: path to BLAST executable.
-Can be empty if BLAST in the the PATH.}
+\item{blast_path}{Character string: path to BLAST executable.}
 
 \item{ltg_params}{Data frame or csv file with a list of
 percentage of identity values (pid) and associated parameters
@@ -50,8 +49,6 @@ frame if necessary. If empty, no file is written.}
 in the lineage using the name of the next known lower-level taxon, prefixed
 by the current taxonomic level
 (e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).}
-
-\item{outdir}{Character string: output directory.}
 }
 \value{
 Data frame with the following columns:
@@ -81,5 +78,7 @@ further parameters:
 }
 }
 \examples{
+\dontrun{
 TaxAssign(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
+}
 }

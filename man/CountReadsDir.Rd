@@ -42,6 +42,8 @@ Efficient in linux-like systems, but slow on Windows for large files.
 Can handle gz compressed and uncompressed files, but not zip files.
 }
 \examples{
+\dontrun{
 CountReadsDir(dir="out", pattern=".fastq", file_type="fastq")
 CountReadsDir(dir="out", pattern="^mfzr", file_type="fasta")
+}
 }

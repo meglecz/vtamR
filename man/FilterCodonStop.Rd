@@ -25,5 +25,7 @@ Filter out all ASVs, if there is a codon stop in all three reading
 frames of the direct strand.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- FilterCodonStop(read_count_df, genetic_code=5)
+}
 }

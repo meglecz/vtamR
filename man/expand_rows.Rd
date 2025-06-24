@@ -18,5 +18,7 @@ Split the taxid column to different taxids in the input data frame.
 Make one line for each taxid.
 }
 \examples{
+\dontrun{
 expand_rows(row)
+}
 }

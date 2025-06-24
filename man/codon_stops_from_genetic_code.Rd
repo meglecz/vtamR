@@ -17,5 +17,7 @@ Returns a vector of codon stops corresponding the genetic
 code number in \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.
 }
 \examples{
+\dontrun{
 codon_stops_from_genetic_code(genetic_code=1)
+}
 }

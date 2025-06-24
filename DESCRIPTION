@@ -1,7 +1,38 @@
 Package: vtamR
 Type: Package
 Title: Validation and Taxonomic Assigment of Metabarcoding data with R
-Version: 0.0.1.0
+Version: 0.2.0
+Authors@R: 
+    person(given = "Emese", 
+           family = "Meglecz", 
+           email = "emese.meglecz@imbe.fr", 
+           role = c("aut", "cre"))
+Description: VTAM (Gonzalez et al, 2023) rewritten and extended in R. 
+    A set of functions to handle and analyze metabarcoding datasets,
+    including wrappers for external tools such as VSEARCH, BLAST, Cutadapt,
+    and Swarm, with support for pipeline execution and result parsing.
+License: MIT + file LICENSE
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
+LazyData: true
 Encoding: UTF-8
+SystemRequirements: vsearch, NCBI BLAST+, cutadapt, swarm
+Depends: 
+    R (>= 4.0.0)
+Imports:
+    dplyr,
+    seqinr,
+    tidyr,
+    ggplot2,
+    magrittr,
+    rlang,
+    tidyselect
+Suggests:
+    testthat,
+    devtools,
+    roxygen2,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+BugReports: https://github.com/meglecz/vtamR/issues
+URL: https://github.com/meglecz/vtamR

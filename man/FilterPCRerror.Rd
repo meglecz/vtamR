@@ -7,7 +7,7 @@
 FilterPCRerror(
   read_count,
   outfile = "",
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
   by_sample = T,
@@ -22,8 +22,7 @@ asv_id, sample, replicate, read_count, asv.}
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{pcr_error_var_prop}{Real (0-1): if the proportion of read_counts of
 two similar ASVs is less or equal to \code{pcr_error_var_prop},
@@ -37,6 +36,8 @@ separately for each sample.}
 
 \item{sample_prop}{Real (0-1): if by_sample=TRUE, the ASV must be
 flagged as a PCRerror in \code{sample_prop} of the samples to be eliminated.}
+
+\item{sep}{Field separator character in input and output csv files.}
 }
 \value{
 Filtered read_count_df data frame.
@@ -50,6 +51,19 @@ The whole data set can be analyzed at once (\code{by_sample=F})
 or sample by sample.
 }
 \examples{
-filtered_read_count_df <- FilterPCRerror(read_count_df, vsearch_path=vsearch_path, pcr_error_var_prop=0.2, max_mismatch=2, by_sample=T, sample_prop=0.8)
-filtered_read_count_df <- FilterPCRerror(read_count_df, vsearch_path=vsearch_path, pcr_error_var_prop=0.2, max_mismatch=2, by_sample=F)
+\dontrun{
+filtered_read_count_df <- FilterPCRerror(read_count_df, 
+     vsearch_path=vsearch_path, 
+     pcr_error_var_prop=0.2, 
+     max_mismatch=2, 
+     by_sample=T, 
+     sample_prop=0.8
+     )
+filtered_read_count_df <- FilterPCRerror(read_count_df, 
+    vsearch_path=vsearch_path, 
+    pcr_error_var_prop=0.2,
+    max_mismatch=2, 
+    by_sample=F
+    )
+}
 }

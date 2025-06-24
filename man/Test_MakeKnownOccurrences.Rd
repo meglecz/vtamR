@@ -16,7 +16,7 @@ Test_MakeKnownOccurrences(
 
 \item{sep}{separator in csv files}
 
-\item{delete_tmp}{\link{T/F}  Delete output folder}
+\item{delete_tmp}{Boolean.  Delete output folder}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }

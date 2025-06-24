@@ -35,6 +35,8 @@ each group, or if \code{feature} is \code{read_count}, gets the total
 number of reads of each group.
 }
 \examples{
+\dontrun{
 SummarizeBy(dir="vtamR_test/out_mfzr", feature="asv", grouped_by="sample")
 SummarizeBy(dir="vtamR_test/out_mfzr", feature="read_count", grouped_by="sample")
+}
 }

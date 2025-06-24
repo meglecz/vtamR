@@ -21,7 +21,9 @@ in its full lineage (starting by the highest taxonomic level).
 Get the complete taxonomic lineage of each taxID in the input vector.
 }
 \examples{
+\dontrun{
 taxids <- c(9606, 9593)
 tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
 get_lineage_ids(taxids, tax_df=tax_df)
+}
 }

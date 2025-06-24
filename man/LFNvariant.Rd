@@ -48,5 +48,7 @@ Issues a warning if the total read count of an ASV has been reduced
 bellow min_read_count_prop, since it can indicate a to high cutoff value.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- LFNvariant(read_count_df, cutoff=0.005, min_read_count_prop=0.8)
+}
 }

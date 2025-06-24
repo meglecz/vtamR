@@ -39,5 +39,7 @@ If updated_asv_list file name is given, the input asv_list is
 completed by new asvs and asv_ids.
 }
 \examples{
+\dontrun{
 add_ids <- function(read_count_df, asv_list=asv_list)
+}
 }

@@ -9,8 +9,8 @@ TrimPrimer_OneFile(
   outfile,
   primer_fw,
   primer_rv,
-  cutadapt_path = "",
-  vsearch_path = "",
+  cutadapt_path = "cutadapt",
+  vsearch_path = "vsearch",
   check_reverse = F,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -28,11 +28,9 @@ TrimPrimer_OneFile(
 
 \item{primer_rv}{Character string: reverse primer (IUPAC ambiguity codes are accepted).}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables.
-Can be empty if cutadapt in the the PATH.}
+\item{cutadapt_path}{Character string: path to cutadapt executables.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{check_reverse}{Boolean: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}
@@ -62,5 +60,15 @@ Input fasta can be uncompressed or gzip, bz2 compressed file,
 but other compression types are not supported.
 }
 \examples{
-TrimPrimer_OneFile(fasta="data/test.fasta", outfile="out/test_trimmed.fasta", primer_fw="TCCACTAATCACAARGATATTGGTAC", primer_rv="WACTAATCAATTWCCAAATCCTCC", check_reverse=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=400)
+\dontrun{
+TrimPrimer_OneFile(fasta="data/test.fasta", 
+    outfile="out/test_trimmed.fasta", 
+    primer_fw="TCCACTAATCACAARGATATTGGTAC", 
+    primer_rv="WACTAATCAATTWCCAAATCCTCC", 
+    check_reverse=T, 
+    primer_to_end=T, 
+    cutadapt_minimum_length=300,
+    cutadapt_maximum_length=400
+    )
+}
 }

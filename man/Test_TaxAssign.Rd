@@ -7,7 +7,7 @@
 Test_TaxAssign(
   test_dir = "vtamR_test/",
   sep = ",",
-  blast_path = blast_path,
+  blast_path = "blastn",
   blast_db = "vtamR_test/test/db_test/COInr_reduced",
   taxonomy = "vtamR_test/test/db_test/taxonomy_reduced.tsv",
   num_threads = 1,
@@ -23,7 +23,10 @@ Test_TaxAssign(
 
 \item{blast_db}{BLAST database}
 
-\item{taxonomy}{file containing the following columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id (has been merged to another tax_id),taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root)}
+\item{taxonomy}{file containing the following
+columns: tax_id,parent_tax_id,rank,name_txt,old_tax_id (has been merged to another tax_id),
+taxlevel
+(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: domain, 0: root)}
 
 \item{num_threads}{Number of CPUs}
 

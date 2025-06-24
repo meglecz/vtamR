@@ -20,6 +20,7 @@ Fill in missing higher-level taxa in the lineage using the name of the
 next known lower-level taxon, prefixed by the current taxonomic level
 }
 \examples{
+\dontrun{
 df <- data.frame(
 id = 1:3,
 name = c("OTU1", "OTU2", "OTU3"),
@@ -32,4 +33,5 @@ phylum = c("Pseudomonadota", "Oomycota", NA),
 class_taxid = c(1236, NA, 2825),
 class = c("Gammaproteobacteria", NA, "Chrysophyceae"))
 df1 <- fill_NA_in_lineage(df)
+}
 }

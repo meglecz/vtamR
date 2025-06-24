@@ -7,7 +7,7 @@
 Merge(
   fastqinfo,
   fastq_dir,
-  vsearch_path = "",
+  vsearch_path = "vsearch",
   outdir = "",
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
@@ -33,8 +33,7 @@ fastq_fw,fastq_rv}
 \item{fastq_dir}{Character string: directory with input fastq files
 (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
 
-\item{vsearch_path}{Character string: path to vsearch executables.
-Can be empty if vsearch in the the PATH.}
+\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{outdir}{Character string: output directory.}
 
@@ -84,9 +83,31 @@ Data frame corresponding to the output fastainfo.csv file
 \description{
 Merge forward are reverse fastq read pairs and transform the files to fasta.
 Output fasta files can be compressed if compress option is used.
-The output fastainfo.csv file is similar to the fastqinfo file, but the fastq columns are replaced by a fasta column with the name of the output files.
+The output fastainfo.csv file is similar to the fastqinfo file, but the
+fastq columns are replaced by a fasta column with the name of the output files.
 }
 \examples{
-Merge(fastqinfo_df, fastq_dir="data/fastqdir", vsearch_path="C:/Users/Public", outdir="data/fastadir", compress=T, quiet=F)
-Merge(fastqinfo_df, fastq_dir="data/fastqdir", outdir="data/fastadir", fastq_maxdiffs=5, fastq_maxee=2, fastq_minlen=60, fastq_maxlen=100, fastq_minmergelen=80, fastq_maxmergelen=100, fastq_maxns=1, fastq_truncqual=20, fastq_minovlen=20, fastq_allowmergestagger=T)
+\dontrun{
+Merge(fastqinfo_df, 
+   fastq_dir="data/fastqdir", 
+   vsearch_path="C:/Users/Public", 
+   outdir="data/fastadir", 
+   compress=T, 
+   quiet=F
+   )
+Merge(fastqinfo_df, 
+   fastq_dir="data/fastqdir", 
+   outdir="data/fastadir", 
+   fastq_maxdiffs=5, 
+   fastq_maxee=2, 
+   fastq_minlen=60, 
+   fastq_maxlen=100, 
+   fastq_minmergelen=80, 
+   fastq_maxmergelen=100, 
+   fastq_maxns=1, 
+   fastq_truncqual=20, 
+   fastq_minovlen=20,
+   fastq_allowmergestagger=T
+   )
+}
 }

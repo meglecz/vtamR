@@ -7,11 +7,14 @@
 is_linux()
 }
 \value{
-TRUE if "sysname" returned by Sys.info() starts with linux, sunos, darwin, gnu or unix
+TRUE if "sysname" returned by Sys.info() starts with linux,
+sunos, darwin, gnu or unix
 }
 \description{
 Returns TRUE if operating system is linux-like.
 }
 \examples{
+\dontrun{
 os_linux <- is_linux()
+}
 }

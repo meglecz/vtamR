@@ -17,5 +17,7 @@ Create directory if does not exists.
 Add slash to the end of the directory name.
 }
 \examples{
+\dontrun{
 check_dir(dir="data")
+}
 }

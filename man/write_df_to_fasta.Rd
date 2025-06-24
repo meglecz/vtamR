@@ -23,6 +23,10 @@ The output file name's extension is corrected according to the
 compression if necessary.
 }
 \examples{
-df <- data.frame(header=c("seq1", "seq2"),sequence=c("AACTTGTTGTCACTGTAAACTGATGTA", "AACTTGTTGTCACTGTTTGACTGATGTA"))
+\dontrun{
+df <- data.frame(header=c("seq1", "seq2"),
+    sequence=c("AACTTGTTGTCACTGTAAACTGATGTA", "AACTTGTTGTCACTGTTTGACTGATGTA")
+    )
 write_df_to_fasta(df, out="out/test.fasta", compress=T)
+}
 }

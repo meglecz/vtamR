@@ -17,5 +17,7 @@ Delete all 1 from the beginning of a raw, shift the other values and
 replace de missing ones at the end by NA
 }
 \examples{
+\dontrun{
 delete_1_by_row(row)
+}
 }

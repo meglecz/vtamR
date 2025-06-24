@@ -9,7 +9,8 @@ Histogram_ReadCountByVariant(read_count_df, min_read_count = 0, binwidth = 100)
 \arguments{
 \item{read_count_df}{data frame with asv and read_count columns}
 
-\item{min_read_count}{filter out ASVs with less than min_read_count reads, before making the graph}
+\item{min_read_count}{filter out ASVs with less than min_read_count reads,
+before making the graph}
 
 \item{binwidth}{width of the read count intervals}
 }

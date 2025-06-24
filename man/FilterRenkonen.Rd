@@ -25,6 +25,8 @@ renkonen distances above cutoff to most other replicates of the same sample.}
 \item{renkonen_distance_quantile}{Real (0-1): if cutoff value is not given,
 use the \code{renkonen_distance_quantile} to determine cutoff value
 (e.g. with 0.9 as \code{renkonen_distance_quantile}, 90\% of the distances are bellow cutoff)}
+
+\item{sep}{Field separator character in input and output csv files.}
 }
 \value{
 Filtered read_count_df data frame.
@@ -34,6 +36,8 @@ Filter out all replicates that have renkonen distances above \code{cutoff}
 to most other replicates of the same sample.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <- FilterRenkonen(read_count_df, cutoff = 0.6)
 filtered_read_count_df <- FilterRenkonen(read_count_df, renkonen_distance_quantile=0.9)
+}
 }

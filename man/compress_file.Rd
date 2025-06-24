@@ -22,5 +22,7 @@ This function work in all operating systems, but might not work with very large 
 since it reads the file to memory.
 }
 \examples{
+\dontrun{
 outfile <- compress_file(filename="data/test.fasta", remove_input=T)
+}
 }

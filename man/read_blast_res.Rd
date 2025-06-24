@@ -18,5 +18,7 @@ Read BLAST result to a data frame.
 If more than one taxid for a hit, make a separate line for each taxid.
 }
 \examples{
+\dontrun{
 read_blast_res(file="blastout.txt")
+}
 }

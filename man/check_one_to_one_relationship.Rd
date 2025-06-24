@@ -22,5 +22,7 @@ unique ASVs and unique asv_ids in the input data frame.
 The same asv - asv_id combination can appear more than once in the data frame.
 }
 \examples{
+\dontrun{
 check_one_to_one_relationship(df=read_count_df)
+}
 }

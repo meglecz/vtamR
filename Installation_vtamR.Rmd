@@ -13,6 +13,18 @@ output:
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
+If you use this package in your work, please consider citing it:
+```{r citation}
+citation("vtamR")
+
+devtools::check()
+
+results <- rcmdcheck::rcmdcheck()
+results$errors
+results$warnings
+results$notes
+```
+
 vtamR is functional and ready to be tested, but the R package has not yet been released.
 
 At the moment, you have to clone de [github repository](https://github.com/meglecz/vtamR) and install third party programs. Please, report bugs and add comments in the [issues](https://github.com/meglecz/vtamR/issues). The release of a package its on it way.
@@ -21,6 +33,20 @@ At the moment, you have to clone de [github repository](https://github.com/megle
 
 
 ## Install third party programs 
+
+### With conda
+
+```{bash clone}
+cd ~/vtamR
+conda env create -f environment_vtamR.yml
+# conda activate vtamRenv
+# which vsearch
+# which blastn
+# which cutadapt
+# which swarm
+# which R
+```
+
 
 ### Linux
 
@@ -84,6 +110,8 @@ install.packages("seqinr")
 install.packages("dplyr")
 install.packages("tidyr")
 install.packages("ggplot2")
+### once released
+devtools::install_github("meglecz/vtamR")
 ```
 
 ## Test your installation
@@ -142,9 +170,12 @@ library("seqinr")
 library("dplyr")
 library("tidyr")
 library("ggplot2") 
+### During dev
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
+### After dev
+library("vtamR")
 ```
 
 

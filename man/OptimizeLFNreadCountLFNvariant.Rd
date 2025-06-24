@@ -73,5 +73,15 @@ For each parameter combination, the number of FN, TP, and FP is reported.
 Users should chose the parameter setting that minimizes, FN and FP.
 }
 \examples{
-OptimizeLFNreadCountLFNvariant(read_count_df, known_occurrences="data/known_occurrences.csv", min_lfn_read_count_cutoff=10, max_lfn_read_count_cutoff=50, increment_lfn_read_count_cutoff=10, min_lnf_variant_cutoff=0.001, max_lnf_variant_cutoff=0.005, increment_lnf_variant_cutoff=0.001)
+\dontrun{
+OptimizeLFNreadCountLFNvariant(read_count_df, 
+    known_occurrences="data/known_occurrences.csv", 
+    min_lfn_read_count_cutoff=10,
+     max_lfn_read_count_cutoff=50, 
+     increment_lfn_read_count_cutoff=10, 
+     min_lnf_variant_cutoff=0.001, 
+     max_lnf_variant_cutoff=0.005, 
+     increment_lnf_variant_cutoff=0.001
+     )
+}
 }

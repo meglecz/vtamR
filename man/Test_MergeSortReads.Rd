@@ -6,8 +6,8 @@
 \usage{
 Test_MergeSortReads(
   test_dir = "vtamR_test/",
-  vsearch_path = "",
-  cutadapt_path = "",
+  vsearch_path = "vsearch",
+  cutadapt_path = "cutadapt",
   delete_tmp = T,
   sep = ",",
   quiet = T
@@ -20,10 +20,13 @@ Test_MergeSortReads(
 
 \item{cutadapt_path}{path to cutadapt executables}
 
-\item{delete_tmp}{\link{T/F}  Delete output folder}
+\item{delete_tmp}{Boolean.  Delete output folder}
+
+\item{sep}{Field separator character in input and output csv files.}
 
 \item{quiet}{Boolean: print only warnings and errors to STDOUT.}
 }
 \description{
-Compare the Merge and SortReads output (using default values of vtam) of vtamR to pre-computed files obtained by vtam
+Compare the Merge and SortReads output (using default values of vtam) of vtamR
+to pre-computed files obtained by vtam
 }

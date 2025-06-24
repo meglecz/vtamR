@@ -23,5 +23,7 @@ Filter out all ASVs, if the modulo 3 of their length is not the same as
 that of the majority of the ASVs.
 }
 \examples{
+\dontrun{
 filtered_read_count_df <-FilterIndel(read_count_df)
+}
 }

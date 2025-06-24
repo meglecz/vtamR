@@ -31,5 +31,9 @@ Prepare a data fram that list all expected occurrences that are missing
 (False negatives).
 }
 \examples{
-make_missing_occurrences(read_count_samples=read_count_samples_df, mock_composition="data/mock_composition.csv")
+\dontrun{
+make_missing_occurrences(read_count_samples=read_count_samples_df, 
+    mock_composition="data/mock_composition.csv"
+    )
+}
 }
