@@ -1025,8 +1025,8 @@ SortReads <- function(fastainfo,
                                           tag_to_end=tag_to_end, 
                                           primer_to_end=primer_to_end, 
                                           cutadapt_error_rate=cutadapt_error_rate, 
-                                          cutadapt_minimum_length=cutadapt_minimum_length, 
-                                          cutadapt_maximum_length=cutadapt_maximum_length, 
+                                          cutadapt_minimum_length=cutadapt_minimum_length,
+                                          cutadapt_maximum_length=cutadapt_maximum_length,
                                           sep=sep, 
                                           compress=F,
                                           quiet=quiet
@@ -1066,9 +1066,9 @@ SortReads <- function(fastainfo,
                                           tag_to_end=tag_to_end, 
                                           primer_to_end=primer_to_end, 
                                           cutadapt_error_rate=cutadapt_error_rate, 
-                                          cutadapt_minimum_length=cutadapt_minimum_length, 
+                                          cutadapt_minimum_length=cutadapt_minimum_length,
                                           cutadapt_maximum_length=cutadapt_maximum_length,
-                                          sep=sep, 
+                                          sep=sep,
                                           compress=F, 
                                           quiet=quiet
                                           )
@@ -1133,7 +1133,7 @@ SortReads <- function(fastainfo,
   }
   
   sortedinfo_df <- get_read_counts(sortedinfo_df, dir=outdir)
-  write.table(sortedinfo_df, file = file.path(outdir, "sortedinfo.csv"),  row.names = F, sep=sep) 
+  write.table(sortedinfo_df, file = file.path(outdir, "sortedinfo.csv"),  row.names = F, sep=sep)
   
   return(sortedinfo_df)
 }
@@ -1184,7 +1184,15 @@ return(df)
 #' containing trimmed reads.
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, fasta_dir="data/fasta", outdir="data/sorted", tag_to_end=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=350, sep=",")
+#' fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, 
+#'     fasta_dir="data/fasta", 
+#'     outdir="data/sorted", 
+#'     tag_to_end=T, 
+#'     primer_to_end=T, 
+#'     cutadapt_minimum_length=300,
+#'     cutadapt_maximum_length=350, 
+#'     sep=","
+#'     )
 #' }
 #' @export
 #' 

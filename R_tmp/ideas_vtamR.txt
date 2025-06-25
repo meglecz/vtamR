@@ -25,6 +25,9 @@
 	Merge return csv ou df
 	asv_list : it is a filename. Maybe it could be also a data frame.
 	Mock_composition : it is a filename. Maybe it could be also a data frame.
+	
+## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
+Avois warning when running test_filters
 
 
 ## SortRedas pas de Read count in output, check why
@@ -93,6 +96,12 @@
 - add citation
 - use devtools::check() and correct formatting
 - make conda env with thirs party programs
+
+## 2025/06/25 install()
+
+- check on windows
+- make readme, doc, vignette structure
+- correcte license, DESCRIPTION
 
  
 ## Ignore

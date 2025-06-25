@@ -1,0 +1,90 @@
+---
+title: "vtamR Developer notes"
+auhor: Emese Meglecz
+date: "2024-06-24"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+
+```{r}
+### Developer
+# Creating a package
+install.packages(c("devtools", "roxygen2", "usethis", "testthat"))
+usethis::create_package("path/to/your/packageName")
+usethis::use_git()
+usethis::use_github()
+
+#### Write the package
+
+# Replaces roxygenise() and usethis::use_roxygen_md()
+# It is for me to run, not necessary for users who used install(vtamR)
+devtools::document() # generate doc
+
+ # Run checks before releasing a package
+devtools::check()     
+## OR rcmdcheck 
+results <- rcmdcheck::rcmdcheck()
+results$errors
+results$warnings
+results$notes
+
+# Load package without installing; Use during development
+devtools::load_all()   
+
+### to test as a package 
+# Install the package
+devtools::install()   
+# then 
+library("vtamR") 
+# this replaces devtools::load_all() , 
+# no need to create doc separately with devtools::document() or roxigenize
+
+## for user the package can be installed from github, not need for load_all()
+# no need to create doc
+# Install the package from a branch
+devtools::install_github("meglecz/vtamR", ref = "develop")
+# Install a specific version (tag) 
+devtools::install_github("meglecz/vtamR", ref = "v1.0.2") 
+# Install a specific version (commit) 
+devtools::install_github("meglecz/vtamR", ref = "1a2b3c4") 
+# install.packages("pak")
+pak::pak("meglecz/vtamR@develop") # supposed to be more efficient
+
+# create a template for README.Rmd que le develper Edit. It is in .builtignore
+usethis::use_readme_rmd()
+# make a README.Rmd from README.Rmd. This should not be edited manually
+# Weh building the readme, the Rmd and its chunks are executer, so all eaxme codes should work. If not, mahe eval=FALSE
+devtools::build_readme()
+
+# creates vignette and adds modif to DESCRIPTION
+usethis::use_vignette("vtamR")
+# Adapt tutorial_vtamR.Rmd to vignette
+# To Build, Code must execute or use eval=FALSE; 
+# Build execute vtam.Rmd to R and html to doc dir
+# and creates a copy of vtamR.Rmd to doc as well.
+# Ir the vignette needs to be edited, the file in 
+# vignettes/ should be edited and buils again.
+devtools::build_vignettes()
+# view a vignette
+vignette("vtamR") 
+# list vignettes
+vignette(package = "vtamR")
+
+
+### Developer To create a tarball for distributing or archiving
+devtools::build()
+
+
+```
+
+
+
+

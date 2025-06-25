@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 local*
+^LICENSE\.md$
+^README\.Rmd$
+^doc$
+^Meta$

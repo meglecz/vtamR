@@ -68,6 +68,14 @@ but the but do not have tag and primer columns.
 }
 \examples{
 \dontrun{
-fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, fasta_dir="data/fasta", outdir="data/sorted", tag_to_end=T, primer_to_end=T, cutadapt_minimum_length=300,cutadapt_maximum_length=350, sep=",")
+fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, 
+    fasta_dir="data/fasta", 
+    outdir="data/sorted", 
+    tag_to_end=T, 
+    primer_to_end=T, 
+    cutadapt_minimum_length=300,
+    cutadapt_maximum_length=350, 
+    sep=","
+    )
 }
 }

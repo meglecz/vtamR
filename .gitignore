@@ -7,3 +7,6 @@ local*
 .Rproj.user
 Protocol*
 TAS*
+inst/doc
+/doc/
+/Meta/

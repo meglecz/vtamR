@@ -1,52 +1,11 @@
----
-title: "vtamR Installation"
-auhor: Emese Meglecz
-date: "2024-05-28"
-output:
-  html_document:
-    toc: true
-    toc_float: true
----
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
-```
-
-If you use this package in your work, please consider citing it:
-```{r citation}
-citation("vtamR")
-
-devtools::check()
-
-results <- rcmdcheck::rcmdcheck()
-results$errors
-results$warnings
-results$notes
-```
+# vtamR
 
 vtamR is functional and ready to be tested, but the R package has not yet been released.
 
 At the moment, you have to clone de [github repository](https://github.com/meglecz/vtamR) and install third party programs. Please, report bugs and add comments in the [issues](https://github.com/meglecz/vtamR/issues). The release of a package its on it way.
 
-[Tutorial](Tutorial_vtamR.html)
-
 
 ## Install third party programs 
-
-### With conda
-
-```{bash clone}
-cd ~/vtamR
-conda env create -f environment_vtamR.yml
-# conda activate vtamRenv
-# which vsearch
-# which blastn
-# which cutadapt
-# which swarm
-# which R
-```
-
 
 ### Linux
 
@@ -91,10 +50,6 @@ Download binaries and save it a convenient place on your computer (path without 
 
 ## Clone github repository
 
-- Open a terminal
-- Go to directory where you want to install vtamR (e.g. `cd c:/Users/YOUR_USER_NAME`, or `cd ~`)
-- Execute de following commands:
-
 ```{bash clone}
 git clone https://github.com/meglecz/vtamR.git
 cd vtamR
@@ -110,8 +65,6 @@ install.packages("seqinr")
 install.packages("dplyr")
 install.packages("tidyr")
 install.packages("ggplot2")
-### once released
-devtools::install_github("meglecz/vtamR")
 ```
 
 ## Test your installation
@@ -120,47 +73,16 @@ devtools::install_github("meglecz/vtamR")
 
 Adapt the paths according to your installation.
 
-vtam_dir <- "C:/Users/emese/vtamR/"
-setwd(vtam_dir)
-
-```{r set_path}
-### windows
-cutadapt_path <- "C:/Users/Public/cutadapt"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
-blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
-swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
-
+```{r set_path, eval=TRUE}
+cutadapt_path <- "C:/Users/Public"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin"
+blast_path <- "C:/Users/Public/blast-2.14.1+/bin/"
+swarm_path <- "C:/Users/Public/swarm-3.1.4-win-x86_64/bin"
 num_threads <- 4
-sep <- ","
-
-### Bombyx
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn" # v2.10.1+
-swarm_path <- "swarm" # v2.1.12
-
-num_threads <- 8
-sep <- ","
+vtam_dir <- "C:/Users/emese/vtamR"
+setwd(vtam_dir)
 ```
 
-Check if path to binaries are correct
-```{r}
-check_path <- function(path="")
-{
-  # in case ~ is used for home
-    path <- path.expand(path)
-  if (Sys.which(path) == "") {
-    stop("Binary not found at: ", path)
-  }else{
-     cat(path, "OK")
-  }
-}
-
-check_path(path=vsearch_path)
-check_path(path=cutadapt_path)
-check_path(path=swarm_path)
-check_path(path=blast_path)
-```
 
 **Load libraries**
 ```{r load_libraries}
@@ -170,14 +92,9 @@ library("seqinr")
 library("dplyr")
 library("tidyr")
 library("ggplot2") 
-### During dev
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
-# Replaces roxygenise() and usethis::use_roxygen_md()
-devtools::document() # generate doc
-### After dev
-library("vtamR")
 ```
 
 
@@ -189,7 +106,6 @@ Test_MakeKnownOccurrences()
 Test_Optimize(vsearch_path=vsearch_path)
 Test_TaxAssign(blast_path=blast_path, num_threads=num_threads)
 ```
-
 You should see "PASS" after the tested function names.
 
 ## Troubleshooting
@@ -200,13 +116,4 @@ You should see "PASS" after the tested function names.
 Most of the time you need to install separately some of the dependencies using `install.packages("pkg_name")` commands.
 On linux systems, sometimes it is necessary to install applications in a 
 terminal and not in R.
-
-### Update vtamR
-
-```{bash update_vtamR}
-cd vtamR
-git pull
-```
-
-
 
