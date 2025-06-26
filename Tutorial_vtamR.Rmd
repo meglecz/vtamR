@@ -97,8 +97,6 @@ num_threads <- 8
 sep <- ","
 ```
 
-
-
 * Adapt the path to third party programs according to your installation. If the program is in your path, it can be empty (e.g. `cutadapt_path=""`)
 * `num_threads` is the number of CPUs for multithreaded programs
 * `sep` is the separator used in csv files
@@ -121,6 +119,11 @@ blast_db <- "~/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
 * Details are in [Reference database for taxonomic assignments section](#reference-database-for-taxonomic-assignments)
 
 **Set input data**
+The demo files bellow are included in the vtamR package. 
+Use them to check if everything is all right, then adjust 
+them according to your data.
+
+sortedinfo <- system.file("extdata/sortedinfo.csv", package = "vtamR")
 
 ```{r}
 fastq_dir <- "vtamR_test/data"

@@ -1,0 +1,90 @@
+---
+title: "make_mock_composition_file"
+output: rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{How to make a mock_composition file}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Make mock_composition file
+
+The [mock_composition](#mock_composition) file is essential 
+in the `MakeKnownOccurrences` function, that 
+
+- identifies known False Positives (FP) in control samples (mock and negative controls), 
+- identifies missing occurrences (FN = False Negatives in mock samples) 
+- calculates performance metrics (precision and sensitivity) based on control samples.
+- produces a known_occurrences file or data frame with the list of 
+expected occurrences (TP = True Positives) in mock samples and FP in all control samples.
+
+The [known_occurrences](#known_occurrences) file is necessary for running the 
+Optimize functions 
+(`OptimizePCRerror`, `OptimizeLFNsampleReplicate`, `OptimizeLFNreadCountLFNvariant`)
+to find the best parameter values for the LFN filters 
+(`LFNsampleReplicate`, `LFNvariant`, `LFNreadCount`) and `FilterPCRerror`.
+
+The [mock_composition](#mock_composition) is also be useful, although not 
+essential for the `WriteASVtable` function if you wish to add a column in 
+the output asv_table to easily find
+expected occurrences in each mock sample in the results of your analyses.
+
+I show you here how to identify the expected mock ASV form your data.
+
+**Assign taxa to ASVs**
+
+See more details of taxonomic assignment [here](#taxassign).
+```{r}
+outfile <- file.path(outdir, "ASV_taxa.csv")
+asv_tax <- TaxAssign(asv=read_count_df, taxonomy=taxonomy, blast_db=blast_db, blast_path=blast_path, num_threads=num_threads, outfile=outfile)
+```
+
+**Pool replicates by sample**
+
+See details of PoolReplicates [here](#poolreplicates).
+```{r}
+tmp_read_count_samples_df <- PoolReplicates(read_count_df, outfile=outfile, sep=sep)
+```
+
+**Make an ASV table with taxonomic assignments**
+
+Make a data frame with ASVs and read counts in the [wide format](#glossary) and add the total number of reads for each ASV, the number of samples they are present and their taxonomic assignment. This format is easier to read for humans, than the `read_count_df`.
+
+See details of `WriteASVtable` [here](#print-output).
+```{r}
+sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+tmp_asv_table <- WriteASVtable(tmp_read_count_samples_df, sortedinfo=sortedinfo, add_sums_by_asv=T, asv_tax=asv_tax)
+```
+
+If there are many samples it might be better to select only mock samples and pertinent columns.
+```{r}
+asv_tpos1 <- tmp_asv_table %>%
+  select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, phylum, class, order, family, genus, species, asv) %>%
+  filter(tpos1 > 0) %>%
+  arrange(desc(tpos1))
+```
+
+In this mock sample, there should be the following 6 species:
+
+- *Caenis pusilla*
+- *Rheocricotopus*
+- *Phoxinus phoxinus*
+- *Hydropsyche pellucidula*
+- *Synorthocladius semivirens*
+- *Baetis rhodani*
+
+We can see that in spite of all the filtering we have done so far, there are still a lot of unexpected occurrences in this sample. Most of them have low read counts and could be filtered out by [Low Frequency Noise Filters](#glossary)
+
+
+You can now pick the correct sequences of the expected ASVs in each mock and make the [mock_composition](#mock_composition) file.
+

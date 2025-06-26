@@ -70,8 +70,8 @@ usethis::use_vignette("vtamR")
 # To Build, Code must execute or use eval=FALSE; 
 # Build execute vtam.Rmd to R and html to doc dir
 # and creates a copy of vtamR.Rmd to doc as well.
-# Ir the vignette needs to be edited, the file in 
-# vignettes/ should be edited and buils again.
+# It the vignette needs to be edited, the file in 
+# vignettes/ should be edited and built again.
 devtools::build_vignettes()
 # view a vignette
 vignette("vtamR") 
