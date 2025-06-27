@@ -9,7 +9,7 @@ read_fasta_seq(filename = filename, dereplicate = F)
 \arguments{
 \item{filename}{Character string: input fasta file name including full path.}
 
-\item{dereplicate}{Boolean: If TRUE, return ASVs with read counts.}
+\item{dereplicate}{logical: If TRUE, return ASVs with read counts.}
 }
 \value{
 Data frame with one read in each line (dereplicate==F), or a data frame with

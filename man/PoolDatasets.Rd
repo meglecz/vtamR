@@ -27,12 +27,13 @@ completed by centroid_id and centroid columns.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{mean_over_markers}{Boolean: If TRUE, the mean read count is calculated
+\item{mean_over_markers}{logical: If TRUE, the mean read count is calculated
 over different ASVs of each cluster. Sum otherwise.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with asv_id, sample, read_count, asv columns.

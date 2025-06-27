@@ -9,7 +9,7 @@ compress_file(filename = "", remove_input = F)
 \arguments{
 \item{filename}{Character string: uncompressed input file.}
 
-\item{remove_input}{Boolean: Remove the input uncompressed file.}
+\item{remove_input}{logical: Remove the input uncompressed file.}
 }
 \value{
 Character string: output gz compressed file.

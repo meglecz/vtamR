@@ -23,10 +23,10 @@ frame if necessary. If empty, no file is written.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{by_sample}{Boolean: ASVs are flagged as chimera separately
+\item{by_sample}{logical: ASVs are flagged as chimera separately
 for each sample.}
 
-\item{sample_prop}{Boolean: if by_sample=TRUE, the ASV deleted if
+\item{sample_prop}{logical: if by_sample=TRUE, the ASV deleted if
 they are flagged as chimera in at least \code{sample_prop} of the
 samples among the sample they are present.}
 

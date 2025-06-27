@@ -24,7 +24,8 @@ Test_MergeSortReads(
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \description{
 Compare the Merge and SortReads output (using default values of vtam) of vtamR

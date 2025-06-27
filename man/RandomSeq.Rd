@@ -33,11 +33,12 @@ input fasta files}
 0 (default value) means to use a pseudo-random seed.
 A given non-zero seed produces always the same result.}
 
-\item{compress}{Boolean: Compress output files to gzip format.}
+\item{compress}{logical: Compress output files to gzip format.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 The input data frame with updated file names and read counts.

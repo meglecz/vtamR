@@ -11,7 +11,7 @@ write_fasta(sequences, filename, seq_as_id = F)
 
 \item{filename}{Character string: name of the output fasta file.}
 
-\item{seq_as_id}{Boolean: Use sequences as seqID.}
+\item{seq_as_id}{logical: Use sequences as seqID.}
 }
 \value{
 fasta file

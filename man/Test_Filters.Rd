@@ -24,7 +24,8 @@ Test_Filters(
 
 \item{delete_tmp}{Boolean. Delete output folder}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \description{
 Run different filtering steps on a test input and compare results to expected

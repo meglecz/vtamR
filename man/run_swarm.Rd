@@ -25,10 +25,11 @@ asv, plate, marker, sample, replicate, read_count.}
 Maximum number of differences allowed between two ASVs,
 meaning that two ASVs will be grouped if they have d (or less) differences.}
 
-\item{fastidious}{Boolean: when working with d = 1, perform a second
+\item{fastidious}{logical: when working with d = 1, perform a second
 clustering pass to reduce the number of small clusters.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the same structure as the input, but ASVs of

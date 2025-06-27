@@ -10,7 +10,7 @@ read_fasta_to_df(file, dereplicate = F)
 \item{file}{Character string: name of the input fasta file.
 Can be  uncompressed or compressed in gz format (zip files are not supported).}
 
-\item{dereplicate}{Boolean: If TRUE returns a data frame with asv and
+\item{dereplicate}{logical: If TRUE returns a data frame with asv and
 read_count columns. If FALSE data frame with header and sequence columns.}
 }
 \value{

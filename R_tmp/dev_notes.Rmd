@@ -41,7 +41,7 @@ devtools::load_all()
 
 ### to test as a package 
 # Install the package
-devtools::install()   
+   
 # then 
 library("vtamR") 
 # this replaces devtools::load_all() , 
@@ -61,7 +61,7 @@ pak::pak("meglecz/vtamR@develop") # supposed to be more efficient
 # create a template for README.Rmd que le develper Edit. It is in .builtignore
 usethis::use_readme_rmd()
 # make a README.Rmd from README.Rmd. This should not be edited manually
-# Weh building the readme, the Rmd and its chunks are executer, so all eaxme codes should work. If not, mahe eval=FALSE
+# When building the readme, the Rmd and its chunks are executer, so all eaxme codes should work. If not, mahe eval=FALSE
 devtools::build_readme()
 
 # creates vignette and adds modif to DESCRIPTION
@@ -74,7 +74,7 @@ usethis::use_vignette("vtamR")
 # vignettes/ should be edited and built again.
 devtools::build_vignettes()
 # view a vignette
-vignette("vtamR") 
+vignette("installation") 
 # list vignettes
 vignette(package = "vtamR")
 

@@ -32,10 +32,10 @@ TrimPrimer_OneFile(
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{check_reverse}{Boolean: if TRUE, check the reverse complementary
+\item{check_reverse}{logical: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}
 
-\item{primer_to_end}{Boolean: primers follow directly the tags
+\item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
 \item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
@@ -47,7 +47,8 @@ trimmed sequence.}
 \item{cutadapt_maximum_length}{Positive integer: maximum length of the
 trimmed sequence.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 NA; Produces an output fasta file.

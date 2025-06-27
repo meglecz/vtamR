@@ -24,7 +24,8 @@ the updated asv - asv_id pairs. Optional.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with asv_id column added to the input data frame.

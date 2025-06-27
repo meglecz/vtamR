@@ -12,7 +12,7 @@ make_adapter_fasta(fastainfo_df, fasta_file, tag_to_end = T, outdir = "")
 \item{fasta_file}{Character string: fasta file that needs
 to be demultiplexed (present in the fasta column of fastainfo_df).}
 
-\item{tag_to_end}{Boolean: tags are at the extremity of the reads.}
+\item{tag_to_end}{logical: tags are at the extremity of the reads.}
 
 \item{outdir}{Character string: output directory.}
 }

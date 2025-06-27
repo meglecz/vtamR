@@ -26,7 +26,8 @@ Imports:
     ggplot2,
     magrittr,
     rlang,
-    tidyselect
+    tidyselect,
+    utils
 Suggests:
     testthat,
     devtools,

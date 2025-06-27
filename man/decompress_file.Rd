@@ -9,7 +9,7 @@ decompress_file(filename = "", remove_input = F)
 \arguments{
 \item{filename}{Character string: gzip compressed input file.}
 
-\item{remove_input}{Boolean: Remove the input compressed file.}
+\item{remove_input}{logical: Remove the input compressed file.}
 }
 \value{
 Character string: output decompressed file.

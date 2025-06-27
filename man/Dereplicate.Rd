@@ -33,7 +33,8 @@ between different data sets.}
 \item{updated_asv_list}{Character string naming of the output file
 with updated asv_id - asv pairs. Optional.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the following columns:

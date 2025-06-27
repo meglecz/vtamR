@@ -30,7 +30,8 @@ run_blast(
 
 \item{num_threads}{Positive integer: number of threads.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 data frame with the BLAST results: qseqid,pident,qcovhsp,staxids

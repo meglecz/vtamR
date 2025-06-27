@@ -20,7 +20,8 @@ NULL
 #' @param vsearch_path path to vsearch executables
 #' @param cutadapt_path path to cutadapt executables
 #' @param delete_tmp Boolean.  Delete output folder
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @param sep Field separator character in input and output csv files.
 #' @export
 #'
@@ -202,7 +203,8 @@ Test_MergeSortReads <- function(test_dir="vtamR_test/",
 #' @param swarm_path Character string: path to swarm executables. 
 #' @param sep separator of the csv files
 #' @param delete_tmp Boolean. Delete output folder
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @export
 #'
 
@@ -637,7 +639,8 @@ compare_df_sample<- function(df1, df2, step=""){
 #' @param blast_db BLAST database
 #' @param blast_path path to BLAST executable
 #' @param num_threads Number of CPUs
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @export
 #'
 
@@ -702,7 +705,8 @@ Test_TaxAssign <- function(test_dir="vtamR_test/",
 #' @param test_dir directory of the test files (Default "~/vtamR/vtamR_test/")
 #' @param sep separator in csv files
 #' @param delete_tmp Boolean.  Delete output folder
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @export
 #'
 
@@ -797,7 +801,8 @@ Test_MakeKnownOccurrences <- function(test_dir="vtamR_test/",
 #' @param vsearch_path path to vsearch executable
 #' @param delete_tmp Boolean.  Delete output folder
 #' @param sep Field separator character in input and output csv files.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @export
 #'
 Test_Optimize <- function(test_dir="vtamR_test/", 

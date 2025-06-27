@@ -11,7 +11,7 @@ write_df_to_fasta(df, out, compress = F)
 
 \item{out}{Character string: name of the output file.}
 
-\item{compress}{Boolean: Compress output files to gzip format.}
+\item{compress}{logical: Compress output files to gzip format.}
 }
 \value{
 Character string: name of the output file updated according to the compression.

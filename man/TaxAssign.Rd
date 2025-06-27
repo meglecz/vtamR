@@ -43,7 +43,8 @@ frame if necessary. If empty, no file is written.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 
 \item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
 in the lineage using the name of the next known lower-level taxon, prefixed

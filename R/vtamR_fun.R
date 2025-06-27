@@ -169,8 +169,9 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' Staggered pairs are pairs where the 3’ end of the reverse read has an 
 #' overhang to the left of the 5’ end of the forward read.
 #' @param sep Field separator character in input and output csv files.
-#' @param compress Boolean: Compress output files to gzip format.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param compress logical: Compress output files to gzip format.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame corresponding to the output fastainfo.csv file
 #' @examples
 #' \dontrun{
@@ -356,7 +357,7 @@ is_linux <- function(){
 #' If remove_input is TRUE, deleted the compressed input file.
 #' 
 #' @param filename Character string: gzip compressed input file.
-#' @param remove_input Boolean: Remove the input compressed file.
+#' @param remove_input logical: Remove the input compressed file.
 #' @returns Character string: output decompressed file.
 #' @examples
 #' \dontrun{
@@ -393,7 +394,7 @@ decompress_file <- function(filename="", remove_input=F){
 #' since it reads the file to memory.
 #' 
 #' @param filename Character string: uncompressed input file.
-#' @param remove_input Boolean: Remove the input uncompressed file.
+#' @param remove_input logical: Remove the input uncompressed file.
 #' @returns Character string: output gz compressed file.
 #' @examples
 #' \dontrun{
@@ -434,9 +435,10 @@ compress_file <- function(filename="", remove_input=F){
 #' @param randseed Positive integer: seed for random sampling. 
 #' 0 (default value) means to use a pseudo-random seed. 
 #' A given non-zero seed produces always the same result.
-#' @param compress Boolean: Compress output files to gzip format.
+#' @param compress logical: Compress output files to gzip format.
 #' @param sep Field separator character in input and output csv files.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns The input data frame with updated file names and read counts.
 #' @examples
 #' \dontrun{
@@ -671,9 +673,9 @@ count_seq <- function(file) {
 #' @param primer_rv Character string: reverse primer (IUPAC ambiguity codes are accepted).
 #' @param vsearch_path Character string: path to vsearch executables. 
 #' @param cutadapt_path Character string: path to cutadapt executables. 
-#' @param check_reverse Boolean: if TRUE, check the reverse complementary 
+#' @param check_reverse logical: if TRUE, check the reverse complementary 
 #' sequences of the input fasta as well.
-#' @param primer_to_end Boolean: primers follow directly the tags 
+#' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
 #' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
@@ -681,7 +683,8 @@ count_seq <- function(file) {
 #' trimmed sequence.
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns
 #' NA; Produces an output fasta file.
 #' @examples
@@ -821,20 +824,21 @@ TrimPrimer_OneFile <- function(fasta,
 #' @param fastainfo Data frame of csv file with the following columns: 
 #' tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count
 #' @param fasta_dir Character string: directory of the fasta files to be trimmed
-#' @param compress Boolean: Compress output files to gzip format.
+#' @param compress logical: Compress output files to gzip format.
 #' @param outdir Character string: output directory for the trimmed fasta files.
 #' @param cutadapt_path Character string: path to cutadapt executables. 
 #' @param vsearch_path Character string: path to vsearch executables.
-#' @param check_reverse Boolean: if TRUE, check the reverse complementary sequences 
+#' @param check_reverse logical: if TRUE, check the reverse complementary sequences 
 #' of the input fasta as well.
-#' @param primer_to_end Boolean: primers follow directly the tags (no heterogeneity spacer).
+#' @param primer_to_end logical: primers follow directly the tags (no heterogeneity spacer).
 #' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
 #' @param cutadapt_minimum_length Positive integer: minimum length of the 
 #' trimmed sequence.
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns fastainfo_df the input data frame, with updated files names and sequence counts.
 #' @examples
 #' \dontrun{
@@ -944,11 +948,11 @@ TrimPrimer <- function(fastainfo,
 #' @param vsearch_path Character string: path to vsearch executables. 
 #' @param cutadapt_path Character string: path to cutadapt executables. 
 #' @param outdir Character string: output directory.
-#' @param check_reverse Boolean: if TRUE, check the reverse complementary 
+#' @param check_reverse logical: if TRUE, check the reverse complementary 
 #' sequences of the input fasta as well.
-#' @param tag_to_end Boolean: tags are at the extremity of the reads 
+#' @param tag_to_end logical: tags are at the extremity of the reads 
 #' (starting at the first base).
-#' @param primer_to_end Boolean: primers follow directly the tags 
+#' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
 #' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
@@ -957,8 +961,9 @@ TrimPrimer <- function(fastainfo,
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
 #' @param sep Field separator character in input and output csv files.
-#' @param compress Boolean: Compress output files to gzip format.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param compress logical: Compress output files to gzip format.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame corresponding to the output sortedinfo.csv file 
 #' and one fasta file for each tag combination for each input fasta file, 
 #' containing trimmed reads.
@@ -1166,9 +1171,9 @@ return(df)
 #' (listed in the fasta columns of fastainfo).
 #' @param cutadapt_path Character string: path to cutadapt executables.
 #' @param outdir Character string: output directory.
-#' @param tag_to_end Boolean: tags are at the extremity of the reads 
+#' @param tag_to_end logical: tags are at the extremity of the reads 
 #' (starting at the first base).
-#' @param primer_to_end Boolean: primers follow directly the tags 
+#' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
 #' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
@@ -1177,8 +1182,9 @@ return(df)
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
 #' @param sep Field separator character in input and output csv files.
-#' @param compress Boolean: Compress output files to gzip format.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param compress logical: Compress output files to gzip format.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns  Data frame corresponding to the output sortedinfo.csv file 
 #' and one fasta file for each tag combination for each input fasta file, 
 #' containing trimmed reads.
@@ -1349,7 +1355,7 @@ SortReads_no_reverse <- function(fastainfo,
 #' @param fasta_file Character string: fasta file that needs 
 #' to be demultiplexed (present in the fasta column of fastainfo_df).
 #' @param outdir Character string: output directory.
-#' @param tag_to_end Boolean: tags are at the extremity of the reads.
+#' @param tag_to_end logical: tags are at the extremity of the reads.
 #' @returns tags.fasta file containing the tag combinations present in fasta_file. 
 #' NA if all tags are NA in fastainfo_df for fasta_file.
 #' @examples 
@@ -1479,7 +1485,8 @@ reverse_complement <- function(sequence){
 #' between different data sets.
 #' @param updated_asv_list Character string naming of the output file 
 #' with updated asv_id - asv pairs. Optional.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with the following columns:
 #' asv_id,sample,replicate,read_count,asv
 #' @examples
@@ -1571,7 +1578,8 @@ Dereplicate <- function(sortedinfo,
 #' @param updated_asv_list Character string: output file with 
 #' the updated asv - asv_id pairs. Optional.
 #' @param sep Field separator character in input and output csv files.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with asv_id column added to the input data frame.
 #' @examples
 #' \dontrun{
@@ -1633,7 +1641,7 @@ add_ids <- function(read_count_df,
 #' Input fasta can be gzip compressed or uncompressed.
 #' 
 #' @param filename Character string: input fasta file name including full path.
-#' @param dereplicate Boolean: If TRUE, return ASVs with read counts.
+#' @param dereplicate logical: If TRUE, return ASVs with read counts.
 #' @returns Data frame with one read in each line (dereplicate==F), or a data frame with 
 #' asv and read_count columns (dereplicate==T).
 #' @examples
@@ -1693,15 +1701,16 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @param swarm_path Character string: path to swarm executables. 
-#' @param by_sample Boolean: run swarm separately for each sample.
+#' @param by_sample logical: run swarm separately for each sample.
 #' @param num_threads Positive integer: Number of CPUs.
 #' @param swarm_d Positive integer: d parameter for swarm.
 #' Maximum number of differences allowed between two ASVs, 
 #' meaning that two ASVs will be grouped if they have d (or less) differences.
-#' @param fastidious Boolean: when working with d = 1, perform a second 
+#' @param fastidious logical: when working with d = 1, perform a second 
 #' clustering pass to reduce the number of small clusters.
 #' @param sep Field separator character in input and output csv files.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with the same structure as the input, but ASVs of 
 #' the same cluster pooled to one row.
 #' @examples
@@ -1791,9 +1800,10 @@ Swarm <- function(read_count,
 #' @param swarm_d Positive integer: d parameter for swarm.
 #' Maximum number of differences allowed between two ASVs, 
 #' meaning that two ASVs will be grouped if they have d (or less) differences.
-#' @param fastidious Boolean: when working with d = 1, perform a second 
+#' @param fastidious logical: when working with d = 1, perform a second 
 #' clustering pass to reduce the number of small clusters.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with the same structure as the input, but ASVs of 
 #' the same cluster pooled to one row.
 #' @examples
@@ -2132,7 +2142,7 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' @param cutoff Real (0-1): minimum proportion of the read count of
 #'  an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
 #'  the occurrence is deleted.
-#' @param by_replicate Boolean: Compare read count of the occurrence to the 
+#' @param by_replicate logical: Compare read count of the occurrence to the 
 #' read counts of the ASV-replicate.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
@@ -2490,7 +2500,7 @@ FilterCodonStop <- function(read_count, outfile="", genetic_code=5, sep=","){
 #'  
 #' @param sequences Vector of sequences.
 #' @param filename Character string: name of the output fasta file.
-#' @param seq_as_id Boolean: Use sequences as seqID.
+#' @param seq_as_id logical: Use sequences as seqID.
 #' @returns fasta file
 #' @examples
 #' \dontrun{
@@ -2640,7 +2650,7 @@ flagPCRerror_vsearch <- function(unique_asv_df,
 #' the less abundant is flagged as a PCR error.
 #' @param max_mismatch Positive integer: maximum number of mismatches 
 #' (gaps included) to consider two ASVs as similar
-#' @param by_sample Boolean: if TRUE ASVs are flagged as an PCR error 
+#' @param by_sample logical: if TRUE ASVs are flagged as an PCR error 
 #' separately for each sample.
 #' @param sample_prop Real (0-1): if by_sample=TRUE, the ASV must be 
 #' flagged as a PCRerror in `sample_prop` of the samples to be eliminated.
@@ -2843,9 +2853,9 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2){
 #' asv_id, sample, replicate, read_count, asv.
 #' @param abskew Positive integer: a chimera must be at least `abskew` 
 #' times less frequent that the parental ASVs.
-#' @param by_sample Boolean: ASVs are flagged as chimera separately 
+#' @param by_sample logical: ASVs are flagged as chimera separately 
 #' for each sample.
-#' @param sample_prop Boolean: if by_sample=TRUE, the ASV deleted if 
+#' @param sample_prop logical: if by_sample=TRUE, the ASV deleted if 
 #' they are flagged as chimera in at least `sample_prop` of the 
 #' samples among the sample they are present.
 #' @param outfile Character string: csv file name to print the output data 
@@ -2987,7 +2997,7 @@ calculate_renkonen_dist <- function(df1, df2){
 #' Calculate the Renkonen distance between pairs of sample-replicates.
 #' 
 #' @param read_count_df Data frame with asv, sample, replicate, and read_count columns.
-#' @param compare_all Boolean: if TRUE calculate the Renkonen distance among all pairs 
+#' @param compare_all logical: if TRUE calculate the Renkonen distance among all pairs 
 #' of sample-replicates. Only between replicates of the same sample otherwise.
 #' @returns Data frame with the following columns: 
 #' sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp
@@ -3227,7 +3237,8 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' @param sep Field separator character in input and output csv files.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with the following columns:
 #' asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
 #' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
@@ -3413,7 +3424,8 @@ return(taxres_df)
 #' @param qcov_hsp_perc Real between 0 and 100: minimum query coverage.
 #' @param perc_identity Real between 0 and 100: minimum percentage of identity.
 #' @param num_threads Positive integer: number of threads.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns data frame with the BLAST results: qseqid,pident,qcovhsp,staxids
 #' @examples
 #' \dontrun{
@@ -3942,13 +3954,13 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' If given, the output is completed with taxonomic assignment of each ASV.
 #' @param sortedinfo Data frame or csv file with columns: sample, sample_type.
 #' Only necessary if add_empty_samples==T or add_expected_asv==T.
-#' @param add_empty_samples Boolean: add a column for each samples 
+#' @param add_empty_samples logical: add a column for each samples 
 #' in the original data set, even if they do not have reads after filtering.
-#' @param add_sums_by_sample Boolean: add a line with the total number of reads
+#' @param add_sums_by_sample logical: add a line with the total number of reads
 #'  in each sample, and another with the number of ASVs in each sample.
-#' @param add_sums_by_asv Boolean: add a column with the total number of reads 
+#' @param add_sums_by_asv logical: add a column with the total number of reads 
 #' for each ASV, and another with the number of samples, where the ASV is present.
-#' @param add_expected_asv Boolean: add a column for each mock sample in which 
+#' @param add_expected_asv logical: add a column for each mock sample in which 
 #' keep and tolerate ASVs are flagged.
 #' @param mock_composition Data frame or CSV file with the following columns: 
 #' sample,action,asv. Action can take the following values: keep/tolerate.
@@ -4802,11 +4814,12 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' @param increment_lnf_variant_cutoff  Real (0-1): values from 
 #' `min_lnf_variant_cutoff` to `max_lnf_variant_cutoff` are tested by 
 #' `increment_lnf_variant_cutoff` increment. 
-#' @param by_replicate Boolean: : compare read count of the occurrence to the 
+#' @param by_replicate logical: : compare read count of the occurrence to the 
 #' read counts of the ASV-replicate in `LFNvariant` function.
 #' @param min_replicate_number Positive integer: minimum number of replicates 
 #' for `FilterMinReplicate`.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns data frame with the following columns: 
 #' lfn_read_count_cutoff, lnf_variant_cutoff, FN, TP, FP.
 #' @examples
@@ -4963,10 +4976,11 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
 #' containing the same information as the concatenated input files, 
 #' completed by centroid_id and centroid columns.
 #' @param sep Field separator character in input and output csv files.
-#' @param mean_over_markers Boolean: If TRUE, the mean read count is calculated 
+#' @param mean_over_markers logical: If TRUE, the mean read count is calculated 
 #' over different ASVs of each cluster. Sum otherwise.
 #' @param vsearch_path Character string: path to vsearch executables. 
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with asv_id, sample, read_count, asv columns.
 #' @examples
 #' \dontrun{
@@ -5318,7 +5332,7 @@ SummarizeBy <- function(dir, feature, grouped_by, outfile="", sep=","){
 #'  
 #' @param df input data frame with the following columns: header, sequence.
 #' @param out Character string: name of the output file.
-#' @param compress Boolean: Compress output files to gzip format.
+#' @param compress logical: Compress output files to gzip format.
 #' @returns Character string: name of the output file updated according to the compression.
 #' @examples
 #' \dontrun{
@@ -5402,7 +5416,7 @@ select_sequences <- function(file, n=100, randseed=0){
 #'  
 #' @param file Character string: name of the input fasta file.
 #' Can be  uncompressed or compressed in gz format (zip files are not supported).
-#' @param dereplicate Boolean: If TRUE returns a data frame with asv and 
+#' @param dereplicate logical: If TRUE returns a data frame with asv and 
 #' read_count columns. If FALSE data frame with header and sequence columns.
 #' @returns Data frame with two columns: 
 #' * headers and sequences if dereplicate==FALSE
@@ -5471,7 +5485,7 @@ read_fasta_to_df <- function(file, dereplicate=F){
 #' @param randseed Positive integer: seed for random sampling. 
 #' 0 by default means to use a pseudo-random seed. 
 #' A given non-zero seed produces always the same result.
-#' @param compress Boolean: Compress output files to gzip format.
+#' @param compress logical: Compress output files to gzip format.
 #' @param sep Field separator character in input and output csv files.
 #' @returns Updated input data frame with file name extensions adjusted, 
 #' if necessary and read_counts updated.
@@ -5640,7 +5654,8 @@ count_reads_file <- function(file, file_type=""){
 #' @param sep Field separator character in input and output csv files.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
-#' @param quiet Boolean: print only warnings and errors to STDOUT.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Data frame with 2 columns: filename, read_count.
 #' @examples
 #' \dontrun{
@@ -5699,7 +5714,8 @@ CountReadsDir<- function(dir,
 #' "fastqinfo", "fastainfo", "sortedinfo", "mock_composition", "known_occurrences", 
 #' "read_count", "read_count_sample", "asv_list".
 #' @param sep Field separator character in input and output csv files.
-#' @param quiet Boolean: print only errors.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 #' @returns Error message if problem with the files and stop the prorgam.
 #' @examples
 #' \dontrun{

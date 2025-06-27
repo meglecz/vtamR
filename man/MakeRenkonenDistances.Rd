@@ -9,7 +9,7 @@ MakeRenkonenDistances(read_count_df, compare_all = FALSE)
 \arguments{
 \item{read_count_df}{Data frame with asv, sample, replicate, and read_count columns.}
 
-\item{compare_all}{Boolean: if TRUE calculate the Renkonen distance among all pairs
+\item{compare_all}{logical: if TRUE calculate the Renkonen distance among all pairs
 of sample-replicates. Only between replicates of the same sample otherwise.}
 }
 \value{

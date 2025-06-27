@@ -30,10 +30,10 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat
 
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
-\item{tag_to_end}{Boolean: tags are at the extremity of the reads
+\item{tag_to_end}{logical: tags are at the extremity of the reads
 (starting at the first base).}
 
-\item{primer_to_end}{Boolean: primers follow directly the tags
+\item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
 \item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
@@ -47,9 +47,10 @@ trimmed sequence.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{compress}{Boolean: Compress output files to gzip format.}
+\item{compress}{logical: Compress output files to gzip format.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame corresponding to the output sortedinfo.csv file

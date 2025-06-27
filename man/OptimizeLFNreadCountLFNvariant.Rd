@@ -52,13 +52,14 @@ function.}
 \code{min_lnf_variant_cutoff} to \code{max_lnf_variant_cutoff} are tested by
 \code{increment_lnf_variant_cutoff} increment.}
 
-\item{by_replicate}{Boolean: : compare read count of the occurrence to the
+\item{by_replicate}{logical: : compare read count of the occurrence to the
 read counts of the ASV-replicate in \code{LFNvariant} function.}
 
 \item{min_replicate_number}{Positive integer: minimum number of replicates
 for \code{FilterMinReplicate}.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 data frame with the following columns:

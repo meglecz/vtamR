@@ -44,6 +44,9 @@ Avois warning when running test_filters
 
 ## make a package
 
+## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Rais warning if FN. , add opton to use custol knownoccurrences files
+=> modify vignette accordingly
+
 
 
 

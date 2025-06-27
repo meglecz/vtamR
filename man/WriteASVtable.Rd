@@ -35,16 +35,16 @@ If given, the output is completed with taxonomic assignment of each ASV.}
 \item{sortedinfo}{Data frame or csv file with columns: sample, sample_type.
 Only necessary if add_empty_samples==T or add_expected_asv==T.}
 
-\item{add_empty_samples}{Boolean: add a column for each samples
+\item{add_empty_samples}{logical: add a column for each samples
 in the original data set, even if they do not have reads after filtering.}
 
-\item{add_sums_by_sample}{Boolean: add a line with the total number of reads
+\item{add_sums_by_sample}{logical: add a line with the total number of reads
 in each sample, and another with the number of ASVs in each sample.}
 
-\item{add_sums_by_asv}{Boolean: add a column with the total number of reads
+\item{add_sums_by_asv}{logical: add a column with the total number of reads
 for each ASV, and another with the number of samples, where the ASV is present.}
 
-\item{add_expected_asv}{Boolean: add a column for each mock sample in which
+\item{add_expected_asv}{logical: add a column for each mock sample in which
 keep and tolerate ASVs are flagged.}
 
 \item{mock_composition}{Data frame or CSV file with the following columns:

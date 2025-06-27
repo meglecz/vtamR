@@ -28,7 +28,7 @@ containing input file names. Files can be compressed in gz format.}
 0 by default means to use a pseudo-random seed.
 A given non-zero seed produces always the same result.}
 
-\item{compress}{Boolean: Compress output files to gzip format.}
+\item{compress}{logical: Compress output files to gzip format.}
 
 \item{sep}{Field separator character in input and output csv files.}
 }

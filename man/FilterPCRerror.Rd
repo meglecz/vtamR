@@ -31,7 +31,7 @@ the less abundant is flagged as a PCR error.}
 \item{max_mismatch}{Positive integer: maximum number of mismatches
 (gaps included) to consider two ASVs as similar}
 
-\item{by_sample}{Boolean: if TRUE ASVs are flagged as an PCR error
+\item{by_sample}{logical: if TRUE ASVs are flagged as an PCR error
 separately for each sample.}
 
 \item{sample_prop}{Real (0-1): if by_sample=TRUE, the ASV must be

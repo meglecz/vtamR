@@ -21,7 +21,7 @@ asv_id, sample, replicate, read_count, asv.}
 an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
 the occurrence is deleted.}
 
-\item{by_replicate}{Boolean: Compare read count of the occurrence to the
+\item{by_replicate}{logical: Compare read count of the occurrence to the
 read counts of the ASV-replicate.}
 
 \item{outfile}{Character string: csv file name to print the output data

@@ -27,16 +27,16 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,rea
 
 \item{outdir}{Character string: output directory for the trimmed fasta files.}
 
-\item{compress}{Boolean: Compress output files to gzip format.}
+\item{compress}{logical: Compress output files to gzip format.}
 
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{check_reverse}{Boolean: if TRUE, check the reverse complementary sequences
+\item{check_reverse}{logical: if TRUE, check the reverse complementary sequences
 of the input fasta as well.}
 
-\item{primer_to_end}{Boolean: primers follow directly the tags (no heterogeneity spacer).}
+\item{primer_to_end}{logical: primers follow directly the tags (no heterogeneity spacer).}
 
 \item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
 between primers and reads (for tags, exact match is required).}
@@ -47,7 +47,8 @@ trimmed sequence.}
 \item{cutadapt_maximum_length}{Positive integer: maximum length of the
 trimmed sequence.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 fastainfo_df the input data frame, with updated files names and sequence counts.

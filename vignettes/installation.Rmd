@@ -1,0 +1,155 @@
+---
+title: "Install and set up vtamR"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Install and set up vtamR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo=TRUE,
+  eval=FALSE,
+  comment = "#>"
+)
+```
+
+## Implementation
+
+The heavy lifting of sequence analyses are done by the following third party 
+programs. They should be installed on your computer:
+
+* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
+* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
+* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
+* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
+
+vtamR has been tested using the above mentioned versions, 
+but it should work with later versions.
+vtamR was tested on Windows and Linux, and should work in all 
+operating systems.
+
+The help is available for all vtamR function by `?function_name`.
+
+For most functions, the input data can be either a data frame or a csv file and 
+they return a data frame wich is also written to a csv file if a file name is provided.
+
+## Install vtamR
+```{r install, eval=FALSE}
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pak("meglecz/vtamR@develop")
+```
+
+## Install third party programs
+
+### Install third party programs using conda environment
+
+```{bash instal-conda}
+cd ~/vtamR
+conda env create -f environment_vtamR.yml
+conda activate vtamRenv
+```
+
+You can now run vtamR directly from the conda environment.
+
+If you're using RStudio, you may need to extract the paths to 
+the third-party programs and explicitly define them in your R scripts.
+See the [Set up section of the tutorial](tutorial-vtamr-pipeline.html#set-up) 
+for details.
+
+**Check paths to third-party programs:**
+```{bash intal-conda}
+conda activate vtamRenv
+
+which vsearch
+which blastn
+which cutadapt
+which swarm
+```
+
+### Install third party programs manually
+
+#### Linux
+
+* `vsearch` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
+* `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
+* `cutadapt` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
+* `swarm` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
+
+#### Windows
+
+Download binaries and save it a convenient place on your computer 
+(path without space, e.g. `C:/Users/Public/`)
+
+**vsearch**
+
+* Download binaries from https://github.com/torognes/vsearch/releases/tag/v2.23.0
+* Decompress the zip file
+* The executable are found in `vsearch-x.xx.x-win-x86_64/bin/`
+
+**cutadapt**
+
+* Download `cutadapt.exe` from 
+[https://github.com/marcelm/cutadapt/releases](https://github.com/marcelm/cutadapt/releases)
+
+**swarm**
+
+* Download binaries from 
+[https://github.com/torognes/swarm/releases](https://github.com/torognes/swarm/releases)
+* Decompress the zip file
+* The executable is in the `swarm-x.x.x-win-x86_64/bin` directory
+
+**BLAST**
+
+* Detailed instructions: 
+[https://www.ncbi.nlm.nih.gov/books/NBK52637/](https://www.ncbi.nlm.nih.gov/books/NBK52637/)
+* Download executable (ncbi-blast-x.xx.x+-win64.exe) from [https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/](https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/)
+* Double click on the .exe file, accept the license agreement and specify the 
+install location when prompted. Attention! 
+Do not accept the standard location (C:/Program Files/...) since it contains a space. 
+Chose a directory with a path without space (e.g. `C:/Users/Public/`).
+* The executable are found in `blast-x.xx.x+/bin/`
+
+## TaxAssign reference data base
+
+A ready to use COI database can be downloaded for [OSF](https://osf.io/vrfwz/), 
+([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756))
+using the command bellow.
+The URL given in the example downloads COInr v.2025_05_23. You can check for updates
+and correct the URL:
+
+- Visit: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
+- Open the dbV5 folder (contains BLAST databases for BLAST versions > 2.9).
+- Locate the version you want.
+- Click the three-dot menu to the right of the file.
+- Right-click on Download in the dropdown menu.
+- Select **Copy link address** to copy the direct download URL
+
+```{r, dowload-coinr}
+
+download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+    url = "https://osf.io/download/jyhz6/",
+    dest_dir = "COInr_db",
+    untar = TRUE,
+    quiet = FALSE
+    )
+```
+
+Alternatively, you can download the database in TSV format from 
+[Zenodo](https://zenodo.org/records/15515860) and make a custom version using 
+[mkCOInr](https://github.com/meglecz/mkCOInr)
+([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
+
+**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
+containing taxIDs and a 
+[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
+If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
+[OSF](https://osf.io/vrfwz/) can be used without modification.
+
+
+

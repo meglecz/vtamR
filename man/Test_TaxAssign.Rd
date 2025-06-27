@@ -30,7 +30,8 @@ taxlevel
 
 \item{num_threads}{Number of CPUs}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \description{
 Run TaxAssign on a test file and compare the output to mkLTG results

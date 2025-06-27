@@ -18,7 +18,8 @@ Test_MakeKnownOccurrences(
 
 \item{delete_tmp}{Boolean.  Delete output folder}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \description{
 Run MakeKnownOccurrences on a test file and compare the output to expected results

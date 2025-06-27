@@ -25,7 +25,8 @@ in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{Boolean: print only errors.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Error message if problem with the files and stop the prorgam.

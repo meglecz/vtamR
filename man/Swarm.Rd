@@ -31,14 +31,15 @@ frame if necessary. If empty, no file is written.}
 Maximum number of differences allowed between two ASVs,
 meaning that two ASVs will be grouped if they have d (or less) differences.}
 
-\item{fastidious}{Boolean: when working with d = 1, perform a second
+\item{fastidious}{logical: when working with d = 1, perform a second
 clustering pass to reduce the number of small clusters.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{by_sample}{Boolean: run swarm separately for each sample.}
+\item{by_sample}{logical: run swarm separately for each sample.}
 
-\item{quiet}{Boolean: print only warnings and errors to STDOUT.}
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the same structure as the input, but ASVs of
