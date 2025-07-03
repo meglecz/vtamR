@@ -6,7 +6,7 @@
 \usage{
 Barplot_RenkonenDistance(
   df,
-  sample_types = "",
+  sample_types = NULL,
   sep = ",",
   x_axis_label_size = 6
 )
@@ -16,7 +16,8 @@ Barplot_RenkonenDistance(
 sample1,sample2,replicate1,replicate2,renkonen_d
 (can be produced by make_renkonen_distance_matrix)}
 
-\item{sample_types}{file with sample and sample_type (real/mock/negative) columns}
+\item{sample_types}{Data frame or CSV file with the following columns:
+sample, sample_type (real/mock/negative)}
 
 \item{sep}{separator used in csv files}
 

@@ -41,6 +41,7 @@ devtools::load_all()
 
 ### to test as a package 
 # Install the package
+devtools::install()
    
 # then 
 library("vtamR") 
@@ -75,6 +76,8 @@ usethis::use_vignette("vtamR")
 devtools::build_vignettes()
 # view a vignette
 vignette("installation") 
+vignette("make-mock-composition-file") 
+vignette("tutorial-vtamr-pipeline") 
 # list vignettes
 vignette(package = "vtamR")
 
@@ -82,6 +85,15 @@ vignette(package = "vtamR")
 ### Developer To create a tarball for distributing or archiving
 devtools::build()
 
+
+
+############
+# create a rda with the asv_tax, so users can load it
+full_asv_tax <- asv_tax
+usethis::use_data(full_asv_tax, overwrite = TRUE)
+rm(full_asv_tax)
+data(full_asv_tax)
+############
 
 ```
 

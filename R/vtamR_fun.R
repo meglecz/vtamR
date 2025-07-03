@@ -3268,6 +3268,9 @@ TaxAssign <- function(asv,
 outdir <- dirname(outfile)
 check_dir(outdir)
 
+taxonomy <- path.expand(taxonomy)
+blast_db <- path.expand(blast_db)
+
 # can accept df or file as an input
 if(is.character(asv)){
   asv_df <- read.csv(asv, header=T, sep=sep)

@@ -133,25 +133,30 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
 #' @param df data frame with the following columns: 
 #' sample1,sample2,replicate1,replicate2,renkonen_d 
 #' (can be produced by make_renkonen_distance_matrix)
-#' @param sample_types file with sample and sample_type (real/mock/negative) columns
+#' @param sample_types Data frame or CSV file with the following columns:
+#' sample, sample_type (real/mock/negative)
 #' @param sep separator used in csv files
 #' @param x_axis_label_size size of labels in x axis
 #' @export
 #' 
 Barplot_RenkonenDistance <- function(df, 
-                                     sample_types="", 
+                                     sample_types=NULL, 
                                      sep=",", 
                                      x_axis_label_size=6
                                      ){
-  #  df <- renkonen_within_df
   
-  if(sample_types != ""){
+  if(is.character(sample_types)){ # input file
     sample_types_df <- read.csv(sample_types, sep=sep)
     # get sample type for each sample
     sample_types_df <- sample_types_df %>%
       select(sample, sample_type) %>%
       unique()
-  }else{
+  }else if (!is.null(sample_types)){
+    sample_types_df <- sample_types %>%
+      select(sample, sample_type) %>%
+      unique()
+  }
+  else{
     sample_types_df <- data.frame(sample=unique(read_count_df$sample),
                                   sample_type=rep("sample_type", 
                                                   length(unique(read_count_df$sample))

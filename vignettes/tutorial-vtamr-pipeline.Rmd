@@ -14,7 +14,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   echo=TRUE,
-  eval=FALSE,
+  eval=TRUE,
   comment = "#>"
 )
 ```
@@ -72,7 +72,7 @@ sep <- ","
 ```
 
 ```{r set_path_linux}
-# Bombyx
+# Linux
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn" # v2.10.1+
@@ -86,25 +86,13 @@ sep <- ","
 * `num_threads` is the number of CPUs for multithreaded programs
 * `sep` is the separator used in csv files
 
-Set the path to the database and the accompanying taxonomy file.
-See [TaxAssign reference data base](installation.html#taxassign-reference-data-base)
-
-```{r}
-taxonomy <- "COInr_db/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
-blast_db <- "COInr_db/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
-```
-
-* `taxonomy` CSV file with taxonomic information
-* `blast_db` BLAST database
-* Details are in [Reference database for taxonomic assignments section](#reference-database-for-taxonomic-assignments)
-
 **Set input data**
 
 The demo files bellow are included in the vtamR package, hence the use of 
 `system.file()`. Use them to check if everything is all right.
-When using your own data just enter the filenames.
+When using your own data just enter the file names.
 
-```{r}
+```{r set-demo-file}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 outdir <- "~/vtamR_demo/out_mfzr"
 fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr.csv", package = "vtamR")
@@ -124,13 +112,32 @@ how to create this file.
 * [asv_list](#asv_list) CSV file with ASVs from earlier data sets. Optional.
 
 
-**Check the format of input files**
+**Demo taxassign database**
+
+Set the path to the database and to the accompanying taxonomy file.
+For this example, we use a very small data base included in the vtamR package.
+To see how to get a real data base visit [TaxAssign reference data base](installation.html#taxassign-reference-data-base).
+When using your own data just enter the file names, without using the 
+`system.file` function.
+
+```{r set_db}
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+blast_db <- system.file("extdata/db_test", package = "vtamR")
+blast_db <- file.path(blast_db, "COInr_reduced")
+```
+
+* `taxonomy` CSV file with taxonomic information
+* `blast_db` BLAST database
+* Details are in [Reference database for taxonomic assignments section](#reference-database-for-taxonomic-assignments)
+
+
+**Check the format of input files (optional)**
 
 The `CheckFileinfo` function tests if all obligatory columns are present, 
 and makes some sanity checks. This can be helpful, since these files are produced 
 by the users, and may contain errors difficult to spot by eye.
 
-```{r}
+```{r check-fileinfo}
 CheckFileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
 CheckFileinfo(file=mock_composition, file_type="mock_composition")
 CheckFileinfo(file=asv_list, file_type="asv_list")
@@ -165,7 +172,7 @@ names and the read counts are included for each file.
 This data frame and the files listed in it are the input for `Dereplicate`.
 
 
-```{r, eval=FALSE}
+```{r merge, eval=FALSE}
 merged_dir <- file.path(outdir, "merged")
 sortedinfo_df <- Merge(fastqinfo, 
                        fastq_dir=fastq_dir, 
@@ -196,7 +203,7 @@ This directory is created by `Merge`.
 * `sortedinfo_df` is  updated version of fastainfo. 
 This data frame and the files listed in it are the input for `Dereplicate`.
 
-```{r, eval=FALSE}
+```{r merge-trim, eval=FALSE}
 # merge and quality filter
 merged_dir <- file.path(outdir, "merged")
 fastainfo_df <- Merge(fastqinfo, 
@@ -239,7 +246,7 @@ This directory is created by `Merge`.
 This data frame and the files listed in it are the input of the `Dereplicate`.
 
 
-```{r}
+```{r merge-demultiplex}
 # merge and quality filter
 merged_dir <- file.path(outdir, "merged")
 fastainfo_df <- Merge(fastqinfo, 
@@ -285,7 +292,7 @@ This can be useful later when analyzing subsequent data sets to homogenize
 ASV IDs between data sets.
 
 
-```{r}
+```{r depelicate}
 outfile <- file.path(outdir, "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
@@ -330,7 +337,7 @@ information on the unfiltered data set.
 * `params` String containing the major parameters of each filtering steps.
 * `stage` String referring to the filtering step.
 
-```{r}
+```{r set-stat}
 stat_df <- data.frame(parameters=character(),
                       asv_count=integer(),
                       read_count=integer(),
@@ -358,7 +365,7 @@ If you are interested in intra-specific variability, I suggest `by_sample=TRUE`
 or skip this step.
 
 
-```{r}
+```{r swarm}
 by_sample <- TRUE
 outfile <- file.path(outdir, "2_Swarm_by_sample.csv")
 
@@ -370,7 +377,6 @@ read_count_df <- Swarm(read_count_df,
                        )
 
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
-print(stat_df)
 ```
 
 Let's check the number the reduction of the number of variants after running `swarm`.
@@ -392,7 +398,7 @@ bellow a threshold.
 
 Let's eliminate [singletons](#glossary):
 
-```{r}
+```{r lfn-global-readcount}
 global_read_count_cutoff = 2
 outfile <- file.path(outdir, "3_LFNglobalReadCount.csv")
 
@@ -416,7 +422,7 @@ The idea is that if the length of the ASV differs from the most frequent ASV
 length by a number that is not a multiple of 3, it is likely to be an erroneous 
 sequence or a pseudo-gene.
 
-```{r}
+```{r filter-indel}
 outfile <- file.path(outdir, "4_FilterIndel.csv")
 
 read_count_df <- FilterIndel(read_count_df, outfile=outfile)
@@ -437,7 +443,7 @@ By default, it is the invertebrate mitochondrial genetic code (5),
 since the STOP codons of this genetic codes are also STOP codons in almost all genetic codes.
 
 
-```{r}
+```{r filter-codon-stop}
 outfile <- file.path(outdir, "5_FilterCodonStop.csv")
 genetic_code = 5
 
@@ -460,7 +466,7 @@ in at least `sample_prop` proportion of the samples where they are present.
 * `abskew` A chimera must be at least `abskew` times less frequent that the parental ASVs.
 
 
-```{r}
+```{r filter-chimera}
 abskew=2
 by_sample = T
 sample_prop = 0.8
@@ -477,18 +483,30 @@ print(stat_df)
 
 Let's eliminate aberrant replicates that are not similar to other replicates of the same sample. 
 
-We will calculate the renkonen distances among all pairs of replicates within sample and plot them.
+We will calculate the renkonen distances among all pairs of replicates within sample.
 
-```{r}
-# calculate renkonen distance among all replicates within sample 
+```{r renkonen-dist}
 renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
-# density plot
-renkonen_density_plot <- DensityPlot_RenkonenDistance(renkonen_within_df)
-print(renkonen_density_plot)
-# barplot
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
-renkonen_barplot <- Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo, x_axis_label_size=6)
-print(renkonen_barplot)
+```
+
+Let's make a density plot of the renkonen distances
+
+```{r renkonen-dist-density-plot}
+DensityPlot_RenkonenDistance(renkonen_within_df)
+```
+Let's make a barplot of the renkonen distances, and use different colors for 
+different sample types (real/mock/negative).
+
+**Note**:
+
+- sortedinfo_df contains a `sample` and `sample_type` columns, but any data frame
+with these columns would do.
+- If you have restarted the analyses after the SortReads function, and  
+`sortedinfo_df` is not in your environment, just use the sortedinfo 
+file (in the `outdir/sorted` directory).
+
+```{r renkonen-dist-barplot}
+Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo_df, x_axis_label_size=6)
 ```
 
 In this example, we have only a few distances, so the density plot is not very relevant. 
@@ -498,7 +516,7 @@ value to 0.4. We will filter out replicates that have Renkonen distances above
 this cutoff to most other replicates of the sample. In this case, 
 replicate 1 of the tnegtag sample will be eliminated.
 
-```{r}
+```{r filer-renkonen}
 outfile <- file.path(outdir, "7_FilterRenkonen.csv")
 cutoff <- 0.4
 
@@ -543,7 +561,7 @@ mock samples, and thus, you do not have the [mock_composition](#mock_composition
 file yet, read the vignette [make-mock-composition-file](tutorial-vtamr-pipeline.html) 
 that explains how to this file.
 
-```{r}
+```{r optimize-pcr-error}
 outfile <- file.path(outdir, "OptimizePCRerror.csv")
 OptimizePCRerror_df <- OptimizePCRerror(read_count_df, 
                                         mock_composition=mock_composition, 
@@ -563,7 +581,7 @@ See the help for more detail `?FilterPCRerror`.
 **Note:** Again, I use `max_mismatch<-2` in this example, since I have used this value
 for `OptimizePCRerror`, but I recommend you to use `max_mismatch<-1`.
 
-```{r}
+```{r filter-pcr-error}
 pcr_error_var_prop <- 0.05
 max_mismatch <- 2
 outfile <- file.path(outdir, "8_FilterPCRerror.csv")
@@ -596,7 +614,7 @@ mock samples, and thus, you do not have the [mock_composition](#mock_composition
 file yet, read the vignette [make-mock-composition-file](tutorial-vtamr-pipeline.html) 
 that explains how to this file.
 
-```{r}
+```{r optimize-lfn-sample-replicate}
 outfile = file.path(outdir, "OptimizeLFNsampleReplicate.csv")
 OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count=read_count_df,
                                                             mock_composition=mock_composition,
@@ -613,7 +631,7 @@ Therefore, we choose 0.004 as a cutoff.
 
 **LFNsampleReplicate**
 
-```{r}
+```{r lfn-sample-replicate}
 lfn_sample_replicate_cutoff <- 0.004
 outfile <- file.path(outdir, "9_LFNsampleReplicate.csv")
 
@@ -635,7 +653,7 @@ print(stat_df)
 To ensure repeatability, we can accept occurrences if they are present in at 
 least `min_replicate_number` replicates of the sample (2 by default).
 
-```{r}
+```{r filter-min-replicate}
 min_replicate_number <- 2
 outfile <- file.path(outdir, "10_FilterMinReplicate.csv")
 
@@ -687,19 +705,24 @@ For details see `?MakeKnownOccurrences`.
 This function takes a `read_count_samples` data frame as an input,
 where the replicates of the same sample have been pooled (see `?PoolReplicates`)
 
-**Note**: If you do not know the exact sequences of the species present in your 
+**Note**: 
+- If you do not know the exact sequences of the species present in your 
 mock samples, and thus, you do not have the [mock_composition](#mock_composition)
 file yet, read the vignette [make-mock-composition-file](tutorial-vtamr-pipeline.html) 
 that explains how to this file.
-
+- sortedinfo_df contains a `sample` and `sample_type` `replicate` and `habitat`
+columns, but any data frame with these columns would do.
+- If you have restarted the analyses after the `SortReads` function, and  
+`sortedinfo_df` is not in your environment, just use the sortedinfo 
+file (in the `outdir/sorted` directory).
  
-```{r}
+```{r make-known-occurrences}
 # Pool replicates
 read_count_samples_df <- PoolReplicates(read_count_df)
 
 # Detect known occurrences
 results <- MakeKnownOccurrences(read_count_samples = read_count_samples_df, 
-                                sortedinfo=sortedinfo, 
+                                sortedinfo=sortedinfo_df, 
                                 mock_composition=mock_composition
                                 )
 
@@ -724,7 +747,7 @@ We set `min_replicate_number` to 2, to eliminate non-repeatable
 occurrences among the three replicates of each sample.
 
 
-```{r}
+```{r optimize-lfn-readcount-lfn-variant}
 outfile = file.path(outdir, "OptimizeLFNreadCountLFNvariant.csv")
 
 OptimizeLFNreadCountLFNvariant_df <- OptimizeLFNreadCountLFNvariant(
@@ -741,7 +764,7 @@ head(OptimizeLFNreadCountLFNvariant_df)
 
 From the output, we choose 0.001 for the cutoff of `LFNvariant` 
 and 10 for `LFNreadCount`, since this is the less stringent combination 
-the keeps all expected occurrences (6 TP, no FN), and has less FP.
+that keeps all expected occurrences (6 TP, no FN), and has less FP.
 
 We will run the two filters on the same input data frame 
 (for which the parameters has been optimized), 
@@ -750,8 +773,8 @@ filters by the `PoolFilters` function.
 
 See `?LFNvariant, ?LFNreadCount` and `?PoolFilters` for details.
 
-```{r}
-## LFNvariant
+LFNvariant
+```{r lfn-variant}
 lnf_variant_cutoff = 0.001
 outfile <- file.path(outdir, "11_LFNvariant.csv")
 
@@ -763,8 +786,10 @@ stat_df <- GetStat(read_count_df_lnf_variant,
                    stat_df, 
                    stage="LFNvariant", 
                    params=lnf_variant_cutoff)
+```
 
-## LFNreadCount
+LFNreadCount
+```{r lfn-readcount}
 lfn_read_count_cutoff <- 10
 outfile <- file.path(outdir, "12_LFNreadCount.csv")
 
@@ -776,8 +801,10 @@ stat_df <- GetStat(read_count_df_lfn_read_count,
                    stat_df, stage="LFNreadCount", 
                    params=lfn_read_count_cutoff
                    )
+```
 
-## Combine results
+Combine results
+```{r combine-results}
 outfile <- file.path(outdir, "13_poolLFN.csv")
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
                              read_count_df_lnf_variant, 
@@ -799,11 +826,10 @@ print(stat_df)
 Let's run again `FilterMinReplicate` to ensure repeatability among replicates 
 of the sample (2 by default).
 
-```{r}
-# Set parameter values
+```{r filter-min-replicate2}
 min_replicate_number <- 2
 outfile <- file.path(outdir, "14_FilterMinReplicate.csv")
-# Run filter and get stats
+
 read_count_df <- FilterMinReplicate(read_count_df, 
                                     min_replicate_number, 
                                     outfile=outfile
@@ -824,7 +850,7 @@ Let's pool replicates of the same sample.
 `PoolReplicates` function will take the mean non-zero read counts of each ASV 
 over replicates of the same sample.
 
-```{r}
+```{r pool-replicates}
 outfile <- file.path(outdir, "15_PoolReplicates.csv")
 read_count_samples_df <- PoolReplicates(read_count_df, 
                                         outfile=outfile
@@ -845,14 +871,13 @@ accuracy and sensitivity.
 You can find false negatives in `missing_occurrences`, 
 and true and false positives in `known_occurrences`.
 
-```{r}
+```{r performance-metrics}
 missing_occurrences <- file.path(outdir, "missing_occurrences.csv")
 performance_metrics <- file.path(outdir, "performance_metrics.csv")
 known_occurrences <- file.path(outdir, "known_occurrences.csv")
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
 
 results <- MakeKnownOccurrences(read_count_samples_df, 
-                                sortedinfo=sortedinfo, 
+                                sortedinfo=sortedinfo_df, 
                                 mock_composition=mock_composition, 
                                 known_occurrences=known_occurrences, 
                                 missing_occurrences=missing_occurrences,
@@ -866,7 +891,7 @@ performance_metrics_df <- results[[3]]
 
 #### TaxAssign
 
-If you haven't assigned ASV to taxa yet (before the optimization step),
+If you haven't assigned ASV to taxa yet (before making the mock_composition file),
 it is time to do it. See [make-mock-composition-file vignette](make-mock-composition-file.html).
 If you have already done it, you can use the same output as previously 
 (`asv_tax` data frame) and skip this step.
@@ -874,9 +899,11 @@ If you have already done it, you can use the same output as previously
 For the format of `taxonomy` and `blast_db` check the 
 [Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments) 
 section. See the brief description of the algorithm with `?TaxAssign`.
+You can also download a ready to use COI database 
+(See [Installation](installation.html)).
 
 
-```{r}
+```{r taxassign}
 outfile <- file.path(outdir, "TaxAssign.csv")
 
 asv_tax <- TaxAssign(asv=read_count_samples_df, 
@@ -905,13 +932,13 @@ in each of them (`add_expected_asv`)
 
 For more information see `?WriteAsVtable`
 
-```{r}
+```{r write-asv-table}
 outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
 
 asv_table_df <- WriteASVtable(read_count_samples_df, 
                               outfile=outfile, 
                               asv_tax=asv_tax, 
-                              sortedinfo=sortedinfo, 
+                              sortedinfo=sortedinfo_df, 
                               add_empty_samples=T, 
                               add_sums_by_sample=T, 
                               add_sums_by_asv=T, 
@@ -1101,7 +1128,7 @@ and only the centroids appear in the `asv` column.
 original ASVs (with samples, markers, and read_count) as well as their centroids.
 * The data frame returned by the function corresponds to the `outfile`.
 
-```{r}
+```{r, eval=FALSE}
 files <- data.frame(file=c("vtamR_test/out_mfzr/15_PoolReplicates.csv",
                            "vtamR_test/test/15_PoolReplicates_ZFZR.csv"),
                     marker=c("MFZR", 
@@ -1145,7 +1172,7 @@ This function can be useful for counting the number of reads in the input `fastq
 * `file_type` [fasta/fastq]
 * `pattern` Regular expression; Check only files for `pattern` in the file name
 
-```{r}
+```{r, eval=FALSE}
 dir <- "vtamR_test/data"
 df <- CountReadsDir(dir, 
                     pattern="_fw.fastq.gz", 
