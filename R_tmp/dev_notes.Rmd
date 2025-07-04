@@ -40,8 +40,22 @@ results$notes
 devtools::load_all()   
 
 ### to test as a package 
-# Install the package
-devtools::install()
+# Install the package with vignettes, but vignettes are not available for users
+devtools::install(build_vignettes = TRUE)
+# make a tarball with the package with vignettes, It includes vignettes for the users
+devtools::build(vignettes = TRUE)
+# creates  "/home/meglecz/vtamR_0.2.0.tar.gz"
+
+
+# users
+install.packages("https://github.com/meglecz/vtamR/releases/download/v0.2.0/vtamR_0.2.0.tar.gz",
+                 repos = NULL,
+                 type = "source")
+
+
+# user
+install.packages("vtamR_0.2.0.tar.gz", repos = NULL, type = "source")
+
    
 # then 
 library("vtamR") 
