@@ -28,6 +28,22 @@ usethis::use_github()
 # It is for me to run, not necessary for users who used install(vtamR)
 devtools::document() # generate doc
 
+# create a template for README.Rmd que le develper Edit. It is in .builtignore
+usethis::use_readme_rmd()
+# make a README.Rmd from README.Rmd. This should not be edited manually
+# When building the readme, the Rmd and its chunks are executed, so all example codes should work. If not, make eval=FALSE
+devtools::build_readme()
+
+# creates vignette and adds modif to DESCRIPTION
+usethis::use_vignette("vtamR")
+# Adapt tutorial_vtamR.Rmd to vignette
+# To Build, Code must execute or use eval=FALSE; 
+# Build execute vtam.Rmd to R and html to doc dir
+# and creates a copy of vtamR.Rmd to doc as well.
+# It the vignette needs to be edited, the file in 
+# vignettes/ should be edited and built again.
+devtools::build_vignettes()
+
  # Run checks before releasing a package
 devtools::check()     
 ## OR rcmdcheck 
@@ -40,64 +56,45 @@ results$notes
 devtools::load_all()   
 
 ### to test as a package 
-# Install the package with vignettes, but vignettes are not available for users
+# Install the package with vignettes, but vignettes are not available for users it is only local
 devtools::install(build_vignettes = TRUE)
 # make a tarball with the package with vignettes, It includes vignettes for the users
 devtools::build(vignettes = TRUE)
-# creates  "/home/meglecz/vtamR_0.2.0.tar.gz"
+# creates  "/home/meglecz/vtamR_0.2.0.tar.gz", than add the tarball to github (pre-)release
 
+#### users
+# simple. intsallas automatically from github and handles dependencies
+# BUT this will not make vignettes
+pak::pak("meglecz/vtamR@develop")
 
-# users
-install.packages("https://github.com/meglecz/vtamR/releases/download/v0.2.0/vtamR_0.2.0.tar.gz",
+## To get vignettes for the users, WO cloning and installing use a tarball
+# Handles only dependencies from CRAN
+install.packages("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz",
                  repos = NULL,
                  type = "source")
+# Handles other dependencies and suggested packages
+pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
 
 
-# user
-install.packages("vtamR_0.2.0.tar.gz", repos = NULL, type = "source")
+
 
    
-# then 
+# USER
 library("vtamR") 
 # this replaces devtools::load_all() , 
 # no need to create doc separately with devtools::document() or roxigenize
 
-## for user the package can be installed from github, not need for load_all()
-# no need to create doc
-# Install the package from a branch
-devtools::install_github("meglecz/vtamR", ref = "develop")
-# Install a specific version (tag) 
-devtools::install_github("meglecz/vtamR", ref = "v1.0.2") 
-# Install a specific version (commit) 
-devtools::install_github("meglecz/vtamR", ref = "1a2b3c4") 
-# install.packages("pak")
-pak::pak("meglecz/vtamR@develop") # supposed to be more efficient
-
-# create a template for README.Rmd que le develper Edit. It is in .builtignore
-usethis::use_readme_rmd()
-# make a README.Rmd from README.Rmd. This should not be edited manually
-# When building the readme, the Rmd and its chunks are executer, so all eaxme codes should work. If not, mahe eval=FALSE
-devtools::build_readme()
-
-# creates vignette and adds modif to DESCRIPTION
-usethis::use_vignette("vtamR")
-# Adapt tutorial_vtamR.Rmd to vignette
-# To Build, Code must execute or use eval=FALSE; 
-# Build execute vtam.Rmd to R and html to doc dir
-# and creates a copy of vtamR.Rmd to doc as well.
-# It the vignette needs to be edited, the file in 
-# vignettes/ should be edited and built again.
-devtools::build_vignettes()
-# view a vignette
+##see vignettes
+vignette(package = "vtamR")
+vignette("tutorial-vtamr-pipeline") 
 vignette("installation") 
 vignette("make-mock-composition-file") 
-vignette("tutorial-vtamr-pipeline") 
-# list vignettes
-vignette(package = "vtamR")
 
 
-### Developer To create a tarball for distributing or archiving
-devtools::build()
+
+
+
+
 
 
 
