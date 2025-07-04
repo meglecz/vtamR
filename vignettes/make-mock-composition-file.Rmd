@@ -124,8 +124,7 @@ See details of `WriteASVtable` [here](tutorial-vtamr-pipeline.html#print-output)
 
 ```{r}
 outdir <- "~/vtamR_demo/out_mfzr"
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+sortedinfo <- system.file("extdata/demo/sortedinfo.csv", package = "vtamR")
 tmp_asv_table <- WriteASVtable(read_count_samples_df, 
                                sortedinfo=sortedinfo, 
                                add_sums_by_asv=T, 

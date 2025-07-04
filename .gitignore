@@ -3,11 +3,11 @@ vtamR_test/out_zfzr*
 vtamR_test/out*
 .Rhistory
 backup
-local*
+/local*
 .Rproj.user
-Protocol*
-TAS*
+/Protocol*
+/TAS*
 inst/doc
 /doc/
 /Meta/
-COInr*
+/COInr*
