@@ -921,7 +921,7 @@ TrimPrimer <- function(fastainfo,
     fastainfo_df$read_count[i] <- seq_n
   }
   fastainfo_df <- fastainfo_df %>%
-    select(sample, sample_type, habitat, replicate, filename, read_count)
+    select(sample, sample_type, habitat, replicate, fasta=filename, read_count)
   
   write.table(fastainfo_df, 
               file = file.path(outdir, "sortedinfo.csv"),  

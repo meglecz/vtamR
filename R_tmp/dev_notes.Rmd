@@ -58,6 +58,7 @@ devtools::load_all()
 ### to test as a package 
 # Install the package with vignettes, but vignettes are not available for users it is only local
 devtools::install(build_vignettes = TRUE)
+
 # make a tarball with the package with vignettes, It includes vignettes for the users
 devtools::build(vignettes = TRUE)
 # creates  "/home/meglecz/vtamR_0.2.0.tar.gz", than add the tarball to github (pre-)release

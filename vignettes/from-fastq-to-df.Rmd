@@ -1,0 +1,278 @@
+---
+title: "From fastq to data frame"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{From fastq to data frame}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo=TRUE,
+  eval=TRUE,
+  comment = "#>"
+)
+```
+
+
+## From fastq to data frame
+
+According to your wetlab and sequencing protocol fastq files can 
+contain one or more [sample-replicates](#glossary), and sequences may or may 
+not contain [tags](#glossary) (for [demultiplexing](#glossary)) and primer sequences. 
+In the following sections I show **3 different scenarios** to obtain the 
+[read_count_df](#read_count_df) data frame, which the input to the filtering steps.
+
+### Set up
+
+```{r setup}
+library(vtamR)
+```
+
+**Set paths**
+An example for windows:
+```{r set_path_win, eval=FALSE}
+# Windows
+cutadapt_path <- "C:/Users/Public/cutadapt"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+num_threads <- 4
+sep <- ","
+```
+
+An example for Linux:
+```{r set_path_linux}
+# Linux
+cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
+vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
+num_threads <- 8
+sep <- ","
+```
+
+* Adapt the path to third party programs according to your installation
+(See [Installation](installation.html)).
+* `num_threads` is the number of CPUs for multithreaded programs
+* `sep` is the separator used in csv files
+
+### Case 1 - One sample per fastq - no tag - no primer
+
+In this scenario, each pair of fasta files correspond to a sample (or
+a replicate of a sample if you have replicates), 
+so no demultiplexing is necessary.
+
+The reads has been trimmed from all artificial add-ons, sunch as
+adapters, tags, indies and also from primers.
+
+Read pairs should be quality filtered merged and written to fasta format.
+This can be done by the `Merge` function. 
+
+See the help (`?Merge`) for setting the correct parameters for quality filtering.
+
+**Set input**
+
+* [fastqinfo](#fastqinfo) is either a csv file, or a data frame. The key 
+information for `Merge` is the list of the fastq file pairs that should be merged. 
+The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, 
+just fill them with `NA`.
+* `fastq_dir` is the directory containing the input fastq files.
+* [sortedinfo_df](#fastainfo) is the output of `Merge`. It is the updated 
+version of fastqinfo, where fastq file names have been replaced by fasta file 
+names and the read counts are included for each file. 
+* When using your own data just enter the file names instead of using
+`system.file` function to access the file included in the package.
+
+```{r set-input1}
+fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo1.csv", package = "vtamR")
+#fastqinfo <-  "/home/meglecz/vtamR/inst/extdata/demo/fastqinfo1.csv"
+outdir <- "~/vtamR_demo/out1"
+merged_dir <- file.path(outdir, "merged")
+```
+
+**Merge fastq file pairs and quality filter reads**
+
+```{r merge1}
+sortedinfo_df <- Merge(fastqinfo, 
+                       fastq_dir=fastq_dir, 
+                       vsearch_path=vsearch_path, 
+                       outdir=merged_dir
+                       )
+```
+
+**Dereplicate**
+
+The fasta files produced by `Merge` can be read to a data frame and be 
+[dereplicated](#glossary) by the `Dereplicate` function.
+See the help (`?Dereplicate`) and [tutorial](#tutorial-vtamr-pipeline.html) more
+more information.
+
+```{r derelicate1}
+outfile <- file.path(outdir, "1_before_filter.csv")
+
+read_count_df <- Dereplicate(sortedinfo_df, 
+                             dir=merged_dir, 
+                             outfile=outfile
+                             )
+```
+
+
+### One sample per fastq - primer - no tag
+
+This is one of the most frequent case. 
+Each pair of fasta files correspond to a sample (or
+a replicate of a sample if you have replicates), 
+so no demultiplexing is necessary.
+
+The reads has been trimmed from all artificial add-ons, sunch as
+adapters, tags, BUT they still have the primers.
+
+Read pairs should be quality filtered, merged and written to fasta format by 
+`Merge` function as in the previous section.
+
+Then the `TrimPrimer` function will trim the primers from the reads. 
+See the help (`?TrimPrimer`) for setting the correct parameters for primer trimming.
+
+**Set input**
+
+* [fastqinfo](#fastqinfo) Either a csv file, or a data frame.  
+The key information for `Merge` is the list of the fastq file pairs that should be merged. 
+The `primer_fw`, `primer_rv` columns are irrelevant in this case, just fill them with `NA`.
+* `fastq_dir` Directory containing the input fastq files.
+* [fastainfo_df](#fastainfo) is the output of `Merge`. 
+It is the updated version of fastqinfo, where fastq file names have been 
+replaced by fasta file names.
+* `fasta_dir` Directory containing the input fasta files for `TrimPrimer`. 
+This directory is created by `Merge`.
+* If `check_reverse` is TRUE, `TrimPrimer` checks the reverse complementary stand as well.
+* `sortedinfo_df` is  updated version of fastainfo. 
+This data frame and the files listed in it are the input for `Dereplicate`.
+* When using your own data just enter the file names instead of using
+`system.file` function to access the file included in the package.
+
+```{r set-input2}
+fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo2.csv", package = "vtamR")
+#fastqinfo <-  "/home/meglecz/vtamR/inst/extdata/demo/fastqinfo2.csv"
+outdir <- "~/vtamR_demo/out2"
+merged_dir <- file.path(outdir, "merged")
+```
+
+**Merge fastq file pairs and quality filter reads**
+
+```{r merge2}
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      outdir=merged_dir
+                      )
+```
+
+**Trim primers**
+
+```{r primer-trim}
+
+sorted_dir <- file.path(outdir, "sorted")
+sortedinfo_df <- TrimPrimer(fastainfo_df, 
+                            fasta_dir=merged_dir, 
+                            outdir=sorted_dir, 
+                            cutadapt_path=cutadapt_path, 
+                            vsearch_path=vsearch_path, 
+                            check_reverse=T,
+                            primer_to_end=F
+                            )
+```
+
+**Dereplicate**
+
+The fasta files produced by `TrimPrimer` can be read to a data frame and be 
+[dereplicated](#glossary) by the `Dereplicate` function.
+See the help (`?Dereplicate`) and [tutorial](#tutorial-vtamr-pipeline.html) more
+more information.
+
+```{r derelicate2}
+outfile <- file.path(outdir, "1_before_filter.csv")
+
+read_count_df <- Dereplicate(sortedinfo_df, 
+                             dir=sorted_dir, 
+                             outfile=outfile
+                             )
+```
+
+### Several samples per fastq - tags - primers
+
+In this case, one pair of fastq files contains reads from multiples samples or
+sample-replicates, so it is necessary to demultiplex them, and trimmed from 
+tags and primers.
+
+Read pairs should be quality filtered, merged and written to fasta format as 
+in the previous sections.
+
+Then the `SortReads` function will [demultiplex](#demultiplexing) the fasta 
+files according to the [tag](#tag) combinations and [trim](#trimming) 
+the primers from the reads. See the help (`?SortReads`) for setting the 
+correct parameters for demultiplexing and primer trimming:
+
+**Set input**
+
+* [fastqinfo](#fastqinfo) Either a csv file, or a data frame. 
+The key information for `Merge` is the list of the fastq file pairs that should be merged.
+* `fastq_dir` Directory containing the input fastq files.
+* [fastainfo_df](#fastainfo) is the output of `Merge`. 
+It is the updated version of fastqinfo, where fastq file names have been 
+replaced by fasta file names.
+* `fasta_dir` Directory containing the input fasta files for `SortReads`. 
+This directory is created by `Merge`.
+* If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
+* `sortedinfo_df` is  updated version of fastainfo. 
+This data frame and the files listed in it are the input of the `Dereplicate`.
+* When using your own data just enter the file names instead of using
+`system.file` function to access the file included in the package.
+
+```{r set-input3}
+fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
+#fastqinfo <-  "/home/meglecz/vtamR/inst/extdata/demo/fastqinfo.csv"
+outdir <- "~/vtamR_demo/out"
+merged_dir <- file.path(outdir, "merged")
+sorted_dir <- file.path(outdir, "sorted")
+```
+
+**Merge fastq file pairs and quality filter reads**
+
+```{r merge3}
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      outdir=merged_dir
+                      )
+```
+
+**Demultiplex, trim off tags and pimers**
+```{r demultiplex}
+sortedinfo_df <- SortReads(fastainfo_df, 
+                           fasta_dir=merged_dir, 
+                           outdir=sorted_dir, 
+                           check_reverse=TRUE, 
+                           cutadapt_path=cutadapt_path, 
+                           vsearch_path=vsearch_path
+                           )
+```
+
+**Dereplicate**
+
+The fasta files produced by `SortReads` can be read to a data frame and be 
+[dereplicated](#glossary) by the `Dereplicate` function.
+See the help (`?Dereplicate`) and [tutorial](#tutorial-vtamr-pipeline.html) more
+more information.
+
+```{r depelicate3}
+outfile <- file.path(outdir, "1_before_filter.csv")
+read_count_df <- Dereplicate(sortedinfo_df, 
+                             dir=sorted_dir, 
+                             outfile=outfile
+                             )
+```

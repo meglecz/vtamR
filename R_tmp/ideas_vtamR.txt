@@ -111,13 +111,15 @@ Avois warning when running test_filters
 ## 2025/06/27 vignette install()
 
 - develop vignettes, but EVAL=FALSE => see if it can be built if COInr is installed locally. Alternativelly, use df with taxassign results
+DONE, test database is used for taxassing
 
 ## 2025/07/03 demo files
 
-- tutorial-vtamr-pipeline vignette adapted and uses only data comming from the package => Adjust graphic size in html and prit stat df, which is too large
-- adapt make-mock-composition-file using the test database
+- tutorial-vtamr-pipeline vignette adapted and uses only data comming from the package => Adjust graphic size in html and print stat df, which is too large
+- adapt make-mock-composition-file using the test database => DONE
 
-TODO Make a separate vignette, with different strategies of merge-Sortreads
+## 2025/07/07
+Make a separate vignette, with different strategies of merge-Sortreads => Done
 
  
 ## Ignore
