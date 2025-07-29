@@ -1,8 +1,9 @@
 # Ideas for vtamR
 
+## check if sample names are all alphanumerical in check_file
 
 ## Generally, better gestion of the wd
-	setwd pour test ne change par de repertoir en test_Merge 
+	setwd for test. do not change de directory in test_Merge 
 	Check slash at the end of dir names in all cases. Check is missing in MakeKnownOccurrences
 	
 ## Protect against failure in system calls:
@@ -14,51 +15,54 @@
 	
 
 ## clustering
-	Add cluster vsearch à la fin into tuto
-	Clustering by fixes threshold => DONE Cluster_size function
+	Add cluster vsearch at the end of the tuto
+	Clustering by fixed threshold => DONE Cluster_size function
 	
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
 
 ## check input df or csv in every function and same for output
 
-	Merge return csv ou df
+	Merge return csv or df
 	asv_list : it is a filename. Maybe it could be also a data frame.
 	Mock_composition : it is a filename. Maybe it could be also a data frame.
 	
 ## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
-Avois warning when running test_filters
+Avoid warning when running test_filters
 
 
-## SortRedas pas de Read count in output, check why
+## SortReads NO readcount in output, check why
 
-## Taxassing avant LFN faire uniqument pour mock (tuto)
-
-## PCR error => dire que c'est la demo (tuto)
 
 ## Check obligatory heading in doc for known_occurrences (tuto)
 
 ## Check the use of asv_id in taxassign. If not asv_id, error message (this is corrected 2025/06/17). Make sure that the asv_id and asv are kept coherently
+## chek Taxassign if asv_id column is really necessary in input, and adapt doc.
 
 ## make useable examples
 
 ## make a package
 
-## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Rais warning if FN. , add opton to use custol knownoccurrences files
+## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
 => modify vignette accordingly
 
-## chek Taxassign if asv_id column is really necessary in input, and adapt doc.
+
+## Merge:  arguments 'show.output.on.console', 'minimized' and 'invisible' are for Windows only
 
 
+
+
+## Ignore
+- Rename LFNvariant to FilterLFNvariant => NO. All LFN filters starts by LFN. Names are already very long, do not add anything on top.
 
 
 # DONE 
 
 ## 2025/05/06
-- Add sep to params in FilterIndel, FilterCodonStop
-- Add Cluster_size function and its internal functions to cluster ASVs to mOTU with fixed limit
-- Allow df or CSV for mock_composition in WriteASVtable
-- Complete lineage of Taxassign if missing taxlevels above resolution => Done, argument fill_lineage is added
+- Add sep to params in FilterIndel, FilterCodonStop => DONE
+- Add Cluster_size function and its internal functions to cluster ASVs to mOTU with fixed limit => DONE
+- Allow df or CSV for mock_composition in WriteASVtable => DONE
+- Complete lineage of Taxassign if missing taxlevels above resolution => Done, argument fill_lineage is added => DONE
 
 ## 2025/06/17
 
@@ -69,10 +73,10 @@ Avois warning when running test_filters
 
 ## 2025/06/19
 
-- Better gestion of path
+- Better gestion of path => DONE
 	- Use file.path() instead of paste() for file paths
 	- check_dir => creates dir, but do not add /
-	- use tempdir() to get temp_dir names => if multiple runs of the same commans, make new subdir for each run and delete it afterwards
+	- use tempdir() to get temp_dir names => if multiple runs of the same command, make new subdir for each run and delete it afterwards
 		Fonctions modified:
 		-SortReads
 		-SortReads_no_reverse
@@ -86,45 +90,57 @@ Avois warning when running test_filters
 		
 ## 2025/06/24 tested on windows
 
-- check_path (experimental in Installation_vtamR.Rmd)
-- use path+executable names for binaries
+- check_path (experimental in Installation_vtamR.Rmd) !!!!!!!! CHECK
+- use path+executable names for binaries => DONE
 
 ## 2025/06/24
 
-- add citation, 
-- complete DESCRIPTION
-- run and correct small bugs with devtools::check() and results <- rcmdcheck::rcmdcheck()
-- \donttest{} examples
+- add citation,  => DONE
+- complete DESCRIPTION => DONE
+- run and correct small bugs with devtools::check() and results <- rcmdcheck::rcmdcheck() => DONE
+- \donttest{} examples => DONE
 
 ## 2025/06/24 check()
 
-- add citation
-- use devtools::check() and correct formatting
-- make conda env with thirs party programs
+- add citation => DONE
+- use devtools::check() and correct formatting => DONE
+- make conda env with third party programs => DONE
 
 ## 2025/06/25 install()
 
-- check on windows
-- make readme, doc, vignette structure
-- correcte license, DESCRIPTION
+- check on windows => DONE
+- make readme, doc, vignette structure => DONE
+- correct license, DESCRIPTION => DONE
 
 ## 2025/06/27 vignette install()
 
-- develop vignettes, but EVAL=FALSE => see if it can be built if COInr is installed locally. Alternativelly, use df with taxassign results
-DONE, test database is used for taxassing
+- develop vignettes, but EVAL=FALSE => see if it can be built if COInr is installed locally. Alternativelly, use df with taxassign results => DONE
+DONE, test database is used for taxassing 
 
 ## 2025/07/03 demo files
 
-- tutorial-vtamr-pipeline vignette adapted and uses only data comming from the package => Adjust graphic size in html and print stat df, which is too large
+- tutorial-vtamr-pipeline vignette adapted and uses only data comming from the package => DONE
 - adapt make-mock-composition-file using the test database => DONE
-
-## 2025/07/07
-Make a separate vignette, with different strategies of merge-Sortreads => Done
+ 
+## 2025/07/07 from-fastq-to-df
+Make a separate vignette, with different strategies of merge-Sortreads => DONE
 
  
-## Ignore
+## 2025/07/28
 
-- Rename LFNvariant to FilterLFNvariant => NO. All LFN filters starts by LFN. Names are already very long, do not add anything on top.
+- tutorial-vtamr-pipeline => Adjust graphic size in html => DONE
+- revise installation => DONE
+
+## 2025/07/29 vignettes revised
+
+- and print stat df, which is too large print => knitr::kable(stat_df, format = "markdown") => DONE
+- revise tutorial-vtamr-pipeline, from-fastq-to-df and make-mock-composition-file vignettes => DONE
+- PCR error => make explicit that is these parametre values are just for demo (tuto)  => DONE
+- install
+- build
+- add tarball to github
+- push
+
 
 
 

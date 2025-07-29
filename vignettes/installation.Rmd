@@ -1,11 +1,11 @@
 ---
-title: "Install and set up vtamR"
+title: "Install and Third Party Programs"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install and set up vtamR}
+  %\VignetteIndexEntry{Install and Third Party Programs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,8 +13,12 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
   echo=TRUE,
   eval=FALSE,
+  fig.width = 6,
+  out.width = '100%',
   comment = "#>"
 )
 ```
@@ -29,40 +33,71 @@ programs. They should be installed on your computer:
 * cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
 * swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
 
-vtamR has been tested using the above mentioned versions, 
+`vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
-vtamR was tested on Windows and Linux, and should work in all 
+`vtamR` was tested on **Windows** and **Linux**, and should work in all 
 operating systems.
 
-The help is available for all vtamR function by `?function_name`.
+ - Help is available for all `vtamR` functions via `?function_name`.
+ - Most functions accept either a **data frame** or a **CSV file** as input, 
+ and return a data frame (optionally saved to a CSV file if a filename is provided).
 
-For most functions, the input data can be either a data frame or a csv file and 
-they return a data frame wich is also written to a csv file if a file name is provided.
 
 ## Install vtamR
+
+**Option 1**: Install from the latest tarball (recommended).
+Installing from the tarball includes the **vignettes**, which demonstrate a complete analysis workflow.
+
+```{r install_tarball, eval=FALSE}
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
+```
+
+After installation, you can access the vignettes with:
+
+```{r browseVignettes, eval=FALSE}
+browseVignettes("vtamR")
+```
+
+**Option 2**: Install from the GitHub repository (vignettes not included).
+You can also install `vtamR` directly from GitHub. 
+However, vignettes will not be included in this case due to how GitHub installations work.
+
 ```{r install, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
 pak::pak("meglecz/vtamR@develop")
 ```
 
+You can still view the HTML versions of the vignettes online:
+https://people.imbe.fr/~emeglecz/vtamr.html
+
+
 ## Install third party programs
 
-### Install third party programs using conda environment
+### Option 1: Install third party programs using conda environment
+
+**In R**, find the full path to the YAML environment file:
+
+```{R environment_vtamR, eval=FALSE}
+environment_vtamR_yml_path <- system.file("environment_vtamR.yml", package = "vtamR")
+cat(environment_vtamR_yml_path)
+```
+
+**In a terminal**, replace PATH_TO_YML with the path you just printed:
 
 ```{bash instal-conda, eval=FALSE}
-cd ~/vtamR
-conda env create -f environment_vtamR.yml
+conda env create -f PATH_TO_YML
 conda activate vtamRenv
 ```
 
-You can now run vtamR directly from the conda environment.
+This creates a Conda environment `vtamRenv` with all required tools.
 
-If you're using RStudio, you may need to extract the paths to 
-the third-party programs and explicitly define them in your R scripts.
+If using **RStudio**, you must manually set the paths to these tools in 
+your R session or scripts.
 See the [Set up section of the tutorial](tutorial-vtamr-pipeline.html#set-up) 
 for details.
 
-**Check paths to third-party programs:**
+Get paths to third-party programs:
 ```{bash access-path, eval=FALSE}
 conda activate vtamRenv
 
@@ -72,7 +107,7 @@ which cutadapt
 which swarm
 ```
 
-### Install third party programs manually
+### Option 2: Install third party programs manually
 
 #### Linux
 
@@ -117,19 +152,10 @@ Chose a directory with a path without space (e.g. `C:/Users/Public/`).
 
 ## TaxAssign reference data base
 
-A ready to use COI database can be downloaded for [OSF](https://osf.io/vrfwz/), 
-([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756))
-using the command bellow.
-The URL given in the example downloads COInr v.2025_05_23. You can check for updates
-and correct the URL:
+A ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
+([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
-- Visit: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
-- Open the dbV5 folder (contains BLAST databases for BLAST versions > 2.9).
-- Locate the version you want.
-- Click the three-dot menu to the right of the file.
-- Right-click on Download in the dropdown menu.
-- Select **Copy link address** to copy the direct download URL
-
+Download and extract using:
 ```{r, dowload-coinr, eval=FALSE}
 
 download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
@@ -140,7 +166,14 @@ download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
     )
 ```
 
-Alternatively, you can download the database in TSV format from 
+To check for newer versions:
+
+- Go to: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
+- Navigate to the dbV5 folder.
+- Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.
+
+
+Alternatively, you can also create a custom version from the **TSV format** database available at
 [Zenodo](https://zenodo.org/records/15515860) and make a custom version using 
 [mkCOInr](https://github.com/meglecz/mkCOInr)
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
@@ -150,6 +183,4 @@ containing taxIDs and a
 [taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
 If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
-
-
 

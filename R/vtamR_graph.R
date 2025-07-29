@@ -2,7 +2,7 @@
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
-#' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
+#' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat scale_y_log10
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
 #' @importFrom tidyr everything pivot_wider gather separate 
 #' @importFrom tidyselect where
@@ -118,6 +118,7 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
   p <- ggplot(df, aes(x = Number_of_reads)) +
       geom_histogram(binwidth = binwidth, fill = "blue", color = "blue", 
                      aes(y = after_stat(count))) +
+      scale_y_log10() +
       labs(title = "Distribution of Read Counts",
            x = "Read Count",
            y = "Frequency") +

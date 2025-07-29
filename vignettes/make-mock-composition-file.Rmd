@@ -13,8 +13,12 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
   echo=TRUE,
   eval=TRUE,
+  fig.width = 6,
+  out.width = '100%',
   comment = "#>"
 )
 ```
@@ -39,7 +43,7 @@ This file is essential in the
 - identifies known False Positives (FP) in control samples (mock and negative controls), 
 - identifies missing occurrences (FN = False Negatives in mock samples) 
 - calculates performance metrics (precision and sensitivity) based on control samples.
-- produces a known_occurrences file or data frame with the list of 
+- produces a [known_occurrences](tutorial-vtamr-pipeline.html#known_occurrences) file or data frame with the list of 
 expected occurrences (TP = True Positives) in mock samples and FP in all control samples.
 
 The [known_occurrences](tutorial-vtamr-pipeline.html#known_occurrences) 
@@ -56,31 +60,37 @@ the output to easily find expected occurrences in each mock sample.
 
 Let's see how to identify the expected mock ASV form your data.
 
-I suggest that you start by filtering/denoising your dataset by using at least some of
+The idea is to 
+
+- Prefilter your data set
+- Assign ASV to taxa
+- Examine the ASV in the mock samples and their read counts and pick the correct sequences.
+
+I suggest that you start by filtering/denoising your data set by using at least some of
 the following functions. This will eliminate most of the erroneous ASV, so
 it will be easier to identify the expected ASV from your mock samples. 
-(See [tutorial-vtamr-pipeline](tutorial-vtamr-pipeline.html) vignette.)
+See [tutorial-vtamr-pipeline](tutorial-vtamr-pipeline.html) vignette.
 
-- [Swarm](tutorial-vtamr-pipeline.html#Swarm)
-- [LFNglobalReadCount](tutorial-vtamr-pipeline.html#LFNglobalReadCount)
-- [FilterIndel](tutorial-vtamr-pipeline.html#FilterIndel)
-- [FilterCodonStop](tutorial-vtamr-pipeline.html#FilterCodonStop)
-- [FilterChimera](tutorial-vtamr-pipeline.html#FilterChimera)
-- [FilterRenkonen](tutorial-vtamr-pipeline.html#FilterRenkonen)
+- [Swarm](tutorial-vtamr-pipeline.html#denoising-by-swarm)
+- [LFNglobalReadCount](tutorial-vtamr-pipeline.html#lfnglobalreadcount)
+- [FilterIndel](tutorial-vtamr-pipeline.html#filterindel)
+- [FilterCodonStop](tutorial-vtamr-pipeline.html#filtercodonstop)
+- [FilterChimera](tutorial-vtamr-pipeline.html#filterchimera)
+- [FilterRenkonen](tutorial-vtamr-pipeline.html#filterrenkonen)
 
-Then you can make the `mock_composition` file, which is essential for the optimize 
-functions, which in turn suggest parameter values for 
-`FilterPCRerror`, `LFNsampleReplicate`, `LFNvariant` and `LFNreadCount`.
+### Set parametres and access the demo files
 
-### Set parametres and access de themo files
+We will use the some of the files created by the first part of the 
+[Tutorial](tutorial-vtamr-pipeline.html) (Till the 
+[FilterRenkonen](tutorial-vtamr-pipeline.html#filterrenkonen))
 
-The demo files bellow are included in the vtamR package, hence the use of 
-`system.file()`. 
-When using your own data just enter your file names.
+- The demo files are included in the `vtamR` package, hence the use of 
+`system.file()`. When using your own data just enter your file names.
+- `read_count_file` is the output of `FilterRenkonen` of the
+[Tutorial](tutorial-vtamr-pipeline.html).
+- The `blast_db` and `taxonomy`, `blast_path`, `num_threads` are set up as in the 
+[Tutorial](tutorial-vtamr-pipeline.html#set-up)
 
-TaxAssign accepts both a csv file or a data frame with `asv_id` and `asv` columns.
-Here, we use a demo csv file, but you will probably use the filtered 
-`read_count_df` data frame. See [Tutorial](tutorial-vtamr-pipeline.html)
 
 ```{r set_db}
 library(vtamR)
@@ -95,6 +105,9 @@ num_threads = 8
 ```
 
 ### Assign taxa to ASVs
+
+TaxAssign will assign all asv in the input cas file or data frame (`read_count_file`).
+
 See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#taxassign).
 ```{r}
 asv_tax <- TaxAssign(asv=read_count_file, 
@@ -116,14 +129,14 @@ read_count_samples_df <- PoolReplicates(read_count_file)
 
 Make a data frame with ASVs and read counts in the 
 [wide format](tutorial-vtamr-pipeline.html#glossary) 
-and add the total number of reads for each ASV, 
-the number of samples they are present and their taxonomic assignment. 
+and add the total number of reads for each ASV and
+the number of samples they are present (`add_sums_by_asv=T`) 
+and their taxonomic assignment. 
 This format is easier to read for humans, than the `read_count_df`.
 
 See details of `WriteASVtable` [here](tutorial-vtamr-pipeline.html#print-output).
 
 ```{r}
-outdir <- "~/vtamR_demo/out_mfzr"
 sortedinfo <- system.file("extdata/demo/sortedinfo.csv", package = "vtamR")
 tmp_asv_table <- WriteASVtable(read_count_samples_df, 
                                sortedinfo=sortedinfo, 
@@ -135,6 +148,7 @@ If there are many samples it might be better to select only mock samples
 and pertinent columns.
 In this example, `tpos1` is the name of one of the mock samples. 
 You can do this separately for each mock.
+
 ```{r}
 asv_tpos1 <- tmp_asv_table %>%
   select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, 
@@ -142,6 +156,12 @@ asv_tpos1 <- tmp_asv_table %>%
          ) %>%
   filter(tpos1 > 0) %>%
   arrange(desc(tpos1))
+```
+
+Let's see the ASV present in `tpos1`.
+
+```{r}
+knitr::kable(asv_tpos1, format = "markdown")
 ```
 
 In this mock sample, there should be the following 6 species:

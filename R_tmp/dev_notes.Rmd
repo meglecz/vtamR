@@ -28,7 +28,7 @@ usethis::use_github()
 # It is for me to run, not necessary for users who used install(vtamR)
 devtools::document() # generate doc
 
-# create a template for README.Rmd que le develper Edit. It is in .builtignore
+# create a template for README.Rmd only le developer Edit. It is in .builtignore
 usethis::use_readme_rmd()
 # make a README.Rmd from README.Rmd. This should not be edited manually
 # When building the readme, the Rmd and its chunks are executed, so all example codes should work. If not, make eval=FALSE
@@ -53,7 +53,17 @@ results$warnings
 results$notes
 
 # Load package without installing; Use during development
-devtools::load_all()   
+library("devtools")
+library("roxygen2")
+library("seqinr")
+library("dplyr")
+library("tidyr")
+library("ggplot2") 
+### before release
+load_all(".")
+setwd("/home/meglecz/vtamR/")
+roxygenise()
+usethis::use_roxygen_md()
 
 ### to test as a package 
 # Install the package with vignettes, but vignettes are not available for users it is only local
@@ -63,8 +73,11 @@ devtools::install(build_vignettes = TRUE)
 devtools::build(vignettes = TRUE)
 # creates  "/home/meglecz/vtamR_0.2.0.tar.gz", than add the tarball to github (pre-)release
 
+## Try builging only one vignette to see in detail the problem 
+rmarkdown::render("vignettes/tutorial-vtamr-pipeline.Rmd")
+
 #### users
-# simple. intsallas automatically from github and handles dependencies
+# simple. installs automatically from github and handles dependencies
 # BUT this will not make vignettes
 pak::pak("meglecz/vtamR@develop")
 
@@ -77,8 +90,6 @@ install.packages("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test
 pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
 
 
-
-
    
 # USER
 library("vtamR") 
@@ -87,16 +98,33 @@ library("vtamR")
 
 ##see vignettes
 vignette(package = "vtamR")
-vignette("tutorial-vtamr-pipeline") 
 vignette("installation") 
+vignette("tutorial-vtamr-pipeline") 
+vignette("from-fastq-to-df") 
 vignette("make-mock-composition-file") 
 
 
 
 
+### If code has been modified, first build doc and install, then buil with vignettes
+devtools::document()
+devtools::install()
+devtools::build(vignettes = TRUE)
 
-
-
+### If pb with vignette not building correctly
+# clean package
+unlink("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR", recursive = TRUE, force = TRUE)
+file.exists("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR") 
+# install WO vignettes
+devtools::clean_dll()
+devtools::document()
+devtools::install(build_vignettes = FALSE, force = TRUE)
+# test library
+library(vtamR)
+# install with vignettes
+devtools::install(build_vignettes = TRUE)
+# build tarball with vignettes
+devtools::build(vignettes = TRUE)
 
 
 ############

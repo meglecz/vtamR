@@ -22,12 +22,34 @@ The goal of vtamR is to ...
 
 ## Installation
 
-You can install the development version of vtamR from [GitHub](https://github.com/) with:
+**Option 1**: Install from the latest tarball (recommended).
+Installing from the tarball includes the **vignettes**, which demonstrate a complete analysis workflow.
 
-```{r}
-if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pak("meglecz/vtamR")
+```{r install_tarball, eval=FALSE}
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
 ```
+
+After installation, you can access the vignettes with:
+
+```{r browseVignettes, eval=FALSE}
+browseVignettes("vtamR")
+```
+
+**Option 2**: Install from the GitHub repository (vignettes not included).
+You can also install `vtamR` directly from GitHub. 
+However, vignettes will not be included in this case due to how GitHub installations work.
+
+```{r install, eval=FALSE}
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pak("meglecz/vtamR@develop")
+```
+
+You can still view the HTML versions of the vignettes online:
+https://people.imbe.fr/~emeglecz/vtamr.html
+
+
+
 
 ## Example
 
