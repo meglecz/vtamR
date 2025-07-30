@@ -86,8 +86,6 @@ pak::pak("meglecz/vtamR@develop")
 install.packages("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz",
                  repos = NULL,
                  type = "source")
-# Handles other dependencies and suggested packages
-pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
 
 
    
@@ -106,7 +104,7 @@ vignette("make-mock-composition-file")
 
 
 
-### If code has been modified, first build doc and install, then buil with vignettes
+### If code has been modified, first build doc and install, then build with vignettes
 devtools::document()
 devtools::install()
 devtools::build(vignettes = TRUE)
@@ -115,16 +113,59 @@ devtools::build(vignettes = TRUE)
 # clean package
 unlink("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR", recursive = TRUE, force = TRUE)
 file.exists("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR") 
-# install WO vignettes
+# Clean and regenerate documentation:
 devtools::clean_dll()
 devtools::document()
+
 devtools::install(build_vignettes = FALSE, force = TRUE)
 # test library
 library(vtamR)
-# install with vignettes
+# install with vignettes (local)
 devtools::install(build_vignettes = TRUE)
+vignette(package = "vtamR")
+vignette("installation")
 # build tarball with vignettes
 devtools::build(vignettes = TRUE)
+
+### Keep the vignettes and if changes are necessary modify these files
+# for htmp on website 
+# check if it builds correctly
+devtools::build_vignettes()
+# copy Rmd to web_doc modify TOC
+  html_document:
+    toc: true
+    toc_float: true
+# knit and put the html to webpage
+# make index to link the different pages
+
+## uninstall
+remove.packages("vtamR")
+# Restart R 
+library(vtamR)
+vignette(package="vtamR")
+?Merge
+
+
+###  install users
+# install vtamR with pak to get the dependencies, but no vignettes
+pak::pkg_install("meglecz/vtamR@develop")
+# HELP, OK no vignettes
+# then install vtamR from tarball with vignettes without rebuilding them
+install.packages(
+  "https://github.com/meglecz/vtamR/releases/download/v0.2.0-test2/vtamR_0.2.0.tar.gz",
+  repos = NULL,
+  type = "source"
+)
+library("vtamR")
+?Merge
+vignette(package="vtamR")
+vignette("installation")
+vignette("make-mock-composition-file")
+vignette("from-fastq-to-df")
+vignette("tutorial-vtamr-pipeline")
+
+
+
 
 
 ############

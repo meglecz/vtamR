@@ -6,61 +6,188 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of vtamR is to …
+**vtamR** is a revised, completed version of
+[VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)
+(Validation and Taxonomic Assignation of Metabarcoding Data) rewritten
+in R. It is a complete metabarcoding pipeline:
 
-## Installation
+-   Sequence analyses from raw fastq files of amplicon sequences till
+    Amplicon Sequence Variant ([ASV](#glossary)) table of validated ASVs
+    assigned to taxonomic groups.
+-   Handles technical or biological replicates of the same sample
+-   Uses positive and negative control samples to fine tune the
+    filtering and reduce [false positive](#glossary) and [false
+    negative](#glossary) occurrences.
+-   Can pool multiple data sets (results of earlier analyses)
+-   Can pool results from overlapping markers
 
-You can install the development version of vtamR from
-[GitHub](https://github.com/) with:
+**Novelties compared to VTAM:**
+
+-   As it is a series of R functions, `vtamR` is highly adaptable to
+    include/exclude and order different steps of the analyses
+-   Includes swarm for denoising
+-   Graphic options
+-   Include functions to get statistics of each filtering steps (read
+    and variant count etc.)
+-   The notion of marker and run has been dropped to simplify the
+    analyses
+
+A detailes **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)** on how
+to construct a full metabarcoding pipeline is avalibale online.
+
+# Installation
+
+## Implementation
+
+The heavy lifting of sequence analyses are done by the following third
+party programs. They should be installed on your computer:
+
+-   BLAST([Altschul et al.,
+    1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
+-   vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/))
+    (v2.7.0)
+-   cutadapt([Martin,
+    2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479))
+    (v4.0)
+-   swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/))
+    (v2.1.12)
+
+`vtamR` has been tested using the above mentioned versions, but it
+should work with later versions. `vtamR` was tested on **Windows** and
+**Linux**, and should work in all operating systems.
+
+-   Help is available for all `vtamR` functions via `?function_name`.
+-   Most functions accept either a **data frame** or a **CSV file** as
+    input, and return a data frame (optionally saved to a CSV file if a
+    filename is provided).
+
+## Install vtamR
+
+`pkg_install` will handle conveniently the R dependencies of `vtamR`.
 
 ``` r
-if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pak("meglecz/vtamR")
-#> ✔ Updated metadata database: 5.74 MB in 15 files.
-#> ℹ Updating metadata database✔ Updating metadata database ... done
-#>  
-#> → Will update 1 package.
-#> → Will download 1 package with unknown size.
-#> + vtamR 0.2.0 → 0.0.1.0 [bld][cmp][dl] (GitHub: 4c6c288)
-#> ℹ Getting 1 pkg with unknown size
-#> ✔ Got vtamR 0.0.1.0 (source) (45.40 MB)
-#> ℹ Packaging vtamR 0.0.1.0
-#> ✔ Packaged vtamR 0.0.1.0 (25.9s)
-#> ℹ Building vtamR 0.0.1.0
-#> ✔ Built vtamR 0.0.1.0 (3.6s)
-#> ✔ Installed vtamR 0.0.1.0 (github::meglecz/vtamR@4c6c288) (71ms)
-#> ✔ 1 pkg: upd 1, dld 1 (NA B) [47.4s]
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("meglecz/vtamR@develop")
 ```
 
-## Example
+Read the **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)** on how
+to construct a full metabarcoding pipeline.
 
-This is a basic example which shows you how to solve a common problem:
+## Install third party programs
+
+### Option 1: Install third party programs using conda environment
+
+**In R**, find the full path to the YAML environment file:
 
 ``` r
-library(vtamR)
-## basic example code
+environment_vtamR_yml_path <- system.file("environment_vtamR.yml", package = "vtamR")
+cat(environment_vtamR_yml_path)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+**In a terminal**, replace PATH\_TO\_YML with the path you just printed:
+
+``` bash
+conda env create -f PATH_TO_YML
+conda activate vtamRenv
+```
+
+This creates a Conda environment `vtamRenv` with all required tools.
+
+If using **RStudio**, you must manually set the paths to these tools in
+your R session or scripts. See the [Set up section of the
+tutorial](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#set-up)
+for details.
+
+Get paths to third-party programs:
+
+``` bash
+conda activate vtamRenv
+
+which vsearch
+which blastn
+which cutadapt
+which swarm
+```
+
+### Option 2: Install third party programs manually
+
+#### Linux
+
+-   `vsearch` <https://github.com/torognes/vsearch>
+-   `BLAST` <https://www.ncbi.nlm.nih.gov/books/NBK52640/>
+-   `cutadapt`
+    <https://cutadapt.readthedocs.io/en/stable/installation.html>
+-   `swarm` <https://github.com/torognes/swarm>
+
+#### Windows
+
+Download binaries and save it a convenient place on your computer (path
+without space, e.g. `C:/Users/Public/`)
+
+**vsearch**
+
+-   Download binaries from
+    <https://github.com/torognes/vsearch/releases/tag/v2.23.0>
+-   Decompress the zip file
+-   The executable are found in `vsearch-x.xx.x-win-x86_64/bin/`
+
+**cutadapt**
+
+-   Download `cutadapt.exe` from
+    <https://github.com/marcelm/cutadapt/releases>
+
+**swarm**
+
+-   Download binaries from <https://github.com/torognes/swarm/releases>
+-   Decompress the zip file
+-   The executable is in the `swarm-x.x.x-win-x86_64/bin` directory
+
+**BLAST**
+
+-   Detailed instructions:
+    <https://www.ncbi.nlm.nih.gov/books/NBK52637/>
+-   Download executable (ncbi-blast-x.xx.x+-win64.exe) from
+    <https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/>
+-   Double click on the .exe file, accept the license agreement and
+    specify the install location when prompted. Attention! Do not accept
+    the standard location (C:/Program Files/…) since it contains a
+    space. Chose a directory with a path without space
+    (e.g. `C:/Users/Public/`).
+-   The executable are found in `blast-x.xx.x+/bin/`
+
+## TaxAssign reference data base
+
+A ready-to-use COI database is available from OSF
+[OSF](https://osf.io/vrfwz/), ([Meglécz,
+2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
+
+Download and extract using:
 
 ``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
+download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+    url = "https://osf.io/download/jyhz6/",
+    dest_dir = "COInr_db",
+    untar = TRUE,
+    quiet = FALSE
+    )
 ```
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
+To check for newer versions:
 
-You can also embed plots, for example:
+-   Go to: <https://osf.io/vrfwz/files/osfstorage>
+-   Navigate to the dbV5 folder.
+-   Choose your version → Click on the tree-dot menu → Right-click
+    Download → Copy Link Address.
 
-<img src="man/figures/README-pressure-1.png" width="100%" />
+Alternatively, you can also create a custom version from the **TSV
+format** database available at
+[Zenodo](https://zenodo.org/records/15515860) and make a custom version
+using [mkCOInr](https://github.com/meglecz/mkCOInr) ([Meglécz,
+2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+**For other markers** you will need a [database formatted to
+BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments),
+containing taxIDs and a [taxonomy
+file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
+If all sequences are extracted from NCBI-nt. The taxonomy file provided
+in [OSF](https://osf.io/vrfwz/) can be used without modification.

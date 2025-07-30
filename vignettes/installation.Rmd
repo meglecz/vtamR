@@ -45,32 +45,14 @@ operating systems.
 
 ## Install vtamR
 
-**Option 1**: Install from the latest tarball (recommended).
-Installing from the tarball includes the **vignettes**, which demonstrate a complete analysis workflow.
-
-```{r install_tarball, eval=FALSE}
+`pkg_install` will handle conveniently the R dependencies of `vtamR`. 
+```{r install_github, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pkg_install("https://github.com/meglecz/vtamR/releases/download/v0.2.0-test1/vtamR_0.2.0.tar.gz")
+pak::pkg_install("meglecz/vtamR@develop")
 ```
 
-After installation, you can access the vignettes with:
-
-```{r browseVignettes, eval=FALSE}
-browseVignettes("vtamR")
-```
-
-**Option 2**: Install from the GitHub repository (vignettes not included).
-You can also install `vtamR` directly from GitHub. 
-However, vignettes will not be included in this case due to how GitHub installations work.
-
-```{r install, eval=FALSE}
-if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pak("meglecz/vtamR@develop")
-```
-
-You can still view the HTML versions of the vignettes online:
-https://people.imbe.fr/~emeglecz/vtamr.html
-
+Read the **[Manual](https://people.imbe.fr/~emeglecz/vtamR)** 
+on how to construct a full metabarcoding pipeline.
 
 ## Install third party programs
 

@@ -141,6 +141,11 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 - add tarball to github
 - push
 
+## 2025/07/30
+
+Transfer install to README; install with pak and either vignettes from tarball or use webpage
+# change outdir to relative path in linux
+
 
 
 

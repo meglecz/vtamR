@@ -67,9 +67,9 @@ The idea is to
 - Examine the ASV in the mock samples and their read counts and pick the correct sequences.
 
 I suggest that you start by filtering/denoising your data set by using at least some of
-the following functions. This will eliminate most of the erroneous ASV, so
+the following functions as in the [Tutorial](tutorial-vtamr-pipeline.html). 
+This will eliminate most of the erroneous ASV, so
 it will be easier to identify the expected ASV from your mock samples. 
-See [tutorial-vtamr-pipeline](tutorial-vtamr-pipeline.html) vignette.
 
 - [Swarm](tutorial-vtamr-pipeline.html#denoising-by-swarm)
 - [LFNglobalReadCount](tutorial-vtamr-pipeline.html#lfnglobalreadcount)
