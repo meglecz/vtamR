@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 # Summary
 
 **vtamR** is a revised, completed version of 
-[VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) 
+[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
 (Validation and Taxonomic Assignation of Metabarcoding Data) 
 rewritten in R. It is a complete metabarcoding pipeline:
 
@@ -455,7 +455,7 @@ Let's make a density plot of the renkonen distances
 DensityPlot_RenkonenDistance(renkonen_within_df)
 ```
 
-Wa can also make a barplot of the renkonen distances, and use different colors for different sample types (real/mock/negative).
+We can also make a barplot of the renkonen distances, and use different colors for different sample types (real/mock/negative).
 
 **Note**:
 

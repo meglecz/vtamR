@@ -7,17 +7,21 @@
 <!-- badges: end -->
 
 **vtamR** is a revised, completed version of
-[VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)
+[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext)
 (Validation and Taxonomic Assignation of Metabarcoding Data) rewritten
 in R. It is a complete metabarcoding pipeline:
 
 -   Sequence analyses from raw fastq files of amplicon sequences till
-    Amplicon Sequence Variant ([ASV](#glossary)) table of validated ASVs
-    assigned to taxonomic groups.
+    Amplicon Sequence Variant
+    ([ASV](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary))
+    table of validated ASVs assigned to taxonomic groups.
 -   Handles technical or biological replicates of the same sample
 -   Uses positive and negative control samples to fine tune the
-    filtering and reduce [false positive](#glossary) and [false
-    negative](#glossary) occurrences.
+    filtering and reduce [false
+    positive](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)
+    and [false
+    negative](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)
+    occurrences.
 -   Can pool multiple data sets (results of earlier analyses)
 -   Can pool results from overlapping markers
 
@@ -186,8 +190,8 @@ using [mkCOInr](https://github.com/meglecz/mkCOInr) ([Meglécz,
 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 **For other markers** you will need a [database formatted to
-BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments),
+BLAST](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments),
 containing taxIDs and a [taxonomy
-file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
+file](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
 If all sequences are extracted from NCBI-nt. The taxonomy file provided
 in [OSF](https://osf.io/vrfwz/) can be used without modification.

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 **vtamR** is a revised, completed version of 
-[VTAM](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756) 
+[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
 (Validation and Taxonomic Assignation of Metabarcoding Data) 
 rewritten in R. It is a complete metabarcoding pipeline:
 

@@ -41,8 +41,6 @@ Avoid warning when running test_filters
 
 ## make useable examples
 
-## make a package
-
 ## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
 => modify vignette accordingly
 
@@ -133,7 +131,7 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 
 ## 2025/07/29 vignettes revised
 
-- and print stat df, which is too large print => knitr::kable(stat_df, format = "markdown") => DONE
+- print stat df, which is too large print => knitr::kable(stat_df, format = "markdown") => DONE
 - revise tutorial-vtamr-pipeline, from-fastq-to-df and make-mock-composition-file vignettes => DONE
 - PCR error => make explicit that is these parametre values are just for demo (tuto)  => DONE
 - install
@@ -147,6 +145,7 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 - change outdir to relative path in linux
 - change link to glossary in readme
 - web_doc copy vignettes Rmd, change TOC, knit for making html on website
+- Rempace mkCOInr paper by VTAM paper
 
 
 
