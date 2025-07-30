@@ -1,8 +1,9 @@
 ---
 title: "From fastq to data frame"
 output: 
-  rmarkdown::html_vignette:
+  html_document:
     toc: true
+    toc_float: true
     toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{From fastq to data frame}

@@ -26,7 +26,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 # Summary
 
 **vtamR** is a revised, completed version of 
@@ -53,10 +52,12 @@ include/exclude and order different steps of the analyses
 (read and variant count etc.)
 * The notion of marker and run has been dropped to simplify the analyses
 
+A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)**
+on how to construct a full metabarcoding pipeline is avalibale online.
+
 # Installation
 
-Please, follow the instructions in the 
-[installation](installation.html) vignette.
+Please, follow the [Installation](installation.html) instructions.
 
 # Tutorial
 
@@ -79,10 +80,10 @@ swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
 
 ```{r set_path_linux}
 #  Example for Linux
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn" # v2.10.1+
-swarm_path <- "swarm" # v2.1.12
+cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
+vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
+blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
+swarm_path <- "swarm"
 ```
 
 * **Adapt the path** to third party programs according to your installation
@@ -93,15 +94,12 @@ swarm_path <- "swarm" # v2.1.12
 ```{r general-parameters}
 num_threads <- 8
 sep <- ","
-outdir <- file.path(normalizePath("~"), "vtamR_demo_out")
+outdir <- "vtamR_demo_out"
 ```
 
 * `num_threads`: Number of CPUs for multithreaded programs
 * `sep`: Separator used in csv files
-* `outdir`: Name of the output directory. No need to use `file.path` 
-and `normalizePath`, if using always the same operating system. 
-You can use something like  
-`c:/data/vtamR_demo_out` on Windows or `~/vtamR_demo_out` on Linux like sytems. 
+* `outdir`: Name of the output directory.
 Make sure there is **no space in the path**.
 
 
@@ -122,7 +120,7 @@ asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 * [fastqinfo](#fastqinfo): CSV file with information on input files, primers, 
 tags, samples.
 * [mock_composition](#mock_composition): CSV file with expected ASVs in mock samples. 
-See [How to make a mock composition file](make-mock-composition-file.html): vignette to see
+See [How to make a mock composition file](make-mock-composition-file.html) on
 how to create this file.
 * [asv_list](#asv_list): CSV file with ASVs from earlier data sets. Optional.
 
@@ -172,8 +170,8 @@ must be
 - merged and quality filtered (`Merge`)
 - demultiplexed and tags and primers trimmed off (`SortReads`)
 
-See the [From fastq to data frame](from-fastq-to-df.html) vignette on
-how to deal with other experimental desing.
+See the [From fastq to data frame](from-fastq-to-df.html) on
+how to deal with other experimental design.
 
 **Merge and quality filter**
 
@@ -521,8 +519,7 @@ but I recommend you to use `max_mismatch=1`.
 
 **Note**: If you do not know the exact sequences of the species present in your 
 mock samples, and thus, you do not have the [mock_composition](#mock_composition)
-file yet, read the vignette [make-mock-composition-file]make-mock-composition-file.html) 
-that explains how to make this file.
+file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
 
 ```{r optimize-pcr-error}
 outfile <- file.path(outdir, "OptimizePCRerror.csv")
@@ -581,8 +578,7 @@ by examining the proportions of expected ASVs in the mock samples using the
 
 **Note**: If you do not know the exact sequences of the species present in your 
 mock samples, and thus, you do not have the [mock_composition](#mock_composition)
-file yet, read the vignette [make-mock-composition-file](make-mock-composition-file.html) 
-that explains how to make this file.
+file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
 
 ```{r optimize-lfn-sample-replicate}
 outfile = file.path(outdir, "OptimizeLFNsampleReplicate.csv")
@@ -681,8 +677,7 @@ where the replicates of the same sample have been pooled (see `?PoolReplicates`)
 
 - If you do not know the exact sequences of the species present in your 
 mock samples, and thus, you do not have the [mock_composition](#mock_composition)
-file yet, read the vignette [make-mock-composition-file](make-mock-composition-file.html) 
-that explains how to make this file.
+file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
 - sortedinfo_df contains a `sample` and `sample_type` `replicate` and `habitat`
 columns, but any data frame with these columns would do.
 - If you have restarted the analyses after the `SortReads` function, and  
@@ -869,10 +864,11 @@ knitr::kable(performance_metrics_df, format = "markdown")
 
 ### TaxAssign
 
-If you haven't assigned ASV to taxa yet (before making the mock_composition file),
-it is time to do it. See [make-mock-composition-file vignette](make-mock-composition-file.html).
-If you have already done it, you can use the same output as previously 
-(`asv_tax` data frame) and skip this step.
+If you have already assigned ASV to taxa, 
+([before making the mock_composition file](make-mock-composition-file.html))
+you can use the same output (`asv_tax` data frame) and skip this step.
+
+If you haven't assigned ASV to taxa yet it is time to do it. 
 
 See the brief description of the algorithm with `?TaxAssign`.
 

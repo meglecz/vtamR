@@ -1,0 +1,185 @@
+---
+title: "How to make a mock_composition file"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{How to make a mock_composition file}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  echo=TRUE,
+  eval=TRUE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+
+## What is it and when to use it
+
+The [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) file is 
+a CSV file with the following columns:
+
+ * sample: Name of the [mock](tutorial-vtamr-pipeline.html#glossary) sample
+ * action: 
+      * `keep`: Expected ASV in the mock, that should be kept in the data set
+      * `tolerate`: ASV that can be present in a mock, but it is not essential to keep it in the data set (e.g. badly amplified organism)
+ * [asv](tutorial-vtamr-pipeline.html#glossary): sequence of the ASV
+ * taxon: Optional; Name of the organism
+ * [asv_id](tutorial-vtamr-pipeline.html#glossary): Optional; If there is a conflict between asv and asv_id, the asv_id is ignored
+
+This file is essential in the 
+`MakeKnownOccurrences` function, that 
+
+- identifies known False Positives (FP) in control samples (mock and negative controls), 
+- identifies missing occurrences (FN = False Negatives in mock samples) 
+- calculates performance metrics (precision and sensitivity) based on control samples.
+- produces a [known_occurrences](tutorial-vtamr-pipeline.html#known_occurrences) file or data frame with the list of 
+expected occurrences (TP = True Positives) in mock samples and FP in all control samples.
+
+The [known_occurrences](tutorial-vtamr-pipeline.html#known_occurrences) 
+file is necessary for running the Optimize functions 
+(`OptimizePCRerror`, `OptimizeLFNsampleReplicate`, `OptimizeLFNreadCountLFNvariant`)
+to find the best parameter values for the LFN filters 
+(`LFNsampleReplicate`, `LFNvariant`, `LFNreadCount`) and `FilterPCRerror`.
+
+The [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) is also useful, 
+although not essential for the `WriteASVtable` function if you wish to add a column in 
+the output to easily find expected occurrences in each mock sample.
+
+## Make mock_composition
+
+Let's see how to identify the expected mock ASV form your data.
+
+The idea is to 
+
+- Prefilter your data set
+- Assign ASV to taxa
+- Examine the ASV in the mock samples and their read counts and pick the correct sequences.
+
+I suggest that you start by filtering/denoising your data set by using at least some of
+the following functions as in the [Tutorial](tutorial-vtamr-pipeline.html). 
+This will eliminate most of the erroneous ASV, so
+it will be easier to identify the expected ASV from your mock samples. 
+
+- [Swarm](tutorial-vtamr-pipeline.html#denoising-by-swarm)
+- [LFNglobalReadCount](tutorial-vtamr-pipeline.html#lfnglobalreadcount)
+- [FilterIndel](tutorial-vtamr-pipeline.html#filterindel)
+- [FilterCodonStop](tutorial-vtamr-pipeline.html#filtercodonstop)
+- [FilterChimera](tutorial-vtamr-pipeline.html#filterchimera)
+- [FilterRenkonen](tutorial-vtamr-pipeline.html#filterrenkonen)
+
+### Set parametres and access the demo files
+
+We will use the some of the files created by the first part of the 
+[Tutorial](tutorial-vtamr-pipeline.html) (Till the 
+[FilterRenkonen](tutorial-vtamr-pipeline.html#filterrenkonen))
+
+- The demo files are included in the `vtamR` package, hence the use of 
+`system.file()`. When using your own data just enter your file names.
+- `read_count_file` is the output of `FilterRenkonen` of the
+[Tutorial](tutorial-vtamr-pipeline.html).
+- The `blast_db` and `taxonomy`, `blast_path`, `num_threads` are set up as in the 
+[Tutorial](tutorial-vtamr-pipeline.html#set-up)
+
+
+```{r set_db}
+library(vtamR)
+library(dplyr)
+
+read_count_file <- system.file("extdata/demo/7_FilterRenkonen.csv", package = "vtamR")
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+blast_db <- system.file("extdata/db_test", package = "vtamR")
+blast_db <- file.path(blast_db, "COInr_reduced")
+blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
+num_threads = 8
+```
+
+### Assign taxa to ASVs
+
+TaxAssign will assign all asv in the input cas file or data frame (`read_count_file`).
+
+See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#taxassign).
+```{r}
+asv_tax <- TaxAssign(asv=read_count_file, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads
+                     )
+```
+
+### Pool replicates by sample
+
+See details of PoolReplicates [here](tutorial-vtamr-pipeline.html#poolreplicates).
+```{r}
+read_count_samples_df <- PoolReplicates(read_count_file)
+```
+
+### Make an ASV table with taxonomic assignments
+
+Make a data frame with ASVs and read counts in the 
+[wide format](tutorial-vtamr-pipeline.html#glossary) 
+and add the total number of reads for each ASV and
+the number of samples they are present (`add_sums_by_asv=T`) 
+and their taxonomic assignment. 
+This format is easier to read for humans, than the `read_count_df`.
+
+See details of `WriteASVtable` [here](tutorial-vtamr-pipeline.html#print-output).
+
+```{r}
+sortedinfo <- system.file("extdata/demo/sortedinfo.csv", package = "vtamR")
+tmp_asv_table <- WriteASVtable(read_count_samples_df, 
+                               sortedinfo=sortedinfo, 
+                               add_sums_by_asv=T, 
+                               asv_tax=asv_tax)
+```
+
+If there are many samples it might be better to select only mock samples 
+and pertinent columns.
+In this example, `tpos1` is the name of one of the mock samples. 
+You can do this separately for each mock.
+
+```{r}
+asv_tpos1 <- tmp_asv_table %>%
+  select(tpos1, Total_number_of_reads, Number_of_samples, asv_id, 
+         phylum, class, order, family, genus, species, asv
+         ) %>%
+  filter(tpos1 > 0) %>%
+  arrange(desc(tpos1))
+```
+
+Let's see the ASV present in `tpos1`.
+
+```{r}
+knitr::kable(asv_tpos1, format = "markdown")
+```
+
+In this mock sample, there should be the following 6 species:
+
+- *Caenis pusilla*
+- *Rheocricotopus*
+- *Phoxinus phoxinus*
+- *Hydropsyche pellucidula*
+- *Synorthocladius semivirens*
+- *Baetis rhodani*
+
+We can see that in spite of all the filtering we have done so far, there are still
+a lot of unexpected occurrences in this sample. 
+Most of them have low read counts and could be filtered out by 
+[Low Frequency Noise Filters](tutorial-vtamr-pipeline.html#glossary)
+
+### Select the expected ASV and make mock_composition
+
+You can now pick the correct sequences of the expected ASVs in each mock and make the [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) file.
+
