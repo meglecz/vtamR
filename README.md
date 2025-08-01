@@ -36,7 +36,7 @@ in R. It is a complete metabarcoding pipeline:
 -   The notion of marker and run has been dropped to simplify the
     analyses
 
-A detailes **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)** on how
+A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)** on how
 to construct a full metabarcoding pipeline is avalibale online.
 
 # Installation

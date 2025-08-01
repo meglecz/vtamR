@@ -52,9 +52,6 @@ include/exclude and order different steps of the analyses
 (read and variant count etc.)
 * The notion of marker and run has been dropped to simplify the analyses
 
-A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)**
-on how to construct a full metabarcoding pipeline is avalibale online.
-
 # Installation
 
 Please, follow the [Installation](installation.html) instructions.

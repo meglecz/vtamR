@@ -15,7 +15,7 @@ run_swarm(
 }
 \arguments{
 \item{read_count_df}{Data frame with the following variables:
-asv, plate, marker, sample, replicate, read_count.}
+asv, plate, marker, sample, replicate (optional), read_count.}
 
 \item{swarm_path}{Character string: path to swarm executables.}
 

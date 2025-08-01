@@ -29,12 +29,15 @@ in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 show warnings or errors.}
 }
 \value{
-Error message if problem with the files and stop the prorgam.
+Error message if problem with the files and stop the script.
 }
 \description{
 Check the format and coherence of different file types:
 \itemize{
 \item Check if all obligatory columns are present (all file_type)
+\item Check if all sample names are alpha-numerical
+\item Check if asv, tag_fw, tag_rv primer_fw, primer_rv have only IUPAC codes
+\item Check if read_count is numerical
 \item Check sample type, habitat homogeneity across replicates
 (fastqinfo, fastainfo, sortedinfo)
 \item Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)

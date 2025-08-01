@@ -5,7 +5,7 @@
 \title{MakeKnownOccurrences}
 \usage{
 MakeKnownOccurrences(
-  read_count_samples,
+  read_count,
   sortedinfo,
   mock_composition,
   sep = ",",
@@ -16,8 +16,8 @@ MakeKnownOccurrences(
 )
 }
 \arguments{
-\item{read_count_samples}{Data frame or csv file with the following variables:
-asv_id, plate, marker, sample, read_count, asv.}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, plate, marker, sample, replicate (optional), read_count, asv.}
 
 \item{sortedinfo}{Data frame or csv file with columns:
 sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}

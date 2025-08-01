@@ -4,16 +4,19 @@
 \alias{check_dir}
 \title{Check directory}
 \usage{
-check_dir(dir)
+check_dir(path, is_file = FALSE)
 }
 \arguments{
-\item{dir}{Character string naming a directory.}
+\item{path}{Character string naming a directory or a file including path.}
+
+\item{is_file}{logical; If TRUE, it is a file. Directory otherwise.}
 }
 \description{
 Check if directory exists, and create it if not.
+If it is a file path, get its directory path and create it.
 }
 \examples{
 \dontrun{
-check_dir(dir="data")
+check_dir(path="data")
 }
 }

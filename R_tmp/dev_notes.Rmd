@@ -60,8 +60,8 @@ library("dplyr")
 library("tidyr")
 library("ggplot2") 
 ### before release
-load_all(".")
 setwd("/home/meglecz/vtamR/")
+load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
 

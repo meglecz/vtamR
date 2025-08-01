@@ -1,6 +1,5 @@
 # Ideas for vtamR
 
-## check if sample names are all alphanumerical in check_file
 
 ## Generally, better gestion of the wd
 	setwd for test. do not change de directory in test_Merge 
@@ -13,25 +12,18 @@
 	}
 	learn more about system and system2
 	
-
-## clustering
-	Add cluster vsearch at the end of the tuto
-	Clustering by fixed threshold => DONE Cluster_size function
 	
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
 
 ## check input df or csv in every function and same for output
-
 	Merge return csv or df
 	asv_list : it is a filename. Maybe it could be also a data frame.
 	Mock_composition : it is a filename. Maybe it could be also a data frame.
 	
+## replace test_filters by an R script to run with demo files
 ## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
 Avoid warning when running test_filters
-
-
-## SortReads NO readcount in output, check why
 
 
 ## Check obligatory heading in doc for known_occurrences (tuto)
@@ -47,11 +39,10 @@ Avoid warning when running test_filters
 
 ## Merge:  arguments 'show.output.on.console', 'minimized' and 'invisible' are for Windows only
 
+## WriteASVtable => include replicates if necessary
 
 
 
-## Ignore
-- Rename LFNvariant to FilterLFNvariant => NO. All LFN filters starts by LFN. Names are already very long, do not add anything on top.
 
 
 # DONE 
@@ -132,7 +123,7 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 ## 2025/07/29 vignettes revised
 
 - print stat df, which is too large print => knitr::kable(stat_df, format = "markdown") => DONE
-- revise tutorial-vtamr-pipeline, from-fastq-to-df and make-mock-composition-file vignettes => DONE
+- revise tutorial-vtamr-pipeline, from-fastq-to-df and make-mock-compositxc vhion-file vignettes => DONE
 - PCR error => make explicit that is these parametre values are just for demo (tuto)  => DONE
 - install
 - build
@@ -147,9 +138,23 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 - web_doc copy vignettes Rmd, change TOC, knit for making html on website
 - Rempace mkCOInr paper by VTAM paper
 
+## 2025/07/31
 
+- CheckFileinfo completed => DONE
+	check if sample names are all alphanumerical
+	if only IUPAC char in tag, primer and asv
+	rad_count numerical
 
-
-
-
-
+- clustering
+	Add cluster vsearch at the end of the tuto => DONE
+	Clustering by fixed threshold => DONE 
+	Make swarm and ClusterSize adapted to both read_count_df and read_count_sample_df => DONE
+	Both swarm and ClusterSize can be run by sample or all toghether => DONE
+	
+## 2025/08/01
+	
+- Add swarm as an alternative for clustering at the end => DONE
+- MakeKnownOccurrences => add PoolReplicates, if necessary => DONE
+- Revise output file names and folders in tutrial => DONE
+- modify check_dir to create a directory or is does not exist and if it file, create a directory of the file => DONE
+- SortReads read_counts column filled

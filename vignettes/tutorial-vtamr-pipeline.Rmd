@@ -51,9 +51,6 @@ include/exclude and order different steps of the analyses
 (read and variant count etc.)
 * The notion of marker and run has been dropped to simplify the analyses
 
-A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)**
-on how to construct a full metabarcoding pipeline is avalibale online.
-
 # Installation
 
 Please, follow the [Installation](installation.html) instructions.
@@ -245,7 +242,7 @@ This will be useful when analyzing further data sets to ensure consistent
 ASV IDs across studies.
 
 ```{r derelicate}
-outfile <- file.path(outdir, "1_before_filter.csv")
+outfile <- file.path(outdir, "filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
 read_count_df <- Dereplicate(sortedinfo_df, 
@@ -323,7 +320,7 @@ or skip this step, since `Swarm` can cluster together very similar real ASV.
 
 ```{r swarm}
 by_sample <- TRUE
-outfile <- file.path(outdir, "2_Swarm_by_sample.csv")
+outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
 
 read_count_df <- Swarm(read_count_df, 
                        outfile=outfile, 
@@ -357,7 +354,7 @@ Let's eliminate [singletons](#glossary) and see how the number of ASV and reads 
 
 ```{r lfn-global-readcount}
 global_read_count_cutoff = 2
-outfile <- file.path(outdir, "3_LFNglobalReadCount.csv")
+outfile <- file.path(outdir, "filter", "3_LFNglobalReadCount.csv")
 
 read_count_df <- LFNglobalReadCount(read_count_df, 
                                     cutoff=global_read_count_cutoff, 
@@ -380,7 +377,7 @@ length by a number that is not a multiple of 3, it is likely to be an erroneous
 sequence or a pseudo-gene.
 
 ```{r filter-indel}
-outfile <- file.path(outdir, "4_FilterIndel.csv")
+outfile <- file.path(outdir, "filter", "4_FilterIndel.csv")
 
 read_count_df <- FilterIndel(read_count_df, outfile=outfile)
 
@@ -402,7 +399,7 @@ since the STOP codons of this genetic codes are also STOP codons in almost all g
 
 
 ```{r filter-codon-stop}
-outfile <- file.path(outdir, "5_FilterCodonStop.csv")
+outfile <- file.path(outdir, "filter", "5_FilterCodonStop.csv")
 genetic_code = 5
 
 read_count_df <- FilterCodonStop(read_count_df, outfile=outfile, genetic_code=genetic_code)
@@ -429,7 +426,7 @@ in at least `sample_prop` proportion of the samples where they are present.
 abskew=2
 by_sample = T
 sample_prop = 0.8
-outfile <- file.path(outdir, "6_FilterChimera.csv")
+outfile <- file.path(outdir, "filter", "6_FilterChimera.csv")
 
 read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
 
@@ -476,7 +473,7 @@ this cutoff to most other replicates of the sample. In this case,
 replicate 1 of the tnegtag sample will be eliminated.
 
 ```{r filer-renkonen}
-outfile <- file.path(outdir, "7_FilterRenkonen.csv")
+outfile <- file.path(outdir, "filter", "7_FilterRenkonen.csv")
 cutoff <- 0.4
 
 read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
@@ -521,7 +518,7 @@ mock samples, and thus, you do not have the [mock_composition](#mock_composition
 file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
 
 ```{r optimize-pcr-error}
-outfile <- file.path(outdir, "OptimizePCRerror.csv")
+outfile <- file.path(outdir, "optimize", "OptimizePCRerror.csv")
 OptimizePCRerror_df <- OptimizePCRerror(read_count_df, 
                                         mock_composition=mock_composition, 
                                         vsearch_path=vsearch_path, 
@@ -549,7 +546,7 @@ for `OptimizePCRerror`, but I recommend you to use `max_mismatch <- 1`.
 ```{r filter-pcr-error}
 pcr_error_var_prop <- 0.05
 max_mismatch <- 2
-outfile <- file.path(outdir, "8_FilterPCRerror.csv")
+outfile <- file.path(outdir, "filter", "8_FilterPCRerror.csv")
 
 read_count_df <- FilterPCRerror(read_count_df, 
                                 outfile=outfile, 
@@ -580,7 +577,7 @@ mock samples, and thus, you do not have the [mock_composition](#mock_composition
 file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
 
 ```{r optimize-lfn-sample-replicate}
-outfile = file.path(outdir, "OptimizeLFNsampleReplicate.csv")
+outfile = file.path(outdir, "optimize", "OptimizeLFNsampleReplicate.csv")
 OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(read_count=read_count_df,
                                                             mock_composition=mock_composition,
                                                             outfile=outfile)
@@ -598,7 +595,7 @@ Therefore, we choose 0.004 as a cutoff.
 
 ```{r lfn-sample-replicate}
 lfn_sample_replicate_cutoff <- 0.004
-outfile <- file.path(outdir, "9_LFNsampleReplicate.csv")
+outfile <- file.path(outdir, "filter", "9_LFNsampleReplicate.csv")
 
 read_count_df <- LFNsampleReplicate(read_count_df, 
                                     cutoff=lfn_sample_replicate_cutoff, 
@@ -621,10 +618,10 @@ least `min_replicate_number` replicates of the sample (2 by default).
 
 ```{r filter-min-replicate}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "10_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "filter", "10_FilterMinReplicate.csv")
 
 read_count_df <- FilterMinReplicate(read_count_df, 
-                                    min_replicate_number, 
+                                    cutoff=min_replicate_number, 
                                     outfile=outfile
                                     )
 stat_df <- GetStat(read_count_df, 
@@ -684,11 +681,8 @@ columns, but any data frame with these columns would do.
 file (in the `vtamR_demo_out/sorted` directory).
  
 ```{r make-known-occurrences}
-# Pool replicates
-read_count_samples_df <- PoolReplicates(read_count_df)
-
 # Detect known occurrences
-results <- MakeKnownOccurrences(read_count_samples = read_count_samples_df, 
+results <- MakeKnownOccurrences(read_count = read_count_df, 
                                 sortedinfo=sortedinfo_df, 
                                 mock_composition=mock_composition
                                 )
@@ -715,7 +709,7 @@ occurrences among the three replicates of each sample.
 
 
 ```{r optimize-lfn-readcount-lfn-variant}
-outfile = file.path(outdir, "OptimizeLFNreadCountLFNvariant.csv")
+outfile = file.path(outdir, "optimize", "OptimizeLFNreadCountLFNvariant.csv")
 
 OptimizeLFNreadCountLFNvariant_df <- OptimizeLFNreadCountLFNvariant(
   read_count_df,
@@ -744,7 +738,7 @@ See `?LFNvariant, ?LFNreadCount` and `?PoolFilters` for details.
 LFNvariant
 ```{r lfn-variant}
 lnf_variant_cutoff = 0.001
-outfile <- file.path(outdir, "11_LFNvariant.csv")
+outfile <- file.path(outdir, "filter", "11_LFNvariant.csv")
 
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
                                         cutoff=lnf_variant_cutoff, 
@@ -759,7 +753,7 @@ stat_df <- GetStat(read_count_df_lnf_variant,
 LFNreadCount
 ```{r lfn-readcount}
 lfn_read_count_cutoff <- 10
-outfile <- file.path(outdir, "12_LFNreadCount.csv")
+outfile <- file.path(outdir, "filter", "12_LFNreadCount.csv")
 
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff, 
@@ -773,7 +767,7 @@ stat_df <- GetStat(read_count_df_lfn_read_count,
 
 Combine results
 ```{r combine-results}
-outfile <- file.path(outdir, "13_poolLFN.csv")
+outfile <- file.path(outdir, "filter", "13_poolLFN.csv")
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
                              read_count_df_lnf_variant, 
                              outfile=outfile
@@ -796,37 +790,16 @@ of the sample (2 by default).
 
 ```{r filter-min-replicate2}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "14_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "filter", "14_FilterMinReplicate.csv")
 
 read_count_df <- FilterMinReplicate(read_count_df, 
-                                    min_replicate_number, 
+                                    cutoff=min_replicate_number, 
                                     outfile=outfile
                                     )
 stat_df <- GetStat(read_count_df, 
                    stat_df, 
                    stage="FilterMinReplicate", 
                    params=min_replicate_number
-                   )
-
-knitr::kable(stat_df, format = "markdown")
-```
-
-## Pool, TaxAssign and document
-
-### PoolReplicates
-
-Let's pool replicates of the same sample. 
-`PoolReplicates` function will take the mean non-zero read counts of each ASV 
-over replicates of the same sample.
-
-```{r pool-replicates}
-outfile <- file.path(outdir, "15_PoolReplicates.csv")
-read_count_samples_df <- PoolReplicates(read_count_df, 
-                                        outfile=outfile
-                                        )
-stat_df <- GetStat(read_count_samples_df, 
-                   stat_df, 
-                   stage="PoolReplicates"
                    )
 
 knitr::kable(stat_df, format = "markdown")
@@ -842,11 +815,11 @@ You can find false negatives in `missing_occurrences`,
 and true and false positives in `known_occurrences`.
 
 ```{r performance-metrics}
-missing_occurrences <- file.path(outdir, "missing_occurrences.csv")
-performance_metrics <- file.path(outdir, "performance_metrics.csv")
-known_occurrences <- file.path(outdir, "known_occurrences.csv")
+missing_occurrences <- file.path(outdir, "Missing_occurrences.csv")
+performance_metrics <- file.path(outdir, "Performance_metrics.csv")
+known_occurrences <- file.path(outdir, "Known_occurrences.csv")
 
-results <- MakeKnownOccurrences(read_count_samples_df, 
+results <- MakeKnownOccurrences(read_count_df, 
                                 sortedinfo=sortedinfo_df, 
                                 mock_composition=mock_composition, 
                                 known_occurrences=known_occurrences, 
@@ -861,13 +834,89 @@ performance_metrics_df <- results[[3]]
 knitr::kable(performance_metrics_df, format = "markdown")
 ```
 
-### TaxAssign
+## Pool Replicates, Make mOTU
+
+### PoolReplicates
+
+Replicates have been used to make sure the repetability and reduce experimental
+fluctuations. We do not need them any more, so let's pool replicates of the same sample. 
+
+`PoolReplicates` function will take the mean non-zero read counts of each ASV 
+over replicates of the same sample.
+
+```{r pool-replicates}
+outfile <- file.path(outdir, "filter", "15_PoolReplicates.csv")
+read_count_samples_df <- PoolReplicates(read_count_df, 
+                                        outfile=outfile)
+
+stat_df <- GetStat(read_count_samples_df, 
+                   stat_df, 
+                   stage="PoolReplicates")
+
+knitr::kable(stat_df, format = "markdown")
+```
+
+### Make mOTU
+
+If you are not interested in intra-specific variation, the ASV can be clustered to mOTUs.
+
+**Option 1 - ClusterSize**
+
+The simplest is to cluster all ASV to the same mOTU within a fixed radius using the
+`cluster_size` algorithm of `vsearch`. 
+
+```{r motu-clustersize}
+outfile <- file.path(outdir, "filter", "16_mOTU_ClusterSize.csv")
+identity <- 0.97 
+read_count_samples_df_ClusterSize <- ClusterSize(read_count_samples_df,
+                                     id=identity, 
+                                     vsearch_path=vsearch_path, 
+                                     outfile=outfile)
+
+stat_df <- GetStat(read_count_samples_df_ClusterSize, 
+                   stat_df, 
+                   stage="ClusterSize_mOTU",
+                   param=identity
+                   )
+```
+
+**Option 2 - Swarm**
+
+Alternatively, it is possible to run `Smarm` on the whole data set (`by_sample=FALSE`)
+using a highest `d` than the default (`1`). In our earlier analyses, we found that `d=7`
+gives a good proxy of clustering different ASV of the same species together for 
+a 313 bp fragment of the COI gene. By no means it is a standard value. 
+You should experiment using a series of different `d` values.
+
+
+```{r motu-swarm}
+outfile <- file.path(outdir, "filter", "17_mOTU_Swarm.csv")
+by_sample <- FALSE
+d = 7
+read_count_samples_df_swarm <- Swarm(read_count_samples_df, 
+                       swarm_path=swarm_path, 
+                       swarm_d=d,
+                       fastidious=FALSE,
+                       num_threads=num_threads, 
+                       by_sample=by_sample,
+                       outfile= outfile)
+
+stat_df <- GetStat(read_count_samples_df_swarm, stat_df, stage="Swarm_mOTU", params=d)
+
+knitr::kable(stat_df, format = "markdown")
+```
+
+Apparently, the 2 different clusterings are doing a similar job in this case.
+
+## TaxAssign
 
 If you have already assigned ASV to taxa, 
 ([before making the mock_composition file](make-mock-composition-file.html))
 you can use the same output (`asv_tax` data frame) and skip this step.
 
-If you haven't assigned ASV to taxa yet it is time to do it. 
+If you haven't assigned ASV to taxa yet, it is time to do it. You can either assign
+the ASV (`read_count_samples_df`) as in this example, or the centroids of the 
+mOTUS (`read_count_samples_df_swarm` or `read_count_samples_df_ClusterSize`)
 
 See the brief description of the algorithm with `?TaxAssign`.
 
@@ -891,8 +940,9 @@ asv_tax <- TaxAssign(asv=read_count_samples_df,
 
 ## Print output
 
-`WriteASVtable` will reorganize the `read_count_samples_df` data frame, 
-with samples in columns and ASV in lines 
+`WriteASVtable` will reorganize the `read_count_samples_df` data frame,
+(or `read_count_samples_df_swarm` or `read_count_samples_df_ClusterSize`)
+with samples in columns and ASV (or centroids of mOTUs) in lines 
 (from [long format](#glossary) to [wide format](#glossary)).
 
 It is possible to add supplementary information as well:
@@ -924,7 +974,7 @@ asv_table_df <- WriteASVtable(read_count_samples_df,
 Print the number of reads, ASVs, samples and replicates after each step to a CSV file.
 
 ```{r}
-write.csv(stat_df, file = file.path(outdir, "stat_steps.csv"))
+write.csv(stat_df, file = file.path(outdir, "Summary.csv"))
 ```
 
 # Supplementary functions
@@ -967,7 +1017,8 @@ has a `value` we are looking for.
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
-tmp_ASV_27 <- HistoryBy(dir=outdir, 
+filter_dir <- file.path(outdir, "filter")
+tmp_ASV_27 <- HistoryBy(dir=filter_dir, 
                         feature="asv_id", 
                         value="27"
                         )
@@ -977,7 +1028,7 @@ knitr::kable(head(tmp_ASV_27), format = "markdown")
 
 *Get the history of a sequence of the ASV  (`feature`).*
 ```{r}
-tmp_replicate_1 <- HistoryBy(dir=outdir, 
+tmp_replicate_1 <- HistoryBy(dir=filter_dir, 
                              feature="asv",
                              value="CCTTTATTTTATTTTCGGTATCTGGTCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT"
                              )
@@ -987,7 +1038,7 @@ knitr::kable(tmp_replicate_1, format = "markdown")
 
 *Get the history of the sample (`feature`) tpos1 (`value`).*
 ```{r}
-tmp_sample_tpos1 <- HistoryBy(dir=outdir, 
+tmp_sample_tpos1 <- HistoryBy(dir=filter_dir, 
                               feature="sample", 
                               value="tpos1"
                               )
@@ -1017,7 +1068,7 @@ From this data frame, we can see that the negative control sample become
 among the number of reads of different real samples.
 
 ```{r}
-read_count_by_sample <- SummarizeBy(dir=outdir, 
+read_count_by_sample <- SummarizeBy(dir=filter_dir, 
                                     feature="read_count", 
                                     grouped_by="sample"
                                     )
@@ -1031,7 +1082,7 @@ knitr::kable(read_count_by_sample, format = "markdown")
 From this data frame, we can see that the negative control sample become "clean" 
 after the LFN filters, and the mock samples has 10 ASVs at the end.
 ```{r}
-asv_by_sample <- SummarizeBy(dir=outdir, 
+asv_by_sample <- SummarizeBy(dir=filter_dir, 
                              feature="asv", 
                              grouped_by="sample"
                              )
@@ -1044,7 +1095,7 @@ knitr::kable(asv_by_sample, format = "markdown")
 
 We can see that number of ASVs are comparable in different replicates.
 ```{r}
-asvid_by_replicate <- SummarizeBy(dir=outdir, 
+asvid_by_replicate <- SummarizeBy(dir=filter_dir, 
                                   feature="asv_id", 
                                   grouped_by="replicate"
                                   )
@@ -1159,8 +1210,7 @@ This function can be useful for counting the number of reads in the input `fastq
 * `pattern`: Regular expression; Check only files for `pattern` in the file name
 
 ```{r, eval=FALSE}
-dir <- "vtamR_test/data"
-df <- CountReadsDir(dir, 
+df <- CountReadsDir(dir=fastq_dir, 
                     pattern="_fw.fastq.gz", 
                     file_type="fastq"
                     )
@@ -1209,6 +1259,7 @@ or among replicates of the same sample (compare_all=FALSE) and plot them.
 * `sample_types`: Data frame or CSV file containing info on sample types for each sample.
 
 ```{r}
+sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
 renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
 DensityPlot_RenkonenDistance(renkonen_within_df)
