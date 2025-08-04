@@ -19,7 +19,7 @@ TaxAssign(
 )
 }
 \arguments{
-\item{asv}{Data frame or csv file containing an asv column.}
+\item{asv}{Data frame or csv file containing an asv and asv_id columns.}
 
 \item{taxonomy}{TSV file containing the following columns:
 tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been merged to tax_id),

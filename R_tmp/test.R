@@ -53,9 +53,11 @@ sortedinfo_df <- SortReads(fastainfo_df,
 ###############
 ### dereplicate
 ###############
+updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
 read_count_df <- Dereplicate(sortedinfo_df, 
                              dir=sorted_dir, 
-                             asv_list=asv_list
+                             asv_list=asv_list,
+                             updated_asv_list = updated_asv_list
 )
 
 ### stat
@@ -151,6 +153,40 @@ read_count_samples_df <- PoolReplicates(read_count_df)
 results <- MakeKnownOccurrences(read_count_samples_df, 
                                 sortedinfo=sortedinfo_df, 
                                 mock_composition=mock_composition)
+
+
+updated_asv_list <- file.path(outdir, "updated_asv_list_end.tsv")
+UpdateASVlist(asv_list1 = read_count_samples_df,
+              asv_list2 =asv_list, 
+              outfile=updated_asv_list
+)
+
+### TaxAssign
+asv_tax <- TaxAssign(asv=read_count_samples_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads)
+
+out_tax <- file.path(outdir, "taxonomy.csv")
+asv_tax <- TaxAssign(asv=read_count_samples_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads,
+                     outfile = out_tax)
+
+### WriteASVtable
+outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
+asv_table_df <- WriteASVtable(read_count_samples_df, 
+                              outfile=outfile, 
+                              asv_tax=asv_tax, 
+                              sortedinfo=sortedinfo_df, 
+                              add_empty_samples=T, 
+                              add_sums_by_sample=T, 
+                              add_sums_by_asv=T, 
+                              add_expected_asv=T, 
+                              mock_composition=mock_composition)
 
 
 #####################

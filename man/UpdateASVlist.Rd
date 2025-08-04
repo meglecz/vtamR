@@ -4,38 +4,36 @@
 \alias{UpdateASVlist}
 \title{Update ASV list}
 \usage{
-UpdateASVlist(df, asv_list, outfile, sep = ",")
+UpdateASVlist(asv_list1, asv_list2, outfile, sep = ",", return_df = FALSE)
 }
 \arguments{
-\item{df}{Data frame with columns:
+\item{asv_list1}{Data frame or csv file with columns:
 asv_id,asv}
 
-\item{asv_list}{Character string: name of the input CSV file with columns:
-asv_id,asv.}
+\item{asv_list2}{Data frame or csv file with columns:
+asv_id,asv}
 
 \item{outfile}{Character string: output csv file name.}
 
 \item{sep}{Field separator character in input and output csv files.}
+
+\item{return_df}{logical; if TRUE returns a data frame}
 }
 \value{
-Updated csv file with all unique asv_id - asv pairs
+Updated data frame or csv file with all unique asv_id - asv pairs
 in the input data frame and csv file.
 If there is a conflict within or between the input data stops with
 an error message.
 }
 \description{
-Pools unique asv - asv_id pairs in the input data frame
-and in the input file (asv_list).
-}
-\details{
-The input file is typically a csv file containing ASVs with their asv_ids
-seen in earlier data sets. This function is used to homogenize
-asv_ids between different data sets.
+Pools unique asv - asv_id pairs in the input data frames or csv files.
+Check if there is no conflict within an between the input data.
+Returns a complete and unique list of asv - asv_id pairs.
 }
 \examples{
 \dontrun{
-UpdateASVlist(df=read_count_df, 
-asv_list="data/asv_list.csv", 
+UpdateASVlist(asv_list1=read_count_df, 
+asv_list2="data/asv_list.csv", 
 outfile="out/updated_asv_list.csv"
 )
 }

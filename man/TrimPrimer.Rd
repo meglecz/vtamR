@@ -20,7 +20,7 @@ TrimPrimer(
 )
 }
 \arguments{
-\item{fastainfo}{Data frame of csv file with the following columns:
+\item{fastainfo}{Data frame or csv file with the following columns:
 tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count}
 
 \item{fasta_dir}{Character string: directory of the fasta files to be trimmed}

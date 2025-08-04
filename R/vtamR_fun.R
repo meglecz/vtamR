@@ -13,36 +13,8 @@ NULL
 
 #' Check directory
 #' 
-#' Create directory if does not exists.
-#' Add slash to the end of the directory name.
-#' 
-#' @param dir Character string naming a directory.
-#' @returns Character string naming a directory appended by slash if necessary.
-#' @examples 
-#' \dontrun{
-#' check_dir(dir="data")
-#' }
-#' @export
-
-check_dir_old <- function(dir){
-  
-  if(dir == ""){# present dir => do not add /
-    return(dir)
-  }else{
-    if(!(endsWith(dir, "/"))){
-      dir <- paste(dir, '/', sep="")
-    }
-    if(!dir.exists(dir)){
-      dir.create(dir, recursive =TRUE)
-    }
-    return(dir)
-  }
-}
-
-#' Check directory
-#' 
 #' Check if directory exists, and create it if not.
-#' If it is a file path, get its directory path and create it.
+#' If it is a file path, get its directory path and create dir in necessary.
 #' 
 #' @param path Character string naming a directory or a file including path.
 #' @param is_file logical; If TRUE, it is a file. Directory otherwise.
@@ -64,25 +36,6 @@ check_dir <- function(path, is_file=FALSE){
       dir.create(dir_to_create, recursive =TRUE)
     }
 }
-
-
-ensure_path_exists <- function(path) {
-  # Remove trailing slashes to normalize
-  path <- normalizePath(path, winslash = "/", mustWork = FALSE)
-  
-  # Check if it's a file (contains a dot and not ending with / or \)
-  is_file <- grepl("\\.[^/\\\\]+$", path)
-  
-  
-  
-  if (!dir.exists(dir_to_create)) {
-    dir.create(dir_to_create, recursive = TRUE, showWarnings = FALSE)
-    message("Created directory: ", dir_to_create)
-  } else {
-    message("Directory already exists: ", dir_to_create)
-  }
-}
-
 
 #' GetStat
 #' 
@@ -844,7 +797,7 @@ TrimPrimer_OneFile <- function(fasta,
 #' Can check both orientations.
 #' Count the number of reads in the output files.
 #'   
-#' @param fastainfo Data frame of csv file with the following columns: 
+#' @param fastainfo Data frame or csv file with the following columns: 
 #' tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count
 #' @param fasta_dir Character string: directory of the fasta files to be trimmed
 #' @param compress logical: Compress output files to gzip format.
@@ -1171,7 +1124,7 @@ SortReads <- function(fastainfo,
 #' Count the number of reads in all fatsa files in the fasta column of a df.
 #' Add read_count column to df.
 #'  
-#' @param df Data frame with fatsa column containing name of fasta files 
+#' @param df Data frame with fasta column containing name of fasta files 
 #' @param dir Character string: directory name with the fasta files.
 #' @returns  Data frame with the read_count column added to the input.
 #' @examples
@@ -1408,7 +1361,8 @@ SortReads_no_reverse <- function(fastainfo,
 #' @export
 #'
 make_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end=T, outdir=""){
-  # select tag combinations pour the fasta file
+  
+  # select tag combinations for the fasta file
   tags <- fastainfo_df %>%
     filter(fasta==fasta_file) %>%
     select(tag_fw, tag_rv)
@@ -1603,17 +1557,16 @@ Dereplicate <- function(sortedinfo,
 
 #' Add ids to ASVs
 #' 
-#' Add asv_ids to a data frame that have an asv column. 
+#' Add asv_ids to a data frame or csv that have an asv column. 
 #' Can take into account already existing asv - asv_id pairs 
-#' (from earlier data sets) present in asv_list file.
+#' (from earlier data sets) present in asv_list.
 #' 
 #' If updated_asv_list file name is given, the input asv_list is 
 #' completed by new asvs and asv_ids.
 #' 
-#' @param read_count_df Data frame with columns: asv,sample,replicate,read_count
-#' @param asv_list Character string: file with asv - asv_id pairs
-#' from earlier analyses. Optional. It is used to homogenize asv_ids between 
-#' different data sets.
+#' @param read_count Data frame or csv with columns: asv,sample,replicate,read_count
+#' @param asv_list Data frame or csv with columns: file with asv - asv_id
+#' Optional. It is used to homogenize asv_ids between different data sets.
 #' @param updated_asv_list Character string: output file with 
 #' the updated asv - asv_id pairs. Optional.
 #' @param sep Field separator character in input and output csv files.
@@ -1626,21 +1579,36 @@ Dereplicate <- function(sortedinfo,
 #' }
 #' @export
 #' 
-add_ids <- function(read_count_df, 
-                    asv_list="", 
+add_ids <- function(read_count, 
+                    asv_list=NULL, 
                     updated_asv_list="", 
                     sep=",", 
                     quiet=T
                     ){
   
-  if(asv_list != ""){  # read already existing asvs, if the file is given
-    asv_df <- read.csv(asv_list, sep=sep, header=TRUE)
-    t <- check_one_to_one_relationship(asv_df)
+  if(is.character(read_count)){
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
   }else{
-    asv_df <- data.frame("asv_id"=integer(),
-                         "asv"=as.character()
-                         )
+    read_count_df <- read_count
   }
+  
+  ### read earlier asv_id - asv pairs
+  if(is.character(asv_list)){
+    if(asv_list == ""){ # no filename
+      asv_df <- data.frame("asv_id"=integer(),
+                           "asv"=as.character())
+    }else{  # read known asv
+      asv_df <- read.csv(asv_list, header=T, sep=sep)
+    }
+  }else if (is.null(asv_list)){
+    asv_df <- data.frame("asv_id"=integer(),
+                         "asv"=as.character())
+  }else{
+    asv_df <- asv_list
+  }
+  t <- check_one_to_one_relationship(asv_df) # stop execution, if FALSE
+  
+
   # list of unique asvs
   asv_uniq <- unique(read_count_df$asv)
   # list of unique asvs, not in the asv_df
@@ -2011,54 +1979,68 @@ check_one_to_one_relationship <- function(df){
 
 #' Update ASV list
 #' 
-#' Pools unique asv - asv_id pairs in the input data frame 
-#' and in the input file (asv_list). 
+#' Pools unique asv - asv_id pairs in the input data frames or csv files. 
+#' Check if there is no conflict within an between the input data.
+#' Returns a complete and unique list of asv - asv_id pairs.
 #' 
-#' The input file is typically a csv file containing ASVs with their asv_ids
-#' seen in earlier data sets. This function is used to homogenize 
-#' asv_ids between different data sets.
 #' 
-#' @param df Data frame with columns:
+#' @param asv_list1 Data frame or csv file with columns:
 #' asv_id,asv
-#' @param asv_list Character string: name of the input CSV file with columns: 
-#' asv_id,asv.
+#' @param asv_list2 Data frame or csv file with columns:
+#' asv_id,asv
 #' @param outfile Character string: output csv file name. 
 #' @param sep Field separator character in input and output csv files.
-#' @returns Updated csv file with all unique asv_id - asv pairs 
+#' @param return_df logical; if TRUE returns a data frame
+#' @returns Updated data frame or csv file with all unique asv_id - asv pairs 
 #' in the input data frame and csv file.
 #' If there is a conflict within or between the input data stops with 
 #' an error message.
 #' @examples
 #' \dontrun{
-#' UpdateASVlist(df=read_count_df, 
-#' asv_list="data/asv_list.csv", 
+#' UpdateASVlist(asv_list1=read_count_df, 
+#' asv_list2="data/asv_list.csv", 
 #' outfile="out/updated_asv_list.csv"
 #' )
 #' }
 #' @export
 #' 
-UpdateASVlist <- function(df, asv_list, outfile, sep=","){
+UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALSE){
   
-  asv_df <- read.csv(asv_list, sep=sep, header=TRUE)
-  #  asv_df[2,1] <- 1
-  t <- check_one_to_one_relationship(asv_df)
-  # make a dataframe with the unique combinations of asv_id-asv
-  new_df <- read_count_df %>%
+  if(is.character(asv_list1)){
+    df1 <- read.csv(asv_list1, header=T, sep=sep)
+  }else{
+    df1 <- asv_list1
+  }
+  # select columns and make unique
+  df1 <- df1 %>%
     select(asv_id, asv) %>%
     distinct()
-  t <- check_one_to_one_relationship(new_df)
-  # pool earlier asvs and new ones and avoid redundancy
-  asv_df <- rbind(asv_df, new_df) %>%
+  t <- check_one_to_one_relationship(df1)
+  
+  if(is.character(asv_list2)){
+    df2 <- read.csv(asv_list2, header=T, sep=sep)
+  }else{
+    df2 <- asv_list2
+  }  
+  # select columns and make unique
+  df2 <- df2 %>%
+    select(asv_id, asv) %>%
+    distinct()
+  t <- check_one_to_one_relationship(df2)
+  
+  # pool 
+  df1 <- rbind(df1, df2) %>%
     distinct() %>%
     arrange(asv_id)
-  t <- check_one_to_one_relationship(asv_df)
+  t <- check_one_to_one_relationship(df1)
   
-  if(outfile == ""){
-    str <- paste("_", trunc(as.numeric(trunc(Sys.time()))), ".", sep="")
-    outfile <- sub("\\.", str, asv_list)
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(df1, file=outfile, row.names = FALSE, sep=sep)
   }
-  check_dir(outfile, is_file=TRUE)
-  write.table(asv_df, file=outfile, row.names = FALSE, sep=sep)
+  if(return_df){
+    return(df1)
+  }
 }
 
 #' LFNglobalReadCount
@@ -3286,7 +3268,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' * refres: Minimum resolution of the hit to be validated
 #' * ltgres: Maximum resolution of the LTG.
 #'  
-#' @param asv Data frame or csv file containing an asv column.
+#' @param asv Data frame or csv file containing an asv and asv_id columns.
 #' @param ltg_params Data frame or csv file with a list of 
 #' percentage of identity values (pid) and associated parameters 
 #' (pcov,phit,taxn,seqn,refres,ltgres).
@@ -3333,8 +3315,6 @@ TaxAssign <- function(asv,
                       fill_lineage=TRUE
                       ){
 
-outdir <- dirname(outfile)
-check_dir(outdir)
 
 taxonomy <- path.expand(taxonomy)
 blast_db <- path.expand(blast_db)
@@ -3345,6 +3325,12 @@ if(is.character(asv)){
 }else{
   asv_df <- asv
 }
+# get unique list
+asv_df <- asv_df %>%
+  select(asv_id, asv) %>%
+  distinct() %>%
+  arrange(asv_id)
+t <- check_one_to_one_relationship(asv_df)
 
 if (is.character(ltg_params)){ 
   if(ltg_params == ""){ # default value for ltg_params_df
@@ -3392,6 +3378,7 @@ check_dir(outdir_tmp)
 ### run blast and clean/complete results
 # run blast and read read results to data frame 
 # (blast_res columns: "qseqid","pident","qcovhsp","staxids")
+# Query seqid are the same as the asv_id
 blast_res <- run_blast(asv_df,
                        blast_db=blast_db, 
                        blast_path=blast_path, 
@@ -3407,24 +3394,19 @@ blast_res <- update_taxids(blast_res, old_taxid)
 blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
   select(-parent_tax_id, -rank, -name_txt) # "qseqid"   "pident"   "qcovhsp"  "staxids"  "taxlevel"
 
-### make a lineage for each taxid in blastres
+### make a lineage for each taxid in blast_res
 lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
-# initialize data frame with asv and NA for all other cells
-unique_asv_df <- asv_df %>%
-  ungroup() %>%
-  select(asv_id, asv) %>%
-  unique()
-taxres_df <- data.frame(asv_id = unique_asv_df$asv_id, 
-                        ltg_taxid = NA, 
-                        pid=NA, 
-                        pcov=NA, 
-                        phit=NA, 
-                        taxn=NA, 
-                        seqn=NA, 
-                        refres=NA, 
-                        ltgres=NA, 
-                        asv = unique_asv_df$asv
-                        )
+
+# new data frame with all asv, asv_id and NA for the other columns
+taxres_df <- asv_df %>%
+  mutate(ltg_taxid = NA, 
+         pid=NA, 
+         pcov=NA, 
+         phit=NA, 
+         taxn=NA, 
+         seqn=NA, 
+         refres=NA, 
+         ltgres=NA)
 
 for(i in 1:nrow(taxres_df)){ # go through all sequences 
   for(p in 1:nrow(ltg_params_df)){ # for each pid
@@ -3436,9 +3418,9 @@ for(i in 1:nrow(taxres_df)){ # go through all sequences
     refresl <- ltg_params_df[p,"refres"]
     ltgresl <- ltg_params_df[p,"ltgres"]
     
-    # filter the blastres according to  pid, pcov, refres
+    # filter the blastres according to qseqid,  pid, pcov, refres
     df_intern <- blast_res %>%
-      filter(qseqid==i & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
+      filter(qseqid==taxres_df$asv_id[i] & pident>=pidl & qcovhsp>=pcovl & taxlevel>=refresl)
     
     # check if enough taxa and seq among validated hits
     tn <- length(unique(df_intern$staxids))
@@ -3446,8 +3428,8 @@ for(i in 1:nrow(taxres_df)){ # go through all sequences
       # make ltg if all conditions are met
       ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
       # fill out line with the ltg and the parmeters that were used to get it
-      taxres_df[i,2:(ncol(taxres_df)-1)] <- 
-        c(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
+      taxres_df[i, 3:(ncol(taxres_df))] <- 
+        list(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
       break
     } # end if
   } # end p (pids)
@@ -3489,7 +3471,7 @@ return(taxres_df)
 #' 
 #' Run BLAST using ASVs of the input data fram as queries.
 #'  
-#' @param df Data frame containing and asv column.
+#' @param df Data frame containing and asv and asv_id columns.
 #' @param blast_db BLAST DB including path.
 #' @param blast_path Character string: path to BLAST executables. 
 #' @param outdir Character string: output directory.
@@ -3524,9 +3506,10 @@ run_blast <- function(df,
   check_dir(outdir)
   
   # make fasta file with unique reads; use numbers as ids  
-  seqs <- unique(df$asv)
+#  seqs <- unique(df$asv)
   fas <- file.path(outdir, 'unique.fas')
-  write_fasta(seqs, fas, seq_as_id=F)
+  write_fasta_df(df, outfile=fas, read_count=FALSE)
+#  write_fasta(seqs, fas, seq_as_id=T)
   # define the name of the output file
   blast_out <- file.path(outdir, 'blast.out')
   

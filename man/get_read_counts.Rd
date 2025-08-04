@@ -7,7 +7,7 @@
 get_read_counts(df, dir)
 }
 \arguments{
-\item{df}{Data frame with fatsa column containing name of fasta files}
+\item{df}{Data frame with fasta column containing name of fasta files}
 
 \item{dir}{Character string: directory name with the fasta files.}
 }

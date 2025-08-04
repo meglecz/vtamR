@@ -1136,8 +1136,8 @@ and reduces greatly the number of ASVs kept in this file.
 updated_asv_list <- file.path(outdir, 
                               "updated_ASV_list.csv"
                               )
-UpdateASVlist(read_count_df,
-              asv_list=asv_list, 
+UpdateASVlist(asv_list1=read_count_df,
+              asv_list2=asv_list, 
               outfile=updated_asv_list
               )
 ```
@@ -1354,7 +1354,7 @@ CSV file or data frame with the following columns.
       all occurrences in negative controls; occurrences in real samples 
       corresponding to an incompatible habitats (e.g. an ASV mostly present 
       in marine samples is unexpected in a freshwater sample)
- * [asv_id](#glossary)
+ * [asv_id](#glossary): optional
  * [asv](#glossary): sequence of the ASV
  
 ## asv_list

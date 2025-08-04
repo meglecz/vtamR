@@ -16,7 +16,7 @@ run_blast(
 )
 }
 \arguments{
-\item{df}{Data frame containing and asv column.}
+\item{df}{Data frame containing and asv and asv_id columns.}
 
 \item{blast_db}{BLAST DB including path.}
 

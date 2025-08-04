@@ -1,5 +1,36 @@
 # Ideas for vtamR
 
+### get %id or swarm R for clustering
+## density plot % identity of ASVs within and between clusters
+# %id among all sequences (use vsearch all_againts_all, ignore asv too different)
+# clustering with variying d
+# for each d, density plot
+
+## classify clustrers
+# clustering with variying d
+# taxassign all ASV
+# for each d classify each clusters at each taxlevel
+#  - close => All same taxon within cluster, all ASV of th taxon is in the same cluster
+#  - open => All same taxon within cluster, same taxon is fauld in other cluster as well
+#  - hybrid-compatible => different taxa within cluster but they are all compatible => taxa and NA
+#  - hybrid-noncompatible => different taxa within cluster and it is not due to NA
+
+
+## replace test_filters by an R script to run with demo files
+## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
+Avoid warning when running test_filters
+
+## make useable examples
+
+## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
+=> modify vignette accordingly
+
+
+## Merge:  arguments 'show.output.on.console', 'minimized' and 'invisible' are for Windows only
+
+## WriteASVtable => include replicates if necessary
+
+## work on compression-decompression
 
 ## Generally, better gestion of the wd
 	setwd for test. do not change de directory in test_Merge 
@@ -15,33 +46,6 @@
 	
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
-
-## check input df or csv in every function and same for output
-	Merge return csv or df
-	asv_list : it is a filename. Maybe it could be also a data frame.
-	Mock_composition : it is a filename. Maybe it could be also a data frame.
-	
-## replace test_filters by an R script to run with demo files
-## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
-Avoid warning when running test_filters
-
-
-## Check obligatory heading in doc for known_occurrences (tuto)
-
-## Check the use of asv_id in taxassign. If not asv_id, error message (this is corrected 2025/06/17). Make sure that the asv_id and asv are kept coherently
-## chek Taxassign if asv_id column is really necessary in input, and adapt doc.
-
-## make useable examples
-
-## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
-=> modify vignette accordingly
-
-
-## Merge:  arguments 'show.output.on.console', 'minimized' and 'invisible' are for Windows only
-
-## WriteASVtable => include replicates if necessary
-
-
 
 
 
@@ -158,3 +162,17 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 - Revise output file names and folders in tutrial => DONE
 - modify check_dir to create a directory or is does not exist and if it file, create a directory of the file => DONE
 - SortReads read_counts column filled
+
+## 2025/08/04
+
+
+## check input df or csv in every function and same for output
+	Merge return csv or df => DONE
+	add_ids : it is a filename. Maybe it could be also a data frame.=> DONE
+	Mock_composition : it is a filename. Maybe it could be also a data frame. => DONE
+	UpdateASVlist => DONE
+
+## Check obligatory heading in doc for known_occurrences (tuto) => DONE
+
+## Check the use of asv_id in taxassign. asv_id are obligatory and they are used in BLAST
+

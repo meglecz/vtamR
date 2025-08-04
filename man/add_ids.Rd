@@ -5,19 +5,18 @@
 \title{Add ids to ASVs}
 \usage{
 add_ids(
-  read_count_df,
-  asv_list = "",
+  read_count,
+  asv_list = NULL,
   updated_asv_list = "",
   sep = ",",
   quiet = T
 )
 }
 \arguments{
-\item{read_count_df}{Data frame with columns: asv,sample,replicate,read_count}
+\item{read_count}{Data frame or csv with columns: asv,sample,replicate,read_count}
 
-\item{asv_list}{Character string: file with asv - asv_id pairs
-from earlier analyses. Optional. It is used to homogenize asv_ids between
-different data sets.}
+\item{asv_list}{Data frame or csv with columns: file with asv - asv_id
+Optional. It is used to homogenize asv_ids between different data sets.}
 
 \item{updated_asv_list}{Character string: output file with
 the updated asv - asv_id pairs. Optional.}
@@ -31,9 +30,9 @@ show warnings or errors.}
 Data frame with asv_id column added to the input data frame.
 }
 \description{
-Add asv_ids to a data frame that have an asv column.
+Add asv_ids to a data frame or csv that have an asv column.
 Can take into account already existing asv - asv_id pairs
-(from earlier data sets) present in asv_list file.
+(from earlier data sets) present in asv_list.
 }
 \details{
 If updated_asv_list file name is given, the input asv_list is

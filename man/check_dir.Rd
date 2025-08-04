@@ -13,7 +13,7 @@ check_dir(path, is_file = FALSE)
 }
 \description{
 Check if directory exists, and create it if not.
-If it is a file path, get its directory path and create it.
+If it is a file path, get its directory path and create dir in necessary.
 }
 \examples{
 \dontrun{
