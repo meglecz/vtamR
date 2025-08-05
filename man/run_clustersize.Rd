@@ -8,7 +8,7 @@ run_clustersize(
   read_count_df,
   id = 0.97,
   vsearch_path = "vsearch",
-  num_threads = 1,
+  num_threads = 0,
   quiet = TRUE
 )
 }

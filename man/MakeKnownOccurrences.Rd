@@ -17,7 +17,7 @@ MakeKnownOccurrences(
 }
 \arguments{
 \item{read_count}{Data frame or csv file with the following variables:
-asv_id, plate, marker, sample, replicate (optional), read_count, asv.}
+asv_id, sample, replicate (optional), read_count, asv.}
 
 \item{sortedinfo}{Data frame or csv file with columns:
 sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}

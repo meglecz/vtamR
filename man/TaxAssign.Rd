@@ -11,7 +11,7 @@ TaxAssign(
   blast_path = "blastn",
   ltg_params = "",
   outfile = "",
-  num_threads = 1,
+  num_threads = 0,
   tax_sep = "\\t",
   sep = ",",
   quiet = T,

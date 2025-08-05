@@ -13,7 +13,7 @@ make_missing_occurrences(
 }
 \arguments{
 \item{read_count_samples}{Data frame or csv file with the following variables:
-asv, plate, marker, sample, read_count.}
+asv, sample, read_count.}
 
 \item{mock_composition}{Data frame or csv file with columns:
 sample, action (keep/tolerate), asv.}

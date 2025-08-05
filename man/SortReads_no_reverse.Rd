@@ -9,6 +9,7 @@ SortReads_no_reverse(
   fasta_dir,
   outdir = "",
   cutadapt_path = "cutadapt",
+  num_threads = 0,
   tag_to_end = T,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -29,6 +30,8 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat
 \item{outdir}{Character string: output directory.}
 
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{tag_to_end}{logical: tags are at the extremity of the reads
 (starting at the first base).}

@@ -93,10 +93,18 @@ sep <- ","
 outdir <- "vtamR_demo_out"
 ```
 
-* `num_threads`: Number of CPUs for multithreaded programs
 * `sep`: Separator used in csv files
-* `outdir`: Name of the output directory.
-Make sure there is **no space in the path**.
+* `outdir`: Name of the output directory. Make sure there is **no space in the path**.
+* `num_threads`: Number of CPUs for multithreaded programs. 
+
+To know how many threads you can use at most
+**Linux/McOS**: type `nproc` in a terminal
+**windows**: type `Get-WmiObject -Class Win32_Processor | Select-Object NumberOfLogicalProcessors`
+in a powershell.
+If you are running other jobs as well on the same computer, 
+use a lower number of threads
+
+
 
 
 *Input Data*
@@ -214,7 +222,9 @@ sortedinfo_df <- SortReads(fastainfo_df,
                            outdir=sorted_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
-                           vsearch_path=vsearch_path
+                           vsearch_path=vsearch_path,
+                           cutadapt_minimum_length = 170,
+                           cutadapt_maximum_length = 185
                            )
 ```
 
@@ -522,6 +532,7 @@ outfile <- file.path(outdir, "optimize", "OptimizePCRerror.csv")
 OptimizePCRerror_df <- OptimizePCRerror(read_count_df, 
                                         mock_composition=mock_composition, 
                                         vsearch_path=vsearch_path, 
+                                        num_threads = num_threads,
                                         outfile=outfile, 
                                         max_mismatch=2, 
                                         min_read_count=5
@@ -1002,6 +1013,7 @@ fastainfo_df <- RandomSeq(fastainfo_df,
                           fasta_dir=merged_dir, 
                           outdir=randomseq_dir, 
                           vsearch_path=vsearch_path, 
+                          num_threads=num_threads,
                           n=10000
                           )
 ```

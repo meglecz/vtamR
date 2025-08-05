@@ -13,7 +13,7 @@ OptimizeLFNsampleReplicate(
 }
 \arguments{
 \item{read_count}{Data frame or csv file with the following variables:
-asv_id, plate, marker, sample, replicate, read_count, asv.}
+asv_id, sample, replicate, read_count, asv.}
 
 \item{mock_composition}{Data frame or csv file with columns:
 sample, action (keep/tolerate), asv.}

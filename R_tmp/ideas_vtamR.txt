@@ -1,5 +1,7 @@
 # Ideas for vtamR
 
+
+
 ### get %id or swarm R for clustering
 ## density plot % identity of ASVs within and between clusters
 # %id among all sequences (use vsearch all_againts_all, ignore asv too different)
@@ -166,13 +168,26 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 ## 2025/08/04
 
 
-## check input df or csv in every function and same for output
+- check input df or csv in every function and same for output
 	Merge return csv or df => DONE
 	add_ids : it is a filename. Maybe it could be also a data frame.=> DONE
 	Mock_composition : it is a filename. Maybe it could be also a data frame. => DONE
 	UpdateASVlist => DONE
 
-## Check obligatory heading in doc for known_occurrences (tuto) => DONE
+- Check obligatory heading in doc for known_occurrences (tuto) => DONE
 
-## Check the use of asv_id in taxassign. asv_id are obligatory and they are used in BLAST
+- Check the use of asv_id in taxassign. asv_id are obligatory and they are used in BLAST
+
+## 2025/08/05
+
+- num_threads is 0 by default. If num_threads set => use value, => DONE
+	If not, do not add num_thread to the command => 
+	this will make blats on 1 strand swarm ???, vsearch and cutadpat on max
+
+- iclude cutadapt_minimum_length and cutadapt_maximum_length to SortReads in tutorial  => DONE
+
+- PoolFilters  Joining with `by = join_by(asv_id, sample, replicate, read_count, asv)` => suppressMessages() => DONE
+
+
+
 

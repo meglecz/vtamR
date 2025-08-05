@@ -10,6 +10,7 @@ SortReads(
   outdir = "",
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
+  num_threads = 0,
   check_reverse = F,
   tag_to_end = T,
   primer_to_end = T,
@@ -34,6 +35,8 @@ habitat(optional),replicate,fasta}
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{check_reverse}{logical: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}

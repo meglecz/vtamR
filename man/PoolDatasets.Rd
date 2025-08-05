@@ -11,6 +11,7 @@ PoolDatasets(
   sep = ",",
   mean_over_markers = T,
   vsearch_path = "vsearch",
+  num_threads = 0,
   quiet = T
 )
 }
@@ -31,6 +32,8 @@ completed by centroid_id and centroid columns.}
 over different ASVs of each cluster. Sum otherwise.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{quiet}{logical: If TRUE, suppress informational messages and only
 show warnings or errors.}

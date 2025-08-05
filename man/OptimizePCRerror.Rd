@@ -8,6 +8,7 @@ OptimizePCRerror(
   read_count,
   mock_composition = "",
   vsearch_path = "vsearch",
+  num_threads = 0,
   sep = ",",
   outfile = "",
   max_mismatch = 1,
@@ -22,6 +23,8 @@ asv_id, sample, replicate, read_count, asv.}
 sample, action (keep/tolerate), asv.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{sep}{Field separator character in input and output csv files.}
 

@@ -8,7 +8,7 @@ Swarm(
   read_count,
   outfile = "",
   swarm_path = "swarm",
-  num_threads = 1,
+  num_threads = 0,
   swarm_d = 1,
   fastidious = T,
   sep = ",",
@@ -18,7 +18,7 @@ Swarm(
 }
 \arguments{
 \item{read_count}{Data frame or csv file with the following variables:
-asv, plate, marker, sample, replicate (optional), read_count.}
+asv, sample, replicate (optional), read_count.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}

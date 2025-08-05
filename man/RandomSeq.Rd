@@ -10,6 +10,7 @@ RandomSeq(
   fasta_dir = "",
   outdir = "",
   vsearch_path = "vsearch",
+  num_threads = 0,
   randseed = 0,
   compress = F,
   sep = ",",
@@ -28,6 +29,8 @@ input fasta files}
 \item{outdir}{Character string: output directory.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{randseed}{Positive integer: seed for random sampling.
 0 (default value) means to use a pseudo-random seed.

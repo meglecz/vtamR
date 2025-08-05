@@ -9,7 +9,7 @@ ClusterSize(
   id = 0.97,
   vsearch_path = "vsearch",
   by_sample = FALSE,
-  num_threads = 1,
+  num_threads = 0,
   outfile = "",
   sep = ",",
   quiet = TRUE

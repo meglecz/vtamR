@@ -17,5 +17,6 @@ write_fasta_df(df, outfile, read_count = FALSE)
 outfile fasta file with definition lines in >label;size=### format or >label format
 }
 \description{
-Write a fasta file with definition lines in >label;size=### format
+Write a fasta file with definition lines in >label;size=### format (read_count=T)
+or in >label format (read_count=F)
 }

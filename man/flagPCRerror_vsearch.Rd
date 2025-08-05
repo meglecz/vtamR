@@ -7,6 +7,7 @@
 flagPCRerror_vsearch(
   unique_asv_df,
   vsearch_path = "vsearch",
+  num_threads = 0,
   pcr_error_var_prop = 0.1,
   max_mismatch = 1
 )
@@ -16,6 +17,8 @@ flagPCRerror_vsearch(
 asv, read_count. ASVs must be unique.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{pcr_error_var_prop}{Real (0-1): if the proportion of read counts
 of two similar ASVs is bellow \code{pcr_error_var_prop}, the less abundant

@@ -8,6 +8,7 @@ Merge(
   fastqinfo,
   fastq_dir,
   vsearch_path = "vsearch",
+  num_threads = 0,
   outdir = "",
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
@@ -34,6 +35,8 @@ fastq_fw,fastq_rv}
 (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{outdir}{Character string: output directory.}
 

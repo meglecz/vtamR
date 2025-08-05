@@ -19,7 +19,7 @@ frame if necessary. If empty, no file is written.}
 }
 \value{
 Data frame with the following columns:
-asv, plate, marker, sample, read_count (over replicates)
+asv, sample, read_count (over replicates)
 }
 \description{
 Take the mean non-zero read counts over replicates for each sample and asv.

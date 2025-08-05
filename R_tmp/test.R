@@ -16,7 +16,7 @@ cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
 swarm_path <- "swarm"
-num_threads <- 8
+num_threads <- 0
 sep <- ","
 outdir <- "~/vtamR_demo_out"
 
@@ -36,7 +36,9 @@ fastainfo_df <- Merge(fastqinfo,
                       outdir=merged_dir,
                       fastq_maxee=1,
                       fastq_maxns=0,
-                      fastq_allowmergestagger=F
+                      fastq_allowmergestagger=F,
+                      num_threads=num_threads
+                      
 )
 
 ### demultiplex
@@ -47,7 +49,8 @@ sortedinfo_df <- SortReads(fastainfo_df,
                            outdir=sorted_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
-                           vsearch_path=vsearch_path
+                           vsearch_path=vsearch_path,
+                           num_threads=num_threads
 )
 
 ###############
@@ -71,22 +74,23 @@ stat_df <- data.frame(parameters=character(),
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
 #### swarm
-by_sample <- TRUE
+by_sample <- FALSE
 
 read_count_df <- Swarm(read_count_df, 
                        swarm_path=swarm_path, 
                        num_threads=num_threads, 
                        by_sample=by_sample)
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
 
 #### LFNglobalReadCount
 global_read_count_cutoff = 2
 
 read_count_df <- LFNglobalReadCount(read_count_df, 
                                     cutoff=global_read_count_cutoff)
-
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=NA)
 #### FilterIndel
 read_count_df <- FilterIndel(read_count_df)
-
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
 ### FilterCodonStop
 genetic_code = 5
 read_count_df <- FilterCodonStop(read_count_df, 
@@ -98,6 +102,7 @@ by_sample = T
 sample_prop = 0.8
 read_count_df <- FilterChimera(read_count_df, 
                                vsearch_path=vsearch_path, 
+                               num_threads=num_threads,
                                by_sample=by_sample, 
                                sample_prop=sample_prop, 
                                abskew=abskew)
@@ -112,6 +117,7 @@ pcr_error_var_prop <- 0.05
 max_mismatch <- 2
 read_count_df <- FilterPCRerror(read_count_df, 
                                 vsearch_path=vsearch_path, 
+                                num_threads=num_threads,
                                 pcr_error_var_prop=pcr_error_var_prop, 
                                 max_mismatch=max_mismatch)
 
@@ -168,13 +174,6 @@ asv_tax <- TaxAssign(asv=read_count_samples_df,
                      blast_path=blast_path, 
                      num_threads=num_threads)
 
-out_tax <- file.path(outdir, "taxonomy.csv")
-asv_tax <- TaxAssign(asv=read_count_samples_df, 
-                     taxonomy=taxonomy, 
-                     blast_db=blast_db, 
-                     blast_path=blast_path, 
-                     num_threads=num_threads,
-                     outfile = out_tax)
 
 ### WriteASVtable
 outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
@@ -215,6 +214,7 @@ identity <- 0.97
 read_count_df_clustersize_motu <- ClusterSize(read_count_samples_df,
                                      id=identity, 
                                      vsearch_path=vsearch_path,
+                                     num_threads=num_threads,
                                      by_sample=FALSE)
 
 stat_df <- GetStat(read_count_df_clustersize_motu, stat_df, stage="clustersize_motu_7", params=identity)

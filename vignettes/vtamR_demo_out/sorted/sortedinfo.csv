@@ -1,0 +1,13 @@
+"sample","sample_type","habitat","replicate","fasta","read_count"
+"tpos1","mock","terrestrial",1,"tpos1-1.fasta",22234
+"tnegtag","negative",NA,1,"tnegtag-1.fasta",57
+"14ben01","real","freshwater",1,"14ben01-1.fasta",7352
+"14ben02","real","freshwater",1,"14ben02-1.fasta",7451
+"tpos1","mock","terrestrial",2,"tpos1-2.fasta",27901
+"tnegtag","negative",NA,2,"tnegtag-2.fasta",260
+"14ben01","real","freshwater",2,"14ben01-2.fasta",7417
+"14ben02","real","freshwater",2,"14ben02-2.fasta",4515
+"tpos1","mock","terrestrial",3,"tpos1-3.fasta",24123
+"tnegtag","negative",NA,3,"tnegtag-3.fasta",89
+"14ben01","real","freshwater",3,"14ben01-3.fasta",13346
+"14ben02","real","freshwater",3,"14ben02-3.fasta",8782
