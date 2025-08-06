@@ -3,6 +3,7 @@
 ## load
 library(vtamR)
 library(dplyr)
+library(gplot2)
 
 setwd("/home/meglecz/vtamR/")
 library("devtools")
@@ -345,3 +346,19 @@ read_count_df_swam_all_sample <- Swarm(read_count_sample_df,
 
 
 stat_df <- GetStat(read_count_df_swam_all_sample, stat_df, stage="Swarm_all_sample", params=by_sample)
+
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=1,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=0,
+                                      outfile="density_plot_1_15.png")
+
+tmp <- PairwiseIdentity(read_count_df, 
+                             min_id = 0.8, 
+                             vsearch_path=vsearch_path)

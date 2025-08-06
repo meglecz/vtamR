@@ -2,30 +2,25 @@
 % Please edit documentation in R/cluster_fun.R
 \name{PairwiseIdentityPlotPerSwarmD}
 \alias{PairwiseIdentityPlotPerSwarmD}
-\title{Pairwise identity Density plot for different Swarm d values}
+\title{Pairwise identity density plot for different Swarm d values}
 \usage{
 PairwiseIdentityPlotPerSwarmD(
   read_count,
-  outfile = "",
+  swarm_d_min = 1,
+  swarm_d_max = 15,
+  swarm_d_increment = 1,
+  min_id = 0.8,
+  vsearch_path = "vsearch",
   swarm_path = "swarm",
   num_threads = 0,
-  swarm_d_min = 3,
-  swarm_d_max = 15,
-  swarm_d_increment = 3,
+  outfile = "",
   sep = ",",
-  quiet = T
+  quiet = TRUE
 )
 }
 \arguments{
 \item{read_count}{Data frame or csv file with the following variables:
 asv, sample, replicate (optional), read_count.}
-
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
-
-\item{swarm_path}{Character string: path to swarm executables.}
-
-\item{num_threads}{Positive integer: Number of CPUs.}
 
 \item{swarm_d_min}{Positive integer: Minimum value of d for Swarm.}
 
@@ -34,30 +29,42 @@ frame if necessary. If empty, no file is written.}
 \item{swarm_d_increment}{Positive integer: increase d by swarm_d_increment between
 swarm_d_min and swarm_d_max.}
 
+\item{min_id}{Real: Bellow this percentage of identity asv pairs are not aligned
+and their identity is not plotted.}
+
+\item{vsearch_path}{Character string: path to vsearch executable.}
+
+\item{swarm_path}{Character string: path to swarm executable.}
+
+\item{num_threads}{Positive integer: Number of CPUs.}
+
+\item{outfile}{Character string: png file name to print the output plot.
+If empty, no file is written.}
+
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.
-
+\item{quiet}{Logical: If TRUE, suppress informational messages and only
 show warnings or errors.}
-
-\item{asv}{data frame or csv file with asv and asv_id and read_count columns.}
-
-\item{min_id}{bellow this percentage of identity do not aligne asv}
-
-\item{vsearch_path}{Character string: path to vsearch executables.}
 }
 \value{
-data frame with asv pairs and their percentage of identity.
-asv pairs with identity bellow min_id are not listed.
+A density plot pairwise percentage of identities.
 }
 \description{
 Cluster by swarm all asv with a range of d values.
 For each d, make a density plot of pairwise percentage of identities between
-asv of the same cluster (within) or different clusters (between).
+asv, using different colors for identities between asv of the same or different
+clusters.
 }
 \examples{
 \dontrun{
-check_dir(path="data")
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=2, 
+                                      swarm_d_max=12,
+                                      swarm_d_increment=2,
+                                      min_id = 0.8, 
+                                      vsearch_path="vsearch", 
+                                      swarm_path="swarm",
+                                      num_threads=8,
+                                      outfile="density_plot.png")
 }
 }

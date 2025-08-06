@@ -8,24 +8,31 @@ PairwiseIdentity(
   asv,
   min_id = 0.8,
   vsearch_path = vsearch,
-  quiet = TRUE,
-  num_threads = 0
+  num_threads = 0,
+  outfile = "",
+  sep = ",",
+  quiet = TRUE
 )
 }
 \arguments{
-\item{asv}{data frame or csv file with asv and asv_id columns.}
+\item{asv}{Data frame or csv file with asv and asv_id columns.}
 
-\item{min_id}{bellow this percentage of identity do not aligne asv}
+\item{min_id}{Real: Bellow this percentage of identity do not align asv}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
-
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
+
+\item{sep}{Field separator character in input and output csv files.}
+
+\item{quiet}{Logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
-data frame with asv pairs and their percentage of identity.
+Data frame with asv pairs and their percentage of identity.
 asv pairs with identity bellow min_id are not listed.
 }
 \description{
@@ -35,6 +42,9 @@ asv pairs with identity bellow min_id are not listed.
 }
 \examples{
 \dontrun{
-check_dir(path="data")
+identity_df <- PairwiseIdentity(asv, 
+                                min_id = 0.8, 
+                                vsearch_path=vsearch, 
+                                num_threads=8)
 }
 }

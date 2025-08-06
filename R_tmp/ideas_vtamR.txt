@@ -1,5 +1,12 @@
 # Ideas for vtamR
 
+## check why reading the output of swams works in run_swarm, but not, 
+in PairwiseIdentityPlotPerSwarmD
+
+### check why filter(identity >= min_id) in PairwiseIdentity is not working
+15     78.3 different swarm's d: 15
+Warning message:
+Removed 15 rows containing non-finite outside the scale range (`stat_density()`). 
 
 
 ### get %id or swarm R for clustering
