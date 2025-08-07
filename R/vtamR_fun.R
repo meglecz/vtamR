@@ -1875,7 +1875,6 @@ run_swarm <- function(read_count_df,
   df_unique <- df_unique %>%
     select(-sum_read_count)
   ### run swarm
-  #  representatives <- file.path(tmp_dir, "representatives.fasta")
   clusters <- file.path(tmp_dir, "clusters.txt")
   swarm <- paste(swarm_path, 
                  " -d ",swarm_d,
@@ -1896,7 +1895,6 @@ run_swarm <- function(read_count_df,
     print(swarm)
   }
   system(swarm, show.output.on.console = FALSE)
-
   
   ###
   # pool clusters in read_count_df
@@ -1904,14 +1902,34 @@ run_swarm <- function(read_count_df,
   # make a data frame with representative and clustered columns, 
   # where clustered has all swarm input sequences id, 
   # and  representative is the name of the cluster they belong to
-#  print("Pooling ASVs to clusters")
-  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
+  
+  #  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
+  # read.table is unpredictable. Use a more complicated, but more sure solution.
+  # Read the file line by line
+  lines <- readLines(clusters)
+  # Split each line by whitespace
+  split_lines <- strsplit(lines, "[[:space:]]+")
+  # Determine the maximum number of fields
+  max_cols <- max(sapply(split_lines, length))
+  # Convert to a data frame and fill empty cells by NA
+  cluster_df <- as.data.frame(
+    do.call(
+      rbind, lapply(
+        split_lines,
+        function(x) c(x, rep(NA, max_cols - length(x)))
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+  #  repeat each representative as many times as columns
+  # transpose and flatten to make clustered
+  # This will produce some lines with NA for clustered. Filter them out afterwards.
   cluster_df <- data.frame(representative = rep(cluster_df$V1, 
                                                 each = ncol(cluster_df)),
                            clustered = as.vector(t(cluster_df[,])))
   # delete line with no values in clustered
   cluster_df <- cluster_df %>%
-    filter(clustered != "")
+    filter(!is.na(clustered))
   # delete read counts from id
   cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
   cluster_df$representative <- as.numeric(cluster_df$representative)

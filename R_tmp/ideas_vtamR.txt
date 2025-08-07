@@ -1,12 +1,11 @@
 # Ideas for vtamR
 
-## check why reading the output of swams works in run_swarm, but not, 
-in PairwiseIdentityPlotPerSwarmD
 
-### check why filter(identity >= min_id) in PairwiseIdentity is not working
-15     78.3 different swarm's d: 15
-Warning message:
-Removed 15 rows containing non-finite outside the scale range (`stat_density()`). 
+
+## suppress output of tpp system("ls non_existing_file 1> /dev/null")
+## complcated bu working solution is in PairwiseIdentityPlotPerSwarmD, see if 
+it should be applied generally.
+ 
 
 
 ### get %id or swarm R for clustering
@@ -195,6 +194,17 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 
 - PoolFilters  Joining with `by = join_by(asv_id, sample, replicate, read_count, asv)` => suppressMessages() => DONE
 
+## 2025/08/07
+
+Develelop PairwiseIdentity and PairwiseIdentityPlotPerSwarmD, but need a slight adjusting
+
+## 2025/08/07
+
+- check why filter(identity >= min_id) in PairwiseIdentity is not working => DONE min_id vs. min_id_perc
+
+- check why reading the output of swams works in run_swarm, but not, in PairwiseIdentityPlotPerSwarmD => 
+=> pb if the eare not many lines with more values, maybe it is the firs line that determines de number of columns => 
+=> replace by same solutiion in run_swarm => DONE
 
 
 

@@ -55,6 +55,9 @@ PairwiseIdentity <- function(asv,
     asv_df <- asv
   }
   
+  # change to percent
+  min_id_perc <- min_id * 100 
+  
   #### get unique asv list and make fasta file
   asv_df <- asv_df %>%
     select(asv, asv_id) %>%
@@ -62,7 +65,6 @@ PairwiseIdentity <- function(asv,
   t <- check_one_to_one_relationship(asv_df) # stop execution, if FALSE
   
   fasta <- file.path(tempdir(), "asv.fasta")
-  print(fasta)
   write_fasta_df(asv_df, outfile=fasta, read_count=FALSE)
   
   ### run vsearch allpairs_global
@@ -73,7 +75,7 @@ PairwiseIdentity <- function(asv,
   if(!quiet){
     print(cmd)
   }
-  system(cmd)
+  system(cmd, show.output.on.console = FALSE)
   
   #### read vsearch result
   if(file.exists(vsearch_out) && file.size(vsearch_out) > 0){
@@ -88,8 +90,7 @@ PairwiseIdentity <- function(asv,
     
     results_vsearch <- results_vsearch %>%
       select(query, target, identity=id_bis) %>%
-      mutate(identity = as.numeric(identity)) %>%
-      filter(identity >= min_id)
+      filter(identity >= min_id_perc)
     results_vsearch$query <- as.numeric(results_vsearch$query)
     results_vsearch$target <- as.numeric(results_vsearch$target)
   } else {
@@ -97,6 +98,9 @@ PairwiseIdentity <- function(asv,
                                   target= numeric(),
                                   identity= numeric())
   }
+  
+  unlink(fasta)
+  unlink(vsearch_out)
   
   #### write csv
   if(outfile != ""){
@@ -205,15 +209,60 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     
     # clusters.txt each line is a cluster, with asv_ids separated  by space
     clusters <- file.path(tmp_dir, "clusters.txt")
-    swarm <- paste(swarm_path, " -d ", d, " -o ", clusters, sep="")
-    if(num_threads > 0){ # if num_threads have been specified
-      swarm <- paste(swarm, " -t ", num_threads, sep="")
-    }
-    swarm <- paste(swarm, input_swarm, sep=" ")
-    if(!quiet){
-      print(swarm)
-    }
-    system(swarm)
+    
+    
+    
+    #    swarm <- paste(swarm_path, " -d ", d, " -o ", clusters, sep="")
+    #    if(num_threads > 0){ # if num_threads have been specified
+    #      swarm <- paste(swarm, " -t ", num_threads, sep="")
+    #    }
+    #swarm <- paste(swarm, input_swarm, sep=" ")
+    #if(!quiet){
+    #  print(swarm)
+    #}
+    #system(swarm, show.output.on.console = FALSE)
+    
+    
+    # Build argument vector
+      args <- c(
+        "-d", d,
+        "-o", clusters,
+        input_swarm
+      )
+      if(num_threads > 0){
+        args <- append(args, c("-t", num_threads), after = 2)
+      }
+      
+      if (!quiet) {
+        # Show the full command that will be run
+        cat("Running command:\n")
+        cat(swarm_path, paste(shQuote(args), collapse = " "), "\n")
+        
+        system2(
+          command = swarm_path,
+          args = args,
+          stdout = "",
+          stderr = ""
+        )
+      }else{
+        output <- suppressWarnings(system2(
+          command = swarm_path,
+          args = args,
+          stdout = TRUE,
+          stderr = TRUE
+        ))
+        
+        # Extract only error/warning lines
+        errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
+        cat(errors_only, sep = "\n")
+      }
+      
+      # Choose output redirection based on `quiet`
+      stdout_setting <- if (quiet) FALSE else ""
+      stderr_setting <- if (quiet) TRUE else ""
+      
+
+
     
     #####
     # make a data frame with cluster_id and asv_id columns, 
@@ -228,8 +277,6 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     # Determine the maximum number of fields
     max_cols <- max(sapply(split_lines, length))
     # Convert to a data frame and fill empty cells by NA
-#    cluster_df <- as.data.frame(do.call(rbind, lapply(split_lines, function(x) c(x, rep(NA, max_cols - length(x))))),
-#                                stringsAsFactors = FALSE)
     cluster_df <- as.data.frame(
       do.call(
         rbind, lapply(
@@ -268,15 +315,12 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
       mutate(cluster = ifelse(cluster_id_query == cluster_id_target, "same", "different")) %>%
       mutate(swarm_d=paste0("swarm's d: ",d)) %>%
       select(identity, cluster, swarm_d)
-    # add lines to the oveall df
+    # add lines to the overall df
     pairwise_id_d <- rbind(pairwise_id_d, pairwise_id_local)
+    
+    unlink(tmp_dir, recursive = TRUE)
   } # end for
-  
-  bad_rows <- pairwise_id_d %>%
-    filter(!is.finite(identity) | identity < 80 | identity > 100)
-  
-  print(bad_rows)
-  
+  unlink(input_swarm)
   
   ####
   # Make the plot
@@ -287,8 +331,9 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     geom_density(adjust = 1.5, alpha = 0.4) +
     scale_x_continuous(limits = c(80, 100)) +
     facet_wrap(~swarm_d, scales = "free_y") +  # one subplot per d
-    ggtitle("Pairwise percent idnetity between ASV ofthe same or different cluster according Swarm's d") +
-    theme_minimal()
+    ggtitle("Pairwise percent identity between ASV of the \n same or different cluster according Swarm's d") +
+    theme(plot.title = element_text(size=12, hjust=0.5)) 
+
   
   ### 
   if(outfile != ""){

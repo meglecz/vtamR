@@ -3,7 +3,7 @@
 ## load
 library(vtamR)
 library(dplyr)
-library(gplot2)
+library(ggplot2)
 
 setwd("/home/meglecz/vtamR/")
 library("devtools")
@@ -17,7 +17,7 @@ cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
 swarm_path <- "swarm"
-num_threads <- 0
+num_threads <- 8
 sep <- ","
 outdir <- "~/vtamR_demo_out"
 
@@ -83,19 +83,42 @@ read_count_df <- Swarm(read_count_df,
                        by_sample=by_sample)
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
 
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="2_swarm.png")
+
 #### LFNglobalReadCount
 global_read_count_cutoff = 2
 
 read_count_df <- LFNglobalReadCount(read_count_df, 
                                     cutoff=global_read_count_cutoff)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="3_LFNglobalReadCount.png")
+
 #### FilterIndel
 read_count_df <- FilterIndel(read_count_df)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
+
 ### FilterCodonStop
 genetic_code = 5
 read_count_df <- FilterCodonStop(read_count_df, 
                                  genetic_code=genetic_code)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=NA)
 
 ### FilterChimera
 abskew=2
@@ -108,10 +131,32 @@ read_count_df <- FilterChimera(read_count_df,
                                sample_prop=sample_prop, 
                                abskew=abskew)
 
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="6_FilterChimera.png")
+
 #### FilterRenkonen
 cutoff <- 0.4
 read_count_df <- FilterRenkonen(read_count_df, 
                                 cutoff=cutoff)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="7_FilterRenkonen.png")
 
 ### FilterPCRerror
 pcr_error_var_prop <- 0.05
@@ -121,28 +166,36 @@ read_count_df <- FilterPCRerror(read_count_df,
                                 num_threads=num_threads,
                                 pcr_error_var_prop=pcr_error_var_prop, 
                                 max_mismatch=max_mismatch)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterPCRerror", params=NA)
 
 ### LFNsampleReplicate
 lfn_sample_replicate_cutoff <- 0.004
 read_count_df <- LFNsampleReplicate(read_count_df, 
                                     cutoff=lfn_sample_replicate_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=NA)
 
 ### FilterMinReplicate
 min_replicate_number <- 2
 read_count_df <- FilterMinReplicate(read_count_df, 
                                     cutoff=min_replicate_number)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
 
 ### LFNvariant
 lnf_variant_cutoff = 0.001
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
                                         cutoff=lnf_variant_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNvariant", params=NA)
+
 ### LFNreadCount
 lfn_read_count_cutoff <- 10
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNreadCount", params=NA)
+
 ### Combine results
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
                              read_count_df_lnf_variant)
+stat_df <- GetStat(read_count_df, stat_df, stage="Combine results", params=NA)
 
 # delete temporary data frames
 rm(read_count_df_lfn_read_count)
@@ -152,9 +205,32 @@ rm(read_count_df_lnf_variant)
 min_replicate_number <- 2
 read_count_df <- FilterMinReplicate(read_count_df, 
                                     cutoff=min_replicate_number)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="13_FilterMinReplicate.png")
 
 #### PoolReplicates
 read_count_samples_df <- PoolReplicates(read_count_df)
+stat_df <- GetStat(read_count_df, stat_df, stage="PoolReplicates", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="14_PoolReplicates.png")
 
 ### MakeKnownOccurrences performance_metrics
 results <- MakeKnownOccurrences(read_count_samples_df, 
@@ -352,13 +428,14 @@ stat_df <- GetStat(read_count_df_swam_all_sample, stat_df, stage="Swarm_all_samp
 plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 
                                       swarm_d_max=15,
-                                      swarm_d_increment=1,
+                                      swarm_d_increment=3,
                                       min_id = 0.8, 
                                       vsearch_path=vsearch_path, 
                                       swarm_path=swarm_path,
-                                      num_threads=0,
-                                      outfile="density_plot_1_15.png")
+                                      num_threads=num_threads,
+                                      outfile="density_plot_1_15_3.png")
 
 tmp <- PairwiseIdentity(read_count_df, 
                              min_id = 0.8, 
+                             num_threads=num_threads,
                              vsearch_path=vsearch_path)
