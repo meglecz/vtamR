@@ -65,7 +65,6 @@ read_count_df <- Dereplicate(sortedinfo_df,
 )
 
 ### stat
-
 stat_df <- data.frame(parameters=character(),
                       asv_count=integer(),
                       read_count=integer(),
@@ -74,15 +73,7 @@ stat_df <- data.frame(parameters=character(),
 
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
-#### swarm
-by_sample <- FALSE
-
-read_count_df <- Swarm(read_count_df, 
-                       swarm_path=swarm_path, 
-                       num_threads=num_threads, 
-                       by_sample=by_sample)
-stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
-
+plot_png <- file.path(outdir, "1_input.png")
 plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 
                                       swarm_d_max=15,
@@ -91,7 +82,40 @@ plot <- PairwiseIdentityPlotPerSwarmD(read_count_df,
                                       vsearch_path=vsearch_path, 
                                       swarm_path=swarm_path,
                                       num_threads=num_threads,
-                                      outfile="2_swarm.png")
+                                      outfile=plot_png,
+                                      quiet=FALSE)
+
+
+#### swarm
+by_sample <- FALSE
+read_count_df <- Swarm(read_count_df, 
+                       swarm_path=swarm_path, 
+                       num_threads=num_threads, 
+                       by_sample=by_sample)
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
+
+plot_png <- file.path(outdir, "2_swarm.png")
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile=plot_png,
+                                      quiet=TRUE)
+
+plot_png <- file.path(outdir, "2_cluster_size.png")
+plot_clustersize <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df, 
+                                                      identity_min=0.9, 
+                                                      identity_max=0.99,
+                                                      identity_increment=0.01,
+                                                      min_id = 0.8, 
+                                                      vsearch_path=vsearch_path, 
+                                                      num_threads=num_threads,
+                                                      outfile=plot_png, 
+                                                      quiet=TRUE)
 
 #### LFNglobalReadCount
 global_read_count_cutoff = 2
@@ -250,6 +274,17 @@ asv_tax <- TaxAssign(asv=read_count_samples_df,
                      blast_db=blast_db, 
                      blast_path=blast_path, 
                      num_threads=num_threads)
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="2_swarm.png")
 
 
 ### WriteASVtable

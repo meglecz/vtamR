@@ -28,7 +28,7 @@ usethis::use_github()
 # It is for me to run, not necessary for users who used install(vtamR)
 devtools::document() # generate doc
 
-# create a template for README.Rmd only le developer Edit. It is in .builtignore
+# create a template for README.Rmd only the developer Edit. It is in .builtignore
 usethis::use_readme_rmd()
 # make a README.Rmd from README.Rmd. This should not be edited manually
 # When building the readme, the Rmd and its chunks are executed, so all example codes should work. If not, make eval=FALSE

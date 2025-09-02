@@ -2,9 +2,11 @@
 
 
 
-## suppress output of tpp system("ls non_existing_file 1> /dev/null")
-## complcated bu working solution is in PairwiseIdentityPlotPerSwarmD, see if 
+## suppress output of tmp system("ls non_existing_file 1> /dev/null")
+## complicated but working solution is in PairwiseIdentityPlotPerSwarmD, see if 
 it should be applied generally.
+
+## Replace system by system2 with appropriate error and warning handling in quet mode. Example in PairwiseIdentityPlotPerSwarmD; see if fossible to make more sumple for vsearch, blats and cutadapt.
  
 
 
@@ -14,10 +16,10 @@ it should be applied generally.
 # clustering with variying d
 # for each d, density plot
 
-## classify clustrers
+## classify clusters
 # clustering with variying d
 # taxassign all ASV
-# for each d classify each clusters at each taxlevel
+# for each d classify each cluster at each taxlevel
 #  - close => All same taxon within cluster, all ASV of th taxon is in the same cluster
 #  - open => All same taxon within cluster, same taxon is fauld in other cluster as well
 #  - hybrid-compatible => different taxa within cluster but they are all compatible => taxa and NA
@@ -188,7 +190,7 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 
 - num_threads is 0 by default. If num_threads set => use value, => DONE
 	If not, do not add num_thread to the command => 
-	this will make blats on 1 strand swarm ???, vsearch and cutadpat on max
+	this will make blats and swarm on 1 strand, vsearch and cutadpat on max
 
 - iclude cutadapt_minimum_length and cutadapt_maximum_length to SortReads in tutorial  => DONE
 
@@ -203,8 +205,10 @@ Develelop PairwiseIdentity and PairwiseIdentityPlotPerSwarmD, but need a slight 
 - check why filter(identity >= min_id) in PairwiseIdentity is not working => DONE min_id vs. min_id_perc
 
 - check why reading the output of swams works in run_swarm, but not, in PairwiseIdentityPlotPerSwarmD => 
-=> pb if the eare not many lines with more values, maybe it is the firs line that determines de number of columns => 
-=> replace by same solutiion in run_swarm => DONE
+=> pb if the ere not many lines with more values, maybe it is the firs line that determines de number of columns => 
+=> replace by same solution in run_swarm => DONE
 
+## 2025/09/02
 
+PairwiseIdentityPlotPerClusterIdThreshold => DONE 
 
