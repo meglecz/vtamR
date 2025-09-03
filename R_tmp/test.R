@@ -94,6 +94,17 @@ read_count_df <- Swarm(read_count_df,
                        by_sample=by_sample)
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
 
+#### cluster_size
+by_sample <- FALSE
+read_count_df <- ClusterSize(read_count_df, 
+                        id=0.97, 
+                        vsearch_path=vsearch_path, 
+                        by_sample = by_sample,
+                        num_threads = num_threads,
+                        quiet=FALSE)
+
+stat_df <- GetStat(read_count_df, stat_df, stage="ClusterSize", params=0.97)
+
 plot_png <- file.path(outdir, "2_swarm.png")
 plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 
@@ -116,6 +127,30 @@ plot_clustersize <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df,
                                                       num_threads=num_threads,
                                                       outfile=plot_png, 
                                                       quiet=TRUE)
+
+
+cluster_size <- cluster_vsearch_cluster_size(read_count_df, 
+                             identity=0.97, 
+                             vsearch_path=vsearch_path, 
+                             num_threads=8, 
+                             outfile="",
+                             quiet=FALSE)
+
+cluster_swarm <- cluster_swarm(read_count_df, 
+                               swarm_d=5, 
+                               swarm_path=swarm_path, 
+                               num_threads=8, 
+                               outfile="",
+                               quiet=FALSE)
+
+### TaxAssign
+asv_tax <- TaxAssign(asv=read_count_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads,
+                     quiet=FALSE)
+
 
 #### LFNglobalReadCount
 global_read_count_cutoff = 2

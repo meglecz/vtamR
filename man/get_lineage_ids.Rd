@@ -11,7 +11,7 @@ get_lineage_ids(taxids, tax_df)
 
 \item{tax_df}{Data frame with the following columns:
 tax_id, parent_tax_id, rank, name_txt, taxlevel
-(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root).}
+(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: domain, 0: root).}
 }
 \value{
 Data frame with each line starting by a taxID followed by a vector taxids

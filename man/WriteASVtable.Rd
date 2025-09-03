@@ -26,7 +26,7 @@ frame if necessary. If empty, no file is written.}
 
 \item{asv_tax}{Data frame or CSV file with taxonomic assignments with the following columns:
 asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
+domain_taxid,domain,kingdom_taxid,kingdom,
 phylum_taxid,phylum,class_taxid,class,order_taxid,order,
 family_taxid,family,genus_taxid,genus,species_taxid,species.
 pid,pcov,phit,taxn,seqn,refres,ltgres,asv.

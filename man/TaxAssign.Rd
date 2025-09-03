@@ -24,7 +24,7 @@ TaxAssign(
 \item{taxonomy}{TSV file containing the following columns:
 tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been merged to tax_id),
 taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
-2: kingdom, 1: superkingdom, 0: root).}
+2: kingdom, 1: domain, 0: root).}
 
 \item{blast_db}{Character string naming the BLAST database.}
 
@@ -54,7 +54,7 @@ by the current taxonomic level
 \value{
 Data frame with the following columns:
 asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
+domain_taxid,domain,kingdom_taxid,kingdom,
 phylum_taxid,phylum,class_taxid,class,order_taxid,order,
 family_taxid,family,genus_taxid,genus,species_taxid,species,
 pid,pcov,phit,taxn,seqn,refres,ltgres,asv

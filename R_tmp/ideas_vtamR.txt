@@ -1,6 +1,8 @@
 # Ideas for vtamR
 
 
+## Make run_system2 and replace all system and system2 by this
+
 
 ## suppress output of tmp system("ls non_existing_file 1> /dev/null")
 ## complicated but working solution is in PairwiseIdentityPlotPerSwarmD, see if 
@@ -10,20 +12,6 @@ it should be applied generally.
  
 
 
-### get %id or swarm R for clustering
-## density plot % identity of ASVs within and between clusters
-# %id among all sequences (use vsearch all_againts_all, ignore asv too different)
-# clustering with variying d
-# for each d, density plot
-
-## classify clusters
-# clustering with variying d
-# taxassign all ASV
-# for each d classify each cluster at each taxlevel
-#  - close => All same taxon within cluster, all ASV of th taxon is in the same cluster
-#  - open => All same taxon within cluster, same taxon is fauld in other cluster as well
-#  - hybrid-compatible => different taxa within cluster but they are all compatible => taxa and NA
-#  - hybrid-noncompatible => different taxa within cluster and it is not due to NA
 
 
 ## replace test_filters by an R script to run with demo files
@@ -199,6 +187,9 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 ## 2025/08/07
 
 Develelop PairwiseIdentity and PairwiseIdentityPlotPerSwarmD, but need a slight adjusting
+PairwiseIdentity => calculate %id between pairs of sequences if %id > 80% (vsearch --allpairs_global) => DONE 
+PairwiseIdentityPlotPerSwarmD => clustering with variying d; Determine for each pair if same or diff cluster; density plot => DONE
+
 
 ## 2025/08/07
 
@@ -210,5 +201,37 @@ Develelop PairwiseIdentity and PairwiseIdentityPlotPerSwarmD, but need a slight 
 
 ## 2025/09/02
 
-PairwiseIdentityPlotPerClusterIdThreshold => DONE 
+PairwiseIdentityPlotPerClusterIdThreshold => clustering with variying %identity; Determine for each pair if same or diff cluster; density plot => DONE
+PairwiseIdentityPlotPerSwarmD and PairwiseIdentityPlotPerClusterIdThreshold might be more decomposed to sub functions thet can be used for both. => TODO
+
+## 2025/09/03
+
+superkingdom replaced by domain in taxonomy_reduced.tsv and vtamr_fun.R
+Correct error in adjust_ltgres
+
+cluster_vsearch_cluster_size => DONE
+cluster_swarm => DONE
+
+Replace part of the following functions by cluster_vsearch_cluster_size or cluster_swarm:
+- PairwiseIdentityPlotPerClusterIdThreshold => DONE
+- PairwiseIdentityPlotPerSwarmD => DONE
+- Swarm => DONE
+- run_swarm => DONE
+- run_clustersize => DONE
+- ClusterSize => DONE
+
+
+
+
+
+
+
+Classify clusters input: 
+- Input: read_count_df (asv, asv_id, read_count) + asv_tax (asv_id,ltg_name,ltg_rank,ltg_rank_index,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
+- clustering with variying d(swarm)/%identity(cluster_size)
+- for each clustering classify each cluster at each taxlevel
+  - close => All same taxon within cluster, all ASV of the taxon is in the same cluster
+  - open => All same taxon within cluster, same taxon is fauld in other cluster as well
+  - hybrid-compatible => different taxa within cluster but they are all compatible => same taxon with different resolution
+  - hybrid-noncompatible => different taxa within cluster and it is not due to NA
 

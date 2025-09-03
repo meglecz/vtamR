@@ -1852,126 +1852,43 @@ run_swarm <- function(read_count_df,
                       fastidious=T,
                       quiet=T){
   
-  tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-  tmp_dir <- file.path(tempdir(), tmp_dir)
-  check_dir(tmp_dir)
+  ### check if one to one relationship between asv and asv_id
+  t <- check_one_to_one_relationship(read_count_df)
   
+  #### run swarm get df with asv_id, cluster_id columns
+    cluster_df <- cluster_swarm(read_count_df, 
+                            swarm_d=swarm_d,
+                            fastidious=fastidious,
+                            swarm_path=swarm_path, 
+                            num_threads=num_threads, 
+                            quiet=quiet)
   
-  ### make df with unique asv and read_count
-  df_unique <- read_count_df %>%
-    group_by(asv, asv_id) %>%
-    summarize(sum_read_count = sum(read_count), .groups="drop_last") %>%
-    ungroup() 
-
-  ### make a fasta with dereplicated sequences  
-  input_swarm <- file.path(tmp_dir, "swarm_input.fasta")
-  writeLines(paste(">", df_unique$asv_id, "_", 
-                   df_unique$sum_read_count, "\n", 
-                   df_unique$asv, 
-                   sep="" 
-                   ), 
-             input_swarm)
+  ### get unique list of asv and asv_id
+    asv <- read_count_df%>%
+      select(asv_id, asv) %>%
+      distinct()
   
-  df_unique <- df_unique %>%
-    select(-sum_read_count)
-  ### run swarm
-  clusters <- file.path(tmp_dir, "clusters.txt")
-  swarm <- paste(swarm_path, 
-                 " -d ",swarm_d,
-                 " -o ", clusters, 
-                 sep=""
-                 )
-  if(num_threads > 0){ # if num_threads have been specified
-    swarm <- paste(swarm, 
-                   " -t ", num_threads, 
-                   sep=""
-    )
-  }
-  if(fastidious){
-    swarm <- paste(swarm, "-f", sep=" ")
-  }
-  swarm <- paste(swarm, input_swarm, sep=" ")
-  if(!quiet){
-    print(swarm)
-  }
-  system(swarm, show.output.on.console = FALSE)
-  
-  ###
-  # pool clusters in read_count_df
-  ###
-  # make a data frame with representative and clustered columns, 
-  # where clustered has all swarm input sequences id, 
-  # and  representative is the name of the cluster they belong to
-  
-  #  cluster_df <- read.table(clusters, fill =TRUE, strip.white=TRUE, header = FALSE)
-  # read.table is unpredictable. Use a more complicated, but more sure solution.
-  # Read the file line by line
-  lines <- readLines(clusters)
-  # Split each line by whitespace
-  split_lines <- strsplit(lines, "[[:space:]]+")
-  # Determine the maximum number of fields
-  max_cols <- max(sapply(split_lines, length))
-  # Convert to a data frame and fill empty cells by NA
-  cluster_df <- as.data.frame(
-    do.call(
-      rbind, lapply(
-        split_lines,
-        function(x) c(x, rep(NA, max_cols - length(x)))
-      )
-    ),
-    stringsAsFactors = FALSE
-  )
-  #  repeat each representative as many times as columns
-  # transpose and flatten to make clustered
-  # This will produce some lines with NA for clustered. Filter them out afterwards.
-  cluster_df <- data.frame(representative = rep(cluster_df$V1, 
-                                                each = ncol(cluster_df)),
-                           clustered = as.vector(t(cluster_df[,])))
-  # delete line with no values in clustered
-  cluster_df <- cluster_df %>%
-    filter(!is.na(clustered))
-  # delete read counts from id
-  cluster_df$representative <- sub("_[0-9]+", "", cluster_df$representative )
-  cluster_df$representative <- as.numeric(cluster_df$representative)
-  cluster_df$clustered <- sub("_[0-9]+", "", cluster_df$clustered )
-  cluster_df$clustered <- as.numeric(cluster_df$clustered)
-  # add representative asv
-  cluster_df <- left_join(cluster_df, df_unique, by= c("representative" = "asv_id")) %>%
-    select("representative_id"=representative, representative_asv=asv, "clustered_id"=clustered)
-
-  # free space
-  remove(df_unique)
-  unlink(input_swarm)
-  unlink(clusters)
-  unlink(tmp_dir, recursive=TRUE)
-  
-#  print("Replace asv by representative sequences")
-  # replace asv by representative sequences in read_count_df
-  read_count_df <- left_join(read_count_df, cluster_df,  by= c("asv_id" = "clustered_id"))
+  # replace asv_id by cluster_id in read_count_df
+  read_count_df <- left_join(read_count_df, cluster_df,  by= "asv_id") %>%
+    select(-asv_id, -asv)
   
   
   if("replicate" %in% colnames(read_count_df)){ # if replicates in input, keep replicates
     
   read_count_df <- read_count_df %>%
-    select(-asv, -asv_id) %>%
-    group_by(representative_asv, representative_id, sample, replicate) %>%
-    summarize(read_count_cluster=sum(read_count), .groups="drop_last") %>%
-    rename("asv" = representative_asv, 
-           "read_count"=read_count_cluster, 
-           "asv_id"=representative_id) %>%
-    select(asv_id, sample, replicate, read_count, asv) %>%
+    group_by(cluster_id, sample, replicate) %>%
+    summarize(read_count=sum(read_count), .groups="drop_last") %>%
+    rename(asv_id=cluster_id) %>%
     ungroup()
   }else{ # if no replicate column
     read_count_df <- read_count_df %>%
-      select(-asv, -asv_id) %>%
-      group_by(representative_asv, representative_id, sample) %>%
-      summarize(read_count_cluster=sum(read_count), .groups="drop_last") %>%
-      rename("asv" = representative_asv, 
-             "read_count"=read_count_cluster, 
-             "asv_id"=representative_id) %>%
-      select(asv_id, sample, read_count, asv) %>%
+      group_by(cluster_id, sample) %>%
+      summarize(read_count=sum(read_count), .groups="drop_last") %>%
+      rename(asv_id=cluster_id) %>%
       ungroup()
   }
+  
+  read_count_df <- left_join(read_count_df, asv, by="asv_id")
   
   return(read_count_df)
 }
@@ -3342,7 +3259,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' @param taxonomy TSV file containing the following columns: 
 #' tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been merged to tax_id),
 #' taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 
-#' 2: kingdom, 1: superkingdom, 0: root).
+#' 2: kingdom, 1: domain, 0: root).
 #' @param blast_db Character string naming the BLAST database.
 #' @param blast_path Character string: path to BLAST executable. 
 #' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
@@ -3358,7 +3275,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' show warnings or errors.
 #' @returns Data frame with the following columns:
 #' asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-#' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
+#' domain_taxid,domain,kingdom_taxid,kingdom,
 #' phylum_taxid,phylum,class_taxid,class,order_taxid,order,
 #' family_taxid,family,genus_taxid,genus,species_taxid,species,
 #' pid,pcov,phit,taxn,seqn,refres,ltgres,asv
@@ -3494,7 +3411,7 @@ for(i in 1:nrow(taxres_df)){ # go through all sequences
     if(tn >= taxnl & nrow(df_intern) >= seqnl ){
       # make ltg if all conditions are met
       ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
-      # fill out line with the ltg and the parmeters that were used to get it
+      # fill out line with the ltg and the parameters that were used to get it
       taxres_df[i, 3:(ncol(taxres_df))] <- 
         list(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
       break
@@ -3517,8 +3434,8 @@ taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
 # adjust resolution if it is higher than ltgres
 taxres_df <- adjust_ltgres(taxres_df, tax_df)
 # taxres_df data frame with the following columns: 
-# asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
-# superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
+# asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,domain_taxid,
+# domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
 # order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
 # pcov,phit,taxn,seqn,refres,ltgres,asv
 
@@ -3722,7 +3639,7 @@ update_taxids <- function(df, old_taxid){
 #' @param taxids Vector of taxIDs (taxonomic IDs).
 #' @param tax_df Data frame with the following columns: 
 #' tax_id, parent_tax_id, rank, name_txt, taxlevel 
-#' (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: superkingdom, 0: root).
+#' (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: domain, 0: root).
 #' @returns Data frame with each line starting by a taxID followed by a vector taxids
 #' in its full lineage (starting by the highest taxonomic level).
 #' @examples
@@ -3864,14 +3781,14 @@ make_ltg <- function(taxids, lineages, phit=70){
 #' @param tax_df Data frame with the following columns: 
 #' tax_id, parent_tax_id, rank, name_txt, taxlevel 
 #' (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 
-#' 2: kingdom, 1: superkingdom, 0: root).
+#' 2: kingdom, 1: domain, 0: root).
 #' @param fill_lineage Boolean. If TRUE, fill in missing higher-level taxa 
 #' in the lineage using the name of the next known lower-level taxon, prefixed 
 #' by the current taxonomic level 
 #' (e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).
 #' @returns Data frame with the ranked lineages of taxids. 
 #' Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-#' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,
+#' domain_taxid,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,
 #' class_taxid,class,order_taxid,order,family_taxid,family,
 #' genus_taxid,genus,species_taxid,species).
 #' @examples
@@ -4009,14 +3926,14 @@ fill_NA_in_lineage <- function(df) {
 #' adjust the LTG and stop lineage at ltgres level.
 #'  
 #' @param taxres_df Data frame with the following columns: asv_id,ltg_taxid,
-#' ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
-#' superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
+#' ltg_name,ltg_rank,ltg_rank_index,domain_taxid,
+#' domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
 #' order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
 #' pcov,phit,taxn,seqn,refres,ltgres,asv.
 #' @param tax_df Data frame with the following columns: 
 #' tax_id, parent_tax_id, rank, name_txt, taxlevel 
 #' (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 
-#' 2: kingdom, 1: superkingdom, 0: root).
+#' 2: kingdom, 1: domain, 0: root).
 #' @returns The modified input data frame with lower resolution of LTGs if necessary.
 #' @examples
 #' \dontrun{
@@ -4028,8 +3945,8 @@ fill_NA_in_lineage <- function(df) {
 adjust_ltgres <- function(taxres_df, tax_df){
   
   # link taxlevel index and tax rank
-  taxlevel_index = data.frame(taxlevel_index=c(1,2,3,4,5,6,7,8),
-                              taxrank=c("superkingdom","kingdom","phylum",
+  taxlevel_index = data.frame(taxlevel_index=c(0,1,2,3,4,5,6,7,8),
+                              taxrank=c("root","domain","kingdom","phylum",
                                         "class","order","family","genus","species")
   )
   
@@ -4037,12 +3954,11 @@ adjust_ltgres <- function(taxres_df, tax_df){
   taxres_df <- left_join(taxres_df, taxlevel_index, by=c("ltgres" = "taxlevel_index"))
   
   for(i in 1:nrow(taxres_df)){ # all rows
-    
     if(!is.na(taxres_df[i,"ltg_taxid"]) & 
        taxres_df[i,"ltg_rank_index"] > taxres_df[i,"ltgres"])
       { # if resolution of ltg is higher then ltgres
-      # get the taxrank that corresponds to ltgres 
-      tl <- taxres_df[i,"taxrank"]
+      # get the taxrank (name) that corresponds to ltgres 
+      tl <- as.character(taxres_df[i,"taxrank"])
       # get the index of the column that corresponds to the ltgres
       col_index <- which(colnames(taxres_df) == tl)
       # make a data frame with taxid, and get taxinfo from tax_df
@@ -4074,7 +3990,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' frame if necessary. If empty, no file is written.
 #' @param asv_tax Data frame or CSV file with taxonomic assignments with the following columns:
 #' asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-#' superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,
+#' domain_taxid,domain,kingdom_taxid,kingdom,
 #' phylum_taxid,phylum,class_taxid,class,order_taxid,order,
 #' family_taxid,family,genus_taxid,genus,species_taxid,species.
 #' pid,pcov,phit,taxn,seqn,refres,ltgres,asv. 
@@ -6391,93 +6307,42 @@ run_clustersize <- function(read_count_df,
                             num_threads=0, 
                             quiet=TRUE){
   
-  ### make tmp dir
-  outdir_tmp <- paste('tmp_cluster_size_', 
-                      trunc(as.numeric(Sys.time())), 
-                      sample(1:100, 1), 
-                      sep='')
-  outdir_tmp <- file.path(tempdir(), outdir_tmp)
-  check_dir(outdir_tmp)
+  # between asv_id and asv
+  check_one_to_one_relationship(read_count_df)
   
-  ### define temporary file names
-  fasta <- file.path(outdir_tmp, 'asv.fasta')
-  blast6_file <- file.path(outdir_tmp, 'blast6.tsv')
-  
-  ### get unique list of asv with read_count and asv_id
-  asv_rc <- read_count_df %>%
-    group_by(asv) %>%
-    summarize(
-      read_count = sum(read_count), 
-      asv_id = first(asv_id) 
-    ) %>%
-    arrange(desc(read_count))
-  
-  # make fasta file with abundances
-  write_fasta_rc(asv_rc, fasta)
-  
-  # run vsearch cluster_size
-  cmd <- paste(vsearch_path, 
-               ' --cluster_size ', fasta,
-               ' --blast6out ', blast6_file,
-               ' --id ', id, 
-               sep="")
-  if(num_threads > 0){
-    paste(cmd, "--threads", num_threads, sep=" ")
-  }
-  if(!quiet){
-    print(cmd)
-  }
-  system(cmd)
-  
-  file_info <- file.info(blast6_file)
-  
-  if(file_info$size == 0){ # No output of clustering
-      # Delete the temp directory
-      unlink(outdir_tmp, recursive = TRUE)
-      return(read_count_df)
-  } else{
-    # read clustering results to df_centroids
-    # merged_id (include to a cluster), centroid_id (most abundant asv_id of the cluster)
-    df_centroids <- read_blast6out(blast6_file)
-    # add centroids to all asv_ids 
-    read_count_df_tmp <- left_join(read_count_df, 
-                                   df_centroids, 
-                                   by=c("asv_id" = "merged_id")
-    ) 
-    
-    read_count_df_tmp <- read_count_df_tmp %>%
-      # if sequence is not in a cluster or if it is a centroid, asv not in blast6_file
-      # => centroid_id is NA => change to asv_id
-      mutate(centroid_id = if_else(is.na(centroid_id), asv_id, centroid_id)) %>%
-      select(-asv, -asv_id) %>% # remore outdated columns
-      rename(asv_id = centroid_id) # replace original asv_id by centroid_id
-    
-    
+  ### run vsearch
+  cluster_df <- cluster_vsearch_cluster_size(read_count_df, 
+                                  identity=id, 
+                                  vsearch_path=vsearch_path, 
+                                  num_threads=num_threads, 
+                                  quiet=quiet)
+
     # list of unique asv (before clustering)
-    asv_rc <- asv_rc %>%
-      select(-read_count) # colnames(asv_rc):asv, asv_id
-    
+    asv <- read_count_df %>%
+      select(asv_id, asv) %>%
+      distinct()
+      
     # add sequence of centroid to read_count_df
-    read_count_df_tmp <- read_count_df_tmp %>%
-      left_join(asv_rc, by=c("asv_id")) %>%
-      select(asv_id, everything()) # put asv_id as a first column
+    read_count_df_tmp <- read_count_df %>%
+      left_join(cluster_df, by=c("asv_id")) %>%
+      select(-asv_id, -asv) %>%
+      rename(asv_id = cluster_id)
     
     # regroup by asv (replaced by centroid) and sample and (replicate)
     if("replicate" %in% colnames(read_count_df_tmp)){
       read_count_df_tmp <- read_count_df_tmp %>%
         group_by(asv_id, sample, replicate) %>% 
-        summarize(read_count = sum(read_count), asv = first(asv), .groups="drop_last")
+        summarize(read_count = sum(read_count), .groups="drop_last")
     } else{ # not replicates
       read_count_df_tmp <- read_count_df_tmp %>%
         group_by(asv_id, sample) %>% 
-        summarize(read_count = sum(read_count),asv = first(asv), .groups="drop_last")
+        summarize(read_count = sum(read_count), .groups="drop_last")
     }
     
-    # Delete the temp directory
-    unlink(outdir_tmp, recursive = TRUE)
+    read_count_df_tmp <- read_count_df_tmp %>%
+      left_join(asv, by="asv_id")
+    
     return(read_count_df_tmp)
-    }
-    
 }
 #' 
 #' 

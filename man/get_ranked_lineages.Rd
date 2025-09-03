@@ -12,7 +12,7 @@ get_ranked_lineages(taxids, tax_df, fill_lineage = TRUE)
 \item{tax_df}{Data frame with the following columns:
 tax_id, parent_tax_id, rank, name_txt, taxlevel
 (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
-2: kingdom, 1: superkingdom, 0: root).}
+2: kingdom, 1: domain, 0: root).}
 
 \item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
 in the lineage using the name of the next known lower-level taxon, prefixed
@@ -22,7 +22,7 @@ by the current taxonomic level
 \value{
 Data frame with the ranked lineages of taxids.
 Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-superkingdom_taxid,superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,
+domain_taxid,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,
 class_taxid,class,order_taxid,order,family_taxid,family,
 genus_taxid,genus,species_taxid,species).
 }

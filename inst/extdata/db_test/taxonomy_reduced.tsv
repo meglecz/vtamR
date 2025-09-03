@@ -1174,7 +1174,7 @@ tax_id	parent_tax_id	rank	name_txt	old_tax_id	taxlevel
 183142	10194	species	Brachionus quadridentatus		8
 1213205	96445	species	Lecane crepida		8
 131567	1	no rank	cellular organisms		0
-2759	131567	superkingdom	Eukaryota		1
+2759	131567	domain	Eukaryota		1
 33154	2759	clade	Opisthokonta		1.5
 2698737	2759	clade	Sar		1.5
 33090	2759	kingdom	Viridiplantae		2
