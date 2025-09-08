@@ -3,6 +3,7 @@
 export(Barplot_ReadCountBySample)
 export(Barplot_RenkonenDistance)
 export(CheckFileinfo)
+export(ClassifyClusters)
 export(ClusterSize)
 export(CountReadsDir)
 export(DensityPlot_RenkonenDistance)

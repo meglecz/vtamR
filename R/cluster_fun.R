@@ -647,6 +647,117 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
   
 } # end function
 
+#' Classify clusters based on taxonomic agreement among their ASVs
+#'
+#' Classifies each cluster according to the taxonomic assignment at a given level:
+#' 
+#' - closed: ASVs in the cluster are assigned to the same taxon, 
+#' and all ASVs of that taxon belong exclusively to this cluster.  
+#' - open: ASVs in the cluster are assigned to the same taxon, 
+#' but some ASVs of that taxon are found in other clusters.  
+#' - hybrid: the cluster contains ASVs assigned to more than one taxon.  
+#'   
+#' 
+#' @param cluster Data frame or csv file with the following variables: 
+#' asv_id, cluter_id
+#' @param taxa Data frame or CSV file with the following variables:  
+#' asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order, 
+#' family, genus, species). 
+#' Missing values within the lineage are not allowed. If the taxonomic assignment 
+#' is incomplete due to low resolution, higher-level taxa should be recorded as `NA`.
+#' @param taxlevels Character vector with names of the taxonomic levels 
+#' @param outfile Character string: name of the output csv file
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet Logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @returns Data frame with the following columns: cluster_id, class for each taxonomic level
+#' @examples 
+#' \dontrun{
+#' plot <- ClassifyClusters(read_count_df, 
+#'                                       swarm_d=7, 
+#'                                       vsearch_path="vsearch",
+#'                                       num_threads=8)
+#' }
+#' @export
+ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE, 
+                             taxlevels=c("domain", "phylum", "class", "order","family", "genus", "species")
+                             ){
+  
+  ##### make df if read_count is file
+  if(is.character(cluster)){
+    cluster_df <- read.csv(cluster, header=T, sep=sep)
+  }else{
+    cluster_df <- cluster
+  }
+  cluster_df <- cluster_df %>%
+    select(asv_id, cluster_id)
+  
+  ##### make df if read_count is file
+  if(is.character(taxa)){
+    taxa_df <- read.csv(taxa, header=T, sep=sep)
+  }else{
+    taxa_df <- taxa
+  }
+  # taxa_df <- asv_tax
+  taxa_df <- taxa_df %>%
+    select(asv_id, all_of(taxlevels))
+  
+  taxa_df <- left_join(taxa_df, cluster_df, by="asv_id")
+  
+  # Data frame to complete at each iteration, for each taxlevel
+  class <- data.frame("cluster_id" = unique(taxa_df$cluster_id))
+  
+  for(t in 1:length(taxlevels)){
+    tl = taxlevels[t]
+    
+    # seletc the taxlevel, delete NA
+    taxa_df_tl <- taxa_df %>%
+      rename(taxon = all_of(tl)) %>% # rename the actual taxlevel to taxon
+      select(cluster_id, taxon) %>%
+      filter(!is.na(taxon))
+
+    # group_by cluster
+    taxa_df_tl <- taxa_df_tl %>%
+      group_by(cluster_id) %>% # one line per cluster
+      summarise(unique_taxa = list(unique(taxon)), # list of unique values of the taxon
+                .groups = "drop") %>%  
+      rowwise() %>% # for each cluster
+      mutate(
+        n_unique_taxa = length(unique_taxa),
+      )
+    
+    # of all taxa in a vector instead of lists
+    taxa_simple <- unlist(taxa_df_tl$unique_taxa)
+
+    # classify
+    taxa_df_tl <- taxa_df_tl %>%
+      mutate(
+        classification = case_when(
+          # --- Case 1: only one unique taxon
+          n_unique_taxa == 1 ~ {
+            taxon <- unique_taxa[[1]]
+            n = sum(taxa_simple == taxon, na.rm=TRUE) # number of clusters where 
+                                                      # the taxon is present
+            if(n == 1) "closed" else "open"
+            },
+          TRUE ~ "hybrid"
+          )
+      ) %>%
+      select(cluster_id, classification)
+    
+    new_name <- paste("classification", tl, sep = "_")
+    class <- left_join(class, taxa_df_tl, by="cluster_id") %>%
+    rename(!!new_name := classification)
+    
+  }
+  return(class)
+}
+
+
+
+
+
+
 
 
 

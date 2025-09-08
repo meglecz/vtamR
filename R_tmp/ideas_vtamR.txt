@@ -207,7 +207,7 @@ PairwiseIdentityPlotPerSwarmD and PairwiseIdentityPlotPerClusterIdThreshold migh
 ## 2025/09/03
 
 superkingdom replaced by domain in taxonomy_reduced.tsv and vtamr_fun.R
-Correct error in adjust_ltgres
+Correct error in adjust_ltgres => DONE
 
 cluster_vsearch_cluster_size => DONE
 cluster_swarm => DONE
@@ -221,17 +221,22 @@ Replace part of the following functions by cluster_vsearch_cluster_size or clust
 - ClusterSize => DONE
 
 
+## 2025/09/08
 
-
-
-
+ClassifyClusters
 
 Classify clusters input: 
-- Input: read_count_df (asv, asv_id, read_count) + asv_tax (asv_id,ltg_name,ltg_rank,ltg_rank_index,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
-- clustering with variying d(swarm)/%identity(cluster_size)
-- for each clustering classify each cluster at each taxlevel
-  - close => All same taxon within cluster, all ASV of the taxon is in the same cluster
-  - open => All same taxon within cluster, same taxon is fauld in other cluster as well
-  - hybrid-compatible => different taxa within cluster but they are all compatible => same taxon with different resolution
-  - hybrid-noncompatible => different taxa within cluster and it is not due to NA
+- Input: read_count_df (asv, asv_id, read_count) + asv_tax (asv_id,domain,kingdom,phylum,class,order,family,genus,species)
+- for each taxonomic level 
+	- delete ASV with NA at taxlevel
+	- grour asv by cluster
+	- classify each cluster
+	  - close => same taxon within cluster, all ASV of the taxon is in the same cluster
+	  - open => same taxon within cluster, but taxa is also in other cluster
+	  - hybrid => different taxa within cluster.
+	  
+  
+  - clustering with variying d(swarm)/%identity(cluster_size)
+  
+
 

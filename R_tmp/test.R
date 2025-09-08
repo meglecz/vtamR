@@ -73,19 +73,6 @@ stat_df <- data.frame(parameters=character(),
 
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
-plot_png <- file.path(outdir, "1_input.png")
-plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-                                      swarm_d_min=1, 
-                                      swarm_d_max=15,
-                                      swarm_d_increment=3,
-                                      min_id = 0.8, 
-                                      vsearch_path=vsearch_path, 
-                                      swarm_path=swarm_path,
-                                      num_threads=num_threads,
-                                      outfile=plot_png,
-                                      quiet=FALSE)
-
-
 #### swarm
 by_sample <- FALSE
 read_count_df <- Swarm(read_count_df, 
@@ -93,6 +80,7 @@ read_count_df <- Swarm(read_count_df,
                        num_threads=num_threads, 
                        by_sample=by_sample)
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
+
 
 #### cluster_size
 by_sample <- FALSE
@@ -150,6 +138,18 @@ asv_tax <- TaxAssign(asv=read_count_df,
                      blast_path=blast_path, 
                      num_threads=num_threads,
                      quiet=FALSE)
+
+
+### Classify clusters
+cluster_df <- cluster_swarm(read_count_df, 
+                               swarm_d=5, 
+                               swarm_path=swarm_path, 
+                               num_threads=8, 
+                               outfile="",
+                               quiet=FALSE)
+
+
+cluster_classes <- ClassifyClusters(cluster=cluster_df, taxa=asv_tax, taxlevels=c("genus", "species"))
 
 
 #### LFNglobalReadCount
