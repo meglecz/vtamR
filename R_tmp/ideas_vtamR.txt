@@ -1,5 +1,11 @@
 # Ideas for vtamR
 
+## add num_thread to chimera
+
+## taxiassign with vsearch global ???
+
+### impove pool runs before filtrage
+
 
 ## Make run_system2 and replace all system and system2 by this
 
@@ -208,6 +214,7 @@ PairwiseIdentityPlotPerSwarmD and PairwiseIdentityPlotPerClusterIdThreshold migh
 
 superkingdom replaced by domain in taxonomy_reduced.tsv and vtamr_fun.R
 Correct error in adjust_ltgres => DONE
+add nul_thread for chimare
 
 cluster_vsearch_cluster_size => DONE
 cluster_swarm => DONE
@@ -237,6 +244,40 @@ Classify clusters input:
 	  
   
   - clustering with variying d(swarm)/%identity(cluster_size)
+  
+
+PairwiseIdentity 
+used in:
+	PairwiseIdentityPlotPerSwarmD
+	PairwiseIdentityPlotPerClusterIdThreshold
+	
+cluster_swarm
+used in:
+	PairwiseIdentityPlotPerSwarmD
+	PlotClusterClasstification
+	
+cluster_vsearch_cluster_size
+used in:
+	PairwiseIdentityPlotPerClusterIdThreshold
+	PlotClusterClasstification
+	
+PairwiseIdentityPlotPerSwarmD
+used in:
+	
+	
+PairwiseIdentityPlotPerClusterIdThreshold
+used in:
+	
+	
+ClassifyClusters
+used in:
+	PlotClusterClasstification
+	
+PlotClusterClasstification
+used in:
+	
+	
+
   
 
 

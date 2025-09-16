@@ -151,6 +151,27 @@ cluster_df <- cluster_swarm(read_count_df,
 
 cluster_classes <- ClassifyClusters(cluster=cluster_df, taxa=asv_tax, taxlevels=c("genus", "species"))
 
+outfile = file.path(outdir, "cluster_types_swarm.csv")
+plot_classify_swarm <- PlotClusterClasstification(read_count_df, asv_tax, 
+                                       clustering_method="swarm", 
+                                       cluster_params=c(2,4,6,8,10), 
+                                       vsearch_path=vsearch_path, 
+                                       swarm_path=swarm_path, 
+                                       taxlevels= c("species", "genus", "family", "order"),
+                                       outfile=outfile,
+                                       sep= ",",
+                                       quiet = TRUE)
+outfile = file.path(outdir, "cluster_types_clsize.csv")
+plot_classify_custersize <- PlotClusterClasstification(read_count_df, asv_tax, 
+                           clustering_method="cluster_size", 
+                           cluster_params=c(100, 99, 97, 95, 90), 
+                           vsearch_path=vsearch_path, 
+                           swarm_path=swarm_path, 
+                           taxlevels= c("species", "genus", "family", "order"),
+                           outfile=outfile,
+                           sep= ",",
+                           quiet = TRUE)
+
 
 #### LFNglobalReadCount
 global_read_count_cutoff = 2

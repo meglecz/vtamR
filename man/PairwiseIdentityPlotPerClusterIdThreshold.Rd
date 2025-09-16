@@ -35,8 +35,8 @@ and their identity is not plotted.}
 
 \item{num_threads}{Positive integer: Number of CPUs.}
 
-\item{outfile}{Character string: png file name to print the output plot.
-If empty, no file is written.}
+\item{outfile}{Character string: csv file name with the following columns:
+identity, cluster, cluster_criterium; If empty, no file is written.}
 
 \item{sep}{Field separator character in input and output csv files.}
 

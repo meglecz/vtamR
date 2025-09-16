@@ -290,8 +290,8 @@ cluster_swarm <- function(read_count,
 #' @returns Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
-#' plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-#'                                       swarm_d=7, 
+#' plot <- cluster_vsearch_cluster_size(read_count_df, 
+#'                                       identity=0.97,
 #'                                       vsearch_path="vsearch",
 #'                                       num_threads=8)
 #' }
@@ -413,8 +413,8 @@ cluster_vsearch_cluster_size <- function(read_count,
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param swarm_path Character string: path to swarm executable. 
 #' @param num_threads Positive integer: Number of CPUs.
-#' @param outfile Character string: png file name to print the output plot. 
-#' If empty, no file is written.
+#' @param outfile Character string: output csv file name with the following columns:
+#' identity, cluster, cluster_criterium; If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
@@ -537,8 +537,8 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' and their identity is not plotted.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param num_threads Positive integer: Number of CPUs.
-#' @param outfile Character string: png file name to print the output plot. 
-#' If empty, no file is written.
+#' @param outfile Character string: csv file name with the following columns: 
+#' identity, cluster, cluster_criterium; If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
@@ -639,9 +639,7 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
   ### 
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
-    png(filename=outfile) # one png file per plot
-    print(p) # print plot to file
-    dev.off()
+    write.table(pairwise_id_final, file = outfile,  row.names = F, sep=sep)
   }
   return(p)
   
@@ -753,6 +751,151 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
   return(class)
 }
 
+
+
+#' Plot Cluster Classification according to taxa
+#'
+#' Cluster ASV with using different clustering parameters, than classify each 
+#' cluster at each cluster setting :
+#'  
+#' - closed: ASVs in the cluster are assigned to the same taxon, 
+#' and all ASVs of that taxon belong exclusively to this cluster.  
+#' - open: ASVs in the cluster are assigned to the same taxon, 
+#' but some ASVs of that taxon are found in other clusters.  
+#' - hybrid: the cluster contains ASVs assigned to more than one taxon.  
+#' 
+#' Plot the number of clusters in each class for each setting.
+#'   
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, asv, read_count
+#' @param taxa Data frame or CSV file with the following variables:  
+#' asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order, 
+#' family, genus, species). 
+#' Missing values within the lineage are not allowed. If the taxonomic assignment 
+#' is incomplete due to low resolution, higher-level taxa should be recorded as `NA`.
+#' @param clustering_method character; [swarm/cluster_size]
+#' @param cluster_params numerical vector of either swarm's d to be used, or 
+#' percentage of identity threshold for the cluster_siz algorithm of vsearch.
+#' @param vsearch_path Character string: path to vsearch executable.
+#' @param swarm_path Character string: path to swarm executable.
+#' @param taxlevels Character vector with names of the taxonomic levels to be classed and plotted
+#' @param outfile Character string: name of the output csv file with the following 
+#' columns: classification, number_of_clusters, taxlevel, clustering_parameter;
+#' If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet Logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @returns A connected scatterplot of the number of clusters in different classes 
+#' (open, closed, hybrid)
+#' @examples 
+#' \dontrun{
+#' plot <- PlotClusterClasstification(read_count, 
+#'                                    taxa,
+#'                                    clustering_method = "swarm"
+#'                                    cluster_params = c(2, 4, 6, 8, 10)
+#'                                    swarm_path= swarm_path,
+#'                                    taxlevels = c(species, genus),
+#'                                    num_threads=8)
+#' }
+#' @export
+
+PlotClusterClasstification <- function(read_count, taxa, 
+                           clustering_method="swarm", 
+                           cluster_params=c(2,4,6,8,10), 
+                           vsearch_path="vsearch", 
+                           swarm_path="swarm", 
+                           taxlevels= c("species", "genus"),
+                           outfile="",
+                           sep= ",",
+                           quiet = TRUE){
+  
+  ##### make df if read_count is file
+  if(is.character(read_count)){
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  read_count_df <- read_count_df %>%
+    group_by(asv_id, asv) %>%
+    summarize(read_count=sum(read_count), .groups="drop") 
+  
+  ##### make df if taxa is a file
+  if(is.character(taxa)){
+    taxa_df <- read.csv(taxa, header=T, sep=sep)
+  }else{
+    taxa_df <- taxa
+  }
+  # taxa_df <- asv_tax
+  taxa_df <- taxa_df %>%
+    select(asv_id, all_of(taxlevels))
+  
+  clusters_count <- data.frame(
+    "classification" = character(),
+    "number_of_clusters" = numeric(),
+    "taxlevel" = character(),
+    "clustering_parameter" = numeric())
+
+  #### for each d or % id
+  for(i in cluster_params){
+    ### cluster
+      if(clustering_method =="swarm"){
+        cluster_df <- cluster_swarm(read_count_df, 
+                                       swarm_d=i, 
+                                       swarm_path=swarm_path, 
+                                       num_threads=num_threads, 
+                                       quiet=quiet)
+      }else{
+        cluster_df <- cluster_vsearch_cluster_size(read_count_df, 
+                                                   identity=i/100, 
+                                                   vsearch_path=vsearch_path, 
+                                                   num_threads=num_threads, 
+                                                   quiet=quiet)
+      }
+      
+      ### classify
+      classification <- ClassifyClusters(cluster_df, taxa_df, quiet=quiet, 
+                                          taxlevels=taxlevels)
+      #### count the number of clusters in each class (open, closed, hybrid, NA)
+      for(tl in taxlevels){
+        col_name <- paste("classification", tl, sep="_")
+  
+          tmp <- classification %>%
+            count(!!sym(col_name)) %>%
+            rename("classification" = !!sym(col_name), "number_of_clusters"=n) %>%
+            mutate("taxlevel" = tl, "clustering_parameter" = i) 
+          
+          clusters_count <- rbind(clusters_count, tmp)
+      }
+  } # end for each cluster_params
+  
+  clusters_count$taxlevel <- factor(clusters_count$taxlevel, levels = unique(clusters_count$taxlevel))
+  
+  if(clustering_method == "swarm"){
+    plot_title = "Number of different cluster types according the the taxonomic assignment of ASVs"
+    x_label = "Swarm's d used for clustering"
+  }else{
+    plot_title = "Number of different cluster types according the the taxonomic assignment of ASVs"
+    x_label = "% identity threshold for cluster_size algorithm of vsearch"
+  }
+  p <- ggplot(clusters_count %>% filter(!is.na(classification)), aes(x=clustering_parameter, y = number_of_clusters, group=classification, color = classification)) +
+    geom_line() +
+    geom_point() +
+    facet_wrap(~taxlevel, scales = "free_y") + # one subplot per tax level
+    ggtitle("Number of different cluster types \n according the the taxonomic assignment of ASVs")  +
+    ylab("Number of clusters") +
+    xlab(x_label) +
+    theme(plot.title = element_text(size=12, hjust=0.5)) 
+  
+  ### 
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(clusters_count, file = outfile,  row.names = F, sep=sep)
+  }
+  return(p)
+
+}
+  
 
 
 
