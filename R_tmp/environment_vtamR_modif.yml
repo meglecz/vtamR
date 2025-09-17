@@ -1,0 +1,10 @@
+name: vtamRenv
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - vsearch
+  - blast  # installs ncbi-blast+
+  - cutadapt
+  - swarm

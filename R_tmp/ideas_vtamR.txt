@@ -1,5 +1,19 @@
 # Ideas for vtamR
 
+# change environment_vtamR.yml to keep only TPP as dependecies
+
+## add library(vtamR) before download_db in installation vignette
+change download_db to download_osf in vignette
+download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+    url = "https://osf.io/download/jyhz6/",
+    dest_dir = "COInr_db",
+    untar = TRUE,
+    quiet = FALSE
+    )
+
+## pb with creating tmp dir in Endoume for SortReads
+
+
 ## add num_thread to chimera
 
 ## taxiassign with vsearch global ???

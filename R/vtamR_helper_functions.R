@@ -26,7 +26,7 @@ NULL
 #' show warnings or errors.
 #' @examples
 #' \dontrun{
-#' download_db(filename = "COInr_2025_05_23.tar.gz",
+#' download_zenodo(filename = "COInr_2025_05_23.tar.gz",
 #'    url = "https://zenodo.org/records/15515860",
 #'    dest_dir = "~/vtamR",
 #'    untar = TRUE,
@@ -75,7 +75,7 @@ download_zenodo <- function(
 #' @returns  full path to the directory where the file was downloaded.
 #' @examples
 #' \dontrun{
-#' download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+#' download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
 #'    url = "https://osf.io/download/jyhz6/",
 #'    dest_dir = "~/vtamR/OSF",
 #'    untar = TRUE,
