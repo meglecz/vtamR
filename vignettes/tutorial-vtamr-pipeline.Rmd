@@ -1,5 +1,5 @@
 ---
-title: "Tutorial - vtamR pipeline"
+title: "Tutorial - vtamR pipeline - v0.3.0"
 output: 
   rmarkdown::html_vignette:
     toc: true

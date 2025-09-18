@@ -1,5 +1,5 @@
 ---
-title: "How to make a mock_composition file"
+title: "How to make a mock_composition file - v0.3.0"
 output: 
   rmarkdown::html_vignette:
     toc: true
