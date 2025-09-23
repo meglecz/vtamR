@@ -3149,8 +3149,8 @@ FilterRenkonen <- function(read_count,
     last_row <- floor(length(renkonen_df$renkonen_d) * renkonen_distance_quantile)
     cutoff <- renkonen_df$renkonen_d[last_row]
   }
-#  msg <- paste("The cutoff value for Renkonen distances is ", cutoff)
-#  print(msg)
+  msg <- paste("The cutoff value for Renkonen distances is ", cutoff)
+  print(msg)
   # get list of samples
   sample_list <- unique(renkonen_df$sample)
   # filter out replicates sample by sample
@@ -4878,7 +4878,7 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' @param increment_lnf_variant_cutoff  Real (0-1): values from 
 #' `min_lnf_variant_cutoff` to `max_lnf_variant_cutoff` are tested by 
 #' `increment_lnf_variant_cutoff` increment. 
-#' @param by_replicate logical: : compare read count of the occurrence to the 
+#' @param by_replicate logical: compare read count of the occurrence to the 
 #' read counts of the ASV-replicate in `LFNvariant` function.
 #' @param min_replicate_number Positive integer: minimum number of replicates 
 #' for `FilterMinReplicate`.
@@ -5108,13 +5108,20 @@ PoolDatasets <- function(files,
     df <- rbind(df, tmp)
   }
   
+
+    
   ###
   # Pool ASVs identical on their overlapping region, if more than one marker
   ###
   marker_list <- unique(df$marker)
   # more than one marker => pool sequences identical in their corresponding region
+  # complete the asv_id by 
   if(length(marker_list) > 1){ 
+    # add marekr to asv_id to avoid incompatibilty among asv_id across markers
+    df <- df %>%
+      mutate(asv_id = paste(marker, asv_id, sep="_"))
     # get full list of ASVs
+
     asvs <- df %>%
       group_by(asv_id, asv) %>%
       summarize("rc" = sum(read_count), .groups="drop_last")  %>%
@@ -5140,7 +5147,7 @@ PoolDatasets <- function(files,
                          sep=""
                          )
     if(num_threads > 0){
-      paste(vsearch_cmd, "--threads", num_threads, sep=" ")
+      vsearch_cmd <- paste(vsearch_cmd, "--threads", num_threads, sep=" ")
     }
     if(!quiet){
       print(vsearch_cmd)
@@ -5154,14 +5161,14 @@ PoolDatasets <- function(files,
     cent <- read.table(centroids_file)
     colnames(cent) <- c("centroid_id")
     cent <- cent %>%
-      filter(grepl(">centroid=", centroid_id))
+      filter(grepl(">centroid=", centroid_id)) # keep onmu fasta definition lines
     cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
     cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
     cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
-    cent$centroid_id <- as.numeric(cent$centroid_id)
+#    cent$centroid_id <- as.numeric(cent$centroid_id)
     cent$nbseq <- as.numeric(cent$nbseq)
     
-    # add to centroid the asv_id that are in the same cluster
+    # add to centroide the asv_id that are in the same cluster
     blastout <- read.table(blastout_file) %>%
       select(1,2)
     colnames(blastout) <- c("asv_id", "centroid_id")
@@ -5184,7 +5191,7 @@ PoolDatasets <- function(files,
     # add the centroid_id to each asv if df
     df <- left_join(df, cent, by=c("asv_id")) %>%
       select(-nbseq)
-    # add the centroid to each centroid_id in df
+    # add the centroid sequence to each centroid_id in df
     df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
       select(-length, -rc) %>%
       rename("asv"=asv.x, "centroid"=asv.y) %>%
@@ -5208,7 +5215,34 @@ PoolDatasets <- function(files,
     df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id")) %>%
       select("asv_id"=centroid_id, sample, read_count, asv)
     
+    if(FALSE){
+    # separate marker and asv_id to different columns
+    df_pool$marker <- sub("_\\d+$", "", df_pool$asv_id)
+    df_pool$asv_id <- sub(".*_(\\d+)$", "\\1", df_pool$asv_id)
+    df_pool$asv_id <- as.integer(df_pool$asv_id)
+    
+    df_pool <- df_pool %>%
+      select(asv_id, marker, everything())
+
+    # separate marker and asv_id to different columns
+    df <- df %>%
+      select(-marker)
+    
+
+      df$marker_asv <- sub("_\\d+$", "", df$asv_id)
+      df$asv_id <- sub(".*_(\\d+)$", "\\1", df$asv_id)
+      df$asv_id <- as.integer(df$asv_id)
+      
+      df$marker_centroid <- sub("_\\d+$", "", df$centroid_id)
+      df$centroid_id <- sub(".*_(\\d+)$", "\\1", df$centroid_id)
+      df$centroid_id <- as.integer(df$centroid_id)
+      
+      df <- df %>%
+        select(centroid_id, marker_centroid, asv_id, marker_asv, everything())
+    }
+    
     if(asv_with_centroids != ""){
+      check_dir(asv_with_centroids, is_file=TRUE)
       write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
     }
   }else{# one marker

@@ -287,3 +287,13 @@ change environment_vtamR.yml to keep only TPP as dependecies
 add library(vtamR) before download_db in installation vignette
 change download_db to download_osf in vignette
 
+
+## 2025/09/23
+
+PoolDatasets => add marker to asv_id when pooling different markers
+benchmark fish 
+	setup fastq
+	filter default
+	filter optimized
+	pool
+
