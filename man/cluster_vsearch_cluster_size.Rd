@@ -40,8 +40,8 @@ columns
 }
 \examples{
 \dontrun{
-plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-                                      swarm_d=7, 
+plot <- cluster_vsearch_cluster_size(read_count_df, 
+                                      identity=0.97,
                                       vsearch_path="vsearch",
                                       num_threads=8)
 }

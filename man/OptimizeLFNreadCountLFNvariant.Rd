@@ -52,7 +52,7 @@ function.}
 \code{min_lnf_variant_cutoff} to \code{max_lnf_variant_cutoff} are tested by
 \code{increment_lnf_variant_cutoff} increment.}
 
-\item{by_replicate}{logical: : compare read count of the occurrence to the
+\item{by_replicate}{logical: compare read count of the occurrence to the
 read counts of the ASV-replicate in \code{LFNvariant} function.}
 
 \item{min_replicate_number}{Positive integer: minimum number of replicates

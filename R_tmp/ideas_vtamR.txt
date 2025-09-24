@@ -1,8 +1,18 @@
 # Ideas for vtamR
 
 
-## conda env create -f PATH_TO_YML
-install v5.1 in Bombyx, 2.6 in endoume => check
+# Make supplementary file that gives the correspondence between centroids and asv for clustering  (Marion)
+
+## Diane: Make mock composition by assigning ASV with small database containing expected sequneces, but not the same size as the ASV. 
+
+## Complete tuto with clustering and determining d or %id
+
+## swarm : si d > 1 and fastidiours TRUE; print informative message error
+
+
+
+
+
 
 ## taxassign with vsearch global ???
 
@@ -297,3 +307,12 @@ benchmark fish
 	filter optimized
 	pool
 
+
+## 2025/09/24
+correct environment_vtamR.yml to bet cutadapt 5.1 with pip
+
+## swarm + ClusterSize + PairwiseIdentityPlotPerSwarmD
+  Some of the the asv_ids belong to multile asv  => Erreur dans check_one_to_one_relationship(asv_df) 
+
+check_one_to_one_relationship => modified to be more robust => probably this causes a pb in Dereplicate , probably add_id => Correct!!!
+undroup has benn added to run_clustersize and cluster_vsearch_cluster_size  (called from ClusterSize)

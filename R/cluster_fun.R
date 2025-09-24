@@ -319,6 +319,7 @@ cluster_vsearch_cluster_size <- function(read_count,
   asv_df <- read_count_df %>%
     group_by(asv, asv_id) %>%
     summarize(read_count = sum(read_count), .groups="drop")%>%
+    ungroup() %>%
     arrange(desc(read_count))
   
   ##### make tmp dir and input files

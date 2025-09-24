@@ -4,38 +4,19 @@ pak::pkg_install("meglecz/vtamR@develop")
 environment_vtamR_yml_path <- system.file("environment_vtamR.yml", package = "vtamR")
 cat(environment_vtamR_yml_path)
 
-# In a terminal
-### uriginal yml try to install many R packages with incompatibilities
-# environment_vtamR_modif.yml contains only TPP s adependencies and making the env goes OK
-conda env create -f /home/emese/Bureau/environment_vtamR_modif.yml   
-
-conda activate vtamRenv
-
-which vsearch
-which blastn
-which cutadapt
-which swarm
-
-/home/emese/anaconda3/envs/vtamRenv/bin/vsearch
-/home/emese/anaconda3/envs/vtamRenv/bin/blastn
-/home/emese/anaconda3/envs/vtamRenv/bin/cutadapt
-/home/emese/anaconda3/envs/vtamRenv/bin/swarm
-
-### in R
-library(vtamR)
-download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
-            url = "https://osf.io/download/jyhz6/",
-            dest_dir = "COInr_db",
-            untar = TRUE,
-            quiet = FALSE
-)
-
 
 
 ################################################"
 
 library(dplyr)
 library(ggplot2)
+
+setwd("/home/emese/vtamR/")
+library("devtools")
+library("roxygen2")
+load_all(".")
+roxygenise()
+usethis::use_roxygen_md()
 
 ### set up
 cutadapt_path <- "/home/emese/anaconda3/envs/vtamRenv/bin/cutadapt"
@@ -80,12 +61,502 @@ sortedinfo_df <- SortReads(fastainfo_df,
                            num_threads=num_threads
 )
 
-### Error
-"/home/emese/anaconda3/envs/vtamRenv/bin/cutadapt --cores=8 --quiet -e 0.1 --no-indels --trimmed-only --minimum-length 50 --maximum-length 500 -g ^TCCACTAATCACAARGATATTGGTAC...GGAGGATTTGGWAATTGATTAGTW$ --output ~/vtamR_demo_out/sorted/14ben01-2.fasta /tmp/Rtmp0F5NsC/mfzr_2_fw.fasta_175811470397/tagtrimmed-GTCGATCATGTCA-ACATCGACGTACG.fasta"
 
-### PB with cutadapt version, which is 2.6 in vtalRenv => see how to chaang this => add a teste of version to install vignette.
+###############
+### dereplicate
+###############
+updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
+read_count_df <- Dereplicate(sortedinfo_df, 
+                             dir=sorted_dir, 
+#                             asv_list=asv_list,
+                             updated_asv_list = updated_asv_list
+)
 
-### OK
-rc_dir <- paste('rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
-rc_dir <- file.path(tempdir(), rc_dir)
-check_dir(rc_dir)
+is_grouped_df(read_count_df)
+
+### stat
+stat_df <- data.frame(parameters=character(),
+                      asv_count=integer(),
+                      read_count=integer(),
+                      sample_count=integer(),
+                      sample_replicate_count=integer())
+
+stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
+
+#### swarm
+by_sample <- FALSE
+read_count_df <- Swarm(read_count_df, 
+                       swarm_path=swarm_path, 
+                       num_threads=num_threads, 
+                       by_sample=by_sample)
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
+
+is_grouped_df(read_count_df)
+#### cluster_size
+by_sample <- FALSE
+read_count_df <- ClusterSize(read_count_df, 
+                             id=0.97, 
+                             vsearch_path=vsearch_path, 
+                             by_sample = by_sample,
+                             num_threads = num_threads,
+                             quiet=FALSE)
+
+stat_df <- GetStat(read_count_df, stat_df, stage="ClusterSize", params=0.97)
+
+is_grouped_df(read_count_df)
+
+check_one_to_one_relationship(read_count_df)
+
+unique_asv_id <- read_count_df %>%
+  ungroup() %>%
+  select(asv_id, asv) %>%
+  distinct() %>%
+  group_by(asv_id) %>%
+  summarize(count= length(asv)) %>%
+  filter(count>1) %>%
+  ungroup()
+
+nrow(unique_asv_id)
+  print(unique_asv_id)
+
+
+plot_png <- file.path(outdir, "2_swarm.png")
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile=plot_png,
+                                      quiet=TRUE)
+
+plot_png <- file.path(outdir, "2_cluster_size.png")
+plot_clustersize <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df, 
+                                                              identity_min=0.9, 
+                                                              identity_max=0.99,
+                                                              identity_increment=0.01,
+                                                              min_id = 0.8, 
+                                                              vsearch_path=vsearch_path, 
+                                                              num_threads=num_threads,
+                                                              outfile=plot_png, 
+                                                              quiet=TRUE)
+
+
+cluster_size <- cluster_vsearch_cluster_size(read_count_df, 
+                                             identity=0.97, 
+                                             vsearch_path=vsearch_path, 
+                                             num_threads=8, 
+                                             outfile="",
+                                             quiet=FALSE)
+
+cluster_swarm <- cluster_swarm(read_count_df, 
+                               swarm_d=5, 
+                               swarm_path=swarm_path, 
+                               num_threads=8, 
+                               outfile="",
+                               quiet=FALSE)
+
+### TaxAssign
+asv_tax <- TaxAssign(asv=read_count_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads,
+                     quiet=FALSE)
+
+
+### Classify clusters
+cluster_df <- cluster_swarm(read_count_df, 
+                            swarm_d=5, 
+                            swarm_path=swarm_path, 
+                            num_threads=8, 
+                            outfile="",
+                            quiet=FALSE)
+
+
+cluster_classes <- ClassifyClusters(cluster=cluster_df, taxa=asv_tax, taxlevels=c("genus", "species"))
+
+outfile = file.path(outdir, "cluster_types_swarm.csv")
+plot_classify_swarm <- PlotClusterClasstification(read_count_df, asv_tax, 
+                                                  clustering_method="swarm", 
+                                                  cluster_params=c(2,4,6,8,10), 
+                                                  vsearch_path=vsearch_path, 
+                                                  swarm_path=swarm_path, 
+                                                  taxlevels= c("species", "genus", "family", "order"),
+                                                  outfile=outfile,
+                                                  sep= ",",
+                                                  quiet = TRUE)
+outfile = file.path(outdir, "cluster_types_clsize.csv")
+plot_classify_custersize <- PlotClusterClasstification(read_count_df, asv_tax, 
+                                                       clustering_method="cluster_size", 
+                                                       cluster_params=c(100, 99, 97, 95, 90), 
+                                                       vsearch_path=vsearch_path, 
+                                                       swarm_path=swarm_path, 
+                                                       taxlevels= c("species", "genus", "family", "order"),
+                                                       outfile=outfile,
+                                                       sep= ",",
+                                                       quiet = TRUE)
+
+
+#### LFNglobalReadCount
+global_read_count_cutoff = 2
+
+read_count_df <- LFNglobalReadCount(read_count_df, 
+                                    cutoff=global_read_count_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="3_LFNglobalReadCount.png")
+
+#### FilterIndel
+read_count_df <- FilterIndel(read_count_df)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
+
+### FilterCodonStop
+genetic_code = 5
+read_count_df <- FilterCodonStop(read_count_df, 
+                                 genetic_code=genetic_code)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=NA)
+
+### FilterChimera
+abskew=2
+by_sample = T
+sample_prop = 0.8
+read_count_df <- FilterChimera(read_count_df, 
+                               vsearch_path=vsearch_path, 
+                               num_threads=num_threads,
+                               by_sample=by_sample, 
+                               sample_prop=sample_prop, 
+                               abskew=abskew)
+
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="6_FilterChimera.png")
+
+#### FilterRenkonen
+cutoff <- 0.4
+read_count_df <- FilterRenkonen(read_count_df, 
+                                cutoff=cutoff)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="7_FilterRenkonen.png")
+
+### FilterPCRerror
+pcr_error_var_prop <- 0.05
+max_mismatch <- 2
+read_count_df <- FilterPCRerror(read_count_df, 
+                                vsearch_path=vsearch_path, 
+                                num_threads=num_threads,
+                                pcr_error_var_prop=pcr_error_var_prop, 
+                                max_mismatch=max_mismatch)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterPCRerror", params=NA)
+
+### LFNsampleReplicate
+lfn_sample_replicate_cutoff <- 0.004
+read_count_df <- LFNsampleReplicate(read_count_df, 
+                                    cutoff=lfn_sample_replicate_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=NA)
+
+### FilterMinReplicate
+min_replicate_number <- 2
+read_count_df <- FilterMinReplicate(read_count_df, 
+                                    cutoff=min_replicate_number)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+
+### LFNvariant
+lnf_variant_cutoff = 0.001
+read_count_df_lnf_variant <- LFNvariant(read_count_df, 
+                                        cutoff=lnf_variant_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNvariant", params=NA)
+
+### LFNreadCount
+lfn_read_count_cutoff <- 10
+read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
+                                             cutoff=lfn_read_count_cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNreadCount", params=NA)
+
+### Combine results
+read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
+                             read_count_df_lnf_variant)
+stat_df <- GetStat(read_count_df, stat_df, stage="Combine results", params=NA)
+
+# delete temporary data frames
+rm(read_count_df_lfn_read_count)
+rm(read_count_df_lnf_variant)
+
+### FilterMinReplicate
+min_replicate_number <- 2
+read_count_df <- FilterMinReplicate(read_count_df, 
+                                    cutoff=min_replicate_number)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="13_FilterMinReplicate.png")
+
+#### PoolReplicates
+read_count_samples_df <- PoolReplicates(read_count_df)
+stat_df <- GetStat(read_count_df, stat_df, stage="PoolReplicates", params=NA)
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="14_PoolReplicates.png")
+
+### MakeKnownOccurrences performance_metrics
+results <- MakeKnownOccurrences(read_count_samples_df, 
+                                sortedinfo=sortedinfo_df, 
+                                mock_composition=mock_composition)
+
+
+updated_asv_list <- file.path(outdir, "updated_asv_list_end.tsv")
+UpdateASVlist(asv_list1 = read_count_samples_df,
+              asv_list2 =asv_list, 
+              outfile=updated_asv_list
+)
+
+### TaxAssign
+asv_tax <- TaxAssign(asv=read_count_samples_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads)
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="2_swarm.png")
+
+
+### WriteASVtable
+outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
+asv_table_df <- WriteASVtable(read_count_samples_df, 
+                              outfile=outfile, 
+                              asv_tax=asv_tax, 
+                              sortedinfo=sortedinfo_df, 
+                              add_empty_samples=T, 
+                              add_sums_by_sample=T, 
+                              add_sums_by_asv=T, 
+                              add_expected_asv=T, 
+                              mock_composition=mock_composition)
+
+
+#####################
+#####################
+#####################
+# make mOTU
+
+#####################
+### mOTU with swarm
+
+stat_df <- GetStat(read_count_samples_df, stat_df, stage="PoolReplicates", params=NA)
+
+by_sample <- FALSE
+d = 7
+read_count_df_swarm_motu <- Swarm(read_count_samples_df, 
+                                  swarm_path=swarm_path, 
+                                  swarm_d=d,
+                                  fastidious=FALSE,
+                                  num_threads=num_threads, 
+                                  by_sample=by_sample)
+
+stat_df <- GetStat(read_count_df_swarm_motu, stat_df, stage="swarm_motu_7", params=d)
+
+### mOTU with ClusterSize
+identity <- 0.97 
+read_count_df_clustersize_motu <- ClusterSize(read_count_samples_df,
+                                              id=identity, 
+                                              vsearch_path=vsearch_path,
+                                              num_threads=num_threads,
+                                              by_sample=FALSE)
+
+stat_df <- GetStat(read_count_df_clustersize_motu, stat_df, stage="clustersize_motu_7", params=identity)
+
+
+
+### ClusterSize
+identity <- 0.97 
+read_count_samples_df <- ClusterSize(read_count_samples_df,
+                                     id=identity, 
+                                     vsearch_path=vsearch_path,
+                                     by_sample=FALSE)
+
+### TaxAssign
+asv_tax <- TaxAssign(asv=read_count_samples_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, 
+                     num_threads=num_threads)
+
+### WriteASVtable
+outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
+asv_table_df <- WriteASVtable(read_count_samples_df, 
+                              outfile=outfile, 
+                              asv_tax=asv_tax, 
+                              sortedinfo=sortedinfo_df, 
+                              add_empty_samples=T, 
+                              add_sums_by_sample=T, 
+                              add_sums_by_asv=T, 
+                              add_expected_asv=T, 
+                              mock_composition=mock_composition)
+
+
+
+
+#################
+#################
+################
+# test ClusterSize after dereplicate
+################
+
+#### ClusterSize by sample
+## sample_replicate
+by_sample <- TRUE
+read_count_df_ClusterSize_sample_replicate <- ClusterSize(read_count_df, 
+                                                          id= 0.97,
+                                                          vsearch_path=vsearch_path, 
+                                                          num_threads=num_threads, 
+                                                          by_sample=by_sample)
+
+
+stat_df <- GetStat(read_count_df_ClusterSize_sample_replicate, stat_df, stage="ClusterSize_sample_replicate", params=by_sample)
+
+## sample
+read_count_df_ClusterSize_sample <- ClusterSize(read_count_sample_df, 
+                                                id= 0.97,
+                                                vsearch_path=vsearch_path, 
+                                                num_threads=num_threads, 
+                                                by_sample=by_sample)
+
+
+stat_df <- GetStat(read_count_df_ClusterSize_sample, stat_df, stage="ClusterSize_sample", params=by_sample)
+
+#### ClusterSize by sample=FALSE
+
+## sample_replicate
+by_sample <- FALSE
+read_count_df_ClusterSize_all_sample_replicate <- ClusterSize(read_count_df, 
+                                                              id= 0.97,
+                                                              vsearch_path=vsearch_path, 
+                                                              num_threads=num_threads, 
+                                                              by_sample=by_sample)
+
+stat_df <- GetStat(read_count_df_ClusterSize_all_sample_replicate, stat_df, stage="ClusterSize_all_sample_replicate", params=by_sample)
+
+## sample
+read_count_df_ClusterSize_all_sample <- ClusterSize(read_count_sample_df, 
+                                                    id= 0.97,
+                                                    vsearch_path=vsearch_path, 
+                                                    num_threads=num_threads, 
+                                                    by_sample=by_sample)
+
+
+stat_df <- GetStat(read_count_df_ClusterSize_all_sample, stat_df, stage="ClusterSize_all_sample", params=by_sample)
+
+
+
+
+
+################
+# test swarm after dereplicate
+################
+#### Swarm by sample
+## sample_replicate
+by_sample <- TRUE
+read_count_df_swam_sample_replicate <- Swarm(read_count_df, 
+                                             swarm_path=swarm_path, 
+                                             num_threads=num_threads, 
+                                             by_sample=by_sample
+)
+stat_df <- GetStat(read_count_df_swam_sample_replicate, stat_df, stage="Swarm_sample_replicate", params=by_sample)
+
+## sample
+read_count_df_swam_sample <- Swarm(read_count_sample_df, 
+                                   swarm_path=swarm_path, 
+                                   num_threads=num_threads, 
+                                   by_sample=by_sample)
+
+
+stat_df <- GetStat(read_count_df_swam_sample, stat_df, stage="Swarm_sample", params=by_sample)
+
+#### Swarm by sample=FALSE
+
+## sample_replicate
+by_sample <- FALSE
+read_count_df_swam_all_sample_replicate <- Swarm(read_count_df, 
+                                                 swarm_path=swarm_path, 
+                                                 num_threads=num_threads, 
+                                                 by_sample=by_sample
+)
+stat_df <- GetStat(read_count_df_swam_all_sample_replicate, stat_df, stage="Swarm_all_sample_replicate", params=by_sample)
+
+## sample
+read_count_df_swam_all_sample <- Swarm(read_count_sample_df, 
+                                       swarm_path=swarm_path, 
+                                       num_threads=num_threads, 
+                                       by_sample=by_sample)
+
+
+stat_df <- GetStat(read_count_df_swam_all_sample, stat_df, stage="Swarm_all_sample", params=by_sample)
+
+
+
+plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+                                      swarm_d_min=1, 
+                                      swarm_d_max=15,
+                                      swarm_d_increment=3,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      swarm_path=swarm_path,
+                                      num_threads=num_threads,
+                                      outfile="density_plot_1_15_3.png")
+
+tmp <- PairwiseIdentity(read_count_df, 
+                        min_id = 0.8, 
+                        num_threads=num_threads,
+                        vsearch_path=vsearch_path)
+
+
+

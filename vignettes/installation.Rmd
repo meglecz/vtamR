@@ -51,6 +51,12 @@ if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
 pak::pkg_install("meglecz/vtamR@develop")
 ```
 
+Alternatively, you can use devtools.
+```{r install_github, eval=FALSE}
+if (!requireNamespace("devtools", quietly = TRUE)) {install.packages("devtools")}
+devtools::install_github("meglecz/vtamR@develop", dependencies=TRUE)
+```
+
 Read the **[Manual](https://people.imbe.fr/~emeglecz/vtamR)** 
 on how to construct a full metabarcoding pipeline.
 

@@ -1918,27 +1918,32 @@ check_one_to_one_relationship <- function(df){
     distinct()
   
   # check if more then one asv per asv_id
-  unique_asv_id <- df %>%
+  unique_asv_id <- read_count_df %>%
+    select(asv_id, asv) %>%
+    distinct() %>%
     group_by(asv_id) %>%
     summarize(count= length(asv)) %>%
     filter(count>1) %>%
     ungroup()
+
   if(nrow(unique_asv_id) > 0 ){
     print(unique_asv_id)
     stop("Some of the the asv_ids belong to multile asv")
   }
   
   # check if more then one asv_id per asv
-  unique_asv <- df %>%
+  unique_asv <- read_count_df %>%
+    select(asv_id, asv) %>%
+    distinct() %>%
     group_by(asv) %>%
     summarize(count= length(asv_id)) %>%
     filter(count>1) %>%
-    ungroup()
+    ungroup()  
+  
   if(nrow(unique_asv) > 0 ){
     print(unique_asv)
-    stop("Some of the asv has multiple asv_ids")
+    stop("Some of the the asv have to multile asv_id")
   }
-  
   return(TRUE)
 }
 
@@ -6366,11 +6371,13 @@ run_clustersize <- function(read_count_df,
     if("replicate" %in% colnames(read_count_df_tmp)){
       read_count_df_tmp <- read_count_df_tmp %>%
         group_by(asv_id, sample, replicate) %>% 
-        summarize(read_count = sum(read_count), .groups="drop_last")
+        summarize(read_count = sum(read_count), .groups="drop_last") %>%
+        ungroup()
     } else{ # not replicates
       read_count_df_tmp <- read_count_df_tmp %>%
         group_by(asv_id, sample) %>% 
-        summarize(read_count = sum(read_count), .groups="drop_last")
+        summarize(read_count = sum(read_count), .groups="drop_last")%>%
+        ungroup()
     }
     
     read_count_df_tmp <- read_count_df_tmp %>%

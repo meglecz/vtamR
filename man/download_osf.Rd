@@ -27,7 +27,7 @@ Extracts the .tar.gz archive, if necessary
 }
 \examples{
 \dontrun{
-download_db(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
    url = "https://osf.io/download/jyhz6/",
    dest_dir = "~/vtamR/OSF",
    untar = TRUE,
