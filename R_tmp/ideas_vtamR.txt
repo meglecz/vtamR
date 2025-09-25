@@ -7,7 +7,7 @@
 
 ## Complete tuto with clustering and determining d or %id
 
-## swarm : si d > 1 and fastidiours TRUE; print informative message error
+
 
 
 
@@ -311,8 +311,6 @@ benchmark fish
 ## 2025/09/24
 correct environment_vtamR.yml to bet cutadapt 5.1 with pip
 
-## swarm + ClusterSize + PairwiseIdentityPlotPerSwarmD
-  Some of the the asv_ids belong to multile asv  => Erreur dans check_one_to_one_relationship(asv_df) 
+## 2025/09/25
+check_one_to_one_relationship
 
-check_one_to_one_relationship => modified to be more robust => probably this causes a pb in Dereplicate , probably add_id => Correct!!!
-undroup has benn added to run_clustersize and cluster_vsearch_cluster_size  (called from ClusterSize)

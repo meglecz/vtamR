@@ -1918,9 +1918,7 @@ check_one_to_one_relationship <- function(df){
     distinct()
   
   # check if more then one asv per asv_id
-  unique_asv_id <- read_count_df %>%
-    select(asv_id, asv) %>%
-    distinct() %>%
+  unique_asv_id <- df %>%
     group_by(asv_id) %>%
     summarize(count= length(asv)) %>%
     filter(count>1) %>%
@@ -1932,9 +1930,7 @@ check_one_to_one_relationship <- function(df){
   }
   
   # check if more then one asv_id per asv
-  unique_asv <- read_count_df %>%
-    select(asv_id, asv) %>%
-    distinct() %>%
+  unique_asv <- df %>%
     group_by(asv) %>%
     summarize(count= length(asv_id)) %>%
     filter(count>1) %>%

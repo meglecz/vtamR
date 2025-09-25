@@ -64,6 +64,8 @@ read_count_df <- Dereplicate(sortedinfo_df,
                              updated_asv_list = updated_asv_list
 )
 
+is_grouped_df(read_count_df)
+
 ### stat
 stat_df <- data.frame(parameters=character(),
                       asv_count=integer(),

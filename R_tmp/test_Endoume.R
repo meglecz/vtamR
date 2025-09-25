@@ -68,7 +68,7 @@ sortedinfo_df <- SortReads(fastainfo_df,
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
 read_count_df <- Dereplicate(sortedinfo_df, 
                              dir=sorted_dir, 
-#                             asv_list=asv_list,
+                             asv_list=asv_list,
                              updated_asv_list = updated_asv_list
 )
 
@@ -107,19 +107,6 @@ is_grouped_df(read_count_df)
 
 check_one_to_one_relationship(read_count_df)
 
-unique_asv_id <- read_count_df %>%
-  ungroup() %>%
-  select(asv_id, asv) %>%
-  distinct() %>%
-  group_by(asv_id) %>%
-  summarize(count= length(asv)) %>%
-  filter(count>1) %>%
-  ungroup()
-
-nrow(unique_asv_id)
-  print(unique_asv_id)
-
-
 plot_png <- file.path(outdir, "2_swarm.png")
 plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 
@@ -131,6 +118,7 @@ plot <- PairwiseIdentityPlotPerSwarmD(read_count_df,
                                       num_threads=num_threads,
                                       outfile=plot_png,
                                       quiet=TRUE)
+is_grouped_df(read_count_df)
 
 plot_png <- file.path(outdir, "2_cluster_size.png")
 plot_clustersize <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df, 
