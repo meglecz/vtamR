@@ -27,10 +27,10 @@ family, genus, species).
 Missing values within the lineage are not allowed. If the taxonomic assignment
 is incomplete due to low resolution, higher-level taxa should be recorded as \code{NA}.}
 
-\item{clustering_method}{character; \link{swarm/cluster_size}}
+\item{clustering_method}{character; swarm or vsearch}
 
 \item{cluster_params}{numerical vector of either swarm's d to be used, or
-percentage of identity threshold for the cluster_siz algorithm of vsearch.}
+percentage of percentage of identity threshold for the cluster_size algorithm of vsearch.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 

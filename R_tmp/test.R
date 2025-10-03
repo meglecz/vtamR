@@ -107,6 +107,16 @@ plot <- PairwiseIdentityPlotPerSwarmD(read_count_df,
                                       outfile=plot_png,
                                       quiet=TRUE)
 
+plot <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
+                                                        identity_min=0.9, 
+                                                        identity_max=0.99,
+                                                        identity_increment=0.01,
+                                      min_id = 0.8, 
+                                      vsearch_path=vsearch_path, 
+                                      num_threads=num_threads,
+                                      quiet=FALSE)
+
+
 plot_png <- file.path(outdir, "2_cluster_size.png")
 plot_clustersize <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df, 
                                                       identity_min=0.9, 

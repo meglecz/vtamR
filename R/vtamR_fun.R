@@ -11,6 +11,50 @@
 #' @importFrom seqinr splitseq
 NULL
 
+#' Run a command using system2
+#' 
+#' Run a command using system2 and handles quite or verbose output
+#' 
+#' @param path Character string naming a path to a program.
+#' @param args vector; Arguments of the command.
+#' @param quiet Logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @examples 
+#' \dontrun{
+#' run_system2(path="ls", args=c("-all"), quiet=FALSE)
+#' }
+#' @export
+
+run_system2 <- function(path, args, quiet=FALSE ){
+  
+  # system2 cannot use ~ as a home
+  path <- path.expand(path)
+  
+  if (!quiet) {
+    # Show the full command that will be run
+    cat("Running command:\n")
+    cat(path, paste(shQuote(args), collapse = " "), "\n")
+    
+    system2(
+      command = path,
+      args = args,
+      stdout = "",
+      stderr = ""
+    )
+  }else{
+    output <- suppressWarnings(system2(
+      command = path,
+      args = args,
+      stdout = TRUE,
+      stderr = TRUE
+    ))
+    
+    # Extract only error/warning lines
+    errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
+    cat(errors_only, sep = "\n")
+  }
+}
+
 #' Check directory
 #' 
 #' Check if directory exists, and create it if not.
@@ -1718,180 +1762,6 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 }
 
 
-#' Run swarm
-#' 
-#' Runs swarm [https://github.com/torognes/swarm](https://github.com/torognes/swarm) 
-#' on input read_count data frame or csv file. 
-#' Pools variants of the same cluster and sums read counts of the 
-#' underlying ASVs.
-#' 
-#' Swarm can be run sample by sample (by_sample=T) or for the whole data set 
-#' in one go.
-#' 
-#' @param read_count Data frame or csv file with the following variables: 
-#' asv, sample, replicate (optional), read_count.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
-#' @param swarm_path Character string: path to swarm executables. 
-#' @param by_sample logical: run swarm separately for each sample.
-#' @param num_threads Positive integer: Number of CPUs.
-#' @param swarm_d Positive integer: d parameter for swarm.
-#' Maximum number of differences allowed between two ASVs, 
-#' meaning that two ASVs will be grouped if they have d (or less) differences.
-#' @param fastidious logical: when working with d = 1, perform a second 
-#' clustering pass to reduce the number of small clusters.
-#' @param sep Field separator character in input and output csv files.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @returns Data frame with the same structure as the input, but ASVs of 
-#' the same cluster pooled to one row.
-#' @examples
-#' \dontrun{
-#' Swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4, by_sample=T)
-#' }
-#' @export
-#' 
-Swarm <- function(read_count, 
-                  outfile="", 
-                  swarm_path="swarm", 
-                  num_threads=0, 
-                  swarm_d=1, 
-                  fastidious=T, 
-                  sep=",", 
-                  by_sample=T, 
-                  quiet=T
-                  ){
-  
-   # can accept df or file as an input
-  if(is.character(read_count)){
-    # read known occurrences
-    read_count_df <- read.csv(read_count, header=T, sep=sep)
-  }else{
-    read_count_df <- read_count
-  }
-  
-  if(by_sample){
-    # make an empty output df, with the same columns and variable types as read_count_df
-    out_df <- read_count_df %>%
-      filter(asv=="")
-    
-    # get list of samples 
-    sample_list <- unique(read_count_df$sample)
-    
-    # run swarm for each sample
-    for(s in sample_list){
-      if(!quiet){
-        print(s)
-      }
-      
-      # select occurrences for sample
-      df_sample <- read_count_df %>%
-        filter(sample==s)
-      # run swarm
-      df_sample <- run_swarm(df_sample, 
-                             swarm_path=swarm_path, 
-                             num_threads=num_threads, 
-                             swarm_d=swarm_d, 
-                             fastidious=fastidious,
-                             quiet=quiet
-                             )
-      # add output of the sample to the total data frame
-      out_df <- rbind(out_df, df_sample)
-    }
-  }else{ # run swarm for all samples together
-    out_df <- run_swarm(read_count_df, 
-                        swarm_path=swarm_path,
-                        num_threads=num_threads,
-                        swarm_d=swarm_d,
-                        fastidious=fastidious, 
-                        quiet=quiet
-                        )
-  }
-  
-  if(outfile != ""){
-    check_dir(outfile, is_file=TRUE)
-    write.table(out_df, file = outfile,  row.names = F, sep=sep)
-  }
-  return(out_df)
-  
-}
-
-#' Run Swarm on one file
-#' 
-#' Runs swarm [https://github.com/torognes/swarm](https://github.com/torognes/swarm) 
-#' on input read_count data frame or csv file. 
-#' Pools variants of the same cluster and sums read counts of the 
-#' underlying ASVs.
-#' 
-#' `run_swarm` runs swarm on the whole data set in one go, while 
-#' `Swarm` can run swarm sample by sample or in one go.
-#' 
-#' @param read_count_df Data frame with the following variables: 
-#' asv, sample, replicate (optional), read_count.
-#' @param swarm_path Character string: path to swarm executables. 
-#' @param num_threads Positive integer: Number of CPUs.
-#' @param swarm_d Positive integer: d parameter for swarm.
-#' Maximum number of differences allowed between two ASVs, 
-#' meaning that two ASVs will be grouped if they have d (or less) differences.
-#' @param fastidious logical: when working with d = 1, perform a second 
-#' clustering pass to reduce the number of small clusters.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @returns Data frame with the same structure as the input, but ASVs of 
-#' the same cluster pooled to one row.
-#' @examples
-#' \dontrun{
-#' run_swarm(read_count=read_count_df, swarm_path=swarm_path, num_threads=4)
-#' }
-#' @export
-#' 
-run_swarm <- function(read_count_df, 
-                      swarm_path="swarm", 
-                      num_threads=0, 
-                      swarm_d=1, 
-                      fastidious=T,
-                      quiet=T){
-  
-  ### check if one to one relationship between asv and asv_id
-  t <- check_one_to_one_relationship(read_count_df)
-  
-  #### run swarm get df with asv_id, cluster_id columns
-    cluster_df <- cluster_swarm(read_count_df, 
-                            swarm_d=swarm_d,
-                            fastidious=fastidious,
-                            swarm_path=swarm_path, 
-                            num_threads=num_threads, 
-                            quiet=quiet)
-  
-  ### get unique list of asv and asv_id
-    asv <- read_count_df%>%
-      select(asv_id, asv) %>%
-      distinct()
-  
-  # replace asv_id by cluster_id in read_count_df
-  read_count_df <- left_join(read_count_df, cluster_df,  by= "asv_id") %>%
-    select(-asv_id, -asv)
-  
-  
-  if("replicate" %in% colnames(read_count_df)){ # if replicates in input, keep replicates
-    
-  read_count_df <- read_count_df %>%
-    group_by(cluster_id, sample, replicate) %>%
-    summarize(read_count=sum(read_count), .groups="drop_last") %>%
-    rename(asv_id=cluster_id) %>%
-    ungroup()
-  }else{ # if no replicate column
-    read_count_df <- read_count_df %>%
-      group_by(cluster_id, sample) %>%
-      summarize(read_count=sum(read_count), .groups="drop_last") %>%
-      rename(asv_id=cluster_id) %>%
-      ungroup()
-  }
-  
-  read_count_df <- left_join(read_count_df, asv, by="asv_id")
-  
-  return(read_count_df)
-}
 
 #' Check one to one relationship
 #' 
@@ -3198,13 +3068,13 @@ FilterRenkonen <- function(read_count,
 #' Take the mean non-zero read counts over replicates for each sample and asv.
 #'  
 #' @param read_count Data frame or csv file with the following variables: 
-#' asv_id, sample, replicate, read_count, asv.
+#' asv_id, sample, replicate, read_count, asv, cluster_id (optional).
 #' @param digits Positive integer: round the mean read counts to digits.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @returns Data frame with the following columns: 
-#' asv, sample, read_count (over replicates)
+#' asv, sample, read_count (over replicates), cluster_id (optional)
 #' @examples
 #' \dontrun{
 #' PoolReplicates(read_count_df)
@@ -3220,13 +3090,34 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
     read_count_df <- read_count
   }
   
+  t <- check_one_to_one_relationship(read_count_df)
+  
+  # make df with unique asv_id cluster_id combinations
+  if("cluster_id" %in% colnames(read_count_df)){
+    cluster_df <- read_count_df %>%
+      select(asv_id, cluster_id) %>%
+      distinct()
+    
+    n <- length(unique(cluster_df$asv_id))
+    if(n != nrow(cluster_df)){
+      cat("WARNING: Some of the the asv have multile cluster_id. 
+             This can happen if ASVs have been clustered sample by sample.
+             cluster_id will not be written to the output.")
+      read_count_df <- read_count_df %>%
+        select(-cluster_id)
+    }
+  }
+  
   read_count_samples_df <- read_count_df %>%
     group_by(asv_id,sample,asv) %>%
-    summarize(read_count = mean(read_count), .groups="drop_last") %>%
-    select(asv_id, sample, read_count, asv) %>%
-    ungroup()
+    summarize(read_count = mean(read_count), .groups="drop") %>%
+    select(asv_id, sample, read_count, asv)
   
   read_count_samples_df$read_count <- round(read_count_samples_df$read_count, digits =digits)
+  
+  if("cluster_id" %in% colnames(read_count_df)){
+    read_count_samples_df <- left_join(read_count_samples_df, cluster_df, by="asv_id")
+  }
   
   if(outfile !=""){
     check_dir(outfile, is_file=TRUE)
@@ -3503,27 +3394,24 @@ run_blast <- function(df,
   dust = "yes"
   max_target_seqs=500
   
-  blast <- paste(blast_path, " -task ", task, 
-                 " -db ",blast_db ,
-                 " -query ",fas,
-                 " -evalue ",e,
-                 " -out ",blast_out,
-                 ' -outfmt "6 qseqid pident qcovhsp staxids" -dust ',dust,
-                 " -qcov_hsp_perc ",qcov_hsp_perc,
-                 " -perc_identity ",perc_identity,
-                 " -max_target_seqs ",max_target_seqs, 
-                 sep=""
-                 )
-  if(num_threads >0){
-    blast <- paste(blast, 
-                   " -num_threads ", num_threads,
-                   sep=""
-    )
+  # Build argument vector
+  args <- c(
+    "-task", task,
+    "-db", blast_db ,
+    "-query", fas,
+    "-evalue", e,
+    "-out", blast_out,
+    "-outfmt", shQuote("6 qseqid pident qcovhsp staxids"),
+    "-dust", dust,
+    "-qcov_hsp_perc", qcov_hsp_perc,
+    "-perc_identity", perc_identity,
+    "-max_target_seqs", max_target_seqs
+  )
+  if(num_threads > 0){
+    args <- append(args, c("-num_threads", num_threads))
   }
-  if(!quiet){
-    print(blast)
-  }
-  system(blast)
+  
+  run_system2(blast_path, args, quiet=quiet)
   
   # read BLAST results; 
   # take care of lines where there is several taxids in the staxids column 
@@ -3985,8 +3873,8 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' 
 #' Write csv file with samples in columns, ASVs in lines, read_counts in cells.
 #'  
-#' @param read_count_samples_df Data frame with the following variables: 
-#' asv_id, sample, read_count, asv.
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, sample, replicate (optional), read_count, asv, cluster_id (optional)
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @param asv_tax Data frame or CSV file with taxonomic assignments with the following columns:
@@ -3998,13 +3886,18 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' If given, the output is completed with taxonomic assignment of each ASV.
 #' @param sortedinfo Data frame or csv file with columns: sample, sample_type.
 #' Only necessary if add_empty_samples==T or add_expected_asv==T.
-#' @param add_empty_samples logical: add a column for each samples 
+#' @param pool_replicates Logical: if replicate column is prensent in the
+#' input data, read counts are averaged over replicates (pool_replicates== TRUE), 
+#' or kept separately (pool_replicates== FALSE). 
+#' In this case, each column in the output df is a 
+#' sample.replicate.
+#' @param add_empty_samples Logical: add a column for each samples 
 #' in the original data set, even if they do not have reads after filtering.
-#' @param add_sums_by_sample logical: add a line with the total number of reads
+#' @param add_sums_by_sample Logical: add a line with the total number of reads
 #'  in each sample, and another with the number of ASVs in each sample.
-#' @param add_sums_by_asv logical: add a column with the total number of reads 
+#' @param add_sums_by_asv Logical: add a column with the total number of reads 
 #' for each ASV, and another with the number of samples, where the ASV is present.
-#' @param add_expected_asv logical: add a column for each mock sample in which 
+#' @param add_expected_asv Logical: add a column for each mock sample in which 
 #' keep and tolerate ASVs are flagged.
 #' @param mock_composition Data frame or CSV file with the following columns: 
 #' sample,action,asv. Action can take the following values: keep/tolerate.
@@ -4028,17 +3921,79 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' }
 #' @export
 #'
-WriteASVtable <- function(read_count_samples_df, 
+WriteASVtable <- function(read_count, 
                           outfile="", 
                           asv_tax=NULL, 
                           sortedinfo="", 
-                          add_empty_samples=F, 
-                          add_sums_by_sample=F, 
-                          add_sums_by_asv=F, 
-                          add_expected_asv=F,
+                          pool_replicates=FALSE,
+                          add_empty_samples=FALSE, 
+                          add_sums_by_sample=FALSE, 
+                          add_sums_by_asv=FALSE, 
+                          add_expected_asv=FALSE,
                           mock_composition="", 
                           sep=","
                           ){
+  
+  
+  if(is.character(read_count)){
+    read_count_samples_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_samples_df <- read_count
+  }
+  
+  # check asv_id - asv
+  t <- check_one_to_one_relationship(read_count_samples_df)
+  
+
+  #### Check if cluster info is available, and make df with unique asv_id an cluster_id, to add them to output
+  add_cluster_id <- FALSE
+  # make df with unique asv_id cluster_id combinations
+  if("cluster_id" %in% colnames(read_count_samples_df)){
+    cluster_df <- read_count_samples_df %>%
+      select(asv_id, cluster_id) %>%
+      distinct()
+    add_cluster_id <- TRUE
+    
+    n <- length(unique(cluster_df$asv_id))
+    if(n != nrow(cluster_df)){
+      cat("WARNING: Some of the the asv have multile cluster_id. 
+             This can happen if ASVs have been clustered sample by sample.
+             cluster_id will not be written to the output.")
+      add_cluster_id <- FALSE
+    }
+    # delete cluster_id
+    read_count_samples_df <- read_count_samples_df %>%
+      select(-cluster_id)
+  }
+  
+  
+  # read the sortedinfo to a data frame 
+  if(add_empty_samples | add_expected_asv){
+    if(is.character(sortedinfo)){
+      sortedinfo_df <- read.csv(sortedinfo, header=T, sep=sep)
+    }else{
+      sortedinfo_df <- sortedinfo
+    }
+  }
+  
+  ### deal with replicates
+  adjust_sample <- FALSE
+  if("replicate" %in% colnames(read_count_samples_df)){
+    if(pool_replicates){ # take the mean read count of the replaictes of the same sample
+      read_count_samples_df <- PoolReplicates(read_count_samples_df)
+    }else{ # make sample column and replace sample by sample.replicate 
+      read_count_samples_df <- read_count_samples_df %>%
+        mutate(sample = paste(sample, replicate, sep=".")) %>%
+        select(-replicate)
+      ### modify sample column in sortedinfo as well
+      if(add_empty_samples | add_expected_asv){
+        sortedinfo_df <- sortedinfo_df %>%
+          mutate(sample = paste(sample, replicate, sep=".")) %>%
+          select(-replicate)
+      }
+      adjust_sample <- TRUE
+    }
+  }
   
   # make a wide data frame with samples in columns, ASVs in lines
   wide_read_count_df <- as.data.frame(pivot_wider(
@@ -4051,16 +4006,7 @@ WriteASVtable <- function(read_count_samples_df,
     )
   # put the asv column at the end
 
-  # read the sortedinfo to a data frame 
-  if(add_empty_samples | add_expected_asv){
-    if(is.character(sortedinfo)){
-      sortedinfo_df <- read.csv(sortedinfo, header=T, sep=sep)
-    }else{
-      sortedinfo_df <- sortedinfo
-    }
-  }
-  
-  
+
   if(add_empty_samples){
     # make vector with samples already in the data frame 
     # (asv_id and asv is also on the list, but it is not a pb)
@@ -4088,12 +4034,12 @@ WriteASVtable <- function(read_count_samples_df,
     sum_rc <- data.frame(matrix(0, nrow=2, ncol= ncol(wide_read_count_df)))
     colnames(sum_rc) <- colnames(wide_read_count_df)
     #  and total number of reads in line 1 
-    sum_rc[1,1] <- "NA" # asv_id col
+    sum_rc[1,1] <- NA # asv_id col
     sum_rc[1,2] <- NA # asv col
     # total number of reads for each sample (ignore cols 1 and 2, since it is asv_id ans asv)
     sum_rc[1,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)])
     # Number of ASVs in each sample in line 2
-    sum_rc[2,1] <- "NA"
+    sum_rc[2,1] <- NA
     sum_rc[2,2] <- NA # asv col
     sum_rc[2,-c(1,2)] <- colSums(wide_read_count_df[,-c(1,2)] != 0)
     wide_read_count_df <- rbind(sum_rc, wide_read_count_df)
@@ -4123,6 +4069,11 @@ WriteASVtable <- function(read_count_samples_df,
     # make a vector with all unique samples in the sortedinfo
     mock_samples <-unique(sortedinfo_df$sample)
     
+    if(adjust_sample){ # samples are sample.replicate in wide_read_count_df
+      mock_samples <- sub("\\..+$", "", mock_samples)
+      mock_samples <- unique(mock_samples)
+    }
+    
     
     if(is.character(mock_composition)){
       mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
@@ -4148,7 +4099,10 @@ WriteASVtable <- function(read_count_samples_df,
         rename_with(~new_colname, action)
     }
   }
-  
+  # add cluster_id
+  if(add_cluster_id){
+    wide_read_count_df <- left_join(wide_read_count_df, cluster_df, by="asv_id")
+  }
   
   if(!is.null(asv_tax)){ #  taxonomic assignation is given
     if(is.character(asv_tax)  && asv_tax != ""){ # as a file
@@ -5118,7 +5072,7 @@ PoolDatasets <- function(files,
   # more than one marker => pool sequences identical in their corresponding region
   # complete the asv_id by 
   if(length(marker_list) > 1){ 
-    # add marekr to asv_id to avoid incompatibilty among asv_id across markers
+    # add marker to asv_id to avoid incompatibilty among asv_id across markers
     df <- df %>%
       mutate(asv_id = paste(marker, asv_id, sep="_"))
     # get full list of ASVs
@@ -6234,157 +6188,7 @@ check_heading <- function(list1, list2, file="") {
   }
 }
 
-#' ClusterSize
-#' 
-#' Cluster ASV in input data frame with the cluster_size command of vsearch. 
-#' Replace ASV by their centroids and regroup lines by centroid and sample.
-#'  
-#' @param read_count Data frame or csv file with the following variables: 
-#' asv_id, sample, replicate (optional), read_count, asv.
-#' @param id Real; Minimum identity between asv and centroid.
-#' @param vsearch_path Character string: path to vsearch executables.
-#' @param by_sample logical: run clustering separately for each sample.
-#' @param num_threads Positive integer: Number of CPUs.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
-#' @param sep Field separator character in input and output csv files.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @returns read_count data frame, with ASV of the same cluster, sample, (replicate)
-#' grouped to the same line
-#' @examples
-#' \dontrun{
-#' clustered_df <- ClusterSize(read_count_df, id=0.97)
-#' }
-#' @export
-#' 
-ClusterSize <- function(read_count, 
-                        id=0.97, 
-                        vsearch_path="vsearch", 
-                        by_sample = FALSE,
-                        num_threads = 0,
-                        outfile="", 
-                        sep=",",
-                        quiet=TRUE
-                        ) {
-  
-  # can accept df or file as an input
-  if(is.character(read_count)){
-    # read known occurrences
-    read_count_df <- read.csv(read_count, header=T, sep=sep)
-  }else{
-    read_count_df <- read_count
-  }
-  
-  if(by_sample){
-    # make an empty output df, with the same columns and variable types as read_count_df
-    out_df <- read_count_df %>%
-      filter(asv=="")
-    
-    # get list of samples 
-    sample_list <- unique(read_count_df$sample)
-    
-    # run cluster_size for each sample
-    for(s in sample_list){
-      if(!quiet){
-        print(s)
-      }
-      
-      # select occurrences for sample
-      df_sample <- read_count_df %>%
-        filter(sample==s)
-      # run clustering
-      df_sample <- run_clustersize(df_sample, 
-                                   id = id,
-                                   vsearch_path=vsearch_path, 
-                                   num_threads=num_threads, 
-                                   quiet=quiet)
-      # add output of the sample to the total data frame
-      out_df <- rbind(out_df, df_sample)
-    }
-  }else{ # run clustering for all samples together
-    out_df <- run_clustersize(read_count_df, 
-                              id = id,
-                              vsearch_path=vsearch_path, 
-                              num_threads=num_threads, 
-                              quiet=quiet)
-  }
-  
-  if(outfile != ""){
-    check_dir(outfile, is_file=TRUE)
-    write.table(out_df, file = outfile,  row.names = F, sep=sep)
-  }
-  return(out_df)
-}
-
-#' run_clustersize
-#' 
-#' Run vsearch clustersize on all ASV of the input data frame and pool
-#' ASV of the same cluster under the asv_id of the centroid.
-#'  
-#' @param read_count_df Data frame with the following variables: 
-#' asv_id, sample, replicate (optional), read_count, asv.
-#' @param id Real; Minimum identity between asv and centroid.
-#' @param vsearch_path Character string: path to vsearch executables.
-#' @param num_threads Positive integer: Number of CPUs.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @returns read_count data frame, with ASV of the same cluster, sample, (replicate)
-#' grouped to the same line
-#' @examples
-#' \dontrun{
-#' clustered_df <- run_clustersize(read_count_df, id=0.97)
-#' }
-#' @export
-run_clustersize <- function(read_count_df, 
-                            id = 0.97,
-                            vsearch_path="vsearch", 
-                            num_threads=0, 
-                            quiet=TRUE){
-  
-  # between asv_id and asv
-  check_one_to_one_relationship(read_count_df)
-  
-  ### run vsearch
-  cluster_df <- cluster_vsearch_cluster_size(read_count_df, 
-                                  identity=id, 
-                                  vsearch_path=vsearch_path, 
-                                  num_threads=num_threads, 
-                                  quiet=quiet)
-
-    # list of unique asv (before clustering)
-    asv <- read_count_df %>%
-      select(asv_id, asv) %>%
-      distinct()
-      
-    # add sequence of centroid to read_count_df
-    read_count_df_tmp <- read_count_df %>%
-      left_join(cluster_df, by=c("asv_id")) %>%
-      select(-asv_id, -asv) %>%
-      rename(asv_id = cluster_id)
-    
-    # regroup by asv (replaced by centroid) and sample and (replicate)
-    if("replicate" %in% colnames(read_count_df_tmp)){
-      read_count_df_tmp <- read_count_df_tmp %>%
-        group_by(asv_id, sample, replicate) %>% 
-        summarize(read_count = sum(read_count), .groups="drop_last") %>%
-        ungroup()
-    } else{ # not replicates
-      read_count_df_tmp <- read_count_df_tmp %>%
-        group_by(asv_id, sample) %>% 
-        summarize(read_count = sum(read_count), .groups="drop_last")%>%
-        ungroup()
-    }
-    
-    read_count_df_tmp <- read_count_df_tmp %>%
-      left_join(asv, by="asv_id")
-    
-    return(read_count_df_tmp)
-}
-#' 
-#' 
-#' 
-#' 
+ 
 #' read_blast6out
 #' 
 #' read output of vsearch --cluster_size to df
@@ -6393,7 +6197,6 @@ run_clustersize <- function(read_count_df,
 #' @returns data frame with merged_id and centroid_id
 #' @export
 #' 
-
 read_blast6out <- function(filename) {
   
   df <- read.table(filename, header=FALSE, sep="\t")

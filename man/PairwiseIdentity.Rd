@@ -17,14 +17,14 @@ PairwiseIdentity(
 \arguments{
 \item{asv}{Data frame or csv file with asv and asv_id columns.}
 
-\item{min_id}{Real: Bellow this percentage of identity do not align asv}
+\item{min_id}{Real: \link{0-1} Bellow this identity do not align asv}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string: path to vsearch executable.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string: csv file name to print the output data frame.
+If empty, no file is written.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
@@ -33,7 +33,7 @@ show warnings or errors.}
 }
 \value{
 Data frame with asv pairs and their percentage of identity.
-asv pairs with identity bellow min_id are not listed.
+asv pairs with identity bellow min_id are not listed. Colums: query, target, identity
 }
 \description{
 Align all pairs of asv with at least min_id similarity and

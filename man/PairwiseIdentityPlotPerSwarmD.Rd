@@ -2,7 +2,8 @@
 % Please edit documentation in R/cluster_fun.R
 \name{PairwiseIdentityPlotPerSwarmD}
 \alias{PairwiseIdentityPlotPerSwarmD}
-\title{Pairwise identity density plot for different Swarm d values}
+\title{Make a density plot: pairwise percent identities between ASVs within and across
+clusters using different Swarm's d for clustering.}
 \usage{
 PairwiseIdentityPlotPerSwarmD(
   read_count,
@@ -14,6 +15,7 @@ PairwiseIdentityPlotPerSwarmD(
   swarm_path = "swarm",
   num_threads = 0,
   outfile = "",
+  plotfile = "",
   sep = ",",
   quiet = TRUE
 )
@@ -39,7 +41,10 @@ and their identity is not plotted.}
 \item{num_threads}{Positive integer: Number of CPUs.}
 
 \item{outfile}{Character string: output csv file name with the following columns:
-identity, cluster, cluster_criterium; If empty, no file is written.}
+pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
@@ -50,10 +55,10 @@ show warnings or errors.}
 A density plot pairwise percentage of identities.
 }
 \description{
-Cluster by swarm all asv with a range of d values.
-For each d, make a density plot of pairwise percentage of identities between
-asv, using different colors for identities between asv of the same or different
-clusters.
+Cluster by swarm all ASV with a range of d values.
+For each clustering (d), make a density plot of pairwise percentage of
+identities between ASVs, using different colors for identities between ASV
+of the same or different clusters.
 }
 \examples{
 \dontrun{
@@ -65,6 +70,6 @@ plot <- PairwiseIdentityPlotPerSwarmD(read_count_df,
                                       vsearch_path="vsearch", 
                                       swarm_path="swarm",
                                       num_threads=8,
-                                      outfile="density_plot.png")
+                                      plotfile="density_plot.png")
 }
 }

@@ -314,3 +314,57 @@ correct environment_vtamR.yml to bet cutadapt 5.1 with pip
 ## 2025/09/25
 check_one_to_one_relationship
 
+## 2025/10/03
+Adjust legend and output of
+PairwiseIdentityPlotPerSwarmD 
+PairwiseIdentityPlotPerClusterIdThreshold
+
+Reorganise function aroung clustering
+- GetClusterIdSwarm and GetClusterIdVsearch (adapted from cluster_swarm and cluster_vsearch_cluster_size)
+	output: Df: asv_id, cluster_id
+- pool_by_cluster (adapted and unified from run_swarm, run_clustersize )
+	output: Df: asv, sample, replicate (optional), read_count
+- ClusterASV (adapted and unified from Swarm and ClusterSize)
+	- group parameter: poole AASV of the clsuter, or keep ASV and add cluster_id
+	- method: swarm or vsearch
+	output: Df: asv, sample, replicate (optional), read_count, cluster_id (opt)
+
+# Function to help to decide on clustering parametre to make mOTU
+- PairwiseIdentity
+- PairwiseIdentityPlotPerSwarmD
+- PairwiseIdentityPlotPerClusterIdentityThreshold
+- ClassifyClusters
+- PlotClusterClasstification
+
+
+PoolDataset is similar in function, to ClusterASV but
+	- can handle identical asv_id across markers
+	- read_counts are either mean or sum unec ASV of the same cluster
+ 
+Vsearch clustering algos
+cluster_fast sort by seq_length => then cluster
+cluster_size => sort by read_count => then cluster
+Cluster_smallmem => no modification of input order, sequences should be in decreasing length
+
+
+WriteASVtable include cluster_id if present in input, and coherence between asv_id and cluster_id
+PoolReplicates => keep cluster_id if present, and coherence between asv_id and cluster_id
+
+WriteASVtable => deal with replicates	
+	- write table for each sample-replicate if pool_replicate = T
+	- pool replicates if present use mean as in PoolReplicates if pool_replicate = F
+	
+Delete 
+cluster_swarm
+cluster_vsearch_cluster_size
+run_swarm
+Swarm
+run_clustersize 
+ClusterSize
+
+## 2025/10/04
+
+Document clustering !!!
+Attention, if Swarm or ClusterSize is by_sample, the output cluster_df an asv_id, can have different clusterd_id in different samples.
+
+

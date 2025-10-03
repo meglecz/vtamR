@@ -12,6 +12,8 @@
 #' @importFrom seqinr splitseq
 NULL
 
+
+
 #' Pairwise identity
 #' 
 #' Align all pairs of asv with at least min_id similarity and
@@ -19,16 +21,16 @@ NULL
 #' asv pairs with identity bellow min_id are not listed.
 #' 
 #' @param asv Data frame or csv file with asv and asv_id columns.
-#' @param min_id Real: Bellow this percentage of identity do not align asv
-#' @param vsearch_path Character string: path to vsearch executables.
+#' @param min_id Real: [0-1] Bellow this identity do not align asv
+#' @param vsearch_path Character string: path to vsearch executable.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
+#' @param outfile Character string: csv file name to print the output data frame.
+#' If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns Data frame with asv pairs and their percentage of identity. 
-#' asv pairs with identity bellow min_id are not listed.
+#' asv pairs with identity bellow min_id are not listed. Colums: query, target, identity 
 #' @examples 
 #' \dontrun{
 #' identity_df <- PairwiseIdentity(asv, 
@@ -58,9 +60,6 @@ PairwiseIdentity <- function(asv,
   # change to percent
   min_id_perc <- min_id * 100 
   
-  # system2 cannot use ~ as a hone
-  vsearch_path <- path.expand(vsearch_path)
-  
   #### get unique asv list and make fasta file
   asv_df <- asv_df %>%
     select(asv, asv_id) %>%
@@ -72,13 +71,17 @@ PairwiseIdentity <- function(asv,
   
   ### run vsearch allpairs_global
   vsearch_out <- file.path(tempdir(), "vsearch_out.tsv")
-  cmd <- paste(vsearch_path, "--allpairs_global", fasta, "--userout", vsearch_out, 
-               '--userfields "query+target+id+ids+alnlen+aln"', 
-               "--id", min_id, "--threads", num_threads, sep=" ")
-  if(!quiet){
-    print(cmd)
-  }
-  system(cmd, show.output.on.console = FALSE)
+  # Build argument vector
+  args <- c(
+    "--allpairs_global", fasta,
+    "--userout", vsearch_out,
+#    "--userfields", '"query+target+id+ids+alnlen+aln"',
+    "--userfields", "query+target+id+ids+alnlen+aln",
+    "--id", min_id,
+    "--threads", num_threads
+  )
+  
+  run_system2(vsearch_path, args, quiet=quiet)
   
   #### read vsearch result
   if(file.exists(vsearch_out) && file.size(vsearch_out) > 0){
@@ -126,20 +129,21 @@ PairwiseIdentity <- function(asv,
 #' clustering pass to reduce the number of small clusters.
 #' @param swarm_path Character string: path to swarm executable. 
 #' @param num_threads Positive integer: Number of CPUs.
-#' @param outfile Character string: name of the output csv file
+#' @param outfile Character string: name of the output csv file 
+#' with asv_id, cluster_id columns
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
-#' plot <- cluster_swarm(read_count_df, 
+#' cluster_df <- GetClusterIdSwarm(read_count_df, 
 #'                      swarm_d=7, 
 #'                      swarm_path="swarm",
 #'                      num_threads=8)
 #' }
 #' @export
-cluster_swarm <- function(read_count, 
+GetClusterIdSwarm <- function(read_count, 
                           swarm_d=1, 
                           fastidious=FALSE,
                           swarm_path="swarm", 
@@ -154,9 +158,11 @@ cluster_swarm <- function(read_count,
   }else{
     read_count_df <- read_count
   }
+  # if called from a ClusterASV, without specifying the path, it has a "" value
+  if(swarm_path==""){
+    swarm_path<- "swarm"
+  }
   
-  # system2 cannot use ~ as a home
-  swarm_path <- path.expand(swarm_path)
   # check coherence between swarm_d and fastidious
   if(fastidious && swarm_d != 1 ){
     stop("ERROR: The fastidious argument must be use with swarm_d 1")
@@ -172,7 +178,7 @@ cluster_swarm <- function(read_count,
   tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   tmp_dir <- file.path(tempdir(), tmp_dir)
   check_dir(tmp_dir)
-
+  
   # make a fasta file with unique asv format adapted to swarm
   input_swarm <- file.path(tmp_dir, "swarm_input.fasta")
   writeLines(paste(">", asv_df$asv_id, "_", 
@@ -197,30 +203,9 @@ cluster_swarm <- function(read_count,
   if(fastidious){
     args <- append(args, c("-f"), after = 2)
   }
-  
-  if (!quiet) {
-    # Show the full command that will be run
-    cat("Running command:\n")
-    cat(swarm_path, paste(shQuote(args), collapse = " "), "\n")
-    
-    system2(
-      command = swarm_path,
-      args = args,
-      stdout = "",
-      stderr = ""
-    )
-  }else{
-    output <- suppressWarnings(system2(
-      command = swarm_path,
-      args = args,
-      stdout = TRUE,
-      stderr = TRUE
-    ))
-    
-    # Extract only error/warning lines
-    errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
-    cat(errors_only, sep = "\n")
-  }
+
+  run_system2(swarm_path, args, quiet=quiet)
+
   
   #####
   # make a data frame with asv_id and cluster_id columns, 
@@ -252,7 +237,7 @@ cluster_swarm <- function(read_count,
   cluster_df <- data.frame(asv_id = as.vector(t(cluster_df[,])),
                            cluster_id = rep(cluster_df$V1, 
                                             each = ncol(cluster_df))
-                          )
+  )
   # delete lines with NA values in asv_id
   cluster_df <- cluster_df %>%
     filter(!is.na(asv_id))
@@ -263,7 +248,7 @@ cluster_swarm <- function(read_count,
     sub("_[0-9]+", "", cluster_df$asv_id ))
   
   unlink(tmp_dir, recursive = TRUE)
-
+  
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
     write.table(cluster_df, file = outfile,  row.names = F, sep=sep)
@@ -273,30 +258,31 @@ cluster_swarm <- function(read_count,
 
 
 
-#' Cluster all input ASV by cluster_size function of vsearch
+#' Cluster all input ASV by cluster_size function of Vsearch
 #' 
 #' Cluster all input ASV and return a data frame with asv_id, cluster_id
 #' columns
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, asv, read_count.
-#' @param identity Real; Identity threshold for clustering.
+#' @param identity Real;[0-1] Identity threshold for clustering.
 #' @param vsearch_path Character string: path to vsearch executable. 
 #' @param num_threads Positive integer: Number of CPUs.
-#' @param outfile Character string: name of the output csv file
+#' @param outfile Character string: name of the output csv file with asv_id, 
+#' and cluster_id columns
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
-#' plot <- cluster_vsearch_cluster_size(read_count_df, 
+#' cluster_df <- GetClusterIdVsearch(read_count_df, 
 #'                                       identity=0.97,
 #'                                       vsearch_path="vsearch",
 #'                                       num_threads=8)
 #' }
 #' @export
-cluster_vsearch_cluster_size <- function(read_count, 
+GetClusterIdVsearch <- function(read_count, 
                           identity=0.97, 
                           vsearch_path="vsearch", 
                           num_threads=0, 
@@ -311,9 +297,11 @@ cluster_vsearch_cluster_size <- function(read_count,
     read_count_df <- read_count
   }
   
-  # system2 cannot use ~ as a home
-  vsearch_path <- path.expand(vsearch_path)
-
+  # if called from a ClusterASV, without specifying the path, it has a "" value
+  if(vsearch_path==""){
+    vsearch_path<- "vsearch"
+  }
+  
   #####
   # make a df with unique asv, asv_id and readcount (sum)
   asv_df <- read_count_df %>%
@@ -344,29 +332,7 @@ cluster_vsearch_cluster_size <- function(read_count,
     args <- append(args, c("--threads", num_threads))
   }
   
-  # run cluster_size
-  if (!quiet) {
-    # Show the full command that will be run
-    cat("Running command:\n")
-    cat(vsearch_path, paste(shQuote(args), collapse = " "), "\n")
-    
-    system2(
-      command = vsearch_path,
-      args = args,
-      stdout = "",
-      stderr = ""
-    )
-  }else{
-    output <- suppressWarnings(system2(
-      command = vsearch_path,
-      args = args,
-      stdout = TRUE,
-      stderr = TRUE
-    ))
-    # Extract only error/warning lines
-    errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
-    cat(errors_only, sep = "\n")
-  } # end run cluster_size
+  run_system2(vsearch_path, args, quiet=quiet)
   
   file_info <- file.info(outfile)
   if(file_info$size == 0){ # No output of clustering => cluster_id is the same as asv_id
@@ -396,12 +362,13 @@ cluster_vsearch_cluster_size <- function(read_count,
 }
 
 
-#' Pairwise identity density plot for different Swarm d values
+#' Make a density plot: pairwise percent identities between ASVs within and across 
+#' clusters using different Swarm's d for clustering.
 #' 
-#' Cluster by swarm all asv with a range of d values.
-#' For each d, make a density plot of pairwise percentage of identities between 
-#' asv, using different colors for identities between asv of the same or different
-#' clusters.
+#' Cluster by swarm all ASV with a range of d values.
+#' For each clustering (d), make a density plot of pairwise percentage of 
+#' identities between ASVs, using different colors for identities between ASV
+#' of the same or different clusters.
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
@@ -415,7 +382,9 @@ cluster_vsearch_cluster_size <- function(read_count,
 #' @param swarm_path Character string: path to swarm executable. 
 #' @param num_threads Positive integer: Number of CPUs.
 #' @param outfile Character string: output csv file name with the following columns:
-#' identity, cluster, cluster_criterium; If empty, no file is written.
+#' pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
@@ -430,7 +399,7 @@ cluster_vsearch_cluster_size <- function(read_count,
 #'                                       vsearch_path="vsearch", 
 #'                                       swarm_path="swarm",
 #'                                       num_threads=8,
-#'                                       outfile="density_plot.png")
+#'                                       plotfile="density_plot.png")
 #' }
 #' @export
 PairwiseIdentityPlotPerSwarmD <- function(read_count, 
@@ -442,6 +411,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
                                           swarm_path="swarm",
                                           num_threads=0,
                                           outfile="", 
+                                          plotfile="", 
                                           sep=",", 
                                           quiet=TRUE
 ){
@@ -464,9 +434,9 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
   
   #####
   # initialize data frame (cluster: same/different)
-  pairwise_id_final <- data.frame(identity = numeric(),
+  pairwise_id_final <- data.frame(pairwise_asv_identity = numeric(),
                               cluster = character(),
-                              cluster_criterium= factor())
+                              clustering_parameter= factor())
   
   #####
   # for each d
@@ -477,7 +447,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     }
     #### Run swarm 
     # cluster_df : avs_id, clsuter_id
-    cluster_df <- cluster_swarm(read_count_df, swarm_d=d,fastidious=FALSE,
+    cluster_df <- GetClusterIdSwarm(read_count_df, swarm_d=d,fastidious=FALSE,
                   swarm_path=swarm_path, num_threads=num_threads, quiet=quiet)
     #####
     # add to pairwise_id the clusters of each query and target and define 
@@ -490,28 +460,40 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     # add same/different column, and the d for each line
     pairwise_id_local <- pairwise_id_local %>%
       mutate(cluster = ifelse(cluster_id_query == cluster_id_target, "same", "different")) %>%
-      mutate(cluster_criterium=paste0("swarm's d: ",d)) %>%
-      select(identity, cluster, cluster_criterium)
+#      mutate(clustering_parameter=paste0("swarm's d: ",d)) %>%
+      mutate(clustering_parameter=d) %>%
+      select(pairwise_asv_identity=identity, cluster, clustering_parameter)
     # add lines to the overall df
     pairwise_id_final <- rbind(pairwise_id_final, pairwise_id_local)
   } # end for
   
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(pairwise_id_final, file = outfile,  row.names = F, sep=sep)
+  }
+  
+  pairwise_id_final <- pairwise_id_final %>%
+    mutate(clustering_parameter = paste0("Swarm d = ",clustering_parameter))
   ####
   # Make the plot
   # fix order of d
-  pairwise_id_final$cluster_criterium <- factor(pairwise_id_final$cluster_criterium, levels = unique(pairwise_id_final$cluster_criterium))
+  pairwise_id_final$clustering_parameter <- factor(pairwise_id_final$clustering_parameter, levels = unique(pairwise_id_final$clustering_parameter))
   
-  p <-ggplot(pairwise_id_final, aes(x = identity, fill = cluster, color = cluster)) +
+  p <-ggplot(pairwise_id_final, aes(x = pairwise_asv_identity, fill = cluster, color = cluster)) +
     geom_density(adjust = 1.5, alpha = 0.4) +
     scale_x_continuous(limits = c(80, 100)) +
-    facet_wrap(~cluster_criterium, scales = "free_y") +  # one subplot per d
-    ggtitle("Pairwise percent identity between ASV of the \n same or different cluster according Swarm's d") +
-    theme(plot.title = element_text(size=12, hjust=0.5)) 
+    facet_wrap(~clustering_parameter, scales = "free_y") +  # one subplot per d
+    ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters (by Swarm's d)") +
+    xlab("Pairwise Percent Identity Between ASVs") +
+    ylab("Density") +
+    theme(plot.title = element_text(size=12, hjust=0.5))
   
   ### 
-  if(outfile != ""){
-    check_dir(outfile, is_file=TRUE)
-    png(filename=outfile) # one png file per plot
+
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile) # one png file per plot
     print(p) # print plot to file
     dev.off()
   }
@@ -519,14 +501,14 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
   
 } # end function
 
-
-#' Pairwise identity density plot for different % identity thresholds of clustering
+#' Make a density plot: pairwise percent identities between ASVs within and across 
+#' clusters using different clustering identity thresholds.
 #' 
-#' Cluster all asv using cluster_size algorithm of vsearch with a range of identity values.
+#' Cluster all ASVs using cluster_size algorithm of vsearch with a range of identity values.
 #' 
-#' For each identity, make a density plot of pairwise percentage of identities between 
-#' asv, using different colors for identities between asv of the same or different
-#' clusters.
+#' For each clustering identity threshold, make a density plot of pairwise 
+#' percentage of identities between ASVs, using different colors for identities 
+#' between ASVs of the same or different clusters.
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
@@ -534,29 +516,31 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' @param identity_max Real; Maximum identity threshold between asv and centroid.
 #' @param identity_increment Real; Identity thresholds vary from identity_min 
 #' to identity_max by identity_increment.
-#' @param min_id Real: Bellow this percentage of identity asv pairs are not aligned
+#' @param min_id Real;[0-1] Bellow this pairwise identity asv pairs are not aligned
 #' and their identity is not plotted.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param num_threads Positive integer: Number of CPUs.
 #' @param outfile Character string: csv file name with the following columns: 
-#' identity, cluster, cluster_criterium; If empty, no file is written.
+#' pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns A density plot of pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
-#' plot <- PairwiseIdentityPlotPerClusterIdThreshold(read_count_df, 
+#' plot <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
 #'                                       identity_min=0.9, 
 #'                                       identity_max=0.99,
 #'                                       identity_increment=0.01,
 #'                                       min_id = 0.8, 
 #'                                       vsearch_path="vsearch", 
 #'                                       num_threads=8,
-#'                                       outfile="density_plot.png")
+#'                                       plotfile="density_plot.png")
 #' }
 #' @export
-PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count, 
+PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count, 
                                           identity_min=0.9, 
                                           identity_max=0.99,
                                           identity_increment=0.01,
@@ -564,6 +548,7 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
                                           vsearch_path="vsearch", 
                                           num_threads=0,
                                           outfile="", 
+                                          plotfile="",
                                           sep=",", 
                                           quiet=TRUE){
   
@@ -584,9 +569,9 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
   
   #####
   # initialize data frame (cluster: same/different)
-  pairwise_id_final <- data.frame(identity = numeric(),
+  pairwise_id_final <- data.frame(pairwise_asv_identity = numeric(),
                               cluster = character(),
-                              cluster_criterium= factor())
+                              clustering_parameter= factor())
   
   #####
   # for each  identity threshold
@@ -598,7 +583,7 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
     
     #####
     # run vsearch
-    cluster_size <- cluster_vsearch_cluster_size(read_count_df, 
+    cluster_size <- GetClusterIdVsearch(read_count_df, 
                                                  identity=d, 
                                                  vsearch_path=vsearch_path, 
                                                  num_threads=num_threads, 
@@ -618,29 +603,42 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
     # add within/between column, and the d for each line
     pairwise_id_local <- pairwise_id_local %>%
       mutate(cluster = ifelse(cluster_id_query == cluster_id_target, "same", "different")) %>%
-      mutate(cluster_criterium= paste0("Clustering with ", d, "indentity")) %>%
-      select(identity, cluster, cluster_criterium)
+#      mutate(clustering_parameter= paste0("Clustering with ", d, "identity")) %>%
+      mutate(clustering_parameter= d) %>%
+      select(pairwise_asv_identity=identity, cluster, clustering_parameter)
     # add lines to the overall df
     pairwise_id_final <- rbind(pairwise_id_final, pairwise_id_local)
   } # end for
   
-  ####
-  # Make the plot
-  # fix order of d
-  pairwise_id_final$cluster_criterium <- factor(pairwise_id_final$cluster_criterium, levels = unique(pairwise_id_final$cluster_criterium))
-
-  
-  p <-ggplot(pairwise_id_final, aes(x = identity, fill = cluster, color = cluster)) +
-     geom_density(adjust = 1.5, alpha = 0.4) +
-     scale_x_continuous(limits = c(80, 100)) +
-     facet_wrap(~cluster_criterium, scales = "free_y") +  # one subplot per d
-     ggtitle("Pairwise percent identity between ASV of the \n same or different cluster according identity threshold of clustering") +
-    theme(plot.title = element_text(size=12, hjust=0.5)) 
-  
-  ### 
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
     write.table(pairwise_id_final, file = outfile,  row.names = F, sep=sep)
+  }
+  
+  pairwise_id_final <- pairwise_id_final %>%
+    mutate(clustering_parameter = paste0("Cluster = ",clustering_parameter))
+  ####
+  # Make the plot
+  # fix order of d
+  pairwise_id_final$clustering_parameter <- factor(pairwise_id_final$clustering_parameter, levels = unique(pairwise_id_final$clustering_parameter))
+
+  
+  p <-ggplot(pairwise_id_final, aes(x = pairwise_asv_identity, fill = cluster, color = cluster)) +
+     geom_density(adjust = 1.5, alpha = 0.4) +
+     scale_x_continuous(limits = c(80, 100)) +
+     facet_wrap(~clustering_parameter, scales = "free_y") +  # one subplot per d
+     xlab("Pairwise Percent Identity Between ASVs") +
+     ylab("Density") +
+     ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters \n using different identity thresholds for clustering") +
+    theme(plot.title = element_text(size=12, hjust=0.5)) 
+  
+  ### 
+
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
   }
   return(p)
   
@@ -650,15 +648,15 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
 #'
 #' Classifies each cluster according to the taxonomic assignment at a given level:
 #' 
-#' - closed: ASVs in the cluster are assigned to the same taxon, 
+#' - closed: All ASVs in the cluster are assigned to the same taxon, 
 #' and all ASVs of that taxon belong exclusively to this cluster.  
-#' - open: ASVs in the cluster are assigned to the same taxon, 
+#' - open: All ASVs in the cluster are assigned to the same taxon, 
 #' but some ASVs of that taxon are found in other clusters.  
 #' - hybrid: the cluster contains ASVs assigned to more than one taxon.  
 #'   
 #' 
 #' @param cluster Data frame or csv file with the following variables: 
-#' asv_id, cluter_id
+#' asv_id, cluster_id
 #' @param taxa Data frame or CSV file with the following variables:  
 #' asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order, 
 #' family, genus, species). 
@@ -669,7 +667,8 @@ PairwiseIdentityPlotPerClusterIdThreshold <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: cluster_id, class for each taxonomic level
+#' @returns Data frame with the following columns: cluster_id, classification
+#' for each taxonomic level
 #' @examples 
 #' \dontrun{
 #' plot <- ClassifyClusters(read_count_df, 
@@ -709,7 +708,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
   for(t in 1:length(taxlevels)){
     tl = taxlevels[t]
     
-    # seletc the taxlevel, delete NA
+    # select the taxlevel, delete NA
     taxa_df_tl <- taxa_df %>%
       rename(taxon = all_of(tl)) %>% # rename the actual taxlevel to taxon
       select(cluster_id, taxon) %>%
@@ -775,9 +774,9 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' family, genus, species). 
 #' Missing values within the lineage are not allowed. If the taxonomic assignment 
 #' is incomplete due to low resolution, higher-level taxa should be recorded as `NA`.
-#' @param clustering_method character; [swarm/cluster_size]
+#' @param clustering_method character; swarm or vsearch
 #' @param cluster_params numerical vector of either swarm's d to be used, or 
-#' percentage of identity threshold for the cluster_siz algorithm of vsearch.
+#' percentage of percentage of identity threshold for the cluster_size algorithm of vsearch.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param swarm_path Character string: path to swarm executable.
 #' @param taxlevels Character vector with names of the taxonomic levels to be classed and plotted
@@ -841,13 +840,13 @@ PlotClusterClasstification <- function(read_count, taxa,
   for(i in cluster_params){
     ### cluster
       if(clustering_method =="swarm"){
-        cluster_df <- cluster_swarm(read_count_df, 
+        cluster_df <- GetClusterIdSwarm(read_count_df, 
                                        swarm_d=i, 
                                        swarm_path=swarm_path, 
                                        num_threads=num_threads, 
                                        quiet=quiet)
       }else{
-        cluster_df <- cluster_vsearch_cluster_size(read_count_df, 
+        cluster_df <- GetClusterIdVsearch(read_count_df, 
                                                    identity=i/100, 
                                                    vsearch_path=vsearch_path, 
                                                    num_threads=num_threads, 
@@ -896,12 +895,206 @@ PlotClusterClasstification <- function(read_count, taxa,
   return(p)
 
 }
+
+
+#' Pool ASVs of the same cluster
+#' 
+#' Pools variants of the same cluster and sums read counts of the 
+#' underlying ASVs.
+#' 
+#' @param read_count_df Data frame with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param cluster_df Data frame with the following variables: 
+#' asv_id, cluster_id.
+#' @returns Data frame: same structure as the input (read_count_df), but ASVs of 
+#' the same cluster pooled to one row.
+#' @examples
+#' \dontrun{
+#' pool_by_cluster(read_count=read_count_df, cluster_df=cluster_df)
+#' }
+#' @export
+#' 
+pool_by_cluster <- function(read_count_df, 
+                          cluster_df){
   
+  ### check if one to one relationship between asv and asv_id
+  t <- check_one_to_one_relationship(read_count_df)
+  
+  ### get unique list of asv and asv_id
+  asv_unique <- read_count_df%>%
+    select(asv_id, asv) %>%
+    distinct()
+  
+  # replace asv_id by cluster_id in read_count_df
+  read_count_df <- left_join(read_count_df, cluster_df,  by= "asv_id") %>%
+    select(-asv_id, -asv)
+  
+  
+  if("replicate" %in% colnames(read_count_df)){ # if replicates in input, keep replicates
+    
+    read_count_df <- read_count_df %>%
+      group_by(cluster_id, sample, replicate) %>%
+      summarize(read_count=sum(read_count), .groups="drop") %>%
+      rename(asv_id=cluster_id)
+    
+  }else{ # if no replicate column
+    read_count_df <- read_count_df %>%
+      group_by(cluster_id, sample) %>%
+      summarize(read_count=sum(read_count), .groups="drop") %>%
+      rename(asv_id=cluster_id)
+  }
+  
+  read_count_df <- left_join(read_count_df, asv_unique, by="asv_id")
+  return(read_count_df)
+}
 
-
-
-
-
-
+#' Cluster ASVs by Swarm or Vsearch
+#' 
+#' This function runs Swarm or the cluster_size command of Vserach 
+#' on the ASVs in the input data frame.
+#' Each ASV is assigned to a cluster, and the function provides 
+#' two possible output formats, controlled by the argument group.
+#' 
+#' If group = TRUE, the function aggregates the ASVs belonging to the same 
+#' cluster into a single row. In this case, the asv_id and asv columns contain 
+#' the identifier and the sequence of the cluster's centroid. 
+#' read_count is summed over ASVs, samples and replicates are unchanged.
+#' 
+#' If group = FALSE, the function returns the original input data frame 
+#' with an additional column: cluster_id. Each row still corresponds to one ASV.
+#' 
+#' The clustering can be run on the whole data set at once, 
+#' or sample by sample (by_sample)
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param group Logical; If TRUE, ASVs of the same cluster are pooled to one row.
+#' if FALSE, input Df is simply completed by a cluser_id column. 
+#' @param by_sample Logical: run clustering separately for each sample.
+#' @param method Character string: program to use for clustering: swarm or vsearch 
+#' @param path Character string: path to swarm or vsearch executables. 
+#' @param swarm_d Positive integer: d parameter for swarm (if applicable).
+#' Maximum number of differences allowed between two ASVs, 
+#' meaning that two ASVs will be grouped if they have d (or less) differences.
+#' @param fastidious Logical: When clustering with swarm and working with d = 1, 
+#' perform a second clustering pass to reduce the number of small clusters.
+#' @param identity real: (0-1), the identity threshold used for
+#' clustering when the cluster_size algorithm of vsearch is used.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param num_threads Positive integer: Number of CPUs.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @returns read_count_df: same structure as the input, but ASVs of 
+#' the same cluster pooled to one row if group==TRUE, or rows kept as in the input 
+#' and an additional cluster_id column is added if group==FALSE.
+#' @examples
+#' \dontrun{
+#' read_count_df <- ClusterASV(read_count=read_count_df, group=TRUE,method="vsearch",
+#' by_sample=TRUE, path=swarm_path, 
+#' num_threads=4)
+#' }
+#' @export
+#' 
+ClusterASV <- function(read_count, 
+                      group = TRUE,
+                      by_sample=FALSE,
+                      method = "swarm",
+                      path="", 
+                      num_threads=0, 
+                      swarm_d=1, 
+                      fastidious=T, 
+                      identity = 0.97,
+                      outfile="", 
+                      sep=",", 
+                      quiet=T
+){
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(by_sample){
+    # make an empty output df, with the same columns and variable types as read_count_df
+    out_df <- read_count_df %>%
+      filter(asv=="")
+    if(group==FALSE){
+      out_df$cluster_id <- numeric()
+    }
+    
+    # get list of samples 
+    sample_list <- unique(read_count_df$sample)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      if(!quiet){
+        print(s)
+      }
+      
+      # select occurrences for sample
+      df_sample <- read_count_df %>%
+        filter(sample==s)
+      
+      # get cluster_id for all ASV
+      if(method == "swarm"){
+        cluster_df <- GetClusterIdSwarm(df_sample, 
+                                        swarm_d=swarm_d, 
+                                        swarm_path=path, 
+                                        num_threads=num_threads, 
+                                        quiet=quiet)
+      }else{
+        cluster_df <- GetClusterIdVsearch(df_sample, 
+                                          identity=identity, 
+                                          vsearch_path=path, 
+                                          num_threads=num_threads, 
+                                          quiet=quiet)
+      }
+      
+      # modify input df according to group
+      if(group){ # pool ASV by cluster
+        df_sample <- pool_by_cluster(df_sample, cluster_df)
+      }
+      else{ # add cluster_id column
+        df_sample <- left_join(df_sample, cluster_df, by="asv_id")
+      }
+      # add output of the sample to the total data frame    
+      out_df <- rbind(out_df, df_sample)
+    }
+  }else{ # run swarm for all samples together
+    # get cluster_id for all ASV
+    if(method == "swarm"){
+      cluster_df <- GetClusterIdSwarm(read_count_df, 
+                                      swarm_d=swarm_d, 
+                                      swarm_path=path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
+    }else{
+      cluster_df <- GetClusterIdVsearch(read_count_df, 
+                                        identity=identity, 
+                                        vsearch_path=path, 
+                                        num_threads=num_threads, 
+                                        quiet=quiet)
+    }
+    
+    if(group){# pool ASV by cluster
+      out_df <- pool_by_cluster(read_count_df, cluster_df)
+    }
+    else{  # add cluster_id column
+      out_df <- left_join(read_count_df, cluster_df, by="asv_id")
+    }
+    
+  }
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(out_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(out_df)
+}
 
 

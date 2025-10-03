@@ -15,7 +15,7 @@ ClassifyClusters(
 }
 \arguments{
 \item{cluster}{Data frame or csv file with the following variables:
-asv_id, cluter_id}
+asv_id, cluster_id}
 
 \item{taxa}{Data frame or CSV file with the following variables:
 asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order,
@@ -33,16 +33,17 @@ show warnings or errors.}
 \item{taxlevels}{Character vector with names of the taxonomic levels}
 }
 \value{
-Data frame with the following columns: cluster_id, class for each taxonomic level
+Data frame with the following columns: cluster_id, classification
+for each taxonomic level
 }
 \description{
 Classifies each cluster according to the taxonomic assignment at a given level:
 }
 \details{
 \itemize{
-\item closed: ASVs in the cluster are assigned to the same taxon,
+\item closed: All ASVs in the cluster are assigned to the same taxon,
 and all ASVs of that taxon belong exclusively to this cluster.
-\item open: ASVs in the cluster are assigned to the same taxon,
+\item open: All ASVs in the cluster are assigned to the same taxon,
 but some ASVs of that taxon are found in other clusters.
 \item hybrid: the cluster contains ASVs assigned to more than one taxon.
 }
