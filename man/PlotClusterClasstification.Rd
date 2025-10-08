@@ -13,7 +13,9 @@ PlotClusterClasstification(
   swarm_path = "swarm",
   taxlevels = c("species", "genus"),
   outfile = "",
+  plotfile = "",
   sep = ",",
+  num_threads = 0,
   quiet = TRUE
 )
 }
@@ -42,7 +44,12 @@ percentage of percentage of identity threshold for the cluster_size algorithm of
 columns: classification, number_of_clusters, taxlevel, clustering_parameter;
 If empty, no file is written.}
 
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
+
 \item{sep}{Field separator character in input and output csv files.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{quiet}{Logical: If TRUE, suppress informational messages and only
 show warnings or errors.}

@@ -780,8 +780,11 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param swarm_path Character string: path to swarm executable.
 #' @param taxlevels Character vector with names of the taxonomic levels to be classed and plotted
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: name of the output csv file with the following 
 #' columns: classification, number_of_clusters, taxlevel, clustering_parameter;
+#' If empty, no file is written.
+#' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
@@ -807,7 +810,9 @@ PlotClusterClasstification <- function(read_count, taxa,
                            swarm_path="swarm", 
                            taxlevels= c("species", "genus"),
                            outfile="",
+                           plotfile="",
                            sep= ",",
+                           num_threads=0,
                            quiet = TRUE){
   
   ##### make df if read_count is file
@@ -950,7 +955,7 @@ pool_by_cluster <- function(read_count_df,
 
 #' Cluster ASVs by Swarm or Vsearch
 #' 
-#' This function runs Swarm or the cluster_size command of Vserach 
+#' This function runs Swarm or the cluster_size command of Vsearch 
 #' on the ASVs in the input data frame.
 #' Each ASV is assigned to a cluster, and the function provides 
 #' two possible output formats, controlled by the argument group.

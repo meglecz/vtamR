@@ -317,27 +317,43 @@ is a powerful and quick computer program to denoise the data set by clustering A
 that are likely to be the result of sequencing errors to ASVs representing real 
 biological sequences. It will considerably reduce the number of ASVs. 
 
-By default, `vtamR` uses 1 as swam's `d` and the `fastidious` algorithm. 
-See `?Swarm` on how to change this.
-It is possible to run `Swarm` separately for each sample (`by_sample=TRUE`; default)
+Swarm can be run from the `ClusterASV` function of `vtamR`. For more detailed 
+information on `ClusterASV`, see the 
+[Clustering or denosing](clustering-or-denosing.html) tutorial.
+
+When the aim the denoising the sequencing reads and not to cluster ASV to mOTUs, 
+Swarm should be run with `d=1` and the `fastidious` algorithm. (See details in 
+[Swarm's Documentation](https://github.com/torognes/swarm/blob/master/man/swarm_manual.pdf))
+
+It is possible to run `Swarm` separately for each sample (`by_sample=TRUE`)
 or at once for the whole data set. 
 This second option is more efficient in reducing the number of ASVs but can 
 cluster very similar real sequences appearing in different samples. 
 
-If you are interested in intra-specific variability, I suggest `by_sample=TRUE` 
-or skip this step, since `Swarm` can cluster together very similar real ASV.
+When interested in intra-specific variability, I suggest `by_sample=TRUE` 
+or skipping this step, since `Swarm` can cluster together very similar real ASV.
+
+The `group` argument pools all ASVs belonging to the same Swarm into one line 
+under the asv_id of the Swarm’s centroid, summing read counts across ASVs 
+while keeping the sample and replicate structure unchanged.
 
 
 ```{r swarm}
 by_sample <- TRUE
+d=1
+fastidious= TRUE
 outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
 
-read_count_df <- Swarm(read_count_df, 
-                       outfile=outfile, 
-                       swarm_path=swarm_path, 
-                       num_threads=num_threads, 
-                       by_sample=by_sample
-                       )
+read_count_df <- ClusterASV(read_count_df,
+                            method = "swarm",
+                            swarm_d=d,
+                            fastidious=fastidious,
+                            by_sample=by_sample,
+                            group = TRUE,
+                            path=swarm_path,
+                            num_threads=num_threads,
+                            outfile=outfile)
+
 
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
 ```
@@ -547,7 +563,9 @@ knitr::kable(head(OptimizePCRerror_df), format = "markdown")
 
 **FilterPCRerror**
 
-It seems that Swarm has done a good job. The highest read count ratio is 0.013 in the output of `OptimizePCRerror`. This should be taken as a lower limit to `pcr_error_var_prop`. Let's use 0.05 for filtering out PCR errors sample by sample.
+It seems that Swarm has done a good job. The highest read count ratio is 0.01 
+in the output of `OptimizePCRerror`. This should be taken as a lower 
+limit to `pcr_error_var_prop`. Let's use 0.05 for filtering out PCR errors sample by sample.
 
 See the help for more detail `?FilterPCRerror`.
 
@@ -596,7 +614,7 @@ knitr::kable(head(OptimizeLFNsampleReplicate_df), format = "markdown")
 ```
 
 The lowest proportion of read count of an expected ASV to the total read count
-of its sample-relicate is 0.0049 
+of its sample-relicate is 0.0047 
 (Sequence of *Caenis pusilla* in the replicate 3 of tpos1 mock sample). 
 A cutoff values for `LFNsampleReplicate` higher than this will eliminate some 
 of the expected occurrences and create false negatives. 
@@ -845,89 +863,12 @@ performance_metrics_df <- results[[3]]
 knitr::kable(performance_metrics_df, format = "markdown")
 ```
 
-## Pool Replicates, Make mOTU
-
-### PoolReplicates
-
-Replicates have been used to make sure the repetability and reduce experimental
-fluctuations. We do not need them any more, so let's pool replicates of the same sample. 
-
-`PoolReplicates` function will take the mean non-zero read counts of each ASV 
-over replicates of the same sample.
-
-```{r pool-replicates}
-outfile <- file.path(outdir, "filter", "15_PoolReplicates.csv")
-read_count_samples_df <- PoolReplicates(read_count_df, 
-                                        outfile=outfile)
-
-stat_df <- GetStat(read_count_samples_df, 
-                   stat_df, 
-                   stage="PoolReplicates")
-
-knitr::kable(stat_df, format = "markdown")
-```
-
-### Make mOTU
-
-If you are not interested in intra-specific variation, the ASV can be clustered to mOTUs.
-
-**Option 1 - ClusterSize**
-
-The simplest is to cluster all ASV to the same mOTU within a fixed radius using the
-`cluster_size` algorithm of `vsearch`. 
-
-```{r motu-clustersize}
-outfile <- file.path(outdir, "filter", "16_mOTU_ClusterSize.csv")
-identity <- 0.97 
-read_count_samples_df_ClusterSize <- ClusterSize(read_count_samples_df,
-                                     id=identity, 
-                                     vsearch_path=vsearch_path, 
-                                     outfile=outfile)
-
-stat_df <- GetStat(read_count_samples_df_ClusterSize, 
-                   stat_df, 
-                   stage="ClusterSize_mOTU",
-                   param=identity
-                   )
-```
-
-**Option 2 - Swarm**
-
-Alternatively, it is possible to run `Smarm` on the whole data set (`by_sample=FALSE`)
-using a highest `d` than the default (`1`). In our earlier analyses, we found that `d=7`
-gives a good proxy of clustering different ASV of the same species together for 
-a 313 bp fragment of the COI gene. By no means it is a standard value. 
-You should experiment using a series of different `d` values.
-
-
-```{r motu-swarm}
-outfile <- file.path(outdir, "filter", "17_mOTU_Swarm.csv")
-by_sample <- FALSE
-d = 7
-read_count_samples_df_swarm <- Swarm(read_count_samples_df, 
-                       swarm_path=swarm_path, 
-                       swarm_d=d,
-                       fastidious=FALSE,
-                       num_threads=num_threads, 
-                       by_sample=by_sample,
-                       outfile= outfile)
-
-stat_df <- GetStat(read_count_samples_df_swarm, stat_df, stage="Swarm_mOTU", params=d)
-
-knitr::kable(stat_df, format = "markdown")
-```
-
-Apparently, the 2 different clusterings are doing a similar job in this case.
 
 ## TaxAssign
 
 If you have already assigned ASV to taxa, 
 ([before making the mock_composition file](make-mock-composition-file.html))
 you can use the same output (`asv_tax` data frame) and skip this step.
-
-If you haven't assigned ASV to taxa yet, it is time to do it. You can either assign
-the ASV (`read_count_samples_df`) as in this example, or the centroids of the 
-mOTUS (`read_count_samples_df_swarm` or `read_count_samples_df_ClusterSize`)
 
 See the brief description of the algorithm with `?TaxAssign`.
 
@@ -940,7 +881,7 @@ section. You can also download a ready to use COI database
 ```{r taxassign}
 outfile <- file.path(outdir, "TaxAssign.csv")
 
-asv_tax <- TaxAssign(asv=read_count_samples_df, 
+asv_tax <- TaxAssign(asv=read_count_df, 
                      taxonomy=taxonomy, 
                      blast_db=blast_db, 
                      blast_path=blast_path, 
@@ -949,10 +890,146 @@ asv_tax <- TaxAssign(asv=read_count_samples_df,
                      )
 ```
 
+
+## Make mOTUs
+
+If you are not interested in intra-specific variation, the ASV can be clustered to mOTUs.
+
+The `ClusterASV` function can use two different algorithms to cluster the ASV:
+
+ - `method=vsearch`: The `cluster_size` command in VSEARCH is a greedy, centroid-based clustering 
+ algorithm that orders ASVs by decreasing read count, so the centroids of the 
+ clusters correspond to the ASVs with the highest read counts. The radius of 
+ the clusters are defined by the `identity` parameter.`
+ - `method=swarm`: Swarm is a fast and robust method that recursively groups ASVs with `d`
+ or less differences. Clusters are centered on local peaks of abundance, 
+ and mostly free from input order dependency.
+ 
+The `group` argument of `ClusterASV`, determines the output format: 
+ 
+ - `group = TRUE`, the function aggregates the ASVs belonging to the same 
+ cluster into a single row. In this case, the asv_id and asv columns contain 
+ the identifier and the sequence of the cluster's centroid. 
+ Read counts are summed over ASVs, samples and replicates are unchanged.
+ - `group = FALSE`, the function returns the original input data frame with 
+ an additional `cluster_id` column. Each row still corresponds to one ASV.
+ 
+
+The clustering can be run on the whole data set at once, or sample by sample. 
+At this stage, when the aim is to create mOTUs, I suggest clustering the data all
+at once (`by_sample=FALSE`).
+
+
+The key parameters are either `identity` for VSEACH or `swarm_d` for SWARM. 
+To help select an appropriate parameter value, we can plot the density of 
+pairwise identities between ASVs, distinguishing between pairs within 
+the same cluster and those from different clusters using either the 
+`PairwiseIdentityPlotPerSwarmD` or the 
+`PairwiseIdentityPlotPerClusterIdentityThreshold` function.
+
+
+```{r PairwiseIdentityPlotPerSwarmD}
+outfile <- file.path(outdir, "cluster", "pairwise_identities_swarm.csv")
+plotfile <- file.path(outdir, "cluster", "PairwiseIdentityPlotPerSwarmD.png")
+
+plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df,
+                                            swarm_d_min=2,
+                                            swarm_d_max=15,
+                                            swarm_d_increment=1,
+                                            min_id = 0.8, 
+                                            vsearch_path=vsearch_path, 
+                                            swarm_path=swarm_path,
+                                            num_threads=num_threads,
+                                            outfile=outfile, 
+                                            plotfile=plotfile)
+
+print(plot_swarm)
+                                          
+```
+
+```{r PairwiseIdentityPlotPerClusterIdentityThreshold}
+outfile <- file.path(outdir, "cluster", "pairwise_identities_vsearch.csv")
+plotfile <- file.path(outdir, "cluster", "PairwiseIdentityPlotPerClusterIdentityThreshold.png")
+
+plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df,
+                                            identity_min=0.9,
+                                            identity_max=0.99,
+                                            identity_increment=0.01,
+                                            min_id = 0.8, 
+                                            vsearch_path=vsearch_path, 
+                                            num_threads=num_threads,
+                                            outfile=outfile, 
+                                            plotfile=plotfile)
+
+print(plot_vsearch)
+                                          
+```
+
+It is also possible to class the clusters according to the taxonomic assignment of
+the ASV within clusters:
+
+ - `closed`: ASVs in the cluster are assigned to the same taxon, 
+ and all ASVs of that taxon belong exclusively to this cluster.  
+ - `open`: ASVs in the cluster are assigned to the same taxon,
+ but some ASVs of that taxon are found in other clusters.  
+ - `hybrid`: the cluster contains ASVs assigned to more than one taxon.
+ 
+This classification can be done after clustering the ASVs using a 
+range of parameter values (`swarm_d` or `identity`). 
+The number of clusters in each class can then be plotted for each setting. 
+The clustering parameter value that yields the most `closed` clusters may 
+be a good candidate for defining mOTUs.
+
+
+```{r PlotClusterClasstification}
+outfile <- file.path(outdir, "cluster", "classification_vsearch.csv")
+plotfile <- file.path(outdir, "cluster", "PlotClusterClasstification_vsearch.png")
+
+scatterplot_vsearch <- PlotClusterClasstification(
+                        read_count=read_count_df,
+                        taxa=asv_tax,
+                        clustering_method="vsearch",
+                        cluster_params=c(0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98),
+                        vsearch_path=vsearch_path,
+                        taxlevels= c("species", "genus"),
+                        num_threads=num_threads,
+                        outfile=outfile,
+                        plotfile=plotfile)
+
+print(scatterplot_vsearch)
+                                          
+```
+
+Once you have chose the algorithm and the corresponding parameter value for 
+clustering, `ClusterASV` can be run to make mOTUs.
+
+Let's use VSEARCH for clustering with 0.97 identity threshold:
+
+```{r motu-clustersize}
+outfile <- file.path(outdir, "filter", "15_mOTU_vsearch.csv")
+identity <- 0.97 
+read_count_samples_df_ClusterSize <- ClusterASV(read_count_df,
+                                                 method = "vsearch",
+                                                 identity = 0.97,
+                                                 group = TRUE,
+                                                 by_sample=FALSE,
+                                                 path=vsearch_path, 
+                                                 outfile=outfile,
+                                                 num_threads=num_threads)
+
+stat_df <- GetStat(read_count_samples_df_ClusterSize, 
+                   stat_df, 
+                   stage="ClusterASV_vsearch",
+                   param=identity
+                   )
+knitr::kable(stat_df, format = "markdown")
+```
+
+
+
 ## Print output
 
-`WriteASVtable` will reorganize the `read_count_samples_df` data frame,
-(or `read_count_samples_df_swarm` or `read_count_samples_df_ClusterSize`)
+`WriteASVtable` will reorganize the `read_count_df` data frame,
 with samples in columns and ASV (or centroids of mOTUs) in lines 
 (from [long format](#glossary) to [wide format](#glossary)).
 
@@ -964,16 +1041,21 @@ It is possible to add supplementary information as well:
 * Supplementary column for each mock sample with expected occurrences 
 in each of them (`add_expected_asv`)
 * Supplementary column for each sample that has been filtered out (`add_empty_samples`)
+* cluster_id is kept if present in the input data frame.
+
+Replicates are be pooled within each sample is `pool_replicates` is `TRUE`. 
+The read count of samples will be the mean non-zero read counts over replicates.
 
 For more information see `?WriteAsVtable`
 
 ```{r write-asv-table}
 outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
 
-asv_table_df <- WriteASVtable(read_count_samples_df, 
+asv_table_df <- WriteASVtable(read_count_df, 
                               outfile=outfile, 
                               asv_tax=asv_tax, 
                               sortedinfo=sortedinfo_df, 
+                              pool_replicates=TRUE,
                               add_empty_samples=T, 
                               add_sums_by_sample=T, 
                               add_sums_by_asv=T, 
@@ -1152,6 +1234,20 @@ UpdateASVlist(asv_list1=read_count_df,
               asv_list2=asv_list, 
               outfile=updated_asv_list
               )
+```
+
+## PoolReplicates
+
+Replicates are been used to make sure the repetability and reduce experimental
+fluctuations, but at the analyse they can be pooled by sample.
+
+`PoolReplicates` function will take the mean non-zero read counts of each ASV 
+over replicates of the same sample.
+
+```{r pool-replicates}
+outfile <- file.path(outdir, "PooledReplicates.csv")
+read_count_samples_df <- PoolReplicates(read_count_df, 
+                                        outfile=outfile)
 ```
 
 ## PoolDatasets

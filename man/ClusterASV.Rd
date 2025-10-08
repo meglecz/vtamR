@@ -58,7 +58,7 @@ the same cluster pooled to one row if group==TRUE, or rows kept as in the input
 and an additional cluster_id column is added if group==FALSE.
 }
 \description{
-This function runs Swarm or the cluster_size command of Vserach
+This function runs Swarm or the cluster_size command of Vsearch
 on the ASVs in the input data frame.
 Each ASV is assigned to a cluster, and the function provides
 two possible output formats, controlled by the argument group.
@@ -77,7 +77,7 @@ or sample by sample (by_sample)
 }
 \examples{
 \dontrun{
-read_count_df <- ClusterASV(read_count=read_count_df, group=TRUE,  
+read_count_df <- ClusterASV(read_count=read_count_df, group=TRUE,method="vsearch",
 by_sample=TRUE, path=swarm_path, 
 num_threads=4)
 }
