@@ -41,7 +41,7 @@ meaning that two ASVs will be grouped if they have d (or less) differences.}
 \item{fastidious}{Logical: When clustering with swarm and working with d = 1,
 perform a second clustering pass to reduce the number of small clusters.}
 
-\item{identity}{real: (0-1), the identity threshold used for
+\item{identity}{Numeric. Value between 0 and 1: the identity threshold used for
 clustering when the cluster_size algorithm of vsearch is used.}
 
 \item{outfile}{Character string: csv file name to print the output data
@@ -74,6 +74,9 @@ with an additional column: cluster_id. Each row still corresponds to one ASV.
 
 The clustering can be run on the whole data set at once,
 or sample by sample (by_sample)
+
+Attention! If clustering is done by_sample (\code{by_sample = TRUE}) and
+\code{group==FALSE}, the same asv_id, can have different cluster_id in different samples.
 }
 \examples{
 \dontrun{

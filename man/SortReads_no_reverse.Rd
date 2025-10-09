@@ -39,7 +39,7 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat
 \item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
 between primers and reads (for tags, exact match is required).}
 
 \item{cutadapt_minimum_length}{Positive integer: minimum length of the

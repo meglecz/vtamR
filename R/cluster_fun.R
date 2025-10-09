@@ -1,9 +1,12 @@
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
-#' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
+#' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first 
+#' @importFrom dplyr if_else case_when 
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
 #' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
-#' @importFrom ggplot2 scale_x_continuous
+#' @importFrom ggplot2 scale_x_continuous facet_wrap ggtitle xlab ylab geom_line
+#' @importFrom ggplot2 geom_point
+#' @importFrom grDevices dev.off png
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
 #' @importFrom tidyr everything pivot_wider gather separate 
 #' @importFrom tidyselect where
@@ -21,7 +24,7 @@ NULL
 #' asv pairs with identity bellow min_id are not listed.
 #' 
 #' @param asv Data frame or csv file with asv and asv_id columns.
-#' @param min_id Real: [0-1] Bellow this identity do not align asv
+#' @param min_id Numeric. Value between 0 and 1: Bellow this identity do not align asv
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: csv file name to print the output data frame.
@@ -265,7 +268,7 @@ GetClusterIdSwarm <- function(read_count,
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, asv, read_count.
-#' @param identity Real;[0-1] Identity threshold for clustering.
+#' @param identity Numeric. Value between 0 and 1: Identity threshold for clustering.
 #' @param vsearch_path Character string: path to vsearch executable. 
 #' @param num_threads Positive integer: Number of CPUs.
 #' @param outfile Character string: name of the output csv file with asv_id, 
@@ -512,11 +515,11 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
-#' @param identity_min Real; Minimum identity threshold between asv and centroid.
-#' @param identity_max Real; Maximum identity threshold between asv and centroid.
-#' @param identity_increment Real; Identity thresholds vary from identity_min 
+#' @param identity_min Numeric. Value between 0 and 1: Minimum identity threshold between asv and centroid.
+#' @param identity_max Numeric. Value between 0 and 1: Maximum identity threshold between asv and centroid.
+#' @param identity_increment Numeric. Value between 0 and 1: Identity thresholds vary from identity_min 
 #' to identity_max by identity_increment.
-#' @param min_id Real;[0-1] Bellow this pairwise identity asv pairs are not aligned
+#' @param min_id Numeric. Value between 0 and 1: Bellow this pairwise identity asv pairs are not aligned
 #' and their identity is not plotted.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param num_threads Positive integer: Number of CPUs.
@@ -730,7 +733,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
     # classify
     taxa_df_tl <- taxa_df_tl %>%
       mutate(
-        classification = case_when(
+        classification = dplyr::case_when(
           # --- Case 1: only one unique taxon
           n_unique_taxa == 1 ~ {
             taxon <- unique_taxa[[1]]
@@ -776,7 +779,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' is incomplete due to low resolution, higher-level taxa should be recorded as `NA`.
 #' @param clustering_method character; swarm or vsearch
 #' @param cluster_params numerical vector of either swarm's d to be used, or 
-#' percentage of percentage of identity threshold for the cluster_size algorithm of vsearch.
+#' identity threshold (Value between 0 and 1) for the cluster_size algorithm of vsearch.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param swarm_path Character string: path to swarm executable.
 #' @param taxlevels Character vector with names of the taxonomic levels to be classed and plotted
@@ -852,7 +855,7 @@ PlotClusterClasstification <- function(read_count, taxa,
                                        quiet=quiet)
       }else{
         cluster_df <- GetClusterIdVsearch(read_count_df, 
-                                                   identity=i/100, 
+                                                   identity=i, 
                                                    vsearch_path=vsearch_path, 
                                                    num_threads=num_threads, 
                                                    quiet=quiet)
@@ -866,7 +869,7 @@ PlotClusterClasstification <- function(read_count, taxa,
         col_name <- paste("classification", tl, sep="_")
   
           tmp <- classification %>%
-            count(!!sym(col_name)) %>%
+            dplyr::count(!!sym(col_name)) %>%
             rename("classification" = !!sym(col_name), "number_of_clusters"=n) %>%
             mutate("taxlevel" = tl, "clustering_parameter" = i) 
           
@@ -896,6 +899,13 @@ PlotClusterClasstification <- function(read_count, taxa,
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
     write.table(clusters_count, file = outfile,  row.names = F, sep=sep)
+  }
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
   }
   return(p)
 
@@ -971,6 +981,9 @@ pool_by_cluster <- function(read_count_df,
 #' The clustering can be run on the whole data set at once, 
 #' or sample by sample (by_sample)
 #' 
+#' Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
+#' `group==FALSE`, the same asv_id, can have different cluster_id in different samples.
+#' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
 #' @param group Logical; If TRUE, ASVs of the same cluster are pooled to one row.
@@ -983,7 +996,7 @@ pool_by_cluster <- function(read_count_df,
 #' meaning that two ASVs will be grouped if they have d (or less) differences.
 #' @param fastidious Logical: When clustering with swarm and working with d = 1, 
 #' perform a second clustering pass to reduce the number of small clusters.
-#' @param identity real: (0-1), the identity threshold used for
+#' @param identity Numeric. Value between 0 and 1: the identity threshold used for
 #' clustering when the cluster_size algorithm of vsearch is used.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.

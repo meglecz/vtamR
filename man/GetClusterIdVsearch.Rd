@@ -18,7 +18,7 @@ GetClusterIdVsearch(
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, asv, read_count.}
 
-\item{identity}{Real;\link{0-1} Identity threshold for clustering.}
+\item{identity}{Numeric. Value between 0 and 1: Identity threshold for clustering.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 

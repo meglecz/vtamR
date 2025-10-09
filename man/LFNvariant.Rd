@@ -17,7 +17,7 @@ LFNvariant(
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{Real (0-1): minimum proportion of the read count of
+\item{cutoff}{Numeric. Value between 0 and 1: minimum proportion of the read count of
 an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
 the occurrence is deleted.}
 
@@ -29,7 +29,7 @@ frame if necessary. If empty, no file is written.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{min_read_count_prop}{Real (0-1): If the proportion of the read count
+\item{min_read_count_prop}{Numeric. Value between 0 and 1: If the proportion of the read count
 of a variant in the output compared to the input is less then
 min_read_count_prop, prints out a warning, since it suggest a
 to high cutoff value}

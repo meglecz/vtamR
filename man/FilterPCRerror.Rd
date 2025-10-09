@@ -27,7 +27,7 @@ frame if necessary. If empty, no file is written.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
-\item{pcr_error_var_prop}{Real (0-1): if the proportion of read_counts of
+\item{pcr_error_var_prop}{Numeric. Value between 0 and 1: if the proportion of read_counts of
 two similar ASVs is less or equal to \code{pcr_error_var_prop},
 the less abundant is flagged as a PCR error.}
 
@@ -37,7 +37,7 @@ the less abundant is flagged as a PCR error.}
 \item{by_sample}{logical: if TRUE ASVs are flagged as an PCR error
 separately for each sample.}
 
-\item{sample_prop}{Real (0-1): if by_sample=TRUE, the ASV must be
+\item{sample_prop}{Numeric. Value between 0 and 1: if by_sample=TRUE, the ASV must be
 flagged as a PCRerror in \code{sample_prop} of the samples to be eliminated.}
 
 \item{sep}{Field separator character in input and output csv files.}

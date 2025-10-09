@@ -23,14 +23,14 @@ PairwiseIdentityPlotPerClusterIdentityThreshold(
 \item{read_count}{Data frame or csv file with the following variables:
 asv, sample, replicate (optional), read_count.}
 
-\item{identity_min}{Real; Minimum identity threshold between asv and centroid.}
+\item{identity_min}{Numeric. Value between 0 and 1: Minimum identity threshold between asv and centroid.}
 
-\item{identity_max}{Real; Maximum identity threshold between asv and centroid.}
+\item{identity_max}{Numeric. Value between 0 and 1: Maximum identity threshold between asv and centroid.}
 
-\item{identity_increment}{Real; Identity thresholds vary from identity_min
+\item{identity_increment}{Numeric. Value between 0 and 1: Identity thresholds vary from identity_min
 to identity_max by identity_increment.}
 
-\item{min_id}{Real;\link{0-1} Bellow this pairwise identity asv pairs are not aligned
+\item{min_id}{Numeric. Value between 0 and 1: Bellow this pairwise identity asv pairs are not aligned
 and their identity is not plotted.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}

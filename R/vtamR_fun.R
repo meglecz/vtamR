@@ -51,7 +51,9 @@ run_system2 <- function(path, args, quiet=FALSE ){
     
     # Extract only error/warning lines
     errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
-    cat(errors_only, sep = "\n")
+    if(length(errors_only) >0){
+      cat(errors_only, sep = "\n")
+    }
   }
 }
 
@@ -708,7 +710,7 @@ count_seq <- function(file) {
 #' sequences of the input fasta as well.
 #' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
-#' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
+#' @param cutadapt_error_rate Numeric. Value between 0 and 1: maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
 #' @param cutadapt_minimum_length Positive integer: minimum length of the 
 #' trimmed sequence.
@@ -866,7 +868,7 @@ TrimPrimer_OneFile <- function(fasta,
 #' @param check_reverse logical: if TRUE, check the reverse complementary sequences 
 #' of the input fasta as well.
 #' @param primer_to_end logical: primers follow directly the tags (no heterogeneity spacer).
-#' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
+#' @param cutadapt_error_rate Numeric. Value between 0 and 1: maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
 #' @param cutadapt_minimum_length Positive integer: minimum length of the 
 #' trimmed sequence.
@@ -990,7 +992,7 @@ TrimPrimer <- function(fastainfo,
 #' (starting at the first base).
 #' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
-#' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
+#' @param cutadapt_error_rate Numeric. Value between 0 and 1: maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
 #' @param cutadapt_minimum_length Positive integer: minimum length of the 
 #' trimmed sequence.
@@ -1235,7 +1237,7 @@ return(df)
 #' (starting at the first base).
 #' @param primer_to_end logical: primers follow directly the tags 
 #' (no heterogeneity spacer).
-#' @param cutadapt_error_rate Real (0-1): maximum proportion of errors 
+#' @param cutadapt_error_rate Numeric. Value between 0 and 1: maximum proportion of errors 
 #' between primers and reads (for tags, exact match is required).
 #' @param cutadapt_minimum_length Positive integer: minimum length of the 
 #' trimmed sequence.
@@ -1965,7 +1967,7 @@ LFNreadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
-#' @param cutoff Real (0-1): minimum proportion of the read count of an
+#' @param cutoff Numeric. Value between 0 and 1: minimum proportion of the read count of an
 #' occurrence within the reads of its sample-replicate. Bellow this cutoff
 #'  the occurrence is deleted.
 #' @param outfile Character string: csv file name to print the output data 
@@ -2016,7 +2018,7 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
-#' @param cutoff Real (0-1): minimum proportion of the read count of
+#' @param cutoff Numeric. Value between 0 and 1: minimum proportion of the read count of
 #'  an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
 #'  the occurrence is deleted.
 #' @param by_replicate logical: Compare read count of the occurrence to the 
@@ -2024,7 +2026,7 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @param sep Field separator character in input and output csv files.
-#' @param min_read_count_prop Real (0-1): If the proportion of the read count 
+#' @param min_read_count_prop Numeric. Value between 0 and 1: If the proportion of the read count 
 #' of a variant in the output compared to the input is less then 
 #' min_read_count_prop, prints out a warning, since it suggest a 
 #' to high cutoff value
@@ -2415,7 +2417,7 @@ write_fasta <- function(sequences, filename, seq_as_id=F) {
 #'  
 #' @param unique_asv_df Data frame with the following variables: 
 #' asv, read_count. ASVs must be unique.
-#' @param pcr_error_var_prop Real (0-1): if the proportion of read counts 
+#' @param pcr_error_var_prop Numeric. Value between 0 and 1: if the proportion of read counts 
 #' of two similar ASVs is bellow `pcr_error_var_prop`, the less abundant 
 #' is flagged as a PCR error.
 #' @param max_mismatch Positive integer: maximum number of mismatches 
@@ -2532,14 +2534,14 @@ flagPCRerror_vsearch <- function(unique_asv_df,
 #'  
 #' @param read_count Data frame or csv file with the following variables:  
 #' asv_id, sample, replicate, read_count, asv.
-#' @param pcr_error_var_prop Real (0-1): if the proportion of read_counts of 
+#' @param pcr_error_var_prop Numeric. Value between 0 and 1: if the proportion of read_counts of 
 #' two similar ASVs is less or equal to `pcr_error_var_prop`, 
 #' the less abundant is flagged as a PCR error.
 #' @param max_mismatch Positive integer: maximum number of mismatches 
 #' (gaps included) to consider two ASVs as similar
 #' @param by_sample logical: if TRUE ASVs are flagged as an PCR error 
 #' separately for each sample.
-#' @param sample_prop Real (0-1): if by_sample=TRUE, the ASV must be 
+#' @param sample_prop Numeric. Value between 0 and 1: if by_sample=TRUE, the ASV must be 
 #' flagged as a PCRerror in `sample_prop` of the samples to be eliminated.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
@@ -2861,7 +2863,7 @@ FilterChimera <- function(read_count,
 #'  
 #' @param df1,df2 Data frames with asv and read_count columns.
 #' @returns
-#' Renkonen distance (Real; 0-1) between the two date frames.
+#' Renkonen distance (Numeric. Value between 0 and 1) between the two date frames.
 #' @examples
 #' \dontrun{
 #' df1 <- read_count_df %>%
@@ -2979,9 +2981,9 @@ MakeRenkonenDistances <- function(read_count_df, compare_all=FALSE){
 #'  
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
-#' @param cutoff Real (0-1):  Filter out all replicates that have 
+#' @param cutoff Numeric. Value between 0 and 1:  Filter out all replicates that have 
 #' renkonen distances above cutoff to most other replicates of the same sample.
-#' @param renkonen_distance_quantile Real (0-1): if cutoff value is not given, 
+#' @param renkonen_distance_quantile Numeric. Value between 0 and 1: if cutoff value is not given, 
 #' use the `renkonen_distance_quantile` to determine cutoff value 
 #' (e.g. with 0.9 as `renkonen_distance_quantile`, 90% of the distances are bellow cutoff)
 #' @param outfile Character string: csv file name to print the output data 
@@ -4481,7 +4483,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 #' the missing occurrences (FN). If empty, no file is written.
 #' @param performance_metrics Character string: csv file containing performance 
 #' metrics. If empty, no file is written.
-#' @param habitat_proportion Real (between 0-1): for each asv, if the proportion 
+#' @param habitat_proportion Numeric. Value between 0 and 1: for each asv, if the proportion 
 #' of reads in a habitat is below this cutoff, 
 #' it is considered as an artifact in all samples of the habitat.
 #' @returns List of data frames:
@@ -4826,11 +4828,11 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' @param increment_lfn_read_count_cutoff Positive integer: values from 
 #' `min_lfn_read_count_cutoff` to `max_lfn_read_count_cutoff` 
 #' are tested by `increment_lfn_read_count_cutof` of increment. 
-#' @param min_lnf_variant_cutoff Real (0-1): the lowest cutoff value for 
+#' @param min_lnf_variant_cutoff Numeric. Value between 0 and 1: the lowest cutoff value for 
 #' `LFNvariant` function. 
-#' @param max_lnf_variant_cutoff  Real (0-1): the highest value for `LFNvariant`
+#' @param max_lnf_variant_cutoff  Numeric. Value between 0 and 1: the highest value for `LFNvariant`
 #'  function.
-#' @param increment_lnf_variant_cutoff  Real (0-1): values from 
+#' @param increment_lnf_variant_cutoff  Numeric. Value between 0 and 1: values from 
 #' `min_lnf_variant_cutoff` to `max_lnf_variant_cutoff` are tested by 
 #' `increment_lnf_variant_cutoff` increment. 
 #' @param by_replicate logical: compare read count of the occurrence to the 

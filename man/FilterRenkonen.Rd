@@ -19,10 +19,10 @@ asv_id, sample, replicate, read_count, asv.}
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
-\item{cutoff}{Real (0-1):  Filter out all replicates that have
+\item{cutoff}{Numeric. Value between 0 and 1:  Filter out all replicates that have
 renkonen distances above cutoff to most other replicates of the same sample.}
 
-\item{renkonen_distance_quantile}{Real (0-1): if cutoff value is not given,
+\item{renkonen_distance_quantile}{Numeric. Value between 0 and 1: if cutoff value is not given,
 use the \code{renkonen_distance_quantile} to determine cutoff value
 (e.g. with 0.9 as \code{renkonen_distance_quantile}, 90\% of the distances are bellow cutoff)}
 

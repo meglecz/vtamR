@@ -5,7 +5,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v0.3.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -90,8 +90,9 @@ swarm_path <- "swarm"
 ```{r general-parameters}
 num_threads <- 8
 sep <- ","
-outdir <- "vtamR_demo_out"
+outdir <- "~/vtamR_demo_out"
 ```
+
 
 * `sep`: Separator used in csv files
 * `outdir`: Name of the output directory. Make sure there is **no space in the path**.
@@ -119,6 +120,7 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
 asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 ```
+
 
 * `fastq_dir`: Directory containing the input fastq files.
 * [fastqinfo](#fastqinfo): CSV file with information on input files, primers, 
@@ -473,6 +475,8 @@ renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
 ```
 
 Let's make a density plot of the renkonen distances
+**Note:** This is a very small test dataset, so the graph you generate with your 
+own data will likely look quite different.
 
 ```{r renkonen-dist-density-plot}
 DensityPlot_RenkonenDistance(renkonen_within_df)
@@ -486,6 +490,8 @@ We can also make a barplot of the renkonen distances, and use different colors f
 - If you have restarted the analyses after the `SortReads` function, and  
 `sortedinfo_df` is not in your environment, just use the sortedinfo 
 file (in the `vtamR_demo_out/sorted/` directory).
+- This is a very small test dataset, so the graph you generate with your 
+own data will likely look quite different.
 
 ```{r renkonen-dist-barplot}
 Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo_df, x_axis_label_size=6)
@@ -511,7 +517,7 @@ knitr::kable(stat_df, format = "markdown")
 
 ### FilterPCRerror
 
-If you have done the denoising step by **swarm**, this function probably redundant.
+If you have done the denoising step by **SWARM** (`ClusterASV`), this function probably redundant.
 
 `FilterPCRerror` filters out an ASV if it is very similar to another, more frequent ASV.
 `max_mismatch` argument tells how many mismatches are allowed between a pair of ASV
@@ -554,6 +560,7 @@ OptimizePCRerror_df <- OptimizePCRerror(read_count_df,
                                         min_read_count=5
                                         )
 ```
+
 
 Let's see the beginning of the output:
 
@@ -895,57 +902,29 @@ asv_tax <- TaxAssign(asv=read_count_df,
 
 If you are not interested in intra-specific variation, the ASV can be clustered to mOTUs.
 
-The `ClusterASV` function can use two different algorithms to cluster the ASV:
+### Algorithm and Clustering parameters
 
- - `method=vsearch`: The `cluster_size` command in VSEARCH is a greedy, centroid-based clustering 
- algorithm that orders ASVs by decreasing read count, so the centroids of the 
- clusters correspond to the ASVs with the highest read counts. The radius of 
- the clusters are defined by the `identity` parameter.`
- - `method=swarm`: Swarm is a fast and robust method that recursively groups ASVs with `d`
- or less differences. Clusters are centered on local peaks of abundance, 
- and mostly free from input order dependency.
- 
-The `group` argument of `ClusterASV`, determines the output format: 
- 
- - `group = TRUE`, the function aggregates the ASVs belonging to the same 
- cluster into a single row. In this case, the asv_id and asv columns contain 
- the identifier and the sequence of the cluster's centroid. 
- Read counts are summed over ASVs, samples and replicates are unchanged.
- - `group = FALSE`, the function returns the original input data frame with 
- an additional `cluster_id` column. Each row still corresponds to one ASV.
- 
+The `ClusterASV` function supports two algorithms for clustering ASVs:
 
-The clustering can be run on the whole data set at once, or sample by sample. 
-At this stage, when the aim is to create mOTUs, I suggest clustering the data all
-at once (`by_sample=FALSE`).
+* `method = "vsearch"`: This approach uses VSEARCH’s `cluster_size` command, 
+a greedy, centroid-based algorithm that ranks ASVs by decreasing read count. 
+As a result, cluster centroids correspond to the most abundant ASVs.
+The cluster radius is controlled by the `identity` parameter.
 
+* `method = "swarm"`: Swarm is a fast, iterative clustering method that groups 
+ASVs differing by `d` or fewer nucleotides. Clusters form around local 
+abundance peaks and are largely unaffected by the order of input sequences.
 
-The key parameters are either `identity` for VSEACH or `swarm_d` for SWARM. 
-To help select an appropriate parameter value, we can plot the density of 
-pairwise identities between ASVs, distinguishing between pairs within 
-the same cluster and those from different clusters using either the 
-`PairwiseIdentityPlotPerSwarmD` or the 
-`PairwiseIdentityPlotPerClusterIdentityThreshold` function.
+The main parameters are `identity` for VSEARCH and `swarm_d` for SWARM.
+In this tutorial, we’ll focus on determining an appropriate `identity` 
+threshold for clustering with VSEARCH, but a similar approach applies to SWARM.
 
+To choose a suitable threshold, you can visualize the distribution of pairwise 
+identities between ASVs—comparing pairs within the same cluster versus those 
+from different clusters—using the function 
+`PairwiseIdentityPlotPerClusterIdentityThreshold` (for VSEARCH).
+If you’re clustering with SWARM, see `?PairwiseIdentityPlotPerSwarmD` for the equivalent plot.
 
-```{r PairwiseIdentityPlotPerSwarmD}
-outfile <- file.path(outdir, "cluster", "pairwise_identities_swarm.csv")
-plotfile <- file.path(outdir, "cluster", "PairwiseIdentityPlotPerSwarmD.png")
-
-plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df,
-                                            swarm_d_min=2,
-                                            swarm_d_max=15,
-                                            swarm_d_increment=1,
-                                            min_id = 0.8, 
-                                            vsearch_path=vsearch_path, 
-                                            swarm_path=swarm_path,
-                                            num_threads=num_threads,
-                                            outfile=outfile, 
-                                            plotfile=plotfile)
-
-print(plot_swarm)
-                                          
-```
 
 ```{r PairwiseIdentityPlotPerClusterIdentityThreshold}
 outfile <- file.path(outdir, "cluster", "pairwise_identities_vsearch.csv")
@@ -964,22 +943,27 @@ plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df,
 print(plot_vsearch)
                                           
 ```
+**Note:** This graph is based on a **very small** test dataset and is therefore not informative. 
+Below is the graph obtained using the complete (though still relatively small) original dataset.
 
-It is also possible to class the clusters according to the taxonomic assignment of
-the ASV within clusters:
+![Pairwise Identity Plot Per Cluster Identity Threshold for the original data](figures/PairwiseIdentityPlotPerClusterIdentityThreshold.png)
 
- - `closed`: ASVs in the cluster are assigned to the same taxon, 
- and all ASVs of that taxon belong exclusively to this cluster.  
- - `open`: ASVs in the cluster are assigned to the same taxon,
- but some ASVs of that taxon are found in other clusters.  
- - `hybrid`: the cluster contains ASVs assigned to more than one taxon.
- 
-This classification can be done after clustering the ASVs using a 
-range of parameter values (`swarm_d` or `identity`). 
-The number of clusters in each class can then be plotted for each setting. 
-The clustering parameter value that yields the most `closed` clusters may 
-be a good candidate for defining mOTUs.
+Clusters can also be classified based on the taxonomic assignments of the ASVs they contain:
 
+* `closed`: All ASVs in the cluster are assigned to the same taxon, 
+and every ASV belonging to that taxon is found exclusively within this cluster.
+* `open`: All ASVs in the cluster share the same taxonomic assignment, 
+but additional ASVs of that taxon appear in other clusters.
+* `hybrid`: The cluster includes ASVs assigned to multiple taxa.
+
+This classification can be performed after clustering ASVs across a range 
+of parameter values for `identity` (VSEARCH) or `swarm_d` (SWARM).
+The number of clusters in each category can then be plotted for each parameter setting.
+A clustering parameter that maximizes the number of `closed` clusters 
+while minimizing the number of `open` and `hybrid` ones is often a good candidate 
+for defining mOTUs.
+
+(See `?PlotClusterClassification` for details on setting parameters when using SWARM.)
 
 ```{r PlotClusterClasstification}
 outfile <- file.path(outdir, "cluster", "classification_vsearch.csv")
@@ -989,7 +973,7 @@ scatterplot_vsearch <- PlotClusterClasstification(
                         read_count=read_count_df,
                         taxa=asv_tax,
                         clustering_method="vsearch",
-                        cluster_params=c(0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98),
+                        cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
                         vsearch_path=vsearch_path,
                         taxlevels= c("species", "genus"),
                         num_threads=num_threads,
@@ -999,11 +983,47 @@ scatterplot_vsearch <- PlotClusterClasstification(
 print(scatterplot_vsearch)
                                           
 ```
+**Note:** This graph is based on a **very small** test dataset and is therefore not informative. 
+Below is the graph obtained using the complete (though still relatively small) original dataset.
 
-Once you have chose the algorithm and the corresponding parameter value for 
-clustering, `ClusterASV` can be run to make mOTUs.
+![Plot ClusterClasstification for the original data](figures/PlotClusterClasstification_vsearch.png)
 
-Let's use VSEARCH for clustering with 0.97 identity threshold:
+Even the original dataset is relatively small, and the graphs do not show strong differences 
+between parameter values. Nevertheless, several conclusions can be drawn:
+
+* At clustering thresholds below 0.94, the pairwise identity distribution among 
+ASVs within the same cluster becomes bimodal. This likely indicates that 
+ASVs from different taxa (species) are being grouped together, 
+suggesting the clustering identity threshold should be **at least 0.94**.
+* The number of `closed` clusters at the species level is highest between 
+**0.94 and 0.97**, while the numbers of `open` and `hybrid` clusters remain 
+relatively low in this range.
+* Taken together, these results suggest that a clustering threshold 
+between **0.94 and 0.97** is appropriate for defining mOTUs as proxies for species.
+
+### Cluster ASVs to mOTUs
+
+The `ClusterASV` function can perform clustering using either VSEARCH 
+(`method = "vsearch"`) or SWARM (`method = "swarm"`).
+
+The output format is controlled by the `group` argument:
+
+* `group = TRUE`: ASVs belonging to the same cluster are aggregated into a 
+single row. In this case, the `asv_id` and `asv` columns contain the
+identifier and sequence of the cluster’s centroid. Read counts are summed 
+across ASVs, while sample and replicate structure remain unchanged.
+* `group = FALSE`: The function returns the original ASV table with an 
+additional `cluster_id` column, so each row still represents a single ASV.
+
+Clustering can be performed on the entire data set or separately for each sample.
+When the goal is to define mOTUs, it is recommended to cluster 
+all ASVs together (`by_sample = FALSE`).
+
+Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
+`group==FALSE`, the same `asv_id`, can have different `cluster_id` in different samples.
+
+Below, we’ll cluster the data using VSEARCH with an identity threshold of `0.97`.
+(See `?ClusterASV` for guidance on adjusting parameters when using SWARM.)
 
 ```{r motu-clustersize}
 outfile <- file.path(outdir, "filter", "15_mOTU_vsearch.csv")
@@ -1026,27 +1046,27 @@ knitr::kable(stat_df, format = "markdown")
 ```
 
 
-
 ## Print output
 
-`WriteASVtable` will reorganize the `read_count_df` data frame,
-with samples in columns and ASV (or centroids of mOTUs) in lines 
-(from [long format](#glossary) to [wide format](#glossary)).
+The `WriteASVtable` function restructures the `read_count_df` data frame 
+so that **samples are represented in columns** and **ASVs (or mOTU centroids)** 
+appear in rows—converting the table from [long format](#glossary) to [wide format](#glossary).
 
-It is possible to add supplementary information as well:
+Additional information can be included in the output:
 
-* Taxonomic assignment (`asv_tax`)
-* Total number of reads and samples for each ASV (`add_sums_by_asv`)
-* Total number of reads and ASVs in each sample (`add_sums_by_sample`)
-* Supplementary column for each mock sample with expected occurrences 
-in each of them (`add_expected_asv`)
-* Supplementary column for each sample that has been filtered out (`add_empty_samples`)
-* cluster_id is kept if present in the input data frame.
+* Taxonomic assignment: (`asv_tax`)
+* Totals by ASV: The total number of reads and samples for each ASV (`add_sums_by_asv`)
+* Totals by sample: The total number of reads and ASVs for each sample (`add_sums_by_sample`)
+* Expected ASVs in mock samples: Adds a column for each mock sample with 
+its expected occurrences (`add_expected_asv`)
+* Filtered samples: Adds a column for each sample that have been filtered out (`add_empty_samples`)
+* Cluster IDs: Retained automatically if present in the input data frame
 
-Replicates are be pooled within each sample is `pool_replicates` is `TRUE`. 
-The read count of samples will be the mean non-zero read counts over replicates.
+If `pool_replicates = TRUE`, biological replicates within each sample are pooled, 
+and the read count for each sample is calculated as the mean of non-zero read
+counts across replicates.
 
-For more information see `?WriteAsVtable`
+For further details, see `?WriteASVtable`.
 
 ```{r write-asv-table}
 outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")

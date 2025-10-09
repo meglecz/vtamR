@@ -37,7 +37,7 @@ the missing occurrences (FN). If empty, no file is written.}
 \item{performance_metrics}{Character string: csv file containing performance
 metrics. If empty, no file is written.}
 
-\item{habitat_proportion}{Real (between 0-1): for each asv, if the proportion
+\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
 of reads in a habitat is below this cutoff,
 it is considered as an artifact in all samples of the habitat.}
 }

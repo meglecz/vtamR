@@ -42,13 +42,13 @@ for \code{LFNreadCount} function.}
 \code{min_lfn_read_count_cutoff} to \code{max_lfn_read_count_cutoff}
 are tested by \code{increment_lfn_read_count_cutof} of increment.}
 
-\item{min_lnf_variant_cutoff}{Real (0-1): the lowest cutoff value for
+\item{min_lnf_variant_cutoff}{Numeric. Value between 0 and 1: the lowest cutoff value for
 \code{LFNvariant} function.}
 
-\item{max_lnf_variant_cutoff}{Real (0-1): the highest value for \code{LFNvariant}
+\item{max_lnf_variant_cutoff}{Numeric. Value between 0 and 1: the highest value for \code{LFNvariant}
 function.}
 
-\item{increment_lnf_variant_cutoff}{Real (0-1): values from
+\item{increment_lnf_variant_cutoff}{Numeric. Value between 0 and 1: values from
 \code{min_lnf_variant_cutoff} to \code{max_lnf_variant_cutoff} are tested by
 \code{increment_lnf_variant_cutoff} increment.}
 

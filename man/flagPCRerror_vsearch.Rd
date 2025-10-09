@@ -20,7 +20,7 @@ asv, read_count. ASVs must be unique.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
-\item{pcr_error_var_prop}{Real (0-1): if the proportion of read counts
+\item{pcr_error_var_prop}{Numeric. Value between 0 and 1: if the proportion of read counts
 of two similar ASVs is bellow \code{pcr_error_var_prop}, the less abundant
 is flagged as a PCR error.}
 

@@ -17,7 +17,7 @@ PairwiseIdentity(
 \arguments{
 \item{asv}{Data frame or csv file with asv and asv_id columns.}
 
-\item{min_id}{Real: \link{0-1} Bellow this identity do not align asv}
+\item{min_id}{Numeric. Value between 0 and 1: Bellow this identity do not align asv}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 

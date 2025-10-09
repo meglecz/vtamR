@@ -32,7 +32,7 @@ is incomplete due to low resolution, higher-level taxa should be recorded as \co
 \item{clustering_method}{character; swarm or vsearch}
 
 \item{cluster_params}{numerical vector of either swarm's d to be used, or
-percentage of percentage of identity threshold for the cluster_size algorithm of vsearch.}
+identity threshold (Value between 0 and 1) for the cluster_size algorithm of vsearch.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 

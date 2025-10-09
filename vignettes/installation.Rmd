@@ -5,7 +5,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -46,13 +46,13 @@ operating systems.
 ## Install vtamR
 
 `pkg_install` will handle conveniently the R dependencies of `vtamR`. 
-```{r install_github, eval=FALSE}
+```{r install_github_pak, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
 pak::pkg_install("meglecz/vtamR@develop")
 ```
 
 Alternatively, you can use devtools.
-```{r install_github, eval=FALSE}
+```{r install_github_devtools, eval=FALSE}
 if (!requireNamespace("devtools", quietly = TRUE)) {install.packages("devtools")}
 devtools::install_github("meglecz/vtamR@develop", dependencies=TRUE)
 ```

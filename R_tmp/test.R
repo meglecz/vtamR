@@ -58,7 +58,8 @@ sortedinfo_df <- SortReads(fastainfo_df,
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
-read_count_df <- Dereplicate(sortedinfo_df, 
+sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+read_count_df <- Dereplicate(sortedinfo, 
                              dir=sorted_dir, 
                              asv_list=asv_list,
                              updated_asv_list = updated_asv_list
@@ -76,12 +77,26 @@ stat_df <- data.frame(parameters=character(),
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
 #### swarm
-by_sample <- FALSE
-read_count_df <- Swarm(read_count_df, 
-                       swarm_path=swarm_path, 
-                       num_threads=num_threads, 
-                       by_sample=by_sample)
-stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=NA)
+by_sample <- TRUE
+d=1
+fastidious= TRUE
+quiet=TRUE
+outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
+
+read_count_df <- ClusterASV(read_count_df,
+                            method = "swarm",
+                            swarm_d=d,
+                            fastidious=fastidious,
+                            by_sample=by_sample,
+                            group = TRUE,
+                            path=swarm_path,
+                            num_threads=num_threads,
+                            outfile=outfile,
+                            quiet=quiet
+                            )
+
+
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
 
 
 #### cluster_size
