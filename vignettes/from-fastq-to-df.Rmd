@@ -56,11 +56,9 @@ vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
 *Set general parameters*
 
 ```{r general-parameters}
-num_threads <- 8
 sep <- ","
 ```
 
-* `num_threads`: Number of CPUs for multithreaded programs
 * `sep`: Separator used in csv files
 
 # Case 1 - One sample per fastq - no tag - no primer

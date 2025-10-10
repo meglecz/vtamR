@@ -32,7 +32,7 @@ if FALSE, input Df is simply completed by a cluser_id column.}
 
 \item{path}{Character string: path to swarm or vsearch executables.}
 
-\item{num_threads}{Positive integer: Number of CPUs.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{swarm_d}{Positive integer: d parameter for swarm (if applicable).
 Maximum number of differences allowed between two ASVs,

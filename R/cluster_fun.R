@@ -52,6 +52,10 @@ PairwiseIdentity <- function(asv,
                              quiet=TRUE
                              ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  
   # can accept df or file as an input
   if(is.character(asv)){
     # read known occurrences
@@ -131,7 +135,7 @@ PairwiseIdentity <- function(asv,
 #' @param fastidious logical: when working with d = 1, perform a second 
 #' clustering pass to reduce the number of small clusters.
 #' @param swarm_path Character string: path to swarm executable. 
-#' @param num_threads Positive integer: Number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: name of the output csv file 
 #' with asv_id, cluster_id columns
 #' @param sep Field separator character in input and output csv files.
@@ -155,6 +159,9 @@ GetClusterIdSwarm <- function(read_count,
                           sep=",", 
                           quiet=TRUE){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -270,7 +277,7 @@ GetClusterIdSwarm <- function(read_count,
 #' asv_id, asv, read_count.
 #' @param identity Numeric. Value between 0 and 1: Identity threshold for clustering.
 #' @param vsearch_path Character string: path to vsearch executable. 
-#' @param num_threads Positive integer: Number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: name of the output csv file with asv_id, 
 #' and cluster_id columns
 #' @param sep Field separator character in input and output csv files.
@@ -293,6 +300,9 @@ GetClusterIdVsearch <- function(read_count,
                           sep=",", 
                           quiet=TRUE){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -383,7 +393,7 @@ GetClusterIdVsearch <- function(read_count,
 #' and their identity is not plotted.
 #' @param vsearch_path Character string: path to vsearch executable.
 #' @param swarm_path Character string: path to swarm executable. 
-#' @param num_threads Positive integer: Number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: output csv file name with the following columns:
 #' pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.
 #' @param plotfile Character string: png file name for the output plot; 
@@ -419,7 +429,9 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
                                           quiet=TRUE
 ){
   
-  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -522,7 +534,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' @param min_id Numeric. Value between 0 and 1: Bellow this pairwise identity asv pairs are not aligned
 #' and their identity is not plotted.
 #' @param vsearch_path Character string: path to vsearch executable.
-#' @param num_threads Positive integer: Number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outfile Character string: csv file name with the following columns: 
 #' pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.
 #' @param plotfile Character string: png file name for the output plot; 
@@ -555,7 +567,9 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
                                           sep=",", 
                                           quiet=TRUE){
   
-  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -818,6 +832,9 @@ PlotClusterClasstification <- function(read_count, taxa,
                            num_threads=0,
                            quiet = TRUE){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -1000,7 +1017,7 @@ pool_by_cluster <- function(read_count_df,
 #' clustering when the cluster_size algorithm of vsearch is used.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
-#' @param num_threads Positive integer: Number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
@@ -1029,6 +1046,9 @@ ClusterASV <- function(read_count,
                       quiet=T
 ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences

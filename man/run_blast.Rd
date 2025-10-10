@@ -28,7 +28,7 @@ run_blast(
 
 \item{perc_identity}{Real between 0 and 100: minimum percentage of identity.}
 
-\item{num_threads}{Positive integer: number of threads.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{quiet}{logical: If TRUE, suppress informational messages and only
 show warnings or errors.}

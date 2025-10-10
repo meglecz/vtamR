@@ -22,7 +22,7 @@ asv_id, asv, read_count.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{outfile}{Character string: name of the output csv file with asv_id,
 and cluster_id columns}

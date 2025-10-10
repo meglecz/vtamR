@@ -26,7 +26,7 @@ clustering pass to reduce the number of small clusters.}
 
 \item{swarm_path}{Character string: path to swarm executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{outfile}{Character string: name of the output csv file
 with asv_id, cluster_id columns}

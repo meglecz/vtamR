@@ -251,7 +251,9 @@ Merge <- function(fastqinfo,
   
   check_dir(fastq_dir)
   check_dir(outdir)
-  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # can accept df or file as an input
   if(is.character(fastqinfo)){
     # read known occurrences
@@ -492,6 +494,10 @@ RandomSeq <- function(fastainfo,
                       compress=F,
                       sep=",", 
                       quiet=T){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   
   # if run on non linux-like system, use RandomSeqWindows
   if(!is_linux()){
@@ -754,6 +760,9 @@ TrimPrimer_OneFile <- function(fasta,
                                quiet=T
                                ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   if(fasta == outfile){
     msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
     stop(msg)
@@ -1039,7 +1048,9 @@ SortReads <- function(fastainfo,
   
   check_dir(fasta_dir)
   check_dir(outdir)
-  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -1276,7 +1287,9 @@ SortReads_no_reverse <- function(fastainfo,
                                  quiet=T
                                  ){
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
-  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   check_dir(fasta_dir)
   check_dir(outdir)
   
@@ -1884,6 +1897,83 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
   }
 }
 
+#' FilterExternalContaminant
+#' 
+#' Eliminate ASVs that are likely to be external contaminants, since 
+#' they have higher read count in at least one negative control, than in any of 
+#' the other samples.
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, sample, replicate, read_count, asv.
+#' @param sample_types Data frame or csv file with at least the following columns: 
+#' sample,sample_type (negative/mock/real). 
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written. 
+#' @param conta_file Character string: csv file name to print lines filtered out
+#' from the input dataset.
+#' If empty, no file is written. 
+#' @param sep Field separator character in input and output csv files.
+#' @returns Filtered read_count_df data frame.
+#' @examples
+#' \dontrun{
+#' filtered_read_count_df <- FilterExternalContaminant(read_count_df, sample_types=sortedinfo)
+#' }
+#' @export
+#' 
+FilterExternalContaminant <- function (read_count, sample_types, outfile="", 
+                                       conta_file="",sep=",") {
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(is.character(sample_types)){
+    # read known occurrences
+    sample_types <- read.csv(sample_types, header=T, sep=sep)
+  }
+  
+  sample_types <- sample_types %>%
+    filter(sample_type == "negative")
+  
+  negative_control_samples <- unique(sample_types$sample)
+  
+  # get for each asv the sample that have the highest read_count
+  df <- read_count_df %>%
+    group_by(asv_id) %>%
+    arrange(desc(read_count)) %>%
+    summarize(sample=first(sample)) %>%
+    ungroup() %>%
+    filter(sample %in% negative_control_samples)
+  
+  asv_conta <- unique(df$asv_id)
+  
+  # make a file with contaminants
+  if(conta_file != ""){
+    check_dir(conta_file, is_file=TRUE)
+    
+    contaminant_df <- read_count_df %>%
+      filter(asv_id %in% asv_conta) %>%
+      group_by(asv_id) %>%
+      arrange(asv_id, desc(read_count))
+    
+    write.table(contaminant_df, file = conta_file,  row.names = F, sep=sep)
+  }
+
+  # delete potential contaminants
+  read_count_df <- read_count_df %>%
+    filter(!(asv_id %in% asv_conta))
+
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(read_count_df)
+}
+
 #' LFNglobalReadCount
 #' 
 #' Eliminate ASVs with less than cutoff reads in the data set.
@@ -2452,6 +2542,9 @@ flagPCRerror_vsearch <- function(unique_asv_df,
                                  quiet=TRUE
                                  ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # no ASV in the unique_asv_df => return a dataframe with 0 for all ASVs in PCRerror column
   if(length(unique_asv_df$asv) == 0){ 
     unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
@@ -2595,6 +2688,9 @@ FilterPCRerror <- function(read_count,
                            quiet=TRUE
                            ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2696,8 +2792,12 @@ FilterPCRerror <- function(read_count,
 #' }
 #' @export
 #'
-flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, quiet=TRUE, num_threads=0){
+flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, 
+                        quiet=TRUE, num_threads=0){
 
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # no ASV in the unique_asv_df => return a data frame with 0 for all ASVs in Chimera column
   if(length(unique_asv_df$asv) == 0){ 
     unique_asv_df$chimera <- rep(0, length(unique_asv_df$asv))
@@ -2760,7 +2860,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, quiet=T
   unique_asv_df$chimera[unique_asv_df$asv %in% results_vsearch$asv] <- 1
   
   # Delete the temp directory
-#  unlink(outdir_tmp, recursive = TRUE)
+  unlink(outdir_tmp, recursive = TRUE)
   return(unique_asv_df)
 }
 
@@ -2812,6 +2912,9 @@ FilterChimera <- function(read_count,
                           quiet=TRUE
                           ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3186,7 +3289,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' in the lineage using the name of the next known lower-level taxon, prefixed 
 #' by the current taxonomic level 
 #' (e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).
-#' @param num_threads Positive integer: number of CPUs.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param tax_sep Field separator character used in taxonomy file.
 #' @param sep Field separator character in input and output csv files.
 #' @param outfile Character string: csv file name to print the output data 
@@ -3219,7 +3322,9 @@ TaxAssign <- function(asv,
                       fill_lineage=TRUE
                       ){
 
-
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
 taxonomy <- path.expand(taxonomy)
 blast_db <- path.expand(blast_db)
 
@@ -3381,7 +3486,7 @@ return(taxres_df)
 #' @param outdir Character string: output directory.
 #' @param qcov_hsp_perc Real between 0 and 100: minimum query coverage.
 #' @param perc_identity Real between 0 and 100: minimum percentage of identity.
-#' @param num_threads Positive integer: number of threads.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns data frame with the BLAST results: qseqid,pident,qcovhsp,staxids
@@ -3407,6 +3512,9 @@ run_blast <- function(df,
                       quiet=T
                       ){
 
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   check_dir(outdir)
   
   # make fasta file with unique reads; use numbers as ids  
@@ -4202,6 +4310,10 @@ OptimizePCRerror <- function(read_count,
                              quiet=TRUE
                              ){
   
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -4843,7 +4955,6 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
   return(df)
 }
 
-
 #' OptimizeLFNreadCountLFNvariant
 #' 
 #' Suggest optimal parameters for `lfn_read_count_cutoff` and `lnf_variant_cutoff` 
@@ -5065,6 +5176,10 @@ PoolDatasets <- function(files,
                          num_threads=0,
                          quiet=T
                          ){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
   
   tmp_dir <-paste('tmp_pool_datasets_', 
                   trunc(as.numeric(Sys.time())), 

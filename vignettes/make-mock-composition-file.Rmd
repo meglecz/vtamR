@@ -88,7 +88,7 @@ We will use the some of the files created by the first part of the
 `system.file()`. When using your own data just enter your file names.
 - `read_count_file` is the output of `FilterRenkonen` of the
 [Tutorial](tutorial-vtamr-pipeline.html).
-- The `blast_db` and `taxonomy`, `blast_path`, `num_threads` are set up as in the 
+- The `blast_db` and `taxonomy`, `blast_path` are set up as in the 
 [Tutorial](tutorial-vtamr-pipeline.html#set-up)
 
 
@@ -101,7 +101,6 @@ taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-num_threads = 8
 ```
 
 ### Assign taxa to ASVs
@@ -113,8 +112,7 @@ See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#tax
 asv_tax <- TaxAssign(asv=read_count_file, 
                      taxonomy=taxonomy, 
                      blast_db=blast_db, 
-                     blast_path=blast_path, 
-                     num_threads=num_threads
+                     blast_path=blast_path
                      )
 ```
 

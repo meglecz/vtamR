@@ -37,7 +37,7 @@ percentage of identity values (pid) and associated parameters
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
-\item{num_threads}{Positive integer: number of CPUs.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{tax_sep}{Field separator character used in taxonomy file.}
 

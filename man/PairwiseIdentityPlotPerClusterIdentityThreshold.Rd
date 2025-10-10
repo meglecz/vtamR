@@ -35,7 +35,7 @@ and their identity is not plotted.}
 
 \item{vsearch_path}{Character string: path to vsearch executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{outfile}{Character string: csv file name with the following columns:
 pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.}

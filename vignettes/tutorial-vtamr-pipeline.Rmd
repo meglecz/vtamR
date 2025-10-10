@@ -88,7 +88,6 @@ swarm_path <- "swarm"
 *Set general parameters*
 
 ```{r general-parameters}
-num_threads <- 8
 sep <- ","
 outdir <- "~/vtamR_demo_out"
 ```
@@ -96,7 +95,6 @@ outdir <- "~/vtamR_demo_out"
 
 * `sep`: Separator used in csv files
 * `outdir`: Name of the output directory. Make sure there is **no space in the path**.
-* `num_threads`: Number of CPUs for multithreaded programs. 
 
 To know how many threads you can use at most
 **Linux/McOS**: type `nproc` in a terminal
@@ -353,7 +351,6 @@ read_count_df <- ClusterASV(read_count_df,
                             by_sample=by_sample,
                             group = TRUE,
                             path=swarm_path,
-                            num_threads=num_threads,
                             outfile=outfile)
 
 
@@ -365,15 +362,9 @@ Let's check the reduction of the number of variants after running `swarm`.
 knitr::kable(stat_df, format = "markdown")
 ```
 
-We can also plot the number of reads per variant.
-```{r}
-Histogram_ReadCountByVariant(read_count_df, binwidth=100)
-```
-As we can see, most ASV have very low read counts.
-
 ### LFNglobalReadCount
 
-Although, swarm has reduced considerably the number of ASVs, there are still 
+Although, SWARM has reduced considerably the number of ASVs, there are still 
 many ASVs with low read count. 
 The `LFNglobalReadCount` function filter out all ASVs with total read count 
 bellow a threshold.
@@ -437,6 +428,36 @@ stat_df <- GetStat(read_count_df, stat_df, stage="FilerCodonStop", params=geneti
 knitr::kable(stat_df, format = "markdown")
 ```
 
+
+### FilterExternalContaminant
+
+We start from the hypothesis that, in cases of slight external contamination, 
+contaminant DNA may be amplified in negative control samples, since there 
+is no competition with abundant target DNA. 
+Conversely, in real or mock samples, the amplification of contaminant DNA 
+is usually less efficient due to this competition.
+
+This filter identifies ASVs whose read counts are higher in at least one 
+negative control than in any other sample. 
+These ASVs are considered potential contaminants and are removed from the dataset.
+
+The `conta_file` will contain the data corresponding to the removed ASVs.
+
+```{r filter-external-contaminant}
+conta_file <- file.path(outdir, "filter", "external_contamination.csv")
+outfile <- file.path(outdir, "filter", "6_FilterCodonStop.csv")
+read_count_df <- FilterExternalContaminant(read_count_df, 
+                          sample_types=sortedinfo_df, 
+                          conta_file=conta_file,
+                          outfile=outfile)
+
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
+
+knitr::kable(stat_df, format = "markdown")
+```
+
+
+
 ### FilterChimera
 
 This function will run the `uchime3_denovo` function implemented in vsearch. 
@@ -454,7 +475,7 @@ in at least `sample_prop` proportion of the samples where they are present.
 abskew=2
 by_sample = T
 sample_prop = 0.8
-outfile <- file.path(outdir, "filter", "6_FilterChimera.csv")
+outfile <- file.path(outdir, "filter", "7_FilterChimera.csv")
 
 read_count_df <- FilterChimera(read_count_df, outfile=outfile, vsearch_path=vsearch_path, by_sample=by_sample, sample_prop=sample_prop, abskew=abskew)
 
@@ -496,21 +517,35 @@ own data will likely look quite different.
 ```{r renkonen-dist-barplot}
 Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo_df, x_axis_label_size=6)
 ```
+In this example, there are only a few distance values, so the density plot is 
+not very informative. The bar plot shows that replicate 1 of the `tnegtag` 
+sample (a negative control) differs substantially from the other 
+two replicates, and setting `cutoff = 0.4` appears reasonable.
 
-In this example, we have only a few distances, so the density plot is not very relevant. 
-The barplot indicates that the replicate 1 of the `tnegtag` sample (negative control) 
-is distant from the other two replicates. Lets, establish the Renkonen cutoff 
-value to 0.4. We will filter out replicates that have Renkonen distances above 
-this cutoff to most other replicates of the sample. In this case, 
-replicate 1 of the tnegtag sample will be eliminated.
+`read_count_df <- FilterRenkonen(read_count_df, cutoff = cutoff)`
+
+This command filters out replicates whose Renkonen distances exceed the 
+cutoff relative to most other replicates of the same sample. 
+In this case, replicate 1 of the `tnegtag` sample will be removed.
+
+An alternative way to determine the cutoff value is to set the 
+`renkonen_distance_quantile` parameter instead of specifying a fixed `cutoff`. 
+This parameter automatically sets the cutoff at the limit defined by the 
+chosen quantile of the within-sample distance distribution. 
+For example, setting `renkonen_distance_quantile = 0.9` will set the `cutoff`
+between the 9th and 10th decile (i.e., the 90th percentile) of the distance distribution.
+
+Let's choose this option.
 
 ```{r filer-renkonen}
-outfile <- file.path(outdir, "filter", "7_FilterRenkonen.csv")
-cutoff <- 0.4
+outfile <- file.path(outdir, "filter", "8_FilterRenkonen.csv")
+renkonen_distance_quantile <- 0.9
 
-read_count_df <- FilterRenkonen(read_count_df, outfile=outfile, cutoff=cutoff)
+read_count_df <- FilterRenkonen(read_count_df, 
+                                outfile=outfile, 
+                                renkonen_distance_quantile=renkonen_distance_quantile)
 
-stat_df <- GetStat(read_count_df, stat_df, stage="FilerRenkonen", params=cutoff)
+stat_df <- GetStat(read_count_df, stat_df, stage="FilerRenkonen", params=renkonen_distance_quantile)
 
 knitr::kable(stat_df, format = "markdown")
 ```
@@ -554,7 +589,6 @@ outfile <- file.path(outdir, "optimize", "OptimizePCRerror.csv")
 OptimizePCRerror_df <- OptimizePCRerror(read_count_df, 
                                         mock_composition=mock_composition, 
                                         vsearch_path=vsearch_path, 
-                                        num_threads = num_threads,
                                         outfile=outfile, 
                                         max_mismatch=2, 
                                         min_read_count=5
@@ -582,7 +616,7 @@ for `OptimizePCRerror`, but I recommend you to use `max_mismatch <- 1`.
 ```{r filter-pcr-error}
 pcr_error_var_prop <- 0.05
 max_mismatch <- 2
-outfile <- file.path(outdir, "filter", "8_FilterPCRerror.csv")
+outfile <- file.path(outdir, "filter", "9_FilterPCRerror.csv")
 
 read_count_df <- FilterPCRerror(read_count_df, 
                                 outfile=outfile, 
@@ -631,7 +665,7 @@ Therefore, we choose 0.004 as a cutoff.
 
 ```{r lfn-sample-replicate}
 lfn_sample_replicate_cutoff <- 0.004
-outfile <- file.path(outdir, "filter", "9_LFNsampleReplicate.csv")
+outfile <- file.path(outdir, "filter", "10_LFNsampleReplicate.csv")
 
 read_count_df <- LFNsampleReplicate(read_count_df, 
                                     cutoff=lfn_sample_replicate_cutoff, 
@@ -654,7 +688,7 @@ least `min_replicate_number` replicates of the sample (2 by default).
 
 ```{r filter-min-replicate}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "filter", "10_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "filter", "11_FilterMinReplicate.csv")
 
 read_count_df <- FilterMinReplicate(read_count_df, 
                                     cutoff=min_replicate_number, 
@@ -774,7 +808,7 @@ See `?LFNvariant, ?LFNreadCount` and `?PoolFilters` for details.
 LFNvariant
 ```{r lfn-variant}
 lnf_variant_cutoff = 0.001
-outfile <- file.path(outdir, "filter", "11_LFNvariant.csv")
+outfile <- file.path(outdir, "filter", "12_LFNvariant.csv")
 
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
                                         cutoff=lnf_variant_cutoff, 
@@ -789,7 +823,7 @@ stat_df <- GetStat(read_count_df_lnf_variant,
 LFNreadCount
 ```{r lfn-readcount}
 lfn_read_count_cutoff <- 10
-outfile <- file.path(outdir, "filter", "12_LFNreadCount.csv")
+outfile <- file.path(outdir, "filter", "13_LFNreadCount.csv")
 
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff, 
@@ -803,7 +837,7 @@ stat_df <- GetStat(read_count_df_lfn_read_count,
 
 Combine results
 ```{r combine-results}
-outfile <- file.path(outdir, "filter", "13_poolLFN.csv")
+outfile <- file.path(outdir, "filter", "14_poolLFN.csv")
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
                              read_count_df_lnf_variant, 
                              outfile=outfile
@@ -826,7 +860,7 @@ of the sample (2 by default).
 
 ```{r filter-min-replicate2}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "filter", "14_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "filter", "15_FilterMinReplicate.csv")
 
 read_count_df <- FilterMinReplicate(read_count_df, 
                                     cutoff=min_replicate_number, 
@@ -892,8 +926,7 @@ asv_tax <- TaxAssign(asv=read_count_df,
                      taxonomy=taxonomy, 
                      blast_db=blast_db, 
                      blast_path=blast_path, 
-                     outfile=outfile, 
-                     num_threads=num_threads
+                     outfile=outfile
                      )
 ```
 
@@ -936,7 +969,6 @@ plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df,
                                             identity_increment=0.01,
                                             min_id = 0.8, 
                                             vsearch_path=vsearch_path, 
-                                            num_threads=num_threads,
                                             outfile=outfile, 
                                             plotfile=plotfile)
 
@@ -976,7 +1008,6 @@ scatterplot_vsearch <- PlotClusterClasstification(
                         cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
                         vsearch_path=vsearch_path,
                         taxlevels= c("species", "genus"),
-                        num_threads=num_threads,
                         outfile=outfile,
                         plotfile=plotfile)
 
@@ -1026,7 +1057,7 @@ Below, we’ll cluster the data using VSEARCH with an identity threshold of `0.9
 (See `?ClusterASV` for guidance on adjusting parameters when using SWARM.)
 
 ```{r motu-clustersize}
-outfile <- file.path(outdir, "filter", "15_mOTU_vsearch.csv")
+outfile <- file.path(outdir, "filter", "16_mOTU_vsearch.csv")
 identity <- 0.97 
 read_count_samples_df_ClusterSize <- ClusterASV(read_count_df,
                                                  method = "vsearch",
@@ -1034,8 +1065,7 @@ read_count_samples_df_ClusterSize <- ClusterASV(read_count_df,
                                                  group = TRUE,
                                                  by_sample=FALSE,
                                                  path=vsearch_path, 
-                                                 outfile=outfile,
-                                                 num_threads=num_threads)
+                                                 outfile=outfile)
 
 stat_df <- GetStat(read_count_samples_df_ClusterSize, 
                    stat_df, 
@@ -1115,7 +1145,6 @@ fastainfo_df <- RandomSeq(fastainfo_df,
                           fasta_dir=merged_dir, 
                           outdir=randomseq_dir, 
                           vsearch_path=vsearch_path, 
-                          num_threads=num_threads,
                           n=10000
                           )
 ```
@@ -1551,6 +1580,8 @@ using mkCOInr. It can be dowloaded and extracted manually of using the
 
 # Options
 
+* `num_threads`: By default, vtamR uses all available CPU cores for 
+multithreaded processes. To limit the number of cores used, specify this parameter.
 * `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` 
 functions are compressed. This saves space, but compressing/decompressing
 increases run time in some cases. I suggest to avoid compressing intermediate 

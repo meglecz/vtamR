@@ -1,13 +1,12 @@
 # Ideas for vtamR
 
+## replace sortedinfo arguments by metainfo
 
 ## Diane: Make mock composition by assigning ASV with small database containing expected sequneces, but not the same size as the ASV. 
 
 ## Polish Histogram_ReadCountByVariant
 
-## determine automatically the numer of threads and give max, if num_htreads is not specidied.
-
-## Diane clement:
+## Diane clement: impove pool runs before filtrage or add to troubleshooting
 Reorganize PoolDatasets:
 1. Pool_data of the ame marker
 	can deal with replicates optionally
@@ -33,51 +32,20 @@ wc
 grep
 
 
-
-
 ## taxassign with vsearch global ???
 
-## impove pool runs before filtrage or add to troubleshooting
-
-
-
-## suppress output of tmp system("ls non_existing_file 1> /dev/null")
-## complicated but working solution is in PairwiseIdentityPlotPerSwarmD, see if 
-it should be applied generally.
-
-## Replace system by system2 with appropriate error and warning handling in quet mode. Example in PairwiseIdentityPlotPerSwarmD; see if fossible to make more sumple for vsearch, blats and cutadapt.
- 
-
-
-
-
 ## replace test_filters by an R script to run with demo files
-## Joining with `by = join_by(asv, sample, replicate, read_count)`Joining with `by = join_by(asv, sample, replicate, read_count)`[1] "PoolFilters: PASS"
-Avoid warning when running test_filters
 
 ## make useable examples
 
 ## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
 => modify vignette accordingly
 
-
-## Merge:  arguments 'show.output.on.console', 'minimized' and 'invisible' are for Windows only
-
-## WriteASVtable => include replicates if necessary
-
 ## work on compression-decompression
 
 ## Generally, better gestion of the wd
 	setwd for test. do not change de directory in test_Merge 
 	Check slash at the end of dir names in all cases. Check is missing in MakeKnownOccurrences
-	
-## Protect against failure in system calls:
-	status <- system(cmd)
-	if (status != 0) {
-	  stop("vsearch failed. Check if the command and paths are correct.")
-	}
-	learn more about system and system2
-	
 	
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
@@ -200,7 +168,6 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 
 ## 2025/08/04
 
-
 - check input df or csv in every function and same for output
 	Merge return csv or df => DONE
 	add_ids : it is a filename. Maybe it could be also a data frame.=> DONE
@@ -208,7 +175,6 @@ Make a separate vignette, with different strategies of merge-Sortreads => DONE
 	UpdateASVlist => DONE
 
 - Check obligatory heading in doc for known_occurrences (tuto) => DONE
-
 - Check the use of asv_id in taxassign. asv_id are obligatory and they are used in BLAST
 
 ## 2025/08/05
@@ -376,27 +342,20 @@ flagChimera
 
 did not modify for system dependent commandes (grep, zcat, gzip ...) 
 
+## 2025/20/10bis FilterExternalContaminant
 
+- num_threads is set to maximum in each function, unless specifies otherwise.
 
+- FilterExternalContaminant
+	For each ASV, take the maximum read count among all samples of negative controls(maxNeg), 
+	and the maximum readcount among all other samples (maxOther). 
+	If maxNeg > maxOther, delete the ASV.
 
+- ASVspecificCutoff
+	si tag jump bcp par variant
+	after all filters, run makeKnownOccurence
+	For all ASV with delete occurrences, take the maximum read_count among delete occurrences
+	and calculate the Nijk/Ni.
+	Return a df with all ASV anf the specific lfn_Variant_cutoff for these ASV, and 0 for the others
+	Run LFNvarinat again with the asv specific values.
 
-
-  ##### run cmd
-  args <- c(
-    "-d", swarm_d,
-    "-o", out_swarm,
-    input_swarm
-  )
-  if(num_threads > 0){
-    args <- append(args, c("-threads", num_threads))
-  }
-
-  run_system2(swarm_path, args, quiet=quiet)
-  
-  
-  @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-
-#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
-  
- 
