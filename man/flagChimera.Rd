@@ -7,8 +7,9 @@
 flagChimera(
   unique_asv_df,
   vsearch_path = "vsearch",
-  num_threads = 0,
-  abskew = 2
+  abskew = 2,
+  quiet = TRUE,
+  num_threads = 0
 )
 }
 \arguments{
@@ -17,10 +18,13 @@ asv, read_count; ASVs must be unique.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
-
 \item{abskew}{Positive integer: a chimera must be at least \code{abskew}
 times less frequent that the parental ASVs.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 }
 \value{
 The input data frame completed by chimera \code{column}.

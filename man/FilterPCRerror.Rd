@@ -13,7 +13,8 @@ FilterPCRerror(
   max_mismatch = 1,
   by_sample = T,
   sample_prop = 0.8,
-  sep = ","
+  sep = ",",
+  quiet = TRUE
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ separately for each sample.}
 flagged as a PCRerror in \code{sample_prop} of the samples to be eliminated.}
 
 \item{sep}{Field separator character in input and output csv files.}
+
+\item{quiet}{Logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Filtered read_count_df data frame.

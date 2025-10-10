@@ -12,7 +12,8 @@ OptimizePCRerror(
   sep = ",",
   outfile = "",
   max_mismatch = 1,
-  min_read_count = 2
+  min_read_count = 2,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ allowed between two asv to be compared.}
 
 \item{min_read_count}{Positive integer: occurrences with fewer
 reads are ignored.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the following columns: sample,expected_read_count,

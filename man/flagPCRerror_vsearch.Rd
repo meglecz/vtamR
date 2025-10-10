@@ -9,7 +9,8 @@ flagPCRerror_vsearch(
   vsearch_path = "vsearch",
   num_threads = 0,
   pcr_error_var_prop = 0.1,
-  max_mismatch = 1
+  max_mismatch = 1,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,9 @@ is flagged as a PCR error.}
 
 \item{max_mismatch}{Positive integer: maximum number of mismatches
 (gaps included) to consider two ASVs as similar.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Input data frame completed by a PCRerror column

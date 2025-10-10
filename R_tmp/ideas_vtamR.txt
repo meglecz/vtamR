@@ -5,9 +5,32 @@
 
 ## Polish Histogram_ReadCountByVariant
 
+## determine automatically the numer of threads and give max, if num_htreads is not specidied.
+
+## Diane clement:
+Reorganize PoolDatasets:
+1. Pool_data of the ame marker
+	can deal with replicates optionally
+	if same sample in different dataset
+		sum
+		mean
+		max
+2. Poll data over markers
+	use ClsuterASV
+	deal with optional replicate
+	deal with homonymy of cluster_IDs (add a different difit for each marker)
+	Read_count within cluster (uven ASv of the same sample, replicate) can be 
+		sum
+		mean
+		max
 
 
-
+# Revise sustem dependent functions :
+gzip
+count_seq
+zcat
+wc
+grep
 
 
 
@@ -16,7 +39,6 @@
 
 ## impove pool runs before filtrage or add to troubleshooting
 
-## Make run_system2 and replace all system and system2 by this
 
 
 ## suppress output of tmp system("ls non_existing_file 1> /dev/null")
@@ -337,21 +359,44 @@ Document clustering
 Document clustering plots: Complete tuto with clustering and determining d or %id
 void empty lines in the terminal when using system2
 
+## 2025/20/10 doc system2
 
-  ##### run swarm
-  # Build argument vector
+Make run_system2 and replace all system and system2 by this
+
+Done:
+Merge
+RandomSeq
+TrimPrimer_OneFile
+SortReads
+SortReads_no_reverse
+flagPCRerror_vsearch !
+OptimizePCRerror
+PoolDatasets
+flagChimera
+
+did not modify for system dependent commandes (grep, zcat, gzip ...) 
+
+
+
+
+
+
+  ##### run cmd
   args <- c(
     "-d", swarm_d,
     "-o", out_swarm,
     input_swarm
   )
   if(num_threads > 0){
-    args <- append(args, c("-t", num_threads), after = 2)
-  }
-  if(fastidious){
-    args <- append(args, c("-f"), after = 2)
+    args <- append(args, c("-threads", num_threads))
   }
 
   run_system2(swarm_path, args, quiet=quiet)
+  
+  
+  @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
 
-
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+  
+ 

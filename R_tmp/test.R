@@ -38,21 +38,64 @@ fastainfo_df <- Merge(fastqinfo,
                       fastq_maxee=1,
                       fastq_maxns=0,
                       fastq_allowmergestagger=F,
-                      num_threads=num_threads
+                      num_threads=num_threads,
+                      quiet=FALSE
                       
 )
 
+
+
+random_dir =  file.path(outdir, "random")
+tmp <- RandomSeq(fastainfo_df,
+          n=10, 
+          fasta_dir=merged_dir,
+          outdir=random_dir, 
+          vsearch_path=vsearch_path,
+          num_threads = num_threads,
+          randseed=676,
+          compress=F,
+          sep=",", 
+          quiet=TRUE)
 ### demultiplex
 
+files <- data.frame(file=c("/home/meglecz/vtamR_benchmark_out/filter/14_FilterMinReplicate.csv", "/home/meglecz/vtamR_benchmark_out/filter/13_poolLFN.csv"),
+      marker=c("mfzr", "zfzr"))
+tmp <- PoolDatasets(files, 
+             outfile="/home/meglecz/vtamR_benchmark_out/filter/poolds/out.csv", 
+             asv_with_centroids="/home/meglecz/vtamR_benchmark_out/filter/poolds/centroids.csv", 
+             mean_over_markers=T, 
+             vsearch_path=vsearch_path, 
+             num_threads=num_threads,
+             quiet=T)
+
+TrimPrimer_OneFile(fasta="/home/meglecz/vtamR_demo_out/merged/mfzr_1_fw.fasta", 
+                               outfile="/home/meglecz/vtamR_demo_out/merged/mfzr_1_fw_primer_trimmed.fasta", 
+                               primer_fw="TCCACTAATCACAARGATATTGGTAC", 
+                               primer_rv="WACTAATCAATTWCCAAATCCTCC", 
+                               cutadapt_path=cutadapt_path, 
+                               vsearch_path=vsearch_path, 
+                               num_threads = 0,
+                               check_reverse=T, 
+                               primer_to_end=T, 
+                               cutadapt_error_rate=0.1,
+                               cutadapt_minimum_length=50,
+                               cutadapt_maximum_length=500, 
+                               quiet=F)
+
+
+
 sorted_dir <- file.path(outdir, "sorted")
+sortedinfo <- file.path(outdir, "sorted", "sortedinfo.csv")
 sortedinfo_df <- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
                            outdir=sorted_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
-                           num_threads=num_threads
-)
+                           num_threads=num_threads,
+                           quiet=TRUE,
+                           tag_to_end = T,
+                           primer_to_end=T)
 
 ###############
 ### dereplicate
@@ -65,7 +108,32 @@ read_count_df <- Dereplicate(sortedinfo,
                              updated_asv_list = updated_asv_list
 )
 
+tmp <- FilterChimera(read_count_df, 
+                     vsearch_path=vsearch_path,
+                     num_threads=num_threads,
+                     by_sample=T, 
+                     sample_prop=0.8, 
+                     abskew=2,
+                     quiet=T)
+
 is_grouped_df(read_count_df)
+
+tmp <- FilterPCRerror(read_count_df,
+                           vsearch_path=vsearch_path, 
+                           num_threads=num_threads,
+                           pcr_error_var_prop=0.1,
+                           max_mismatch=1, 
+                           by_sample=T, 
+                           sample_prop=0.8, 
+                           quiet=F)
+
+tmp <- OptimizePCRerror(read_count_df, 
+                             mock_composition=mock_composition, 
+                             vsearch_path=vsearch_path, 
+                             num_threads=num_threads,
+                             max_mismatch=2, 
+                             min_read_count=5,
+                             quiet=FALSE)
 
 ### stat
 stat_df <- data.frame(parameters=character(),
@@ -272,7 +340,8 @@ read_count_df <- FilterPCRerror(read_count_df,
                                 vsearch_path=vsearch_path, 
                                 num_threads=num_threads,
                                 pcr_error_var_prop=pcr_error_var_prop, 
-                                max_mismatch=max_mismatch)
+                                max_mismatch=max_mismatch,
+                                quiet=FALSE)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterPCRerror", params=NA)
 
 ### LFNsampleReplicate
