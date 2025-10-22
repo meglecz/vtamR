@@ -1,5 +1,10 @@
 # Ideas for vtamR
 
+## Diane: avoid NA in the asv_id colonne of the output of OptimizeLFNsampleReplicate, if  the ASv have been seen in the dataste, eve if it hase not been seen in the sammple-replicate.
+
+## Diane: rename asv_list as input_asv_list and output_asv_list
+
+
 ## replace sortedinfo arguments by metainfo
 
 ## Diane: Make mock composition by assigning ASV with small database containing expected sequneces, but not the same size as the ASV. 
@@ -351,11 +356,23 @@ did not modify for system dependent commandes (grep, zcat, gzip ...)
 	and the maximum readcount among all other samples (maxOther). 
 	If maxNeg > maxOther, delete the ASV.
 
+
+## 2025/20/22 LFNvariant2 => Not yet finished
 - ASVspecificCutoff
 	si tag jump bcp par variant
 	after all filters, run makeKnownOccurence
 	For all ASV with delete occurrences, take the maximum read_count among delete occurrences
 	and calculate the Nijk/Ni.
-	Return a df with all ASV anf the specific lfn_Variant_cutoff for these ASV, and 0 for the others
-	Run LFNvarinat again with the asv specific values.
+	Return a df with all ASV and the specific lfn_Variant_cutoff for these ASV, and 0 for the others
+	Run LFNvariant again with the asv specific values.
+	
+Fontrions in test.R => they should be tested and documented
+ASVspecificCutoff and LFNvariant2
+Adds cutoff to read_count_df, which can, be fix or asv specifique, or 0 => then filter
+
+To change maybe => if fix, do not add limit ?
+test verification of the number of reads deleted by ASV
+	
+
+
 

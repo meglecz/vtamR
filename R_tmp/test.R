@@ -152,6 +152,7 @@ read_count_df <- FilterMinReplicate(read_count_df,
                                     cutoff=min_replicate_number)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
 
+
 ### LFNvariant
 lnf_variant_cutoff = 0.001
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
@@ -163,6 +164,9 @@ lfn_read_count_cutoff <- 10
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNreadCount", params=NA)
+
+
+
 
 ### Combine results
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
@@ -192,39 +196,56 @@ plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df,
 
 
 
-#' Make ASV specific cutoff values
-#' 
-#' For all ASVs that have a know false positive occurrences, 
-#' calculate an ASV specific cutoff value for the LFNvariant filter.
-#' 
-#' For each ASV take the maximum read count among its false positive occurrences
-#' and divide it by the total number of reads of the ASV. #' 
-#'  
+#' Generate ASV-Specific Cutoff Values
+#'
+#' In some datasets, certain variants may occur in many samples with high read counts.  
+#' As a result, reads due to tag-jump contamination may remain unfiltered when using  
+#' a fixed cutoff value in the *LFNvariant* function.  
+#'
+#' This function computes variant-specific cutoff values for use in *LFNvariant*,  
+#' targeting ASVs known to have false-positive occurrences 
+#' (detected by MakeKnownOccurrences). 
+#'
+#' For each ASV, the function:
+#' - Identifies all its false-positive occurrences.
+#' - Takes the maximum read count among these false positives.
+#' - Divides this value by the total number of reads of the ASV across the dataset,  
+#'   or within replicates if `by_replicate = TRUE`.  
+#'
+#' Because some false positives may not result from tag-jump contamination, these  
+#' cutoff values can be excessively high. Therefore:
+#' - Filter the dataset as much as possible **before** using ASV-specific cutoffs.
+#' - Set a reasonable upper limit for ASV-specific cutoffs using the `max_cutoff` parameter.  
+#'
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate, read_count.
+#' @param max_cutoff Numeric; the maximum allowed cutoff value.
 #' @param mock_composition Data frame or csv file with columns: 
 #' sample, action (keep/tolerate), asv.
+#' @param habitat_proportion Numeric. Value between 0 and 1: for each asv, if the proportion 
+#' of reads in a habitat is below this cutoff,
+#' it is considered as a false positive in all samples of the habitat.
+#' @param by_replicate Logical; if `TRUE`, compute cutoffs separately by replicates.
+#' @param outfile Character string: output file. If empty, no file is written. 
 #' @param sep Field separator character in input and output csv files.
-#' @param out Character string: output file. If empty, no file is written. 
 #' @returns Data frame with the following columns: 
-#' asv_id, cutoff
+#' asv_id, replicate (if by_replicate), cutoff
+#' @seealso [LFNvariant()]
 #' @examples
 #' \dontrun{
-#' make_missing_occurrences(read_count_samples=read_count_samples_df, 
+#' ASVspecificCutoff(read_count=read_count_samples_df, 
 #'     mock_composition="data/mock_composition.csv"
 #'     )
 #' }
 #' @export
 #'
 ASVspecificCutoff <- function(read_count, 
-                              by_replicate=FALSE, 
-                              min_read_count_prop=0.7,
+                              max_cutoff=0.05,
                               mock_composition="",
-                              sortedinfo="",
-                              habitat_proportion,
+                              habitat_proportion=0.5,
+                              by_replicate=FALSE, 
                               outfile="", 
-                              sep=",", 
-                              outfile="")  {
+                              sep=",")  {
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -263,36 +284,239 @@ ASVspecificCutoff <- function(read_count,
   
   # 
   if(by_replicate){
-    asv_spec_cutoff <- read_count_df %>%
+    asv_spec_cutoff_df <- read_count_df %>%
       mutate(asv_sample = paste(asv_id, sample, sep=".")) %>%
       filter(asv_sample %in% delete_occurrences_df$asv_sample) %>%
       group_by(asv_id, replicate) %>%
       filter(read_count==max(read_count))%>%
       ungroup() %>%
       left_join(asv_total_rc, by=c("asv_id", "replicate")) %>%
-      mutate(asv_specific_cutoff= read_count/total_rc) %>%
-      select(asv_id, replicate, asv_specific_cutoff)
+      mutate(cutoff_asv_spec = read_count/total_rc) %>%
+      select(asv_id, replicate, cutoff_asv_spec)
       
   }else{
-    asv_spec_cutoff <- read_count_df %>%
+    asv_spec_cutoff_df <- read_count_df %>%
       mutate(asv_sample = paste(asv_id, sample, sep=".")) %>%
       filter(asv_sample %in% delete_occurrences_df$asv_sample) %>%
       group_by(asv_id) %>%
       filter(read_count==max(read_count))%>%
       ungroup() %>%
       left_join(asv_total_rc, by=c("asv_id")) %>%
-      mutate(asv_specific_cutoff= read_count/total_rc)%>%
-      select(asv_id, asv_specific_cutoff)
+      mutate(cutoff_asv_spec= read_count/total_rc)%>%
+      select(asv_id, cutoff_asv_spec)
   }
+  
+  # adjust too high values to max_cutoff
+  asv_spec_cutoff_df <- asv_spec_cutoff_df %>%
+    mutate(cutoff_asv_spec = if_else(
+      cutoff_asv_spec > max_cutoff, max_cutoff, cutoff_asv_spec))
 
   # write to outfile
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
-    write.table(asv_spec_cutoff, file=outfile, row.names = F, sep=sep)
+    write.table(asv_spec_cutoff_df, file=outfile, row.names = F, sep=sep)
   }
   
-  return(asv_spec_cutoff)
+  return(asv_spec_cutoff_df)
 }
+
+
+
+ASVspecificCutoff_df <- ASVspecificCutoff(read_count_df,  mock_composition=mock_composition,
+                              by_replicate=TRUE, 
+                              outfile="tmp/ASVspecificCutoff_by_replicate_false.csv")
+
+
+
+#' LFNvariant2
+#' 
+#' This function filters out false positives present dut to tag-jump or light
+#' intersame contamination.
+#' 
+#' If by_replicate is FALSE: Eliminate occurrences where the 
+#' (read_count/read_count of the asv in the data set) is less than cutoff.
+#' If by_replicate is TRUE: Eliminate occurrences where the 
+#' (read_count/read_count of the asv in its replicate) is less than cutoff.
+#' 
+#' Issues a warning if the total read count of an ASV has been reduced 
+#' bellow min_read_count_prop, since it can indicate a to high cutoff value.
+#' 
+#' By default, the same cutoff value is applied for all variants. However, it is
+#' also possible to use variant specific cutoffs, present in asv_specific_cutoffs
+#' data frame or csv file.
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, sample, replicate, read_count, asv.
+#' @param cutoff Numeric. Value between 0 and 1: minimum proportion of the read count of
+#'  an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
+#'  the occurrence is deleted.
+#' @param  asv_specific_cutoffs a data fral or csv file with the following columns.
+#' asv_id, replicate (if by_replicate), asv_specific_cutoff
+#' @param by_replicate logical: Compare read count of the occurrence to the 
+#' read counts of the ASV-replicate.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param min_read_count_prop Numeric. Value between 0 and 1: If the proportion of the read count 
+#' of a variant in the output compared to the input is less then 
+#' min_read_count_prop, prints out a warning, since it suggest a 
+#' to high cutoff value
+#' @returns Filtered read_count_df data frame.
+#' @examples
+#' \dontrun{
+#' filtered_read_count_df <- LFNvariant(read_count_df, cutoff=0.005, min_read_count_prop=0.8)
+#' }
+#' @export
+#' 
+LFNvariant2 <- function(read_count, 
+                       cutoff=NULL, 
+                       asv_specific_cutoff = NULL,
+                       by_replicate=TRUE, 
+                       outfile="", 
+                       sep=",", 
+                       min_read_count_prop=0.7){
+  
+  #### get read_count_df
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  ##### check coherence of parameters
+  if(is.null(asv_specific_cutoff)){
+    if(is.null(cutoff)){
+      stop("ERROR: cutoff and asv_specific_cutoff are both NULL, Please, specify at least one of them.")
+    }
+  }else{
+    # make asv_specific_cutoff_df
+    if (is.character(asv_specific_cutoff)){
+      # read known occurrences
+      asv_specific_cutoff_df <- read.csv(asv_specific_cutoff, header=T, sep=sep)
+    }else{
+      asv_specific_cutoff_df <- asv_specific_cutoff
+    }
+    
+    if(!("replicate" %in% colnames(asv_specific_cutoff_df)) & by_replicate==TRUE){
+      stop("ERROR: When by_replicate id TRUE, asv_specific_cutoff should have a replicate column.")
+    }
+    if("replicate" %in% colnames(asv_specific_cutoff_df) & by_replicate==FALSE){
+      stop("ERROR: When by_replicate id FALSE, asv_specific_cutoff should not have a replicate column.")
+    }
+  }
+  
+
+  #### input read count and sample count for leater comparaison
+  asvs <- read_count_df %>%
+    group_by(asv_id) %>%
+    summarize("sample_count_input" = length(sample), "read_count_input"=sum(read_count)) %>%
+    filter(read_count_input > 10) %>%
+    ungroup()
+  
+  #### make df with asv total read count 
+  if(by_replicate){
+    sum_by_asv <- read_count_df %>%
+      group_by(asv_id,replicate) %>%
+      summarize(asv_sum = sum(read_count), .groups="drop")
+  } else{
+    sum_by_asv <- read_count_df %>%
+      group_by(asv_id) %>%
+      summarize(asv_sum = sum(read_count)) %>%
+      ungroup()
+  }
+  
+  #### Simple case of fixed cutoff
+  if(is.null(asv_specific_cutoff)){
+    if(by_replicate){
+      read_count_df <- left_join(read_count_df, sum_by_asv, by=c("asv_id", "replicate")) %>%
+        filter(read_count/asv_sum >= cutoff)
+    } else{
+      read_count_df <- left_join(read_count_df, sum_by_asv, by=c("asv_id")) %>%
+        filter(read_count/asv_sum >= cutoff)
+    }
+  }
+
+  #### ASV specific cutoff
+  # get sum_by_asv with sum read_cout of asv and threshold
+  if(!is.null(asv_specific_cutoff)){
+
+    # add cutoff_asv_spec from input asv_specific_cutoff
+    if(by_replicate){
+      sum_by_asv <- left_join(sum_by_asv, asv_specific_cutoff_df, by=c("asv_id", "replicate"))
+    }else{
+      sum_by_asv <- left_join(sum_by_asv, asv_specific_cutoff_df, by=c("asv_id"))
+    }
+    
+    if(is.null(cutoff)){ # no fix cutoff
+      sum_by_asv <- sum_by_asv %>%
+        mutate(cutoff_asv_spec = if_else(is.na(cutoff_asv_spec), 0, cutoff_asv_spec))
+    }
+    else{
+      ### add fixed cutoff, when not specified in the input asv_specific_cutoff_df
+      sum_by_asv <- sum_by_asv %>%
+        mutate(cutoff_asv_spec = if_else(is.na(cutoff_asv_spec), cutoff, cutoff_asv_spec))
+    }
+
+    ### filter
+    if(by_replicate){
+      read_count_df <- left_join(read_count_df, sum_by_asv, by = c("asv_id", "replicate"))
+    }else{
+      read_count_df <- left_join(read_count_df, sum_by_asv, by = c("asv_id"))
+    }
+    read_count_df <- read_count_df %>%
+      filter(read_count/asv_sum >= cutoff_asv_spec) %>%
+      select(-cutoff_asv_spec, -asv_sum )
+  }
+
+  ###
+  # Check if filter do not eliminate occurrences with relatively high readcount 
+  ###
+  asvs_output <- read_count_df %>%
+    group_by(asv_id) %>%
+    summarize("sample_count_output" = length(sample), 
+              "read_count_output"=sum(read_count)) %>%
+    ungroup()
+  # join sample and read counts before and after filtering
+    asvs <- left_join(asvs, asvs_output, by="asv_id")
+  asvs$sample_prop <- asvs$sample_count_output / asvs$sample_count_input
+  asvs$read_count_prop <- asvs$read_count_output / asvs$read_count_input
+  asvs <- asvs %>%
+    filter(read_count_prop<min_read_count_prop) %>%
+    arrange(read_count_prop, sample_prop) %>%
+    select("asv_id", "read_count_input", "read_count_output", "read_count_prop",
+           "sample_count_input", "sample_count_output", "sample_prop")
+  
+  if(nrow(asvs > 0)){
+    cat("WARNING: The following ASVs have lost a high proportion of their 
+          reads during this filtering step. 
+          The cutoff value of LFNvariant function might need to be reduced.")
+    print(asvs)
+  }
+  
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(read_count_df)
+}
+
+
+tmp <- LFNvariant2(read_count_df, 
+                        cutoff=0.8, 
+                        asv_specific_cutoff = ASVspecificCutoff_df,
+                        by_replicate=TRUE, 
+                        outfile="", 
+                        sep=",", 
+                        min_read_count_prop=0.7)
+
+
+
+
+
+
+
 
 
 
