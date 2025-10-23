@@ -38,8 +38,6 @@ for each taxonomic level
 }
 \description{
 Classifies each cluster according to the taxonomic assignment at a given level:
-}
-\details{
 \itemize{
 \item closed: All ASVs in the cluster are assigned to the same taxon,
 and all ASVs of that taxon belong exclusively to this cluster.

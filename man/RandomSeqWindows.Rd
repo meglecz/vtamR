@@ -39,8 +39,7 @@ if necessary and read_counts updated.
 \description{
 Random select n sequences from each input fasta file.
 The output is the same compression type (if any) as the input.
-}
-\details{
+
 This function can work on any operating systems, but it is relatively slow.
 Check out the \code{RandomSeq} function on linux-like systems.
 }

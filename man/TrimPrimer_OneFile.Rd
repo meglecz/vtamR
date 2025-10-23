@@ -58,8 +58,7 @@ NA; Produces an output fasta file.
 }
 \description{
 Trim primers from the input fasta file
-}
-\details{
+
 Input fasta can be uncompressed or gzip, bz2 compressed file,
 but other compression types are not supported.
 }

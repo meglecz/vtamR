@@ -2,7 +2,9 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{compress_file}
 \alias{compress_file}
-\title{Compress file}
+\title{Compress file
+
+Compress input file to gzip format.}
 \usage{
 compress_file(filename = "", remove_input = F)
 }
@@ -15,9 +17,6 @@ compress_file(filename = "", remove_input = F)
 Character string: output gz compressed file.
 }
 \description{
-Compress input file to gzip format.
-}
-\details{
 This function work in all operating systems, but might not work with very large files,
 since it reads the file to memory.
 }

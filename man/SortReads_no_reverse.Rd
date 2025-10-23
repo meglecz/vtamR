@@ -65,8 +65,7 @@ Same as SortReads, but do not check the reverse complement of the sequences.
 Demultiplex each input fasta file using the tag combinations
 at the extremities of the merged reads.
 Trim primers from demultiplexed reads.
-}
-\details{
+
 The output sortedinfo.csv file is similar to the fastainfo file,
 but the but do not have tag and primer columns.
 }

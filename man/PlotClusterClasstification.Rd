@@ -68,8 +68,7 @@ and all ASVs of that taxon belong exclusively to this cluster.
 but some ASVs of that taxon are found in other clusters.
 \item hybrid: the cluster contains ASVs assigned to more than one taxon.
 }
-}
-\details{
+
 Plot the number of clusters in each class for each setting.
 }
 \examples{

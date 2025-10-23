@@ -17,8 +17,7 @@ asv and read_count columns (dereplicate==T).
 }
 \description{
 Read sequences from a fasta file.
-}
-\details{
+
 Input fasta can be gzip compressed or uncompressed.
 }
 \examples{

@@ -33,8 +33,7 @@ Data frame with asv_id column added to the input data frame.
 Add asv_ids to a data frame or csv that have an asv column.
 Can take into account already existing asv - asv_id pairs
 (from earlier data sets) present in asv_list.
-}
-\details{
+
 If updated_asv_list file name is given, the input asv_list is
 completed by new asvs and asv_ids.
 }

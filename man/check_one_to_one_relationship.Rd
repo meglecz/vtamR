@@ -17,8 +17,7 @@ Otherwise stops the run with an error message.
 \description{
 Check if there is a one to one relationship between
 unique ASVs and unique asv_ids in the input data frame.
-}
-\details{
+
 The same asv - asv_id combination can appear more than once in the data frame.
 }
 \examples{

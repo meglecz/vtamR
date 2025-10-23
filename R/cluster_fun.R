@@ -516,11 +516,13 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
   
 } # end function
 
-#' Make a density plot: pairwise percent identities between ASVs within and across 
+#' Make a density plot
+#' 
+#' Make a density plot pf pairwise percent identities between ASVs within and across 
 #' clusters using different clustering identity thresholds.
-#' 
+#'  
 #' Cluster all ASVs using cluster_size algorithm of vsearch with a range of identity values.
-#' 
+#'  
 #' For each clustering identity threshold, make a density plot of pairwise 
 #' percentage of identities between ASVs, using different colors for identities 
 #' between ASVs of the same or different clusters.
@@ -664,13 +666,12 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
 #' Classify clusters based on taxonomic agreement among their ASVs
 #'
 #' Classifies each cluster according to the taxonomic assignment at a given level:
-#' 
+#'  
 #' - closed: All ASVs in the cluster are assigned to the same taxon, 
 #' and all ASVs of that taxon belong exclusively to this cluster.  
 #' - open: All ASVs in the cluster are assigned to the same taxon, 
 #' but some ASVs of that taxon are found in other clusters.  
 #' - hybrid: the cluster contains ASVs assigned to more than one taxon.  
-#'   
 #' 
 #' @param cluster Data frame or csv file with the following variables: 
 #' asv_id, cluster_id
@@ -771,16 +772,16 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 
 
 #' Plot Cluster Classification according to taxa
-#'
+#' 
 #' Cluster ASV with using different clustering parameters, than classify each 
 #' cluster at each cluster setting :
-#'  
+#'   
 #' - closed: ASVs in the cluster are assigned to the same taxon, 
 #' and all ASVs of that taxon belong exclusively to this cluster.  
 #' - open: ASVs in the cluster are assigned to the same taxon, 
 #' but some ASVs of that taxon are found in other clusters.  
 #' - hybrid: the cluster contains ASVs assigned to more than one taxon.  
-#' 
+#'  
 #' Plot the number of clusters in each class for each setting.
 #'   
 #' 
@@ -986,18 +987,18 @@ pool_by_cluster <- function(read_count_df,
 #' on the ASVs in the input data frame.
 #' Each ASV is assigned to a cluster, and the function provides 
 #' two possible output formats, controlled by the argument group.
-#' 
+#'  
 #' If group = TRUE, the function aggregates the ASVs belonging to the same 
 #' cluster into a single row. In this case, the asv_id and asv columns contain 
 #' the identifier and the sequence of the cluster's centroid. 
 #' read_count is summed over ASVs, samples and replicates are unchanged.
-#' 
+#'  
 #' If group = FALSE, the function returns the original input data frame 
 #' with an additional column: cluster_id. Each row still corresponds to one ASV.
-#' 
+#'  
 #' The clustering can be run on the whole data set at once, 
 #' or sample by sample (by_sample)
-#' 
+#'  
 #' Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
 #' `group==FALSE`, the same asv_id, can have different cluster_id in different samples.
 #' 

@@ -48,8 +48,7 @@ The input data frame with updated file names and read counts.
 }
 \description{
 Random select n sequences from each input fasta file.
-}
-\details{
+
 Do not work on Windows! If using Windows, please, use RandomSeqWindows
 }
 \examples{

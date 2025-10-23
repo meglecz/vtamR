@@ -2,8 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{PairwiseIdentityPlotPerClusterIdentityThreshold}
 \alias{PairwiseIdentityPlotPerClusterIdentityThreshold}
-\title{Make a density plot: pairwise percent identities between ASVs within and across
-clusters using different clustering identity thresholds.}
+\title{Make a density plot}
 \usage{
 PairwiseIdentityPlotPerClusterIdentityThreshold(
   read_count,
@@ -52,9 +51,11 @@ show warnings or errors.}
 A density plot of pairwise percentage of identities.
 }
 \description{
+Make a density plot pf pairwise percent identities between ASVs within and across
+clusters using different clustering identity thresholds.
+
 Cluster all ASVs using cluster_size algorithm of vsearch with a range of identity values.
-}
-\details{
+
 For each clustering identity threshold, make a density plot of pairwise
 percentage of identities between ASVs, using different colors for identities
 between ASVs of the same or different clusters.

@@ -14,7 +14,7 @@ NULL
 #' Run a command using system2
 #' 
 #' Run a command using system2 and handles quite or verbose output
-#' 
+#'  
 #' @param path Character string naming a path to a program.
 #' @param args vector; Arguments of the command.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
@@ -67,7 +67,7 @@ run_system2 <- function(path, args, quiet = FALSE) {
 #' 
 #' Check if directory exists, and create it if not.
 #' If it is a file path, get its directory path and create dir in necessary.
-#' 
+#'  
 #' @param path Character string naming a directory or a file including path.
 #' @param is_file logical; If TRUE, it is a file. Directory otherwise.
 #' @examples 
@@ -93,7 +93,7 @@ check_dir <- function(path, is_file=FALSE){
 #' 
 #' Get read, variant, sample and replicate counts.
 #' Complete the stat_df with the above statistics.
-#' 
+#'  
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
 #' @param stat_df Data frame with the following variables: parameters, 
@@ -165,7 +165,7 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' Output fasta files can be compressed if compress option is used.
 #' The output fastainfo.csv file is similar to the fastqinfo file, but the 
 #' fastq columns are replaced by a fasta column with the name of the output files.
-#'  
+#'   
 #' @param fastqinfo Data frame or csv file with columns: tag_fw,primer_fw,tag_rv,
 #' primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,
 #' fastq_fw,fastq_rv  
@@ -389,7 +389,7 @@ is_linux <- function(){
 #' 
 #' Decompress the input gzipped file.
 #' If remove_input is TRUE, deleted the compressed input file.
-#' 
+#'  
 #' @param filename Character string: gzip compressed input file.
 #' @param remove_input logical: Remove the input compressed file.
 #' @returns Character string: output decompressed file.
@@ -421,12 +421,12 @@ decompress_file <- function(filename="", remove_input=F){
   return(outfile)
 }
 #' Compress file
-#' 
+#'  
 #' Compress input file to gzip format.
 #' 
 #' This function work in all operating systems, but might not work with very large files, 
 #' since it reads the file to memory.
-#' 
+#'
 #' @param filename Character string: uncompressed input file.
 #' @param remove_input logical: Remove the input uncompressed file.
 #' @returns Character string: output gz compressed file.
@@ -456,7 +456,7 @@ compress_file <- function(filename="", remove_input=F){
 #' Select random sequences
 #' 
 #' Random select n sequences from each input fasta file. 
-#' 
+#'   
 #' Do not work on Windows! If using Windows, please, use RandomSeqWindows
 #'  
 #' @param fastainfo Data frame or csv file with a fasta column containing input 
@@ -616,7 +616,7 @@ RandomSeq <- function(fastainfo,
 #' Count sequences in fasta
 #' 
 #' Count the number of sequences in the input fasta file. 
-#' 
+#'  
 #' Input can be uncompressed or gzip compressed file, 
 #' but other compression types are not supported.
 #'  
@@ -655,7 +655,7 @@ count_seq2 <- function(file){
 #' Count sequences in fasta
 #' 
 #' Count the number of sequences in the input fasta file. 
-#' 
+#'  
 #' Input can be uncompressed or gzip compressed file, 
 #' but other compression types are not supported.
 #' For linux-like systems, uses the bash commands grep and wc and it is quick. 
@@ -706,7 +706,7 @@ count_seq <- function(file) {
 #' Trim primers
 #' 
 #' Trim primers from the input fasta file
-#' 
+#'  
 #' Input fasta can be uncompressed or gzip, bz2 compressed file, 
 #' but other compression types are not supported.
 #'   
@@ -982,7 +982,7 @@ TrimPrimer <- function(fastainfo,
 #' Demultiplex each input fasta file using the tag combinations at the 
 #' extremities of the merged reads.
 #' Trim primers from demultiplexed reads.
-#' 
+#'  
 #' The output sortedinfo.csv file is similar to the input fastainfo, 
 #' but the but do not have tag and primer columns.
 #'  
@@ -1230,7 +1230,7 @@ return(df)
 #' Demultiplex each input fasta file using the tag combinations 
 #' at the extremities of the merged reads.
 #' Trim primers from demultiplexed reads.
-#' 
+#'  
 #' The output sortedinfo.csv file is similar to the fastainfo file, 
 #' but the but do not have tag and primer columns.
 #'  
@@ -1546,7 +1546,7 @@ reverse_complement <- function(sequence){
 #' Dereplicate reads to ASVs. 
 #' Count the number of reads of each ASV in each input file.
 #' Add a unique asv_id to each asv. 
-#' 
+#'  
 #' If asv_list is given (containing earlier asv and asv_id pairs), 
 #' uses already existing asv_id when possible for the present data
 #' and adds new unique asv_id, to new ASVs.
@@ -1647,7 +1647,7 @@ Dereplicate <- function(sortedinfo,
 #' Add asv_ids to a data frame or csv that have an asv column. 
 #' Can take into account already existing asv - asv_id pairs 
 #' (from earlier data sets) present in asv_list.
-#' 
+#'  
 #' If updated_asv_list file name is given, the input asv_list is 
 #' completed by new asvs and asv_ids.
 #' 
@@ -1731,7 +1731,7 @@ add_ids <- function(read_count,
 #' Read sequences from fasta
 #' 
 #' Read sequences from a fasta file. 
-#' 
+#'  
 #' Input fasta can be gzip compressed or uncompressed.
 #' 
 #' @param filename Character string: input fasta file name including full path.
@@ -1785,7 +1785,7 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' 
 #' Check if there is a one to one relationship between 
 #' unique ASVs and unique asv_ids in the input data frame.
-#' 
+#'  
 #' The same asv - asv_id combination can appear more than once in the data frame.
 #' 
 #' @param df Data frame with the following variables: asv_id, asv 
@@ -2099,16 +2099,330 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
   return(read_count_df)
 }
 
+#' Generate ASV-Specific Cutoff Values
+#' 
+#' In some datasets, certain ASVs may occur in many samples with high read counts.  
+#' As a result, reads originating from tag-jump or inter sample contamination 
+#' may remain after applying a fixed cutoff value in the *LFNvariant* function.  
+#' This function computes ASV-specific cutoff values for use in *LFNvariant*,  
+#' targeting ASVs known to have false-positive occurrences (as identified by  
+#' *MakeKnownOccurrences*).  
+#'    
+#' For each ASV, the function:
+#' - Identifies all false-positive occurrences.
+#' - Takes the maximum read count among these false positives.
+#' - Divides this value by the total read count of the ASV across the dataset,  
+#'   or within each replicate if `by_replicate = TRUE`.  
+#'   
+#' Because some false positives may not result from tag-jump contamination, the resulting  
+#' cutoff values can sometimes be excessively high. Therefore:
+#' - Filter the dataset as thoroughly as possible *before* computing ASV-specific cutoffs.
+#' - Set a reasonable upper limit for these cutoffs using the *max_cutoff* parameter.
+#'
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate, read_count.
+#' @param max_cutoff Numeric; the maximum allowed cutoff value.
+#' @param mock_composition Data frame or csv file with columns: 
+#' sample, action (keep/tolerate), asv.
+#' @param habitat_proportion Numeric. Value between 0 and 1: for each asv, if the proportion 
+#' of reads in a habitat is below this cutoff,
+#' it is considered as a false positive in all samples of the habitat.
+#' @param by_replicate Logical; if TRUE, compute cutoffs separately by replicates.
+#' @param outfile Character string: output file. If empty, no file is written. 
+#' @param sep Field separator character in input and output csv files.
+#' @returns Data frame with the following columns: 
+#' asv_id, replicate (if by_replicate), cutoff
+#' Lines contain only ASVs that have know false positive occurrences.
+#' @seealso [LFNvariant()]
+#' @examples
+#' \dontrun{
+#' cutoffs <- ASVspecificCutoff(read_count=read_count_df, 
+#'     mock_composition="data/mock_composition.csv"
+#'     )
+#' }
+#' @export
+#'
+ASVspecificCutoff <- function(read_count, 
+                              max_cutoff=0.05,
+                              mock_composition="",
+                              habitat_proportion=0.5,
+                              by_replicate=FALSE, 
+                              outfile="", 
+                              sep=",")  {
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  ### MakeKnownOccurrences to make known_occurrences_df
+  results <- MakeKnownOccurrences(read_count_df, 
+                                  sortedinfo=sortedinfo, 
+                                  mock_composition=mock_composition,
+                                  habitat_proportion=habitat_proportion)
+  
+  known_occurrences_df <- results[[1]]
+  
+  # total number of read by asv, or asv.replicate
+  if(by_replicate){
+    asv_total_rc <- read_count_df %>%
+      group_by(asv_id, replicate) %>%
+      summarize(total_rc = sum(read_count), .groups="drop")
+  }else{
+    asv_total_rc <- read_count_df %>%
+      group_by(asv_id) %>%
+      summarize(total_rc = sum(read_count))%>%
+      ungroup()
+  }
+  
+  # list of asv.sample FP
+  delete_occurrences_df <- known_occurrences_df %>%
+    filter(action=="delete") %>%
+    select(sample,asv_id) %>%
+    distinct() %>%
+    mutate(asv_sample = paste(asv_id, sample, sep="."))
+  
+  # 
+  if(by_replicate){
+    asv_spec_cutoff_df <- read_count_df %>%
+      mutate(asv_sample = paste(asv_id, sample, sep=".")) %>%
+      filter(asv_sample %in% delete_occurrences_df$asv_sample) %>%
+      group_by(asv_id, replicate) %>%
+      filter(read_count==max(read_count))%>%
+      ungroup() %>%
+      left_join(asv_total_rc, by=c("asv_id", "replicate")) %>%
+      mutate(cutoff_asv_spec = round((read_count/total_rc)+0.00005, digits=4)) %>%
+      select(asv_id, replicate, cutoff_asv_spec)
+    
+  }else{
+    asv_spec_cutoff_df <- read_count_df %>%
+      mutate(asv_sample = paste(asv_id, sample, sep=".")) %>%
+      filter(asv_sample %in% delete_occurrences_df$asv_sample) %>%
+      group_by(asv_id) %>%
+      filter(read_count==max(read_count))%>%
+      ungroup() %>%
+      left_join(asv_total_rc, by=c("asv_id")) %>%
+      mutate(cutoff_asv_spec = round((read_count/total_rc)+0.00005, digits=4)) %>%
+      select(asv_id, cutoff_asv_spec)
+  }
+  
+  # adjust too high values to max_cutoff
+  asv_spec_cutoff_df <- asv_spec_cutoff_df %>%
+    mutate(cutoff_asv_spec = if_else(
+      cutoff_asv_spec > max_cutoff, max_cutoff, cutoff_asv_spec))
+  
+  # write to outfile
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(asv_spec_cutoff_df, file=outfile, row.names = F, sep=sep)
+  }
+  
+  return(asv_spec_cutoff_df)
+}
+
 #' LFNvariant
+#' 
+#' Filters out potential false positives arising from tag-jumps or low-level
+#' inter-sample contamination.
+#'   
+#' When *by_replicate = FALSE*, the function removes occurrences where the
+#' ratio (read_count/read_count of the asv in the dataset) is
+#' lower than *cutoff*.
+#'   
+#' When *by_replicate = TRUE*, the function removes occurrences where the
+#' ratio (read_count/read_count of the ASV across all samples of the same replicate) is
+#' lower than *cutoff*.
+#'   
+#' A warning is issued if the total read count of an ASV is reduced below
+#' *min_read_count_prop* after filtering, as this may indicate that the cutoff
+#' value is too high.
+#'   
+#' By default, a single global cutoff value (argument *cutoff*) is applied to
+#' all ASVs. Alternatively, ASV-specific cutoff values can be provided through
+#' the *asv_specific_cutoffs* argument, either as a data frame or a CSV file.
+#' When both are provided, the global *cutoff* is applied in cases where
+#' an ASV-specific cutoff is not defined or is lower than the global cutoff.
+#'
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, sample, replicate, read_count, asv.
+#' @param cutoff Numeric. Value between 0 and 1: minimum proportion of the read count of
+#'  an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
+#'  the occurrence is deleted.
+#' @param asv_specific_cutoffs A data frame or CSV file specifying ASV-specific
+#'   cutoff values. May include a `replicate` column if `by_replicate = TRUE`.
+#' @param by_replicate Logical; If TRUEn compare read count of the occurrence to the 
+#' read counts of the ASV-replicate.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param min_read_count_prop Minimum proportion of total reads retained for
+#'   each ASV after filtering. ASVs dropping below this threshold trigger a
+#'   warning.
+#' @return Filtered read_count_df data frame.
+#' @examples
+#' \dontrun{
+#' read_count_df <- LFNvariant2(
+#'   read_count = "read_counts.csv",
+#'   cutoff = 0.001,
+#'   asv_specific_cutoffs = "asv_cutoffs.csv",
+#'   by_replicate = FALSE
+#' )
+#' }
+#'
+#' @export
+LFNvariant <- function(read_count, 
+                       cutoff=NULL, 
+                       asv_specific_cutoffs = NULL,
+                       by_replicate=FALSE, 
+                       outfile="", 
+                       sep=",", 
+                       min_read_count_prop=0.7){
+  
+  #### get read_count_df
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  ##### check coherence of parameters
+  if(is.null(asv_specific_cutoffs)){
+    if(is.null(cutoff)){
+      stop("ERROR: cutoff and asv_specific_cutoffs are both NULL, Please, specify at least one of them.")
+    }
+  }else{
+    # make asv_specific_cutoffs_df
+    if (is.character(asv_specific_cutoffs)){
+      # read known occurrences
+      asv_specific_cutoffs_df <- read.csv(asv_specific_cutoffs, header=T, sep=sep)
+    }else{
+      asv_specific_cutoffs_df <- asv_specific_cutoffs
+    }
+    
+    if(!("replicate" %in% colnames(asv_specific_cutoffs_df)) & by_replicate==TRUE){
+      stop("ERROR: When by_replicate is TRUE, asv_specific_cutoffs should have a replicate column.")
+    }
+    if("replicate" %in% colnames(asv_specific_cutoffs_df) & by_replicate==FALSE){
+      stop("ERROR: When by_replicate id FALSE, asv_specific_cutoffs should not have a replicate column.")
+    }
+  }
+  
+  
+  #### input read count and sample count for later comparison
+  asvs <- read_count_df %>%
+    group_by(asv_id) %>%
+    summarize("sample_count_input" = length(unique(sample)), "read_count_input"=sum(read_count)) %>%
+    filter(read_count_input > 10) %>%
+    ungroup()
+  
+  #### make df with asv total read count 
+  if(by_replicate){
+    sum_by_asv <- read_count_df %>%
+      group_by(asv_id,replicate) %>%
+      summarize(asv_sum = sum(read_count), .groups="drop")
+  } else{
+    sum_by_asv <- read_count_df %>%
+      group_by(asv_id) %>%
+      summarize(asv_sum = sum(read_count)) %>%
+      ungroup()
+  }
+  
+  #### Simple case of fixed cutoff
+  if(is.null(asv_specific_cutoffs)){
+    if(by_replicate){
+      read_count_df <- left_join(read_count_df, sum_by_asv, by=c("asv_id", "replicate")) %>%
+        filter(read_count/asv_sum >= cutoff) %>%
+        select(-asv_sum)
+    } else{
+      read_count_df <- left_join(read_count_df, sum_by_asv, by=c("asv_id")) %>%
+        filter(read_count/asv_sum >= cutoff)%>%
+        select(-asv_sum)
+    }
+  }
+  
+  #### ASV specific cutoff
+  # add  asv_specific_cutoffs_df to sum_by_asv
+  if(!is.null(asv_specific_cutoffs)){
+    
+    # add cutoff_asv_spec from input asv_specific_cutoffs
+    if(by_replicate){
+      sum_by_asv <- left_join(sum_by_asv, asv_specific_cutoffs_df, by=c("asv_id", "replicate"))
+    }else{
+      sum_by_asv <- left_join(sum_by_asv, asv_specific_cutoffs_df, by=c("asv_id"))
+    }
+    # Change NA to 0 if no fixed cutoff
+    if(is.null(cutoff)){ # no fix cutoff
+      sum_by_asv <- sum_by_asv %>%
+        mutate(cutoff_asv_spec = if_else(is.na(cutoff_asv_spec), 0, cutoff_asv_spec))
+    }
+    else{  # Change NA to cutoff if fixed cutoff 
+      # and modify cutoff_asv_spec to fixed cutoff, it fixed cutoff if higher
+      ### add fixed cutoff, when not specified in the input asv_specific_cutoffs_df
+      sum_by_asv <- sum_by_asv %>%
+        mutate(cutoff_asv_spec = if_else(is.na(cutoff_asv_spec), cutoff, cutoff_asv_spec)) %>%
+        mutate(cutoff_asv_spec = if_else(cutoff_asv_spec<cutoff, cutoff, cutoff_asv_spec))
+    }
+    
+    ### filter
+    if(by_replicate){
+      read_count_df <- left_join(read_count_df, sum_by_asv, by = c("asv_id", "replicate"), relationship = "many-to-many")
+    }else{
+      read_count_df <- left_join(read_count_df, sum_by_asv, by =c("asv_id"), relationship = "many-to-many")
+    }
+    read_count_df <- read_count_df %>%
+      filter(read_count/asv_sum >= cutoff_asv_spec) %>%
+      select(-cutoff_asv_spec, -asv_sum)
+  }
+  
+  ###
+  # Check if filter do not eliminate occurrences with relatively high read_count 
+  ###
+  asvs_output <- read_count_df %>%
+    group_by(asv_id) %>%
+    summarize("sample_count_output" = length(unique(sample)), 
+              "read_count_output"=sum(read_count)) %>%
+    ungroup()
+  
+  # join sample and read counts before and after filtering
+  asvs <- left_join(asvs, asvs_output, by="asv_id") %>%
+    mutate(sample_count_output = if_else(is.na(sample_count_output), 0, sample_count_output)) %>%
+    mutate(read_count_output = if_else(is.na(read_count_output), 0, read_count_output)) %>%
+    mutate(sample_prop = sample_count_output / sample_count_input) %>%
+    mutate(read_count_prop = read_count_output / read_count_input) %>%
+    filter(read_count_prop<min_read_count_prop) %>%
+    arrange(read_count_prop, sample_prop) %>%
+    select("asv_id", "read_count_input", "read_count_output", 
+           "sample_count_input", "sample_count_output")
+  
+  if(nrow(asvs) > 0){
+    cat("WARNING: The following ASVs have lost a high proportion of their 
+          reads during this filtering step. 
+          The cutoff value of LFNvariant function might need to be reduced.")
+    print(asvs)
+  }
+  
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(read_count_df)
+}
+
+#' LFNvariant_fixed_cutoff
 #' 
 #' If by_replicate is FALSE: Eliminate occurrences where the 
 #' (read_count/read_count of the asv in the data set) is less than cutoff.
 #' If by_replicate is TRUE: Eliminate occurrences where the 
 #' (read_count/read_count of the asv in its replicate) is less than cutoff.
-#' 
+#'  
 #' Issues a warning if the total read count of an ASV has been reduced 
 #' bellow min_read_count_prop, since it can indicate a to high cutoff value.
-#' 
+#'  
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
 #' @param cutoff Numeric. Value between 0 and 1: minimum proportion of the read count of
@@ -2130,7 +2444,7 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' }
 #' @export
 #' 
-LFNvariant <- function(read_count, 
+LFNvariant_fixed_cutoff <- function(read_count, 
                        cutoff=0.001, 
                        by_replicate=FALSE, 
                        outfile="", 
@@ -2635,7 +2949,7 @@ flagPCRerror_vsearch <- function(unique_asv_df,
 #' 
 #' Filter out an ASVs if it is very similar (`max_mismatch`) to another 
 #' more frequent ASV (`pcr_error_var_prop`).
-#' 
+#'  
 #' The whole data set can be analyzed at once (`by_sample=F`) 
 #' or sample by sample.
 #'  
@@ -3261,7 +3575,7 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' TaxAssign
 #' 
 #' Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
-#' 
+#'  
 #' TaxAssign uses the mkLTG algorithm described 
 #' in [Meglécz, 2024](https://rdcu.be/dxABF) and  
 #' [https://github.com/meglecz/mkLTG](https://github.com/meglecz/mkLTG).
@@ -3560,7 +3874,6 @@ run_blast <- function(df,
 #' 
 #' Read BLAST result to a data frame.
 #' If more than one taxid for a hit, make a separate line for each taxid.
-#' 
 #'  
 #' @param file Character string naming the output of BLAST. 
 #' Tab separated colums: qseqid,pident,qcovhsp,staxids
@@ -5134,14 +5447,13 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
 #' Take several input files, each in long format containing 
 #' asv_id, sample, replicate (optional), read_count and asv columns.
 #' Pool the different data sets, if all have the same marker.
-#' 
+#'  
 #' If more than one markers, ASVs identical on their overlapping 
 #' regions are pooled into groups, and different ASVs of the same group 
 #' are pooled under the centroid (longest ASV of the group). The asv_id are
 #' prefixed by the marker, to avoid confounding different ASVs of different 
 #' markers, with the same id.
 #' Pooling can take the mean of the read counts of the ASV (default) or their sum.
-#' 
 #'  
 #' @param files Data frame with the following variables: file (name of input files), marker.
 #' Input files must have asv_id, sample, replicate (optional), read_count and asv columns.
@@ -5711,7 +6023,7 @@ read_fasta_to_df <- function(file, dereplicate=F){
 #' 
 #' Random select n sequences from each input fasta file. 
 #' The output is the same compression type (if any) as the input.
-#' 
+#'  
 #' This function can work on any operating systems, but it is relatively slow. 
 #' Check out the `RandomSeq` function on linux-like systems.
 #'  
@@ -5785,7 +6097,7 @@ RandomSeqWindows <- function(fastainfo,
 #' 
 #' Count the number of sequences in a fasta or fastq file
 #' or the number of lines in other files.
-#' 
+#'  
 #' Efficient in linux-like systems, but slow on Windows for large files.
 #' Can handle gz compressed and uncompressed files, but not zip files.
 #'  
@@ -5879,8 +6191,8 @@ count_reads_file <- function(file, file_type=""){
 #' 
 #' Counts the number of sequences in fasta or fastq files, or the number of 
 #' lines in other files. Reads all files in the input directory with 
-#' `pattren` in their names.
-#' 
+#' *pattren* in their names.
+#'  
 #' Efficient in linux-like systems, but slow on Windows for large files.
 #' Can handle gz compressed and uncompressed files, but not zip files.
 #'  
@@ -6334,7 +6646,6 @@ check_file_exists <- function(file_list, dir=""){
 #' 
 #' Compare the heading of files to an input vector. 
 #' 
-#'  
 #' @param list1,list2 Vectors: `list1` is a heading of file, 
 #' `list2` is the expected heading for the file.
 #' @param file Character string: name of the file.

@@ -61,8 +61,7 @@ pid,pcov,phit,taxn,seqn,refres,ltgres,asv
 }
 \description{
 Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
-}
-\details{
+
 TaxAssign uses the mkLTG algorithm described
 in \href{https://rdcu.be/dxABF}{Meglécz, 2024} and
 \url{https://github.com/meglecz/mkLTG}.

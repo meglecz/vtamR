@@ -52,8 +52,7 @@ Filtered read_count_df data frame.
 \description{
 Filter out an ASVs if it is very similar (\code{max_mismatch}) to another
 more frequent ASV (\code{pcr_error_var_prop}).
-}
-\details{
+
 The whole data set can be analyzed at once (\code{by_sample=F})
 or sample by sample.
 }

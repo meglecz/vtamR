@@ -36,9 +36,8 @@ Data frame with 2 columns: filename, read_count.
 \description{
 Counts the number of sequences in fasta or fastq files, or the number of
 lines in other files. Reads all files in the input directory with
-\code{pattren} in their names.
-}
-\details{
+\emph{pattren} in their names.
+
 Efficient in linux-like systems, but slow on Windows for large files.
 Can handle gz compressed and uncompressed files, but not zip files.
 }

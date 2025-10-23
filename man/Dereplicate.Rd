@@ -45,8 +45,7 @@ Read all fasta files in the fasta columns of sortedinfo data frame (or csv file)
 Dereplicate reads to ASVs.
 Count the number of reads of each ASV in each input file.
 Add a unique asv_id to each asv.
-}
-\details{
+
 If asv_list is given (containing earlier asv and asv_id pairs),
 uses already existing asv_id when possible for the present data
 and adds new unique asv_id, to new ASVs.

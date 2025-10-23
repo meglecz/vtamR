@@ -1149,6 +1149,75 @@ fastainfo_df <- RandomSeq(fastainfo_df,
                           )
 ```
 
+## ASVspecificCutoff
+
+In some datasets, certain ASVs may occur in many samples with high read counts.  
+As a result, reads originating from tag-jump or inter sample contamination 
+may remain after applying a fixed cutoff value in the `LFNvariant` function.  
+
+The `ASVspecificCutoff` function computes ASV-specific cutoff values for use in `LFNvariant`,  
+targeting only ASVs known to have false-positive occurrences (as identified by  
+`MakeKnownOccurrences`).  
+
+For each ASV, the function:
+
+* Identifies all false-positive occurrences.
+* Takes the maximum read count among these false positives.
+* Divides this value by the total read count of the ASV across the dataset, 
+or within each replicate if `by_replicate = TRUE`.  
+   
+Because some false positives may not result from tag-jump contamination, the resulting  
+cutoff values can sometimes be excessively high. Therefore:
+
+* Filter the dataset as thoroughly as possible **before** computing ASV-specific cutoffs.
+* Set a reasonable upper limit for these cutoffs using the `max_cutoff` parameter.
+
+```{r}
+asv_spec <- ASVspecificCutoff(read_count_df, 
+                                   max_cutoff=0.05,
+                                   mock_composition=mock_composition_df) 
+```
+
+The command above produces a data frame (`asv_spec`) containing  
+`asv_id` and `cutoff_asv_spec` columns.
+Since `max_cutoff = 0.05`, any `cutoff_asv_spec` values greater than 0.05 have been adjusted to 0.05.
+
+The `asv_spec` data frame contains cutoff values only for ASVs with known false-positive occurrences.
+
+These ASV-specific cutoff values can then be used with the `LFNvariant` function 
+to filter occurrences. 
+If `LFNvariant` has already been applied with a fixed `cutoff`, it is sufficient 
+to provide the `asv_spec` data frame. The filtering will be applied only to 
+the variants listed in `asv_spec`.
+
+```{r}
+read_count_df <- LFNvariant(read_count_df, 
+                            asv_specific_cutoffs = asv_spec,
+                            min_read_count_prop=0.7)
+```
+
+A warning is issued by the above command, if for some variants, less than 
+`min_read_count_prop` of the reads are retained after filtering. 
+This indicates that the cutoff value for those variants was likely too high and 
+should be lowered.
+
+
+It is also possible to use both the `asv_specific_cutoff` and `cutoff` arguments
+in `LFNvariant`. 
+In this case, the global `cutoff` is applied to all ASVs that do not have an 
+ASV-specific cutoff defined in `asv_spec`, as well as to ASVs whose ASV-specific 
+cutoff is lower than the global `cutoff`.
+
+
+```{r}
+read_count_df <- LFNvariant(read_count_df, 
+                            cutoff=0.002,
+                            asv_specific_cutoffs = asv_spec,
+                            min_read_count_prop=0.7)
+```
+
+
+
 ##  HistoryBy
 
 This function scans all files in the `dir` that starts by a number. 
