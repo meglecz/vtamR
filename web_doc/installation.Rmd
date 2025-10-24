@@ -1,8 +1,9 @@
 ---
 title: "Install vtamR and Third Party Programs - v0.3.0"
 output: 
-  rmarkdown::html_vignette:
+  rmarkdown::html_document:
     toc: true
+    toc_float: true
     toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.0}

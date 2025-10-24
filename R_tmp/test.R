@@ -53,6 +53,7 @@ sortedinfo_df <- SortReads(fastainfo_df,
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
+sorted_dir <- file.path(outdir, "sorted")
 sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
 read_count_df <- Dereplicate(sortedinfo, 
                              dir=sorted_dir, 
@@ -183,6 +184,7 @@ read_count_df <- FilterMinReplicate(read_count_df,
                                     cutoff=min_replicate_number)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
 
+read_count_df_backup <- read_count_df
 
 plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 

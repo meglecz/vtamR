@@ -181,3 +181,10 @@ data(full_asv_tax)
 
 
 
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("rRDP")
+
+devtools::install_github("yourname/vtamR")
+```

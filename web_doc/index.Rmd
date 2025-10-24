@@ -1,5 +1,5 @@
 ---
-title: "vtamR tutorials"
+title: "vtamR tutorials - v0.3.0"
 output: 
   html_document:
     toc: true

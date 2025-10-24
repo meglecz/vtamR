@@ -1,7 +1,7 @@
 # Ideas for vtamR
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
-## make a fonction to run RDP_classifier 
+
 
 ## Diane: avoid NA in the asv_id colonne of the output of OptimizeLFNsampleReplicate, if  the ASv have been seen in the dataste, eve if it hase not been seen in the sammple-replicate.
 
@@ -383,7 +383,10 @@ Added to tutorial
 	
 LFNvariant and ASVspecificCutoff are tested and documented
 
+## 2025/20/24 TaxAssignRDP
 
+## make a fonction to run RDP_classifier 
 
-
+use rRDP and rRDPData 
+Doc and tuto OK
 

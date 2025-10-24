@@ -824,7 +824,7 @@ TrimPrimer_OneFile <- function(fasta,
       "--minimum-length", cutadapt_minimum_length,
       "--maximum-length", cutadapt_maximum_length, 
       "-g ", shQuote(g),
-      "--output", outfile,
+      "--output", out_rv,
       fasta
     )
     if(quiet){

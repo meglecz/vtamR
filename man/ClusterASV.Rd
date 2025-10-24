@@ -62,8 +62,7 @@ This function runs Swarm or the cluster_size command of Vsearch
 on the ASVs in the input data frame.
 Each ASV is assigned to a cluster, and the function provides
 two possible output formats, controlled by the argument group.
-}
-\details{
+
 If group = TRUE, the function aggregates the ASVs belonging to the same
 cluster into a single row. In this case, the asv_id and asv columns contain
 the identifier and the sequence of the cluster's centroid.
