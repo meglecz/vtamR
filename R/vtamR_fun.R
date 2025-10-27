@@ -5339,18 +5339,31 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' 
 #' Suggest optimal parameters for `lfn_read_count_cutoff` and `lnf_variant_cutoff` 
 #' functions.
+#'  
 #' The the `LFNreadCount` and `LFNvariant` is run for a series of parameter value 
 #' combinations followed by `FilterMinReplicate`. 
 #' For each parameter combination, the number of FN, TP, and FP is reported. 
 #' Users should chose the parameter setting that minimizes, FN and FP.
+#' 
+#' This function need a *known_occurrences* data frame or CSV file. If it is not 
+#' provided, it will be calculated from *read_count*, *mock_composition*, *sampleinfo* and 
+#' *habitat_proportion*.
 #'  
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
+#' @param outdir Character string: name of the output directory.
 #' @param known_occurrences Data frame or file produced by 
 #' `MakeKnownOccurrences` function, with known False Positives and True Positives.
+#' Optional; If no *known_occurrences* is provided by the user, it will be calculated 
+#' from mock_composition and sampleinfo and habitat_proportion.
+#' @param mock_composition Data frame or csv file with columns: 
+#' sample, action (keep/tolerate), asv.
+#' @param sampleinfo Data frame or csv file with columns: 
+#' sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).
+#' @param habitat_proportion Numeric. Value between 0 and 1: for each asv, if the proportion 
+#' of reads in a habitat is below this cutoff, 
+#' it is considered as an artifact in all samples of the habitat.
 #' @param sep Field separator character in input and output csv files.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
 #' @param min_lfn_read_count_cutoff Positive integer: the lowest cutoff value for 
 #' `LFNreadCount` function. 
 #' @param max_lfn_read_count_cutoff Positive integer: the highest cutoff value 
@@ -5389,9 +5402,12 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #'
 
 OptimizeLFNreadCountLFNvariant <- function(read_count, 
-                                           known_occurrences, 
+                                           outdir, 
+                                           known_occurrences = NULL, 
+                                           mock_composition = "",
+                                           sampleinfo = "",
+                                           habitat_proportion = 0.5,
                                            sep=",",
-                                           outfile="", 
                                            min_lfn_read_count_cutoff=10, 
                                            max_lfn_read_count_cutoff=100, 
                                            increment_lfn_read_count_cutoff=5, 
@@ -5399,16 +5415,16 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
                                            max_lnf_variant_cutoff=0.01, 
                                            increment_lnf_variant_cutoff=0.001, 
                                            by_replicate=FALSE, 
-                                           min_replicate_number=2, 
+                                           min_replicate_number=1, 
                                            quiet=T
-                                           ){
+){
   #  read_count_df = optimize_read_count_df
   #  min_lfn_read_count_cutoff = 10
   #  min_lnf_variant_cutoff = 0.001
   #  rc_cutoff = 55
   #  var_cutoff = 0.05
   #  by_replicate = T
-
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -5418,28 +5434,62 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   }
   
   # can accept df or file as an input
-  if(is.character(known_occurrences)){
-    # read known occurrences
-    known_occurrences_df <- read.csv(known_occurrences, header=T, sep=sep)
-  }else{
+  if(is.null(known_occurrences)){ # Calculate known_occurrences from data
+    
+    known_occurrences <- file.path(outdir, "known_occurrences.csv")
+    missing_occurrences <- file.path(outdir, "missing_occurrences.csv")
+    performance_metrics <- file.path(outdir, "performance_metrics.csv")
+    
+    results <- MakeKnownOccurrences(
+      read_count_df,
+      sampleinfo = sampleinfo,
+      mock_composition = mock_composition,
+      known_occurrences = known_occurrences,
+      missing_occurrences = missing_occurrences,
+      performance_metrics = performance_metrics,
+      sep = ",",
+      habitat_proportion = habitat_proportion
+    )
+    
+    known_occurrences_df <- results[[1]]
+    missing_occurrences <- results[[2]]
+    
+    if (nrow(missing_occurrences) > 0) {
+      missing_asv_text <- paste(capture.output(print(missing_occurrences)), collapse = "\n")
+      warning(
+        paste0(
+          "\n  Some expected ASVs are missing from the mock samples.\n",
+          "----------------------------------------------------------\n",
+          missing_asv_text,
+          "\n----------------------------------------------------------\n"
+        ),
+        call. = FALSE
+      )
+    }
+  }else{# known_occurrences is given
+    if(is.character(known_occurrences)){
+      # read known occurrences
+      known_occurrences_df <- read.csv(known_occurrences, header=T, sep=sep)
+    }else{
       known_occurrences_df <- known_occurrences
+    }
+    CheckFileinfo(file=known_occurrences_df, 
+                  file_type="known_occurrences", 
+                  sep=sep, 
+                  quiet=TRUE
+    )
   }
-  CheckFileinfo(file=known_occurrences_df, 
-                file_type="known_occurrences", 
-                sep=sep, 
-                quiet=TRUE
-                )
   
   # make a series of cutoff values for LFNreadCount
   rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, 
                         to=max_lfn_read_count_cutoff, 
                         by=increment_lfn_read_count_cutoff
-                        )
+  )
   # make a series of cutoff values for LFNreadCount
   var_cutoff_list <- seq(from=min_lnf_variant_cutoff, 
                          to=max_lnf_variant_cutoff, 
                          by=increment_lnf_variant_cutoff
-                         )
+  )
   
   out_df <- data.frame(
     lfn_read_count_cutoff=numeric(),
@@ -5490,7 +5540,7 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
                              FN=FN_count, 
                              TP=TP_count, 
                              FP=FP_count
-                             )
+      )
       if(!quiet){
         print(new_line)
       }
@@ -5501,13 +5551,12 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   out_df <- out_df %>%
     arrange(FN, FP, lnf_variant_cutoff, lfn_read_count_cutoff)
   
-  if(outfile != ""){
-    check_dir(outfile, is_file=TRUE)
-    write.table(out_df, file=outfile, sep=sep, row.names = F)
-  }
+  outfile <- file.path(outdir, "OptimizeLFNreadCountLFNvariant.csv")
+  check_dir(outfile, is_file=TRUE)
+  write.table(out_df, file=outfile, sep=sep, row.names = F)
+  
   return(out_df)
 }
-
 
 #' Pool Datasets
 #' 

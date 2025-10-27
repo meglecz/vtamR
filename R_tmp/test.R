@@ -141,6 +141,41 @@ mock_composition_df <- read.csv(mock_composition)
 mock_composition_df[5,"asv"] <- "TTTTTTTTTTTT"
 mock_composition_df[6,"asv"] <- "AAAAAAAAAa"
 
+dir_opt = file.path(outdir, "OptimizeLFNreadCountLFNvariant") 
+opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                                           outdir = dir_opt,
+                                           known_occurrences = NULL, 
+                                           mock_composition = mock_composition_df,
+                                           sampleinfo = sampleinfo_df,
+                                           habitat_proportion = 0.5,
+                                           sep=",",
+                                           min_lfn_read_count_cutoff=10, 
+                                           max_lfn_read_count_cutoff=100, 
+                                           increment_lfn_read_count_cutoff=5, 
+                                           min_lnf_variant_cutoff=0.001, 
+                                           max_lnf_variant_cutoff=0.01, 
+                                           increment_lnf_variant_cutoff=0.001, 
+                                           by_replicate=FALSE, 
+                                           min_replicate_number=2, 
+                                           quiet=T)
+
+opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                                             outdir = dir_opt,
+                                             known_occurrences = "/home/meglecz/vtamR_demo_out/OptimizeLFNreadCountLFNvariant/known_occurrences.csv", 
+                                             sep=",",
+                                             min_lfn_read_count_cutoff=10, 
+                                             max_lfn_read_count_cutoff=100, 
+                                             increment_lfn_read_count_cutoff=5, 
+                                             min_lnf_variant_cutoff=0.001, 
+                                             max_lnf_variant_cutoff=0.01, 
+                                             increment_lnf_variant_cutoff=0.001, 
+                                             by_replicate=FALSE, 
+                                             min_replicate_number=2, 
+                                             quiet=T)
+
+
+
+
 optPCR <- OptimizePCRerror(read_count=read_count_df, 
                  mock_composition=mock_composition_df, 
                  vsearch_path=vsearch_path, 

@@ -10,8 +10,7 @@ Alternativelly, try using vsearch dereplicate.
 ## Diane: Make mock composition by assigning ASV with small database containing expected sequneces, but not the same size as the ASV.
 Draft is in windows 
 
-## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
-=> modify vignette accordingly
+
 
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
@@ -396,4 +395,12 @@ Sorted => Demultiplexed
 
 - OptimizePCRerror and OptimizeLFNsampleReplicate => Warning, if some expected asv are not found
 
+commit -m "optimize-asv_list-sorted"
+
+- Integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant
+  Raise warning if FN. 
+  Add option to use custom knownOccurrences files
+=> modify vignette accordingly DONE
+
+commit -m "OptimizeLFNreadCountLFNvariant"
 

@@ -6,9 +6,12 @@
 \usage{
 OptimizeLFNreadCountLFNvariant(
   read_count,
-  known_occurrences,
+  outdir,
+  known_occurrences = NULL,
+  mock_composition = "",
+  sampleinfo = "",
+  habitat_proportion = 0.5,
   sep = ",",
-  outfile = "",
   min_lfn_read_count_cutoff = 10,
   max_lfn_read_count_cutoff = 100,
   increment_lfn_read_count_cutoff = 5,
@@ -16,7 +19,7 @@ OptimizeLFNreadCountLFNvariant(
   max_lnf_variant_cutoff = 0.01,
   increment_lnf_variant_cutoff = 0.001,
   by_replicate = FALSE,
-  min_replicate_number = 2,
+  min_replicate_number = 1,
   quiet = T
 )
 }
@@ -24,13 +27,24 @@ OptimizeLFNreadCountLFNvariant(
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv.}
 
+\item{outdir}{Character string: name of the output directory.}
+
 \item{known_occurrences}{Data frame or file produced by
-\code{MakeKnownOccurrences} function, with known False Positives and True Positives.}
+\code{MakeKnownOccurrences} function, with known False Positives and True Positives.
+Optional; If no \emph{known_occurrences} is provided by the user, it will be calculated
+from mock_composition and sampleinfo and habitat_proportion.}
+
+\item{mock_composition}{Data frame or csv file with columns:
+sample, action (keep/tolerate), asv.}
+
+\item{sampleinfo}{Data frame or csv file with columns:
+sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}
+
+\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
+of reads in a habitat is below this cutoff,
+it is considered as an artifact in all samples of the habitat.}
 
 \item{sep}{Field separator character in input and output csv files.}
-
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
 
 \item{min_lfn_read_count_cutoff}{Positive integer: the lowest cutoff value for
 \code{LFNreadCount} function.}
@@ -68,10 +82,16 @@ lfn_read_count_cutoff, lnf_variant_cutoff, FN, TP, FP.
 \description{
 Suggest optimal parameters for \code{lfn_read_count_cutoff} and \code{lnf_variant_cutoff}
 functions.
+
 The the \code{LFNreadCount} and \code{LFNvariant} is run for a series of parameter value
 combinations followed by \code{FilterMinReplicate}.
 For each parameter combination, the number of FN, TP, and FP is reported.
 Users should chose the parameter setting that minimizes, FN and FP.
+}
+\details{
+This function need a \emph{known_occurrences} data frame or CSV file. If it is not
+provided, it will be calculated from \emph{read_count}, \emph{mock_composition}, \emph{sampleinfo} and
+\emph{habitat_proportion}.
 }
 \examples{
 \dontrun{
