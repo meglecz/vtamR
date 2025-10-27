@@ -56,7 +56,7 @@ trimmed sequence.}
 show warnings or errors.}
 }
 \value{
-Data frame corresponding to the output sortedinfo.csv file
+Data frame corresponding to the output sampleinfo.csv file
 and one fasta file for each tag combination for each input fasta file,
 containing trimmed reads.
 }
@@ -66,7 +66,7 @@ Demultiplex each input fasta file using the tag combinations
 at the extremities of the merged reads.
 Trim primers from demultiplexed reads.
 
-The output sortedinfo.csv file is similar to the fastainfo file,
+The output sampleinfo.csv file is similar to the fastainfo file,
 but the but do not have tag and primer columns.
 }
 \examples{

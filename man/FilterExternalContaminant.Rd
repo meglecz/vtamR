@@ -38,6 +38,6 @@ the other samples.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- FilterExternalContaminant(read_count_df, sample_types=sortedinfo)
+filtered_read_count_df <- FilterExternalContaminant(read_count_df, sample_types=sampleinfo)
 }
 }

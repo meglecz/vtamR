@@ -211,15 +211,15 @@ See the help (`?SortReads`) for setting the
 correct parameters for demultiplexing and primer trimming:
 
 * If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
-* `sortedinfo_df` is  updated version of `fastainfo`. 
+* `sampleinfo_df` is  updated version of `fastainfo`. 
 This data frame and the files listed in it are the input of the `Dereplicate`.
 
 
 ```{r demultiplex}
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo_df <- SortReads(fastainfo_df, 
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+sampleinfo_df <- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
-                           outdir=sorted_dir, 
+                           outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
@@ -244,9 +244,9 @@ and [trimming](#glossary) steps.
 
 If you wish to retain ASV IDs from a previous analysis, you can provide a 
 reference file ([asv_list](#asv_list)) containing earlier ASVs and their IDs. 
-The complete, updated list of ASVs will then be written to `updated_asv_list`.
+The complete, updated list of ASVs will then be written to `output_asv_list`.
 
-If only `updated_asv_list` is provided (and `asv_list` is omitted), 
+If only `output_asv_list` is provided (and `input_asv_list` is omitted), 
 the function will write the full list of current ASVs with assigned IDs. 
 This will be useful when analyzing further data sets to ensure consistent 
 ASV IDs across studies.
@@ -255,11 +255,11 @@ ASV IDs across studies.
 outfile <- file.path(outdir, "filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
-read_count_df <- Dereplicate(sortedinfo_df, 
-                             dir=sorted_dir, 
+read_count_df <- Dereplicate(sampleinfo_df, 
+                             dir=demultiplexed_dir, 
                              outfile=outfile, 
-                             asv_list=asv_list, 
-                             updated_asv_list=updated_asv_list
+                             input_asv_list=asv_list, 
+                             output_asv_list=updated_asv_list
                              )
 ```
 
@@ -447,7 +447,7 @@ The `conta_file` will contain the data corresponding to the removed ASVs.
 conta_file <- file.path(outdir, "filter", "external_contamination.csv")
 outfile <- file.path(outdir, "filter", "6_FilterCodonStop.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
-                          sample_types=sortedinfo_df, 
+                          sample_types=sampleinfo_df, 
                           conta_file=conta_file,
                           outfile=outfile)
 
@@ -507,15 +507,15 @@ We can also make a barplot of the renkonen distances, and use different colors f
 
 **Note**:
 
-- `sortedinfo_df` contains a `sample` and `sample_type` columns, but any data frame with these columns would do.
+- `sampleinfo_df` contains a `sample` and `sample_type` columns, but any data frame with these columns would do.
 - If you have restarted the analyses after the `SortReads` function, and  
-`sortedinfo_df` is not in your environment, just use the sortedinfo 
-file (in the `vtamR_demo_out/sorted/` directory).
+`sampleinfo_df` is not in your environment, just use the sampleinfo 
+file (in the `vtamR_demo_out/demultiplexed/` directory).
 - This is a very small test dataset, so the graph you generate with your 
 own data will likely look quite different.
 
 ```{r renkonen-dist-barplot}
-Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo_df, x_axis_label_size=6)
+Barplot_RenkonenDistance(renkonen_within_df, sample_types=sampleinfo_df, x_axis_label_size=6)
 ```
 In this example, there are only a few distance values, so the density plot is 
 not very informative. The bar plot shows that replicate 1 of the `tnegtag` 
@@ -744,16 +744,16 @@ where the replicates of the same sample have been pooled (see `?PoolReplicates`)
 - If you do not know the exact sequences of the species present in your 
 mock samples, and thus, you do not have the [mock_composition](#mock_composition)
 file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
-- sortedinfo_df contains a `sample` and `sample_type` `replicate` and `habitat`
+- sampleinfo_df contains a `sample` and `sample_type` `replicate` and `habitat`
 columns, but any data frame with these columns would do.
 - If you have restarted the analyses after the `SortReads` function, and  
-`sortedinfo_df` is not in your environment, just use the sortedinfo 
-file (in the `vtamR_demo_out/sorted` directory).
+`sampleinfo_df` is not in your environment, just use the sampleinfo 
+file (in the `vtamR_demo_out/demultiplexed` directory).
  
 ```{r make-known-occurrences}
 # Detect known occurrences
 results <- MakeKnownOccurrences(read_count = read_count_df, 
-                                sortedinfo=sortedinfo_df, 
+                                sampleinfo=sampleinfo_df, 
                                 mock_composition=mock_composition
                                 )
 
@@ -890,7 +890,7 @@ performance_metrics <- file.path(outdir, "Performance_metrics.csv")
 known_occurrences <- file.path(outdir, "Known_occurrences.csv")
 
 results <- MakeKnownOccurrences(read_count_df, 
-                                sortedinfo=sortedinfo_df, 
+                                sampleinfo=sampleinfo_df, 
                                 mock_composition=mock_composition, 
                                 known_occurrences=known_occurrences, 
                                 missing_occurrences=missing_occurrences,
@@ -1104,7 +1104,7 @@ outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
 asv_table_df <- WriteASVtable(read_count_df, 
                               outfile=outfile, 
                               asv_tax=asv_tax, 
-                              sortedinfo=sortedinfo_df, 
+                              sampleinfo=sampleinfo_df, 
                               pool_replicates=TRUE,
                               add_empty_samples=T, 
                               add_sums_by_sample=T, 
@@ -1380,41 +1380,51 @@ knitr::kable(asvid_by_replicate, format = "markdown")
 
 ## UpdateASVlist
 
-Pools unique `asv` - `asv_id` combinations from the input data frame (`read_count_df`) 
-and from the input file (`asv_list`).
+The `UpdateASVlist` function combines unique `asv`–`asv_id` pairs from two 
+input data frames or CSV files.
 
-The input file is typically a CSV file containing ASVs seen in earlier data sets 
-with their `asv_id`.
-If there is a conflict within or between the input data the function quits 
-with an error message. Otherwise writes the `updated_asv_list` to the outfile.
+If any inconsistencies are detected within or between the input datasets, 
+the function stops and returns an error message.
+Otherwise, it writes the merged list of `asv`–`asv_id` pairs to the 
+specified output file.
 
-The safest option of avoiding incoherence between `asv_ids` of earlier 
-and present runs is to use the `asv_list` and `updated_asv_list` 
-parameters in the `Dereplicate` function as it is done in this [tutorial](#dereplicate). 
-This will synchronize the `asv_id` in this run with earlier ones, 
-and writes an updated file with all ASV from earlier and the present data set. 
-In this case, calling the `UpdateASVlist` function is not necessary, since it is 
-automatically called from `Dereplicate`. 
+This function ensures consistency between `asv_id`s used in previous and 
+current datasets.
 
-However, if you are analyzing a large number of very large data sets, 
-the complete `asv_list` will grow quickly, and might cause memory issues. 
-Most of the ASVs in this list are singletons, and filtered out during the analyses. 
-Therefore, you can opt for homogenizing the `asv_id`s with earlier runs by the 
-`Dereplicate` function, without writing an `updated_asv_list`. 
-Then update the `asv_list` after the first steps of filtering 
-(e.g. `Swarm`, `LFNglobalReadCount`) to keep only ASVs that are more frequent 
-and more likely to appear in future data sets. It is still a quite safe option, 
-and reduces greatly the number of ASVs kept in this file.
+The safest and approach is to provide both the `input_asv_list` and 
+`output_asv_list` arguments directly to the `Dereplicate` function,
+as in the [Dereplicate tutorial](#dereplicate).
+This approach automatically synchronizes `asv_id`s between the current 
+and earliers datasets (`input_asv_list`) and generates an updated ASV list 
+that includes all ASVs from both earlier and current datasets (`output_asv_list`).
+In this case, you do **not** need to call `UpdateASVlist`
+manually — it is automatically invoked within `Dereplicate`.
 
+However, when processing a large number of extensive datasets, the complete ASV 
+list can become very large and may cause memory issues.
+Because most ASVs in this list are singletons that are later filtered out,
+you can choose a lighter workflow:
 
-```{r}
-updated_asv_list <- file.path(outdir, 
-                              "updated_ASV_list.csv"
-                              )
-UpdateASVlist(asv_list1=read_count_df,
-              asv_list2=asv_list, 
-              outfile=updated_asv_list
-              )
+* Use `input_asv_list` in the `Dereplicate` function to align `asv_id`s with 
+previous runs **without** writing an `output_asv_list`.
+* After preliminary filtering steps (e.g. `Swarm`, `LFNglobalReadCount`), 
+update the ASV list to include only frequent ASVs that are more likely to 
+reappear in future datasets.
+
+This strategy remains safe and substantially reduces the number of ASVs stored 
+in the list file.
+
+#### Example
+
+```{r update-asv-list}
+asv_list <- "PATH/TO/CSV/WITH/Earlier_asv-asv_id_pairs.csv"
+updated_asv_list <- file.path(outdir, "updated_ASV_list.csv")
+
+UpdateASVlist(
+  asv_list1 = read_count_df,
+  asv_list2 = asv_list,
+  outfile = updated_asv_list
+)
 ```
 
 ## PoolReplicates
@@ -1489,7 +1499,7 @@ The output file or data frame can be rearranged to [wide format](#glossary) by t
 Count the number of reads in `fasta` or `fastq` files found in the input directory.
 Input files can be gz compressed or uncompressed, but zip files are not supported.
 
-The [fastainfo](#fastainfo) and the [sortedinfo](#sortedinfo) 
+The [fastainfo](#fastainfo) and the [sampleinfo](#sampleinfo) 
 files contain the number of reads after `Merge` or `SortReads`, 
 so no need to run `CountReadsDir` separately. 
 This function can be useful for counting the number of reads in the input `fastq` files.
@@ -1515,10 +1525,10 @@ Can use different colors for different sample types ([real/mock/negative](#gloss
 * `sample_types`: data frame or CSV file containing info on sample types for each sample
 
 ```{r}
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
 Barplot_ReadCountBySample(read_count_df=read_count_df, 
                           sample_replicate=F, 
-                          sample_types=sortedinfo
+                          sample_types=sampleinfo
                           )
 ```
 
@@ -1548,9 +1558,9 @@ or among replicates of the same sample (compare_all=FALSE) and plot them.
 * `sample_types`: Data frame or CSV file containing info on sample types for each sample.
 
 ```{r}
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
+sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
 renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
-Barplot_RenkonenDistance(renkonen_within_df, sample_types=sortedinfo)
+Barplot_RenkonenDistance(renkonen_within_df, sample_types=sampleinfo)
 DensityPlot_RenkonenDistance(renkonen_within_df)
 
 renkonen_all_df <- MakeRenkonenDistances(read_count_df, compare_all=TRUE)
@@ -1603,7 +1613,7 @@ Each line corresponds to a sample-replicate combination.
  * fasta: Fasta file
  * Read_count: Number of reads in the fasta file. Optional.
 
-## sortedinfo
+## sampleinfo
 
 CSV file with information on demultiplexed and primer trimmed fasta files 
 and samples with the following columns. Each line corresponds to a 
@@ -1851,7 +1861,7 @@ Here is a list of files I would tend to keep, delete or compress.
 information on read counts after `Merge`.
 * `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility 
 in case of re-analyse.
-* `SortReads`: Delete the output fasta files, but keep `sortedinfo.csv` for 
+* `SortReads`: Delete the output fasta files, but keep `sampleinfo.csv` for 
 information on read counts after `SortReads`. 
 * `Dereplicate`: Write the dereplicated info to a file 
 (`1_before_filter.csv` in the tutorial) and compress it after the analyses. 

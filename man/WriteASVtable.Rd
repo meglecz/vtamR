@@ -8,7 +8,7 @@ WriteASVtable(
   read_count,
   outfile = "",
   asv_tax = NULL,
-  sortedinfo = "",
+  sampleinfo = "",
   pool_replicates = FALSE,
   add_empty_samples = FALSE,
   add_sums_by_sample = FALSE,
@@ -33,7 +33,7 @@ family_taxid,family,genus_taxid,genus,species_taxid,species.
 pid,pcov,phit,taxn,seqn,refres,ltgres,asv.
 If given, the output is completed with taxonomic assignment of each ASV.}
 
-\item{sortedinfo}{Data frame or csv file with columns: sample, sample_type.
+\item{sampleinfo}{Data frame or csv file with columns: sample, sample_type.
 Only necessary if add_empty_samples==T or add_expected_asv==T.}
 
 \item{pool_replicates}{Logical: if replicate column is prensent in the
@@ -73,7 +73,7 @@ Write csv file with samples in columns, ASVs in lines, read_counts in cells.
 WriteASVtable(read_count_samples_df, 
     outfile="out/asv_table.csv", 
     asv_tax=asv_tax, 
-    sortedinfo=sortedinfo_df,
+    sampleinfo=sampleinfo_df,
     add_empty_samples=T, 
     add_sums_by_sample=T,
     add_sums_by_asv=T, 

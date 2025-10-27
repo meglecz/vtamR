@@ -1,9 +1,8 @@
 ---
 title: "Tutorial - vtamR pipeline - v0.3.0"
 output: 
-  rmarkdown::html_document:
+  rmarkdown::html_vignette:
     toc: true
-    toc_float: true
     toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{Tutorial - vtamR pipeline - v0.3.0}

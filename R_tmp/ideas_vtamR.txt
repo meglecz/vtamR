@@ -1,15 +1,7 @@
 # Ideas for vtamR
 
-## make taxonomy.tsv and BLAST DB à partir de RDP database.
 
-
-## Diane: avoid NA in the asv_id colonne of the output of OptimizeLFNsampleReplicate, if  the ASv have been seen in the dataste, eve if it hase not been seen in the sammple-replicate.
-
-## Diane: rename asv_list as input_asv_list and output_asv_list
-
-## replace sortedinfo arguments by metainfo
-
-## test dereplicate with large dataset both in windows and linux. If too slow trythe following algo:
+## test dereplicate with large dataset both in windows and linux. If too slow try the following algo:
 - read data file by file and dereplicate, do not add asv_id
 - add new data to a pooled data frame once the file have been read
 - after readind all files, add asv_ids.
@@ -21,12 +13,15 @@ Draft is in windows
 ## integrate MakeKnownOccurrences to OptimizeLFNreadCountLFNvariant ?? Raise warning if FN. , add option to use custom knownOccurrences files
 => modify vignette accordingly
 
-## replace test_filters by an R script to run with demo files
+## replace test_filters by an R script to run with demo files (make test_run() function)
 
-## check doc to include what is necessary to description, and mput the others to Deatils (separated by an ampty line)
+### Rename SortReads to Demultiplex ???
 
 
 
+
+## make taxonomy.tsv and BLAST DB à partir de RDP database.
+## make rdp_local
 
 ## Diane clement: impove pool runs before filtrage or add to troubleshooting
 Reorganize PoolDatasets:
@@ -385,8 +380,20 @@ LFNvariant and ASVspecificCutoff are tested and documented
 
 ## 2025/20/24 TaxAssignRDP
 
-## make a fonction to run RDP_classifier 
+make a fonction to run RDP_classifier 
+	use rRDP and rRDPData 
+	Doc and tuto OK
 
-use rRDP and rRDPData 
-Doc and tuto OK
+## 2025/20/27
+
+- Avoid NA in the asv_id colonne of the output of OptimizeLFNsampleReplicate
+ (if  the ASV have been seen in the dataset, even if it has not been seen in the sammple-replicate) => DONE
+ 
+- Rename asv_list as input_asv_list and output_asv_list => DONE in functions and tuto
+
+- Replace sortedinfo arguments by sampleinfo  => DONE in functions and tuto
+Sorted => Demultiplexed
+
+- OptimizePCRerror and OptimizeLFNsampleReplicate => Warning, if some expected asv are not found
+
 

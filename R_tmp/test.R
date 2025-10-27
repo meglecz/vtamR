@@ -39,10 +39,10 @@ fastainfo_df <- Merge(fastqinfo,
                       fastq_allowmergestagger=F)
 
 ### demultiplex
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo_df <- SortReads(fastainfo_df, 
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+sampleinfo_df <- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
-                           outdir=sorted_dir, 
+                           outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
@@ -53,13 +53,12 @@ sortedinfo_df <- SortReads(fastainfo_df,
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo <- file.path(sorted_dir, "sortedinfo.csv")
-read_count_df <- Dereplicate(sortedinfo, 
-                             dir=sorted_dir, 
-                             asv_list=asv_list,
-                             updated_asv_list = updated_asv_list
-)
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
+read_count_df <- Dereplicate(sampleinfo, 
+                             dir=demultiplexed_dir, 
+                             input_asv_list=asv_list,
+                             output_asv_list = updated_asv_list)
 
 ### stat
 stat_df <- data.frame(parameters=character(),
@@ -106,6 +105,9 @@ read_count_df <- FilterCodonStop(read_count_df,
                                  genetic_code=genetic_code)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=NA)
 
+
+read_count_df_backup <- read_count_df
+
 ### FilterExternalContaminant
 conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
@@ -133,6 +135,36 @@ read_count_df <- FilterRenkonen(read_count_df,
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
 
 ### FilterPCRerror
+
+mock_composition_df <- read.csv(mock_composition)
+
+mock_composition_df[5,"asv"] <- "TTTTTTTTTTTT"
+mock_composition_df[6,"asv"] <- "AAAAAAAAAa"
+
+optPCR <- OptimizePCRerror(read_count=read_count_df, 
+                 mock_composition=mock_composition_df, 
+                 vsearch_path=vsearch_path, 
+                 max_mismatch=2, 
+                 min_read_count=5)
+
+optLFN_sample <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition_df)
+
+optLFN_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                                           known_occurrences, 
+                                           sep=",",
+                                           outfile="", 
+                                           min_lfn_read_count_cutoff=10, 
+                                           max_lfn_read_count_cutoff=100, 
+                                           increment_lfn_read_count_cutoff=5, 
+                                           min_lnf_variant_cutoff=0.001, 
+                                           max_lnf_variant_cutoff=0.01, 
+                                           increment_lnf_variant_cutoff=0.001, 
+                                           by_replicate=FALSE, 
+                                           min_replicate_number=2, 
+                                           quiet=T
+)
+
+
 pcr_error_var_prop <- 0.05
 max_mismatch <- 2
 read_count_df <- FilterPCRerror(read_count_df, 
@@ -450,3 +482,54 @@ tmp <- PairwiseIdentity(read_count_df,
                              min_id = 0.8, 
                              num_threads=num_threads,
                              vsearch_path=vsearch_path)
+
+
+###################################
+###################################
+# test TaxAssignRDP
+file <- "/home/meglecz/vtamR/tmp/test_rdp/9_PoolReplicates_TAS2_16S.csv"
+read_count_16S <- read.csv(file)
+
+taxa <- TaxAsssignRDP(asv=read_count_16S, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
+
+plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_16S,
+                                                                identity_min=0.9,
+                                                                identity_max=0.99,
+                                                                identity_increment=0.01,
+                                                                min_id = 0.8, 
+                                                                vsearch_path=vsearch_path)
+
+scatterplot_vsearch <- PlotClusterClasstification(
+  read_count=read_count_16S,
+  taxa=taxa,
+  clustering_method="vsearch",
+  cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
+  vsearch_path=vsearch_path,
+  taxlevels= c("species", "genus"))
+
+
+
+read_count_samples_df_ClusterSize <- ClusterASV(read_count_16S,
+                                                method = "vsearch",
+                                                identity = 0.97,
+                                                group = TRUE,
+                                                by_sample=FALSE,
+                                                path=vsearch_path)
+
+dim(read_count_16S)
+dim(read_count_samples_df_ClusterSize)
+
+meta_info <- "/home/meglecz/vtamR/tmp/test_rdp/fastqinfo.csv"
+mock <- "/home/meglecz/vtamR/tmp/test_rdp/mock_composition.csv"
+out <- "/home/meglecz/vtamR/tmp/test_rdp/asv_table.csv"
+asv_table_df <- WriteASVtable(read_count_16S, 
+                              asv_tax=taxa, 
+                              sortedinfo=meta_info, 
+                              pool_replicates=TRUE,
+                              add_empty_samples=T, 
+                              add_sums_by_sample=T, 
+                              add_sums_by_asv=T, 
+                              add_expected_asv=T, 
+                              outfile=out,
+                              mock_composition=mock
+)

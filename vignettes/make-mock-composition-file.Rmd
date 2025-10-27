@@ -135,9 +135,9 @@ This format is easier to read for humans, than the `read_count_df`.
 See details of `WriteASVtable` [here](tutorial-vtamr-pipeline.html#print-output).
 
 ```{r}
-sortedinfo <- system.file("extdata/demo/sortedinfo.csv", package = "vtamR")
+sampleinfo <- system.file("extdata/demo/sampleinfo.csv", package = "vtamR")
 tmp_asv_table <- WriteASVtable(read_count_samples_df, 
-                               sortedinfo=sortedinfo, 
+                               sampleinfo=sampleinfo, 
                                add_sums_by_asv=T, 
                                asv_tax=asv_tax)
 ```
