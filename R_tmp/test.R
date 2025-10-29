@@ -4,6 +4,8 @@
 library(vtamR)
 library(dplyr)
 library(ggplot2)
+library(rRDP)
+library(rRDPData)
 
 setwd("/home/meglecz/vtamR/")
 library("devtools")
@@ -27,6 +29,8 @@ asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
+
+taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
 
 ### Merge
 merged_dir <- file.path(outdir, "merged")
@@ -111,7 +115,7 @@ read_count_df_backup <- read_count_df
 ### FilterExternalContaminant
 conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
-                          sample_types=sortedinfo, 
+                          sample_types=sampleinfo, 
                           conta_file=conta_file)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
@@ -133,6 +137,35 @@ cutoff <- 0.4
 read_count_df <- FilterRenkonen(read_count_df, 
                                 cutoff=cutoff)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
+
+
+fas <- "/home/meglecz/vtamR/inst/extdata/demo/mock_ncbi.fasta"
+outdir <- "/home/meglecz/vtamR/inst/extdata/demo/mock"
+
+taxonomy <- taxonomy_COInr
+
+MakeMockCompositionLTG(read_count_df, 
+                      fas=fas,
+                      taxonomy=taxonomy_COInr,
+                      blast_path = blast_path,
+                      sampleinfo = sampleinfo_df,
+                      outdir= outdir)
+
+
+
+
+
+
+
+make_taxid_file(file=fas, outfile=taxids)
+
+
+
+
+
+
+
+
 
 ### FilterPCRerror
 

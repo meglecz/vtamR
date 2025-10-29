@@ -53,6 +53,8 @@ results$warnings
 results$notes
 
 # Load package without installing; Use during development
+library("vtamR")
+library("rRDP")
 library("devtools")
 library("roxygen2")
 library("seqinr")
@@ -109,6 +111,7 @@ devtools::document()
 devtools::install()
 devtools::build(vignettes = TRUE)
 
+#######################
 ### If pb with vignette not building correctly
 # clean package
 unlink("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR", recursive = TRUE, force = TRUE)
@@ -126,6 +129,7 @@ vignette(package = "vtamR")
 vignette("installation")
 # build tarball with vignettes
 devtools::build(vignettes = TRUE)
+############################
 
 ### Keep the vignettes and if changes are necessary modify these files
 # for htmp on website 

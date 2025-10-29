@@ -1,7 +1,7 @@
 ---
 title: "Install vtamR and Third Party Programs - v0.3.0"
 output: 
-  rmarkdown::html_document:
+  html_document:
     toc: true
     toc_float: true
     toc_depth: 3

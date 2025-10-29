@@ -1,6 +1,7 @@
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
+#' @importFrom dplyr slice_head
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
 #' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
@@ -3005,6 +3006,14 @@ FilterPCRerror <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  if(pcr_error_var_prop >= 1){
+    stop("pcr_error_var_prop must be between 0-1.")
+  }
+  if(pcr_error_var_prop > 0.5){
+    warning("pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -6882,4 +6891,220 @@ write_fasta_df <- function(df, outfile, read_count=FALSE) {
   }
   # Close the file
   close(file)
+}
+
+#' MakeMockCompositionLTG
+#'
+#' Identify potential expected variants in mock samples.
+#'
+#' This function performs the following steps:
+#' 
+#' - Creates a small BLAST database from sequences corresponding to the species 
+#'   expected in the mock samples, or from closely related taxa. The sequences 
+#'   should partially cover the amplified region (70% coverage) but may be shorter or longer.
+#' - Assigns taxonomy to all ASVs detected in the mock samples using this custom database.
+#' - Selects the most abundant ASV for each taxon.
+#' - Generates a `mock_composition` template file that users should review and, if necessary, edit.
+#' 
+#' The output directory will contain two files:
+#'
+#' - *mock_taxassign.csv*:  
+#'   Contains the results of the taxonomic assignment, including the total number of reads 
+#'   detected in the mock samples and the number of mock samples in which each ASV is present.
+#'
+#' - *mock_composition_template_to_check.csv*:  
+#'   A template for the `mock_composition` file.  
+#'   It includes the most abundant sequence for each `ltg_name` identified in the taxonomic 
+#'   assignment output, repeated for each mock sample.  
+#'   When working with different mock samples that have distinct compositions, users should 
+#'   remove the lines corresponding to taxa not expected in a given sample.  
+#'
+#'   Note: the file does *not* include sequences for species in the custom database that 
+#'   did not show significant similarity to any ASV. This may occur if the species was not 
+#'   amplified in the mock samples or if the reference sequence in the custom database is erroneous.
+#'  
+#' @param read_count Data frame or csv file containing an asv_id, sample, asv and
+#' read_count columns.
+#' @param fas Character string; name of a FASTA file containing sequences from species 
+#' expected in the mock samples or from closely related taxa. The FASTA header line 
+#' should follow this format: `>HQ563207.1 taxID=1592914`, where `taxID` is a valid 
+#' NCBI taxonomic identifier (https://www.ncbi.nlm.nih.gov/taxonomy).
+#' @param taxonomy Character string; path to a TSV file containing the following columns: 
+#' `tax_id`, `parent_tax_id`, `rank`, `name_txt`, `old_tax_id` (merged into `tax_id`), 
+#' and `taxlevel` (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 
+#' 2: kingdom, 1: domain, 0: root).  
+#' A taxonomy file distributed with the COInr database is suitable for Eukaryotes (any marker).
+#' @param blast_path Character string: path to BLAST executable. 
+#' @param sampleinfo Data frame or csv file containing sample and sample_type columns.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param sep Field separator character in input and output csv files.
+#' @param outdir Character string: A directory to write output files. 
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @returns  Data frame with the following columns: sample, action, asv, taxon, asv_id
+#' @examples
+#' \dontrun{
+#' MakeMockCompositionLTG(read_count=read_count_df, fas=xxxxx, taxonomy="xxxxxx", 
+#' blast_path=blast_path, sampleinfo=sampleinfo)
+#' }
+#' @export
+#'
+#'
+MakeMockCompositionLTG <- function(read_count,
+                                   fas,
+                                   taxonomy="",
+                                   blast_path = "blastn",
+                                   sampleinfo = "",
+                                   outdir= NULL,
+                                   num_threads=0,
+                                   sep=",",
+                                   quiet=TRUE
+){
+  
+  ##### Make blast db from mock fasta
+  
+  ## make TSV with seqID and taxID
+  taxids <- file.path(tempdir(), "taxid.tsv" )
+  make_taxid_file(file=fas, outfile=taxids)
+  
+  blastdb_path <- sub("blastn$", "makeblastdb", blast_path)
+  write_output <- TRUE
+  if(is.null(outdir)){
+    outdir = file.path(tempdir(), "mock")
+    write_output <- FALSE
+  }
+  bdmock <- file.path(outdir, "db_mock", "db")
+  check_dir(bdmock, is_file = TRUE)
+  
+  args = c(
+    "-dbtype", "nucl",
+    "-in", fas,
+    "-taxid_map", taxids,
+    "-out", bdmock,
+    "-parse_seqids"
+  )
+  run_system2(blastdb_path, args, quiet=FALSE)
+  
+  if(is.character(sampleinfo)){
+    # read known occurrences
+    sampleinfo_df <- read.csv(sampleinfo, header=T, sep=sep)
+  }else{
+    sampleinfo_df <- sampleinfo
+  }
+  
+  ### Get list of mocks
+  mocks <- sampleinfo_df %>%
+    filter(sample_type == "mock") %>%
+    select(sample) %>%
+    distinct()
+  
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  ### Select sequences in mock samples
+  # select mock samples
+  mock_df <- read_count_df %>%
+    filter(sample %in% mocks$sample)
+  
+  #### taxassign
+    ltg_params_df = data.frame( pid=c(100,97,95,90,80),
+                                pcov=c(70,70,70,70,70),
+                                phit=c(0,0,0,0,0),
+                                taxn=c(1,1,1,1,1),
+                                seqn=c(1,1,1,1,1),
+                                refres=c(1,1,1,1,1),
+                                ltgres=c(8,8,8,8,8))
+
+  taxa <- TaxAssign(asv= mock_df, 
+                    taxonomy = taxonomy, 
+                    blast_db = bdmock, 
+                    blast_path=blast_path, 
+                    ltg_params=ltg_params_df, 
+                    quiet=F, 
+                    fill_lineage=TRUE)
+  
+  
+  
+  ### filter and organize taxa
+  # For each ASV, get the sum of the read counts in the mocks, and the number of mocks, where the ASV is present.
+  df <- mock_df %>%
+    group_by(asv_id) %>%
+    summarize(total_read_count_mock = sum(read_count), number_mock=n_distinct(sample))
+  # complete taxa with read and sample count info and arrange
+  taxa <- left_join(taxa, df, by="asv_id") %>%
+    select(asv_id, total_read_count_mock, number_mock, ltg_name, species, genus, family, order, class, phylum, pid, asv) %>%
+    arrange(ltg_name, desc(total_read_count_mock))
+  
+  # select columns and sort the lines by species and decreasing read counts
+  taxa_select <- taxa %>%
+    filter(!is.na(ltg_name)) %>%
+    group_by(ltg_name) %>%
+    slice_head(n = 1) %>%
+    select(asv, taxon=ltg_name, asv_id) %>%
+    ungroup()
+  
+  mock_composition_template <- merge(mocks, taxa_select, by = NULL)%>%
+    mutate(action="keep") %>%
+    arrange(sample, taxon) %>%
+    select(sample, action, asv,taxon, asv_id)
+  
+  #  mocks <- rbind(mocks, data.frame(sample=c("tpos2")))
+  
+  
+  ### make mock composition template
+  
+  if(write_output){
+    out_comp <- file.path(outdir, "mock_taxassign.csv")
+    write.table(taxa, file=out_comp, row.names = FALSE, sep=sep)
+    out <- file.path(outdir, "mock_composition_template_to_check.csv")
+    write.table(mock_composition_template, file=out, row.names = FALSE, sep=sep)
+  }
+  
+  return(mock_composition_template)
+}
+
+#' Create a TaxID Mapping File from a FASTA File
+#'
+#' This function reads a FASTA file and extracts sequence identifiers (`seq_id`) 
+#' and corresponding NCBI taxonomic identifiers (`tax_id`) from the FASTA headers.  
+#' The output is a simple two-column tab-separated file containing these mappings.
+#'
+#' The FASTA headers must include a taxonomic identifier in the following format:
+#' `>SequenceName taxID=12345`
+#'
+#' @param file Character string; path to a FASTA file containing sequences whose 
+#' headers include taxonomic identifiers in the format `taxID=<number>`.
+#' @param outfile Character string; path to the output file to be created. 
+#' The file will contain two tab-separated columns: `seq_id` and `tax_id`, 
+#' without headers or quotes.
+#'
+#' @return A tab-delimited file is written to the specified `outfile` location.
+#'
+#' @details
+#' - The function uses an internal helper `read_fasta_to_df()` to read the FASTA file.
+#' - Only the first two space-separated elements of the FASTA header are used; 
+#'   extra elements are ignored.
+#' - The `taxID=` prefix is removed before converting values to numeric.
+#'
+#' @examples
+#' \dontrun{
+#' make_taxid_file("input_sequences.fasta", "taxid_mapping.tsv")
+#' }
+#'
+#' @export
+make_taxid_file <- function(file, outfile){
+  
+  df <- read_fasta_to_df(file)
+  
+  df <- df %>%
+    separate(header, into=c("seq_id", "tax_id"), extra="drop", sep=" ", remove=TRUE) %>%
+    mutate(tax_id = sub("taxID=", "", tax_id)) %>%
+    mutate(tax_id = as.numeric(tax_id)) %>%
+    select(seq_id, tax_id)
+  
+  write.table(df, file=outfile, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
 }

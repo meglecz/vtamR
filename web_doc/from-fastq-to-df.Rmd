@@ -1,7 +1,7 @@
 ---
 title: "From fastq to data frame - v0.3.0"
 output: 
-  rmarkdown::html_document:
+  html_document:
     toc: true
     toc_float: true
     toc_depth: 3
@@ -84,7 +84,7 @@ information for `Merge` is the list of the fastq file pairs that should be merge
 The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, 
 just fill them with `NA`.
 * `fastq_dir`: Directory containing the input fastq files.
-* [sortedinfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `Merge`. It is the updated 
+* [sampleinfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `Merge`. It is the updated 
 version of fastqinfo, where fastq file names have been replaced by fasta file 
 names and the read counts are included for each file. 
 * `outdir`: Name of the output directory.
@@ -105,7 +105,7 @@ merged_dir <- file.path(outdir, "merged")
 **Merge fastq file pairs and quality filter reads**
 
 ```{r merge1}
-sortedinfo_df <- Merge(fastqinfo, 
+sampleinfo_df <- Merge(fastqinfo, 
                        fastq_dir=fastq_dir, 
                        vsearch_path=vsearch_path, 
                        outdir=merged_dir
@@ -122,7 +122,7 @@ more information.
 ```{r derelicate1}
 outfile <- file.path(outdir, "1_before_filter.csv")
 
-read_count_df <- Dereplicate(sortedinfo_df, 
+read_count_df <- Dereplicate(sampleinfo_df, 
                              dir=merged_dir, 
                              outfile=outfile
                              )
@@ -157,7 +157,7 @@ replaced by fasta file names.
 * `fasta_dir`: Directory containing the input fasta files for `TrimPrimer`. 
 This directory is created by `Merge`.
 * If `check_reverse` is TRUE, `TrimPrimer` checks the reverse complementary strand as well.
-* `sortedinfo_df`: is  updated version of fastainfo. 
+* `sampleinfo_df`: is  updated version of fastainfo. 
 This data frame and the files listed in it are the input for `Dereplicate`.
 * `outdir`: Name of the output directory. 
 
@@ -188,10 +188,10 @@ fastainfo_df <- Merge(fastqinfo,
 
 ```{r primer-trim}
 
-sorted_dir <- file.path(outdir, "sorted")
-sortedinfo_df <- TrimPrimer(fastainfo_df, 
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+sampleinfo_df <- TrimPrimer(fastainfo_df, 
                             fasta_dir=merged_dir, 
-                            outdir=sorted_dir, 
+                            outdir=demultiplexed_dir, 
                             cutadapt_path=cutadapt_path, 
                             vsearch_path=vsearch_path, 
                             check_reverse=T,
@@ -209,8 +209,8 @@ more information.
 ```{r derelicate2}
 outfile <- file.path(outdir, "1_before_filter.csv")
 
-read_count_df <- Dereplicate(sortedinfo_df, 
-                             dir=sorted_dir, 
+read_count_df <- Dereplicate(sampleinfo_df, 
+                             dir=demultiplexed_dir, 
                              outfile=outfile
                              )
 ```
@@ -242,7 +242,7 @@ replaced by fasta file names.
 * `fasta_dir`: Directory containing the input fasta files for `SortReads`. 
 This directory is created by `Merge`.
 * If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
-* `sortedinfo_df`: Updated version of fastainfo. 
+* `sampleinfo_df`: Updated version of fastainfo. 
 This data frame and the files listed in it are the input of the `Dereplicate`.
 * `outdir`: Name of the output directory. 
 
@@ -257,7 +257,7 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 
 outdir <- "vtamR_demo_case3"
 merged_dir <- file.path(outdir, "merged")
-sorted_dir <- file.path(outdir, "sorted")
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
 ```
 
 **Merge fastq file pairs and quality filter reads**
@@ -272,9 +272,9 @@ fastainfo_df <- Merge(fastqinfo,
 
 **Demultiplex, trim off tags and pimers**
 ```{r demultiplex}
-sortedinfo_df <- SortReads(fastainfo_df, 
+sampleinfo_df <- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
-                           outdir=sorted_dir, 
+                           outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path
@@ -290,8 +290,8 @@ more information.
 
 ```{r depelicate3}
 outfile <- file.path(outdir, "1_before_filter.csv")
-read_count_df <- Dereplicate(sortedinfo_df, 
-                             dir=sorted_dir, 
+read_count_df <- Dereplicate(sampleinfo_df, 
+                             dir=demultiplexed_dir, 
                              outfile=outfile
                              )
 ```

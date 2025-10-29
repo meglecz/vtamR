@@ -7,8 +7,6 @@
 - after readind all files, add asv_ids.
 Alternativelly, try using vsearch dereplicate.
 
-## Diane: Make mock composition by assigning ASV with small database containing expected sequneces, but not the same size as the ASV.
-Draft is in windows 
 
 
 
@@ -56,7 +54,6 @@ grep
 
 ## Generally, better gestion of the wd
 	setwd for test. do not change de directory in test_Merge 
-	Check slash at the end of dir names in all cases. Check is missing in MakeKnownOccurrences
 	
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
@@ -364,6 +361,7 @@ did not modify for system dependent commandes (grep, zcat, gzip ...)
 	
 Added to tutorial
 
+## test the useage of CPU in linux and windows
 
 ## 2025/20/23 LFNvariant ASVspecificCutoff
 
@@ -379,7 +377,7 @@ LFNvariant and ASVspecificCutoff are tested and documented
 
 ## 2025/20/24 TaxAssignRDP
 
-make a fonction to run RDP_classifier 
+make a fonction to run RDP_classifier TaxAssignRDP()
 	use rRDP and rRDPData 
 	Doc and tuto OK
 
@@ -403,4 +401,15 @@ commit -m "optimize-asv_list-sorted"
 => modify vignette accordingly DONE
 
 commit -m "OptimizeLFNreadCountLFNvariant"
+
+## 2025/10/28 
+
+- Message for high pcr_error_var_prop in FilterPCRerror.
+
+- Make mock composition by assigning ASV with small database containing expected sequneces, 
+but not the same size as the ASV. Draft is in windows 
+
+commit -m "MakeMockCompositionLTG"
+
+
 

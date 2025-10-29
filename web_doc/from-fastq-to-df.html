@@ -272,7 +272,7 @@ vsearch_path &lt;- &quot;~/miniconda3/envs/vtam/bin/vsearch&quot; # v2.15.1</cod
 <ul>
 <li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: is either a csv file, or a data frame. The key information for <code>Merge</code> is the list of the fastq file pairs that should be merged. The <code>tag_fw</code>, <code>primer_fw</code>, <code>tag_rv</code>, <code>primer_rv</code> are irrelevant in this case, just fill them with <code>NA</code>.</li>
 <li><code>fastq_dir</code>: Directory containing the input fastq files.</li>
-<li><a href="tutorial-vtamr-pipeline.html#fastainfo">sortedinfo_df</a>: Output of <code>Merge</code>. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names and the read counts are included for each file.</li>
+<li><a href="tutorial-vtamr-pipeline.html#fastainfo">sampleinfo_df</a>: Output of <code>Merge</code>. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names and the read counts are included for each file.</li>
 <li><code>outdir</code>: Name of the output directory.</li>
 </ul>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code>system.file()</code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and filenames</strong>.</p>
@@ -282,7 +282,7 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo1.csv&quot;, package = 
 outdir &lt;- &quot;vtamR_demo_case1&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
 <p><strong>Merge fastq file pairs and quality filter reads</strong></p>
-<pre class="r"><code>sortedinfo_df &lt;- Merge(fastqinfo, 
+<pre class="r"><code>sampleinfo_df &lt;- Merge(fastqinfo, 
                        fastq_dir=fastq_dir, 
                        vsearch_path=vsearch_path, 
                        outdir=merged_dir
@@ -291,7 +291,7 @@ merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
 <p>The fasta files produced by <code>Merge</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
 
-read_count_df &lt;- Dereplicate(sortedinfo_df, 
+read_count_df &lt;- Dereplicate(sampleinfo_df, 
                              dir=merged_dir, 
                              outfile=outfile
                              )</code></pre>
@@ -310,7 +310,7 @@ The key information for <code>Merge</code> is the list of the fastq file pairs t
 <li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>: is the output of <code>Merge</code>. It is the updated version of <code>fastqinfo</code>, where fastq file names have been replaced by fasta file names.</li>
 <li><code>fasta_dir</code>: Directory containing the input fasta files for <code>TrimPrimer</code>. This directory is created by <code>Merge</code>.</li>
 <li>If <code>check_reverse</code> is TRUE, <code>TrimPrimer</code> checks the reverse complementary strand as well.</li>
-<li><code>sortedinfo_df</code>: is updated version of fastainfo. This data frame and the files listed in it are the input for <code>Dereplicate</code>.</li>
+<li><code>sampleinfo_df</code>: is updated version of fastainfo. This data frame and the files listed in it are the input for <code>Dereplicate</code>.</li>
 <li><code>outdir</code>: Name of the output directory.</li>
 </ul>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code>system.file()</code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and filenames</strong>.</p>
@@ -327,10 +327,10 @@ merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
                       )</code></pre>
 <p><strong>Trim primers</strong></p>
 <pre class="r"><code>
-sorted_dir &lt;- file.path(outdir, &quot;sorted&quot;)
-sortedinfo_df &lt;- TrimPrimer(fastainfo_df, 
+demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)
+sampleinfo_df &lt;- TrimPrimer(fastainfo_df, 
                             fasta_dir=merged_dir, 
-                            outdir=sorted_dir, 
+                            outdir=demultiplexed_dir, 
                             cutadapt_path=cutadapt_path, 
                             vsearch_path=vsearch_path, 
                             check_reverse=T,
@@ -343,8 +343,8 @@ sortedinfo_df &lt;- TrimPrimer(fastainfo_df,
 <p>The fasta files produced by <code>Merge</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
 
-read_count_df &lt;- Dereplicate(sortedinfo_df, 
-                             dir=sorted_dir, 
+read_count_df &lt;- Dereplicate(sampleinfo_df, 
+                             dir=demultiplexed_dir, 
                              outfile=outfile
                              )</code></pre>
 </div>
@@ -361,7 +361,7 @@ read_count_df &lt;- Dereplicate(sortedinfo_df,
 <li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>: Output of <code>Merge</code>. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names.</li>
 <li><code>fasta_dir</code>: Directory containing the input fasta files for <code>SortReads</code>. This directory is created by <code>Merge</code>.</li>
 <li>If <code>check_reverse</code> is TRUE, <code>SortReads</code> checks the reverse complementary stand as well.</li>
-<li><code>sortedinfo_df</code>: Updated version of fastainfo. This data frame and the files listed in it are the input of the <code>Dereplicate</code>.</li>
+<li><code>sampleinfo_df</code>: Updated version of fastainfo. This data frame and the files listed in it are the input of the <code>Dereplicate</code>.</li>
 <li><code>outdir</code>: Name of the output directory.</li>
 </ul>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code>system.file()</code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and filenames</strong>.</p>
@@ -370,7 +370,7 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo.csv&quot;, package = &
 
 outdir &lt;- &quot;vtamR_demo_case3&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)
-sorted_dir &lt;- file.path(outdir, &quot;sorted&quot;)</code></pre>
+demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)</code></pre>
 <p><strong>Merge fastq file pairs and quality filter reads</strong></p>
 <pre class="r"><code>fastainfo_df &lt;- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
@@ -378,9 +378,9 @@ sorted_dir &lt;- file.path(outdir, &quot;sorted&quot;)</code></pre>
                       outdir=merged_dir
                       )</code></pre>
 <p><strong>Demultiplex, trim off tags and pimers</strong></p>
-<pre class="r"><code>sortedinfo_df &lt;- SortReads(fastainfo_df, 
+<pre class="r"><code>sampleinfo_df &lt;- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
-                           outdir=sorted_dir, 
+                           outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path
@@ -388,8 +388,8 @@ sorted_dir &lt;- file.path(outdir, &quot;sorted&quot;)</code></pre>
 <p><strong>Dereplicate</strong></p>
 <p>The fasta files produced by <code>Merge</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
-read_count_df &lt;- Dereplicate(sortedinfo_df, 
-                             dir=sorted_dir, 
+read_count_df &lt;- Dereplicate(sampleinfo_df, 
+                             dir=demultiplexed_dir, 
                              outfile=outfile
                              )</code></pre>
 </div>

@@ -1,15 +1,15 @@
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first 
-#' @importFrom dplyr relocate if_else across
+#' @importFrom dplyr relocate if_else across slice_head
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
 #' @importFrom Biostrings DNAStringSet
-#' @importFrom rRDP predict rdp
+#' @importFrom rRDP rdp
 NULL
 
 
 
-#' TaxAsssignRDP
+#' TaxAssignRDP
 #' 
 #' Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
 #' 
@@ -38,12 +38,12 @@ NULL
 #' asv_id,domain,kingdom,phylum,class,order,family,genus
 #' @examples
 #' \dontrun{
-#' taxa <- TaxAsssignRDP(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
+#' taxa <- TaxAssignRDP(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
 #' }
 #' @export
 #'
 #'
-TaxAsssignRDP <- function(
+TaxAssignRDP <- function(
   asv,
   dir=NULL,
   max_memory=1,
