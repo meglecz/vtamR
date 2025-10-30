@@ -522,7 +522,7 @@ RandomSeq <- function(fastainfo,
 #  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
   
   # quite fast for uncompressed and gz files
-  check_dir(fasta_dir)
+  (fasta_dir)
   check_dir(outdir)
   
   fastainfo_df$new_file <- NA
@@ -5427,13 +5427,7 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
                                            min_replicate_number=1, 
                                            quiet=T
 ){
-  #  read_count_df = optimize_read_count_df
-  #  min_lfn_read_count_cutoff = 10
-  #  min_lnf_variant_cutoff = 0.001
-  #  rc_cutoff = 55
-  #  var_cutoff = 0.05
-  #  by_replicate = T
-  
+
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -5442,6 +5436,7 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
     read_count_df <- read_count
   }
   
+  outdir <- path.expand(outdir)
   # can accept df or file as an input
   if(is.null(known_occurrences)){ # Calculate known_occurrences from data
     

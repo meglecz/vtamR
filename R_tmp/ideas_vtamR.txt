@@ -1,5 +1,12 @@
 # Ideas for vtamR
 
+## OptimizeLFNreadCountLFNvariant => referr to missing occurrences instaed of printing missing asv to the terminale
+## add asv_id to missing occurrences (if there are any)
+
+## Merge is very long on compressed files on windows. work in decrompress, since this is a limiting step.
+Test Merge on decompressend files.
+when running Merge in windows, the memory and Diswue SSd are both saturated.
+
 
 ## test dereplicate with large dataset both in windows and linux. If too slow try the following algo:
 - read data file by file and dereplicate, do not add asv_id
@@ -410,6 +417,7 @@ commit -m "OptimizeLFNreadCountLFNvariant"
 but not the same size as the ASV. Draft is in windows 
 
 commit -m "MakeMockCompositionLTG"
+push
 
 
 

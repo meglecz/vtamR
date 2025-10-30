@@ -131,6 +131,7 @@ vignette("installation")
 devtools::build(vignettes = TRUE)
 ############################
 
+
 ### Keep the vignettes and if changes are necessary modify these files
 # for htmp on website 
 # check if it builds correctly
