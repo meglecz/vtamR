@@ -72,6 +72,7 @@ cutadapt_path <- "C:/Users/Public/cutadapt"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
 blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
 swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
+pigz_path <- "C:/Users/Public/pigz-win32/pigz"
 ```
 
 ```{r set_path_linux}
@@ -90,21 +91,12 @@ swarm_path <- "swarm"
 ```{r general-parameters}
 sep <- ","
 outdir <- "~/vtamR_demo_out"
+outdir <- "vtamR_demo_out"
 ```
 
 
 * `sep`: Separator used in csv files
 * `outdir`: Name of the output directory. Make sure there is **no space in the path**.
-
-To know how many threads you can use at most
-**Linux/McOS**: type `nproc` in a terminal
-**windows**: type `Get-WmiObject -Class Win32_Processor | Select-Object NumberOfLogicalProcessors`
-in a powershell.
-If you are running other jobs as well on the same computer, 
-use a lower number of threads
-
-
-
 
 *Input Data*
 
@@ -186,6 +178,10 @@ It is the updated version of `fastqinfo`, where fastq file names have been
 replaced by fasta file names.
 * `fasta_dir`: Directory containing the input fasta files for `SortReads`. 
 This directory is created by `Merge`.
+* `compress = FALSE` produces uncompressed files, even if the input files are compressed.
+  Compression and decompression on Windows can be slow, so in this tutorial we will use uncompressed files.
+  This will generate large intermediate files that should be compressed or deleted once the analyses are complete.
+  For more details, see [Files to keep](#files-to-keep).
 
 See `?Merge` for the options of quality filtering.
 
@@ -197,7 +193,8 @@ fastainfo_df <- Merge(fastqinfo,
                       outdir=merged_dir,
                       fastq_maxee=1,
                       fastq_maxns=0,
-                      fastq_allowmergestagger=F
+                      fastq_allowmergestagger=F,
+                      compress=FALSE
                       )
 ```
 
@@ -213,6 +210,9 @@ correct parameters for demultiplexing and primer trimming:
 * If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
 * `sampleinfo_df` is  updated version of `fastainfo`. 
 This data frame and the files listed in it are the input of the `Dereplicate`.
+* `compress = TRUE` produces gzip-compressed files, even if the input files are uncompressed.
+  Since the next step, `Dereplicate`, can read compressed files directly, it makes sense to generate compressed output here to save disk space.
+* I am using `pigz=TRUE` to speed up the file compression, but it is not essential.
 
 
 ```{r demultiplex}
@@ -224,7 +224,10 @@ sampleinfo_df <- SortReads(fastainfo_df,
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
                            cutadapt_minimum_length = 170,
-                           cutadapt_maximum_length = 185
+                           cutadapt_maximum_length = 185,
+                           compress=TRUE,
+                           pigz=TRUE,
+                           pigz_path = pigz_path
                            )
 ```
 

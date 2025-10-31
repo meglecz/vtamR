@@ -55,7 +55,9 @@ run_system2 <- function(path, args, quiet = FALSE) {
     errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
     
     # Remove lines containing "Mean expected error"
-    errors_only <- grep("Mean expected error|Mean observed errors", errors_only, ignore.case = TRUE, value = TRUE, invert = TRUE)
+    errors_only <- grep("Mean expected error|Mean observed errors|Pairs that failed|expected error too high|failed merging", 
+                        errors_only, ignore.case = TRUE, value = TRUE, 
+                        invert = TRUE)
     
     if (length(errors_only) > 0) {
       cat(errors_only, sep = "\n")
@@ -89,6 +91,103 @@ check_dir <- function(path, is_file=FALSE){
       dir.create(dir_to_create, recursive =TRUE)
     }
 }
+
+#' Compress or uncompress file
+#'
+#' Compress or uncompress a file using `pigz` (if available, faster) or fallback to `R.utils`.
+#'
+#' @param file Character string: Input file name.
+#' @param outfile Character string: Output file name. If empty, automatically derived from input.
+#' @param remove Logical: Remove input file after successful operation.
+#' @param pigz Logical: Use pigz for compression/decompression. If FALSE uses `R.utils`.
+#' @param pigz_path Character string: Path to `pigz` executable.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param quiet Logical: If `TRUE`, suppress informational messages.
+#' @param compress Logical: If `TRUE`, compress (`gzip`); if `FALSE`, decompress (`gunzip`).
+#'
+#' @return Character string: Name of the output file including path.
+#' @examples
+#' \dontrun{
+#' # Decompress a .gz file
+#' smart_gzip("data.fastq.gz", compress = FALSE)
+#'
+#' # Compress a file
+#' smart_gzip("data.fastq", compress = TRUE)
+#' }
+#' @export
+smart_gzip <- function(file,
+                       outfile = "",
+                       remove = FALSE,
+                       pigz_path = "pigz",
+                       pigz = FALSE,
+                       num_threads = 0,
+                       quiet = TRUE,
+                       compress = FALSE) {
+  # Check input
+  if (!file.exists(file)) stop("File not found: ", file)
+  
+  # Detect operation type and define flags
+  if (compress) {
+    mode_flag <- "-c"        # compress
+    file_check <- !grepl("\\.gz$", file, ignore.case = TRUE)
+  } else {
+    mode_flag <- "-d"        # decompress
+    file_check <- grepl("\\.gz$", file, ignore.case = TRUE)
+  }
+  
+  if (!file_check)
+    stop("File extension does not match expected mode: ",
+         if (compress) "expected uncompressed input" else "expected .gz input")
+  
+  # Determine output file
+  if (!nzchar(outfile)) {
+    outfile <- if (compress) paste0(file, ".gz") else sub("\\.gz$", "", file)
+    outfile <- path.expand(outfile)
+  }else{ # check if output filename is coherent
+    if (compress) {
+      outfile_check <- grepl("\\.gz$", outfile, ignore.case = TRUE)
+    } else {
+      outfile_check <- !grepl("\\.gz$", outfile, ignore.case = TRUE)
+    }
+    if (!outfile_check)
+      stop("File extension does not match expected mode: ",
+           if (compress) "expected compressed (.gz ) output" else "expected uncompessed output")
+  }
+  
+  # Detect number of threads
+  if (num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  
+  # Use pigz if provided
+  if (pigz) {
+    if (!quiet) {
+      message("Using pigz for ", if (compress) "compression" else "decompression")
+    }
+    
+    # Build argument list
+    args <- c(mode_flag, "-p", num_threads, "-c", file)
+    
+    # Run pigz with system2 (safe cross-platform)
+    status <- system2(pigz_path, pigz=pigz, args = args, stdout = outfile)
+    
+    if (status != 0) stop("pigz failed with exit code: ", status)
+    if (remove) unlink(file)
+  } else {
+    if (!quiet) {
+      message("Using R.utils for ", if (compress) "compression" else "decompression")
+    }
+    
+    if (compress) {
+      R.utils::gzip(file, destname = outfile, remove = remove, overwrite = TRUE)
+    } else {
+      R.utils::gunzip(file, destname = outfile, remove = remove, overwrite = TRUE)
+    }
+  }
+  
+  return(outfile)
+}
+
 
 #' GetStat
 #' 
@@ -172,7 +271,12 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' fastq_fw,fastq_rv  
 #' @param fastq_dir Character string: directory with input fastq files 
 #' (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).
-#' @param vsearch_path  Character string: path to vsearch executables. 
+#' @param vsearch_path Character string: path to vsearch executables.
+#' @param pigz Logical: Use pigz for compression/decompression. If FALSE uses `R.utils`.
+#' @param pigz_path Character string: Path to `pigz` executable.
+#' Used only to speed up the decompression of large `.fastq.gz` files on Windows. 
+#' If not provided, `R.utils` is used instead. On Unix-like systems, this parameter 
+#' is unnecessary because `vsearch` can directly process gzipped files.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outdir Character string: output directory.
 #' @param fastq_ascii ASCII character number (33 or 64) used as the basis for 
@@ -232,7 +336,9 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 
 Merge <- function(fastqinfo, 
                   fastq_dir, 
-                  vsearch_path="vsearch", 
+                  vsearch_path="vsearch",
+                  pigz=FALSE,
+                  pigz_path="pigz",
                   num_threads=0,
                   outdir="", 
                   fastq_ascii=33, 
@@ -282,10 +388,25 @@ Merge <- function(fastqinfo,
     rv_fastq <- file.path(fastq_dir, tmp[i,2])
     
     #Decompress input files, since they are cannot be treated directly by vsearch on the OS
-    if(!is_linux() && endsWith(fw_fastq, ".gz")){ 
-      fw_fastq <- decompress_file(fw_fastq, remove_input=F)
-      rv_fastq <- decompress_file(rv_fastq, remove_input=F)
-    }
+    if(!is_linux() && endsWith(fw_fastq, ".gz")){
+      fw_fastq <- smart_gzip(fw_fastq, 
+                            remove = FALSE,
+                            pigz=pigz,
+                            pigz_path=pigz_path,
+                            num_threads = num_threads,
+                            quiet = quiet,
+                            compress = FALSE)
+      rv_fastq <- smart_gzip(rv_fastq, 
+                             remove = FALSE,
+                             pigz=pigz,
+                             pigz_path=pigz_path,
+                             num_threads = num_threads,
+                             quiet = quiet,
+                             compress = FALSE)
+      
+#              fw_fastq <- decompress_file(fw_fastq, remove_input=F)
+#          rv_fastq <- decompress_file(rv_fastq, remove_input=F)
+        }
     
     if(fw_fastq == outfile){ # stop the run if input and output files have the same name
       stop("ERROR: Input and output directories for fastq and fasta files are indentical. 
@@ -326,8 +447,15 @@ Merge <- function(fastqinfo,
       if(is_linux()){
         cmd <- paste("gzip", outfile, sep=" ")
         system(cmd)
-      }else{ # this version of compression can work in all systems, but might not work with very large files
-        out <- compress_file(filename=outfile, remove_input=T)
+      }else{ 
+        out <- smart_gzip(outfile, 
+                          remove = TRUE,
+                          pigz=pigz,
+                          pigz_path=pigz_path,
+                          num_threads = num_threads,
+                          quiet = quiet,
+                          compress = TRUE)
+#        out <- compress_file(filename=outfile, remove_input=T)
       }
       
       # correct output filename in fastainfo if necessary
@@ -390,6 +518,7 @@ is_linux <- function(){
 #' 
 #' Decompress the input gzipped file.
 #' If remove_input is TRUE, deleted the compressed input file.
+#' Not adapted for large files.
 #'  
 #' @param filename Character string: gzip compressed input file.
 #' @param remove_input logical: Remove the input compressed file.
@@ -425,8 +554,7 @@ decompress_file <- function(filename="", remove_input=F){
 #'  
 #' Compress input file to gzip format.
 #' 
-#' This function work in all operating systems, but might not work with very large files, 
-#' since it reads the file to memory.
+#' This function work in all operating systems, but not adapetd to very large files. 
 #'
 #' @param filename Character string: uncompressed input file.
 #' @param remove_input logical: Remove the input uncompressed file.
@@ -467,6 +595,8 @@ compress_file <- function(filename="", remove_input=F){
 #' input fasta files
 #' @param outdir Character string: output directory.
 #' @param vsearch_path Character string: path to vsearch executables. 
+#' @param pigz Logical: Use pigz for compression/decompression. If FALSE uses `R.utils`.
+#' @param pigz_path Character string: Path to `pigz` executable.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param randseed Positive integer: seed for random sampling. 
 #' 0 (default value) means to use a pseudo-random seed. 
@@ -490,6 +620,8 @@ RandomSeq <- function(fastainfo,
                       fasta_dir="",
                       outdir="", 
                       vsearch_path="vsearch",
+                      pigz= FALSE,
+                      pigz_path= "pigz",
                       num_threads = 0,
                       randseed=0,
                       compress=F,
@@ -522,7 +654,7 @@ RandomSeq <- function(fastainfo,
 #  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
   
   # quite fast for uncompressed and gz files
-  (fasta_dir)
+  check_dir(fasta_dir)
   check_dir(outdir)
   
   fastainfo_df$new_file <- NA
@@ -564,11 +696,25 @@ RandomSeq <- function(fastainfo,
       print(msg)
       # copy and compress/decompress input file according to the need
       if(compress && !endsWith(input_fasta_p, ".gz")){ # input uncompressed, and compress = T
-        output <- compress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+#        output <- compress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+        output <- smart_gzip(file=input_fasta_p,
+                              remove = FALSE,
+                              pigz=pigz,
+                              pigz_path = pigz_path,
+                              num_threads = num_threads,
+                              quiet = quiet,
+                              compress = TRUE)        
         file.rename(output, output_fasta_p) # move compressed file to the target location
       }else{
         if(!compress && endsWith(input_fasta_p, ".gz")){ # input compressed, and compress = F
-          output <- decompress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+ #         output <- decompress_file(filename=input_fasta_p, remove_input=F) # compress input, keep original
+          output <- smart_gzip(file=input_fasta_p,
+                                remove = FALSE,
+                                pigz=pigz,
+                                pigz_path = pigz_path,
+                                num_threads = num_threads,
+                                quiet = quiet,
+                                compress = FALSE)
           file.rename(output, output_fasta_p) # move compressed file to the target location
         }else{ # output, input same compression
           file.copy(input_fasta_p, output_fasta_p)
@@ -599,7 +745,14 @@ RandomSeq <- function(fastainfo,
     options(scipen=0)
     
     if(compress){ # compress the output file 
-      output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
+#      output_fasta_p <- compress_file(filename=output_fasta_p, remove_input=T)
+      output_fasta_p <- smart_gzip(file=output_fasta_p,
+                            remove = TRUE,
+                            pigz=pigz,
+                            pigz_path = pigz_path,
+                            num_threads = num_threads,
+                            quiet = quiet,
+                            compress = TRUE)
     }
     
     fastainfo_df$new_file[which(fastainfo_df$fasta==input_fasta)] <- output_fasta
@@ -856,7 +1009,14 @@ TrimPrimer_OneFile <- function(fasta,
     unlink(out_rv)
     
     if(outfile != original_output ){ # Output should be compressed
-      outfile <- compress_file(filename=outfile, remove_input=T)
+#      outfile <- compress_file(filename=outfile, remove_input=T)
+      outfile <- smart_gzip(file=outfile,
+                            remove = TRUE,
+                            pigz=pigz,
+                            pigz_path = pigz_path,
+                            num_threads = num_threads,
+                            quiet = quiet,
+                            compress = TRUE)
     }
   }
 }
@@ -994,6 +1154,8 @@ TrimPrimer <- function(fastainfo,
 #' (listed in the fasta columns of fastainfo).
 #' @param vsearch_path Character string: path to vsearch executables. 
 #' @param cutadapt_path Character string: path to cutadapt executables. 
+#' @param pigz Logical: Use pigz for compression/decompression. If FALSE uses `R.utils`.
+#' @param pigz_path Character string: Path to `pigz` executable.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param outdir Character string: output directory.
 #' @param check_reverse logical: if TRUE, check the reverse complementary 
@@ -1035,6 +1197,8 @@ SortReads <- function(fastainfo,
                       outdir="", 
                       cutadapt_path="cutadapt",
                       vsearch_path="vsearch", 
+                      pigz=FALSE,
+                      pigz_path="pigz",
                       num_threads=0,
                       check_reverse=F, 
                       tag_to_end=T, 
@@ -1169,7 +1333,14 @@ SortReads <- function(fastainfo,
         file <- sampleinfo_df$fasta[i]
         sampleinfo_df$fasta[i] <- paste(file, ".gz", sep="") # correct output filename
         file <- file.path(outdir, file) # add path
-        file_gz <- compress_file(file, remove_input=T) # compress file
+#        file_gz <- compress_file(file, remove_input=T) # compress file
+        file_gz <- smart_gzip(file,
+                              remove = TRUE,
+                              pigz=pigz,
+                              pigz_path = pigz_path,
+                              num_threads = num_threads,
+                              quiet = quiet,
+                              compress = TRUE)
       }
     }
   }
@@ -7102,4 +7273,202 @@ make_taxid_file <- function(file, outfile){
     select(seq_id, tax_id)
   
   write.table(df, file=outfile, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
+}
+
+#' RandomSampleFastaR
+#' 
+#' Randomly select `n` sequences from an input FASTA file.
+#' 
+#' The input FASTA can be uncompressed or gzipped. The output compression is
+#' determined automatically from the output file name (i.e., ends with `.gz` → gzip).
+#' 
+#' This function is slow but works on any OS.
+#' 
+#' If the number of sequences in the input file is less than or equal to the
+#' requested number (`n`), the input file is simply copied to the output,
+#' respecting the compression inferred from the output file name.
+#'
+#' @param fasta Character string: Path to the input FASTA file. Can be gzipped.
+#' @param outfile Character string: Path to the output FASTA file. If it ends with `.gz`,
+#'   the output will be gzip-compressed.
+#' @param n Positive integer: Number of sequences to randomly select.
+#' @param randseed Positive integer or NULL: Seed for random sampling. NULL (default)
+#'   uses a pseudo-random seed. A given non-zero seed ensures reproducible results.
+#' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.
+#' @return Invisibly the number of sequences in the output file.
+#' @examples
+#' \dontrun{
+#' RandomSampleFastaR(
+#'   fasta = "all_sequences.fasta.gz",
+#'   outfile = "subset_100.fasta.gz",
+#'   n = 100,
+#'   randseed = 123,
+#'   quiet = FALSE
+#' )
+#' }
+#' @export
+#' 
+RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TRUE) {
+  if (!is.null(randseed)) set.seed(randseed)
+  
+  # --- Count sequences
+  con <- if (grepl("\\.gz$", fasta)) gzfile(fasta, "rt") else file(fasta, "rt")
+  total <- 0L
+  if(!quiet){cat("Counting sequences.\n")}
+  while (length(lines <- readLines(con, n = 100000)) > 0) { # read by chunks
+    total <- total + sum(startsWith(lines, ">"))
+  }
+  close(con)
+  
+  if(!quiet){ cat("Total sequences:", total, "\n")}
+  
+  # --- Check if n >= total
+  if (n >= total) {
+    txt <- paste(fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
+    warning(txt)
+    
+    # determine compression for output
+    if (grepl("\\.gz$", outfile)) {
+      out_con <- gzfile(outfile, "wt")
+    } else {
+      out_con <- file(outfile, "wt")
+    }
+    
+    # read input (compressed or not) and write to output
+    con <- if (grepl("\\.gz$", fasta)){
+      gzfile(fasta, "rt")
+    }else {
+      file(fasta, "rt")
+    }
+    while (length(lines <- readLines(con, n = 100000)) > 0) {
+      writeLines(lines, out_con)
+    }
+    close(con)
+    close(out_con)
+    
+    return(invisible(total))
+  }
+  
+  # --- Sample indices
+  keep_idx <- sort(sample.int(total, n))
+  
+  # --- Extract sampled sequences
+  if(!quiet){cat("Extracting sampled sequences.\n")}
+  con <- if (grepl("\\.gz$", fasta)) gzfile(fasta, "rt") else file(fasta, "rt")
+  out_con <- if (grepl("\\.gz$", outfile)) gzfile(outfile, "wt") else file(outfile, "wt")
+  
+  seq_idx <- 0L # integer
+  keep_pointer <- 1L # integer; position in the vector of keep_idx
+  current_seq <- character()
+  write_seq <- FALSE
+  
+  while (length(line <- readLines(con, n = 1)) > 0) {
+    if (startsWith(line, ">")) {
+      # write previous sequence if needed
+      if (length(current_seq) > 0 && write_seq) {
+        writeLines(current_seq, out_con)
+      }
+      seq_idx <- seq_idx + 1L
+      # (keep_pointer <= length(keep_idx) Make sure not to refer to an element in keep_idx, that do not exists
+      write_seq <- (keep_pointer <= length(keep_idx) && seq_idx == keep_idx[keep_pointer])
+      if (write_seq && keep_pointer <= length(keep_idx)) keep_pointer <- keep_pointer + 1L
+      current_seq <- if (write_seq) line else character(0)
+    } else if (write_seq) {
+      current_seq <- c(current_seq, line)
+    }
+  }
+  # write last sequence if needed
+  if (length(current_seq) > 0 && write_seq) {
+    writeLines(current_seq, out_con)
+  }
+  
+  close(con)
+  close(out_con)
+  
+  return(invisible(n))
+}
+
+
+#' RandomSeqR
+#' 
+#' Randomly select `n` sequences from each input FASTA file in the input data frame.
+#' This is a wrapper to run `RandomSampleFastaR` on a series of FASTA files.
+#'  
+#' This function works on any operating system and can handle large files, 
+#' but may be slow. For Linux-like systems, consider the `RandomSeq` function, 
+#' which is faster.
+#'  
+#' @param fastainfo Data frame or CSV file containing a `fasta` column with input file names. 
+#'   Files can be gzipped.
+#' @param fasta_dir Character string: directory containing the input FASTA files.
+#' @param n Positive integer: number of sequences to randomly select from each file.
+#' @param outdir Character string: directory to write the output FASTA files.
+#' @param randseed Positive integer: seed for random sampling. Default 0 uses a pseudo-random seed. 
+#'   A non-zero value ensures reproducible results.
+#' @param compress Logical: If TRUE, output files are compressed in gzip format.
+#' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.
+#' @param sep Character: field separator for input and output CSV files.
+#' @return Updated input data frame with file name extensions adjusted (if needed) 
+#'   and `read_counts` updated.
+#' @examples
+#' \dontrun{
+#' RandomSeqR(
+#'   fastainfo = fastainfo_df, 
+#'   n = 100, 
+#'   fasta_dir = "out/fasta", 
+#'   outdir = "out/randomseq", 
+#'   randseed = 2261, 
+#'   compress = TRUE
+#' )
+#' }
+#' 
+#' @export
+#' 
+RandomSeqR <- function(fastainfo, 
+                       n,
+                       fasta_dir="",
+                       outdir="", 
+                       randseed=0, 
+                       compress=T, 
+                       sep=",",
+                       quiet=TRUE){
+  
+  # can accept df or file as an input
+  if(is.character(fastainfo)){
+    # read known occurrences
+    fastainfo_df <- read.csv(fastainfo, header=T, sep=sep)
+  }else{
+    fastainfo_df <- fastainfo
+  }
+  
+  check_dir(fasta_dir)
+  check_dir(outdir)
+  
+  unique_fasta <- unique(fastainfo_df$fasta)
+  
+  for(i in 1:length(unique_fasta)){ # go through all fasta files
+    input_fasta <- unique_fasta[i]
+    input_fasta_p <- file.path(fasta_dir, input_fasta)
+    
+    # outline name is the same as the input, but different folder
+    # adjusted compression
+    outfile <- input_fasta
+    if(!compress && grepl("\\.gz$", input_fasta)){
+      outfile <- sub("\\.gz$", "", outfile)
+    }
+    if(compress && !grepl("\\.gz$", input_fasta)){
+      outfile <- paste(outfile, "gz", sep=".")
+    }
+    outfile_p <- file.path(outdir, outfile)
+    seqn <- RandomSampleFastaR(fasta=input_fasta_p, 
+                               outfile = outfile_p,
+                               n=n, 
+                               randseed = randseed,
+                               quiet=quiet)
+    
+    fastainfo_df$fasta[which(fastainfo_df$fasta == input_fasta)] <- outfile
+    fastainfo_df$read_count[which(fastainfo_df$fasta == outfile)] <- seqn
+  } # end for
+  write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
+  return(fastainfo_df)
 }

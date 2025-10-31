@@ -10,6 +10,8 @@ RandomSeq(
   fasta_dir = "",
   outdir = "",
   vsearch_path = "vsearch",
+  pigz = FALSE,
+  pigz_path = "pigz",
   num_threads = 0,
   randseed = 0,
   compress = F,
@@ -29,6 +31,10 @@ input fasta files}
 \item{outdir}{Character string: output directory.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{pigz}{Logical: Use pigz for compression/decompression. If FALSE uses \code{R.utils}.}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 

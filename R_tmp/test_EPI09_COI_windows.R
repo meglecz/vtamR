@@ -2,50 +2,294 @@
 
 ## load
 library(vtamR)
-library(dplyr)
-library(ggplot2)
-library(rRDP)
-library(rRDPData)
+#library(dplyr)
+#library(ggplot2)
 
-setwd("/home/meglecz/vtamR/")
+setwd("C:/Users/emese/vtamR")
 library("devtools")
 library("roxygen2")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
 
-### set up
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-swarm_path <- "swarm"
+### set up windows
+cutadapt_path <- "C:/Users/Public/cutadapt"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+blast_path <- "blastn" # in the PATH
+swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
+pigz_path <- "C:/Users/Public/pigz-win32/pigz"
 sep <- ","
-outdir <- "~/vtamR_demo_out"
 
+
+### EPI09
+fastq_dir <- "C:/data/EPI09"
+fastqinfo <-  "C:/data/EPI09/metainfo/fastqinfo_Epi09_COI.csv"
+mock_composition <-  "C:/data/EPI09/metainfo/mock_composition_EPI09_COI.csv"
+taxonomy <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
+blast_db <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
+asv_list <- "C:/data/EPI09/metainfo/asv_list_COI.csv"
+outdir <- "C:/data/EPI09/out"
+
+### TEST small
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
+#fastq_dir <- "C:/Users/emese/vtamR/tmp/test_zip/unzipped_fastq"
 fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
+#fastqinfo <-  "C:/Users/emese/vtamR/tmp/test_zip/fastqinfo_unzipped.csv"
+outdir <- "C:/Users/emese/vtamR/vtamR_demo"
+
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
 asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 
-taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
+merged_dir_uncomp <- file.path(outdir, "merged_uncomp")
+fastainfo_df_uncomp <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      pigz_path=pigz_path,
+                      outdir=merged_dir_uncomp,
+                      fastq_maxee=1,
+                      fastq_maxns=0,
+                      fastq_allowmergestagger=F,
+                      compress=FALSE,
+                      quiet=TRUE)
+
+merged_dir_gz <- file.path(outdir, "merged_gz")
+fastainfo_df_gz <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      pigz_path=pigz_path,
+                      outdir=merged_dir_gz,
+                      fastq_maxee=1,
+                      fastq_maxns=0,
+                      fastq_allowmergestagger=F,
+                      compress=TRUE,
+                      quiet=TRUE)
+
+random_dir_uncomp <- file.path(outdir, "RandomSample_uncomp")
+fastainfo_random_uncomp <- RandomSeqR(fastainfo=fastainfo_df_uncomp, 
+           n=40000,
+           fasta_dir=merged_dir_uncomp,
+           outdir=random_dir_uncomp, 
+           randseed=123, 
+           compress=FALSE, 
+           quiet=TRUE)
+
+random_dir_uncomp <- file.path(outdir, "RandomSample_uncomp")
+fastainfo_random_uncomp <- RandomSeqR(fastainfo=fastainfo_df_gz, 
+                                      n=40000,
+                                      fasta_dir=merged_dir_gz,
+                                      outdir=random_dir_uncomp, 
+                                      randseed=123, 
+                                      compress=FALSE, 
+                                      quiet=FALSE)
+
+random_dir_gz <- file.path(outdir, "RandomSample_gz")
+fastainfo_random_gz <- RandomSeqR(fastainfo=fastainfo_df_uncomp, 
+                                      n=40000,
+                                      fasta_dir=merged_dir_uncomp,
+                                      outdir=random_dir_gz, 
+                                      randseed=123, 
+                                      compress=TRUE, 
+                                      quiet=TRUE)
 
 
-
-
-### Merge
-merged_dir <- file.path(outdir, "merged")
+### 1. Merge decompresse compresse pigz
+t1 <- proc.time()
+merged_dir <- file.path(outdir, "merged1")
 fastainfo_df <- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
+                      pigz_path=pigz_path,
                       outdir=merged_dir,
                       fastq_maxee=1,
                       fastq_maxns=0,
-                      fastq_allowmergestagger=F)
+                      fastq_allowmergestagger=F,
+                      compress=TRUE,
+                      quiet=TRUE)
+
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- data.frame(
+  Step = "Merge",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE)
+
+### 2. Merge  Merge decompresse compresse R.Utils
+t1 <- proc.time()
+merged_dir <- file.path(outdir, "merged2")
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      pigz_path="",
+                      outdir=merged_dir,
+                      fastq_maxee=1,
+                      fastq_maxns=0,
+                      fastq_allowmergestagger=F,
+                      compress=TRUE,
+                      quiet=TRUE)
+
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "SortReads",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+
+### 3. Merge decompresse pigz
+t1 <- proc.time()
+merged_dir <- file.path(outdir, "merged3")
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      pigz_path=pigz_path,
+                      outdir=merged_dir,
+                      fastq_maxee=1,
+                      fastq_maxns=0,
+                      fastq_allowmergestagger=F,
+                      compress=FALSE,
+                      quiet=TRUE)
+
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "SortReads",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+### 4. Merge decompresse R.Utils
+t1 <- proc.time()
+merged_dir <- file.path(outdir, "merged4")
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      pigz_path="",
+                      outdir=merged_dir,
+                      fastq_maxee=1,
+                      fastq_maxns=0,
+                      fastq_allowmergestagger=F,
+                      compress=FALSE,
+                      quiet=TRUE)
+
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "SortReads",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+write.csv(time_df, file="C:/data/EPI09/metainfo/Merge_runtimes_Windows.csv", row.names = FALSE)
+
+
+
+
+
+
+
+fasta <-"C:/data/EPI09/out/merged1/Epi09-COI-R1_S16_R1_001.fasta.gz"
+outfile <-"C:/data/EPI09/out/merged1/Epi09-COI-R1_S16_R1_001_10M.fasta.gz"
+
+t1 <- proc.time()
+outfile <- sample_fasta(fasta_path=fasta, n=10000000, output_path = outfile, seed = 123, quiet=FALSE)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- data.frame(
+  Step = "sample_fasta_gz_zg",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+)
+
+# 2,4 Gb input
+fasta <-"C:/data/EPI09/out/merged1/Epi09-COI-R1_S16_R1_001.fasta.gz"
+outfile <-"C:/data/EPI09/out/merged1/Epi09-COI-R1_S16_R1_001_10M.fasta"
+t1 <- proc.time()
+outfile <- sample_fasta(fasta_path=fasta, n=10000000, output_path = outfile, seed = 123, quiet=FALSE)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "sample_fasta_gz_uncomp",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+fasta <-"C:/data/EPI09/out/merged3/Epi09-COI-R1_S16_R1_001.fasta"
+outfile <-"C:/data/EPI09/out/merged3/Epi09-COI-R1_S16_R1_001_10M.fasta.gz"
+t1 <- proc.time()
+outfile <- sample_fasta(fasta_path=fasta, n=10000000, output_path = outfile, seed = 123, quiet=FALSE)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "sample_fasta_uncomp_gz",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+# 15GB input
+fasta <-"C:/data/EPI09/out/merged3/Epi09-COI-R1_S16_R1_001.fasta"
+outfile <-"C:/data/EPI09/out/merged3/Epi09-COI-R1_S16_R1_001_10M.fasta"
+t1 <- proc.time()
+outfile <- sample_fasta(fasta_path=fasta, n=10000000, output_path = outfile, seed = 123, quiet=FALSE)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "sample_fasta_uncomp_uncomp",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+
+############# Random Seq on decompressed file
+t1 <- proc.time()
+outdir <- file.path(outdir, "randomseq1")
+fastainfo_df <- RandomSeq(fastainfo_df,
+                          n=10000000, 
+                          fasta_dir=merged_dir,
+                          outdir=outdir, 
+                          vsearch_path=vsearch_path,
+                          pigz_path= pigz_path,
+                          num_threads = 0,
+                          randseed=12345,
+                          compress=F,
+                          sep=",", 
+                          quiet=T)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "RandomSeq1",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+write.csv(time_df, file="C:/data/EPI09/metainfo/RandomSeq_runtimes_Windows.csv", row.names = FALSE)
+
+
+
 
 ### demultiplex
+t1 <- proc.time()
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
 sampleinfo_df <- SortReads(fastainfo_df, 
                            fasta_dir=merged_dir, 
@@ -55,17 +299,39 @@ sampleinfo_df <- SortReads(fastainfo_df,
                            vsearch_path=vsearch_path,
                            tag_to_end = T,
                            primer_to_end=T)
+t2 <- proc.time()
+t <- t2 - t1
+
+time_df <- rbind(time_df, data.frame(
+  Step = "SortReads",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ###############
 ### dereplicate
 ###############
+t1 <- proc.time()
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
 sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
+outfile <- file.path(outdir, "filter", "1_input_dereplicated.csv")
 read_count_df <- Dereplicate(sampleinfo, 
                              dir=demultiplexed_dir, 
                              input_asv_list=asv_list,
-                             output_asv_list = updated_asv_list)
+                             output_asv_list = updated_asv_list,
+                             outfile=outfile)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "Dereplicate",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### stat
 stat_df <- data.frame(parameters=character(),
@@ -77,6 +343,7 @@ stat_df <- data.frame(parameters=character(),
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
 #### swarm
+t1 <- proc.time()
 by_sample <- TRUE
 d=1
 fastidious= TRUE
@@ -89,41 +356,98 @@ read_count_df <- ClusterASV(read_count_df,
                             fastidious=fastidious,
                             by_sample=by_sample,
                             group = TRUE,
-                            path=swarm_path
+                            path=swarm_path,
+                            outfile=outfile
                             )
 
 
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "ClusterASV_SWARM",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 #### LFNglobalReadCount
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "3_LFNglobalReadCount.csv")
 global_read_count_cutoff = 2
 
 read_count_df <- LFNglobalReadCount(read_count_df, 
-                                    cutoff=global_read_count_cutoff)
+                                    cutoff=global_read_count_cutoff,
+                                    outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "LFNglobalReadCount",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 #### FilterIndel
-read_count_df <- FilterIndel(read_count_df)
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "4_FilterIndel.csv")
+read_count_df <- FilterIndel(read_count_df, 
+                             outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterIndel",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### FilterCodonStop
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "5_FilterCodonStop.csv")
 genetic_code = 5
 read_count_df <- FilterCodonStop(read_count_df, 
-                                 genetic_code=genetic_code)
+                                 genetic_code=genetic_code,
+                                 outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=NA)
-
-
-read_count_df_backup <- read_count_df
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterCodonStop",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### FilterExternalContaminant
-conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "6_FilterExternalContaminant.csv")
+conta_file <- file.path(outdir, "filter", "external_contamination.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
                           sample_types=sampleinfo, 
-                          conta_file=conta_file)
+                          conta_file=conta_file,
+                          outfile=outfile)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterExternalContaminant",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### FilterChimera
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "7_FilterChimera.csv")
 abskew=2
 by_sample = T
 sample_prop = 0.8
@@ -131,163 +455,221 @@ read_count_df <- FilterChimera(read_count_df,
                                vsearch_path=vsearch_path, 
                                by_sample=by_sample, 
                                sample_prop=sample_prop, 
-                               abskew=abskew)
+                               abskew=abskew,
+                               outfile=outfile)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterChimera",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 #### FilterRenkonen
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "8_FilterRenkonen.csv")
 cutoff <- 0.4
 read_count_df <- FilterRenkonen(read_count_df, 
-                                cutoff=cutoff)
+                                cutoff=cutoff,
+                                outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterRenkonen",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
-
-fas <- "/home/meglecz/vtamR/inst/extdata/demo/mock_ncbi.fasta"
-outdir <- "/home/meglecz/vtamR/inst/extdata/demo/mock"
-
-taxonomy <- taxonomy_COInr
-
-MakeMockCompositionLTG(read_count_df, 
-                      fas=fas,
-                      taxonomy=taxonomy_COInr,
-                      blast_path = blast_path,
-                      sampleinfo = sampleinfo_df,
-                      outdir= outdir)
-
-
-
-
-
-
-
-make_taxid_file(file=fas, outfile=taxids)
-
-
-
-
-
-
-
-
+### OptimizePCRerror
+t1 <- proc.time()
+outfile <- file.path(outdir, "optimize", "OptPCRerror.csv")
+OptPCR <- OptimizePCRerror(read_count_df, 
+                             mock_composition=mock_composition, 
+                             vsearch_path= vsearch_path, 
+                             outfile=outfile, 
+                             max_mismatch=1, 
+                             min_read_count=10)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "OptimizePCRerror",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### FilterPCRerror
-
-mock_composition_df <- read.csv(mock_composition)
-
-mock_composition_df[5,"asv"] <- "TTTTTTTTTTTT"
-mock_composition_df[6,"asv"] <- "AAAAAAAAAa"
-
-dir_opt = file.path(outdir, "OptimizeLFNreadCountLFNvariant") 
-opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                           outdir = dir_opt,
-                                           known_occurrences = NULL, 
-                                           mock_composition = mock_composition_df,
-                                           sampleinfo = sampleinfo_df,
-                                           habitat_proportion = 0.5,
-                                           sep=",",
-                                           min_lfn_read_count_cutoff=10, 
-                                           max_lfn_read_count_cutoff=100, 
-                                           increment_lfn_read_count_cutoff=5, 
-                                           min_lnf_variant_cutoff=0.001, 
-                                           max_lnf_variant_cutoff=0.01, 
-                                           increment_lnf_variant_cutoff=0.001, 
-                                           by_replicate=FALSE, 
-                                           min_replicate_number=2, 
-                                           quiet=T)
-
-opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                             outdir = dir_opt,
-                                             known_occurrences = "/home/meglecz/vtamR_demo_out/OptimizeLFNreadCountLFNvariant/known_occurrences.csv", 
-                                             sep=",",
-                                             min_lfn_read_count_cutoff=10, 
-                                             max_lfn_read_count_cutoff=100, 
-                                             increment_lfn_read_count_cutoff=5, 
-                                             min_lnf_variant_cutoff=0.001, 
-                                             max_lnf_variant_cutoff=0.01, 
-                                             increment_lnf_variant_cutoff=0.001, 
-                                             by_replicate=FALSE, 
-                                             min_replicate_number=2, 
-                                             quiet=T)
-
-
-
-
-optPCR <- OptimizePCRerror(read_count=read_count_df, 
-                 mock_composition=mock_composition_df, 
-                 vsearch_path=vsearch_path, 
-                 max_mismatch=2, 
-                 min_read_count=5)
-
-optLFN_sample <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition_df)
-
-optLFN_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                           known_occurrences, 
-                                           sep=",",
-                                           outfile="", 
-                                           min_lfn_read_count_cutoff=10, 
-                                           max_lfn_read_count_cutoff=100, 
-                                           increment_lfn_read_count_cutoff=5, 
-                                           min_lnf_variant_cutoff=0.001, 
-                                           max_lnf_variant_cutoff=0.01, 
-                                           increment_lnf_variant_cutoff=0.001, 
-                                           by_replicate=FALSE, 
-                                           min_replicate_number=2, 
-                                           quiet=T
-)
-
-
-pcr_error_var_prop <- 0.05
-max_mismatch <- 2
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "9_FilterPCRerror.csv")
+pcr_error_var_prop <- 0.1
+max_mismatch <- 1
 read_count_df <- FilterPCRerror(read_count_df, 
                                 vsearch_path=vsearch_path, 
                                 pcr_error_var_prop=pcr_error_var_prop, 
                                 max_mismatch=max_mismatch)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterPCRerror", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "FilterPCRerror",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+#### OptimizeLFNsampleReplicate
+t1 <- proc.time()
+outfile <- file.path(outdir, "optimize", "OptimizeLFNsampleReplicate.csv")
+optLFN_sample <- OptimizeLFNsampleReplicate(read_count_df, 
+                                            mock_composition=mock_composition,
+                                            outfile=outfile)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "OptimizeLFNsampleReplicate",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
 
 ### LFNsampleReplicate
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "10_LFNsampleReplicate.csv")
 lfn_sample_replicate_cutoff <- 0.004
 read_count_df <- LFNsampleReplicate(read_count_df, 
-                                    cutoff=lfn_sample_replicate_cutoff)
+                                    cutoff=lfn_sample_replicate_cutoff,
+                                    outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "LFNsampleReplicate",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
-### FilterMinReplicate
-min_replicate_number <- 2
-read_count_df <- FilterMinReplicate(read_count_df, 
-                                    cutoff=min_replicate_number)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+#### OptimizeLFNreadCountLFNvariant
+t1 <- proc.time()
+dir_opt <- file.path(outdir, "optimize")
+OptLFNreadCountLFNvariant <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                                           outdir = dir_opt,
+                                           mock_composition = mock_composition,
+                                           sampleinfo = sampleinfo_df,
+                                           habitat_proportion = 0.5,
+                                           by_replicate=TRUE, 
+                                           min_replicate_number=2)
 
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "OptimizeLFNreadCountLFNvariant",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### LFNvariant
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "11_LFNvariant.csv")
 lnf_variant_cutoff = 0.001
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
-                                        cutoff=lnf_variant_cutoff)
+                                        cutoff=lnf_variant_cutoff,
+                                        outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNvariant", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "LFNvariant",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 ### LFNreadCount
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "12_LFNreadCount.csv")
 lfn_read_count_cutoff <- 10
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
-                                             cutoff=lfn_read_count_cutoff)
+                                             cutoff=lfn_read_count_cutoff,
+                                             outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNreadCount", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "LFNreadCount",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
 
 
 
 ### Combine results
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "13_PoolFilters.csv")
 read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
-                             read_count_df_lnf_variant)
-stat_df <- GetStat(read_count_df, stat_df, stage="Combine results", params=NA)
-
+                             read_count_df_lnf_variant,
+                             outfile=outfile)
 # delete temporary data frames
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)
 
+stat_df <- GetStat(read_count_df, stat_df, stage="Combine results", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "PoolFilters",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
+
+
 ### FilterMinReplicate
+t1 <- proc.time()
+outfile <- file.path(outdir, "filter", "14_FilterMinReplicate.csv")
 min_replicate_number <- 2
 read_count_df <- FilterMinReplicate(read_count_df, 
-                                    cutoff=min_replicate_number)
+                                    cutoff=min_replicate_number,
+                                    outfile=outfile)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+t2 <- proc.time()
+t <- t2 - t1
+time_df <- rbind(time_df, data.frame(
+  Step = "PoolFilters",
+  user = t["user.self"],
+  system = t["sys.self"],
+  elapsed = t["elapsed"],
+  stringsAsFactors = FALSE
+))
 
-read_count_df_backup <- read_count_df
+outfile <- file.path(outdir, "stat_time.csv")
+write.csv(time_df, file=outfile, row.names = FALSE)
+
+outfile <- file.path(outdir, "stat_count.csv")
+write.csv(stat_df, file=outfile, row.names = FALSE)
+
+
+
+
 
 plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
                                       swarm_d_min=1, 

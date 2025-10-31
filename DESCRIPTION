@@ -27,7 +27,8 @@ Imports:
     magrittr,
     rlang,
     tidyselect,
-    utils
+    utils,
+	R.utils
 Suggests:
     rRDP,
     rRDPData,

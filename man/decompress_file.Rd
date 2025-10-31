@@ -17,6 +17,7 @@ Character string: output decompressed file.
 \description{
 Decompress the input gzipped file.
 If remove_input is TRUE, deleted the compressed input file.
+Not adapted for large files.
 }
 \examples{
 \dontrun{

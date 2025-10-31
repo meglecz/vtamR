@@ -8,6 +8,8 @@ Merge(
   fastqinfo,
   fastq_dir,
   vsearch_path = "vsearch",
+  pigz = FALSE,
+  pigz_path = "pigz",
   num_threads = 0,
   outdir = "",
   fastq_ascii = 33,
@@ -35,6 +37,13 @@ fastq_fw,fastq_rv}
 (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{pigz}{Logical: Use pigz for compression/decompression. If FALSE uses \code{R.utils}.}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable.
+Used only to speed up the decompression of large \code{.fastq.gz} files on Windows.
+If not provided, \code{R.utils} is used instead. On Unix-like systems, this parameter
+is unnecessary because \code{vsearch} can directly process gzipped files.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 

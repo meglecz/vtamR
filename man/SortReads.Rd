@@ -10,6 +10,8 @@ SortReads(
   outdir = "",
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
+  pigz = FALSE,
+  pigz_path = "pigz",
   num_threads = 0,
   check_reverse = F,
   tag_to_end = T,
@@ -35,6 +37,10 @@ habitat(optional),replicate,fasta}
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{pigz}{Logical: Use pigz for compression/decompression. If FALSE uses \code{R.utils}.}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 

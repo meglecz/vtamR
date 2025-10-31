@@ -17,8 +17,7 @@ compress_file(filename = "", remove_input = F)
 Character string: output gz compressed file.
 }
 \description{
-This function work in all operating systems, but might not work with very large files,
-since it reads the file to memory.
+This function work in all operating systems, but not adapetd to very large files.
 }
 \examples{
 \dontrun{

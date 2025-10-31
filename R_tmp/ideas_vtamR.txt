@@ -1,5 +1,8 @@
 # Ideas for vtamR
 
+## rewise Rowing doc, using ` when necessary.
+## revise return(invisible(x)) when necessary
+
 ## OptimizeLFNreadCountLFNvariant => referr to missing occurrences instaed of printing missing asv to the terminale
 ## add asv_id to missing occurrences (if there are any)
 
@@ -418,6 +421,24 @@ but not the same size as the ASV. Draft is in windows
 
 commit -m "MakeMockCompositionLTG"
 push
+
+
+## 2025/10/30
+
+smart_gzip replaces compess_file and decompress_file
+Used in 
+-Merge
+-RandomSeq
+-TrimPrimer_OneFile
+-SortReads
+installation, tuto and from_fastq-to-df vignettes are adjusted
+!! Compress in Merge SortReads, TrimPrimer might need to be adjusted
+afetr test on linux, and clean up of SortReads
+
+!!! zip intermadiate files, and sort them out after the analyses.
+
+Incude RandomSampleFastaR to RandomSeqR => tuto => TO do after cleaning up 
+the linux version.
 
 
 
