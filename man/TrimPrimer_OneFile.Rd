@@ -11,6 +11,8 @@ TrimPrimer_OneFile(
   primer_rv,
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
+  compress_method = "R",
+  pigz_path = "pigz",
   num_threads = 0,
   check_reverse = F,
   primer_to_end = T,
@@ -32,6 +34,15 @@ TrimPrimer_OneFile(
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 

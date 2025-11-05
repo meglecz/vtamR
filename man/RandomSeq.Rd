@@ -2,66 +2,82 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{RandomSeq}
 \alias{RandomSeq}
-\title{Select random sequences}
+\title{RandomSeq}
 \usage{
 RandomSeq(
   fastainfo,
   n,
   fasta_dir = "",
   outdir = "",
+  use_vsearch = FALSE,
   vsearch_path = "vsearch",
-  pigz = FALSE,
+  randseed = NULL,
+  compress_method = "R",
   pigz_path = "pigz",
   num_threads = 0,
-  randseed = 0,
-  compress = F,
+  compress = T,
   sep = ",",
-  quiet = T
+  quiet = TRUE
 )
 }
 \arguments{
-\item{fastainfo}{Data frame or csv file with a fasta column containing input
-fasta file names. Files can be gzip compressed.}
+\item{fastainfo}{Data frame or CSV file containing a \code{fasta} column with input file names.
+Files can be gzipped.}
 
-\item{n}{Positive integer: the number of randomly selected sequences from each input file.}
+\item{n}{Positive integer: number of sequences to randomly select from each file.}
 
-\item{fasta_dir}{Character string: directory that contains the
-input fasta files}
+\item{fasta_dir}{Character string: directory containing the input FASTA files.}
 
-\item{outdir}{Character string: output directory.}
+\item{outdir}{Character string: directory to write the output FASTA files.}
+
+\item{use_vsearch}{Logical: If TRUE, use vsearch for random sampling. Only available
+on Linux. Otherwise uses a cross-platform version`.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{pigz}{Logical: Use pigz for compression/decompression. If FALSE uses \code{R.utils}.}
+\item{randseed}{Positive integer or NULL: seed for random sampling.
+NULL or 0 means to use a pseudo-random seed.
+A given non-zero seed produces always the same result.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable.}
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
-\item{randseed}{Positive integer: seed for random sampling.
-0 (default value) means to use a pseudo-random seed.
-A given non-zero seed produces always the same result.}
+\item{compress}{Logical: If TRUE, output files are compressed in gzip format.}
 
-\item{compress}{logical: Compress output files to gzip format.}
+\item{sep}{Character: field separator for input and output CSV files.}
 
-\item{sep}{Field separator character in input and output csv files.}
-
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: If TRUE, suppress informational messages; only warnings and errors are shown.}
 }
 \value{
-The input data frame with updated file names and read counts.
+Updated input data frame with file name extensions adjusted (if needed)
+and \code{read_counts} updated.
 }
 \description{
-Random select n sequences from each input fasta file.
+Randomly select \code{n} sequences from each input FASTA file in the input data frame.
+This is a wrapper to run \code{RandomSampleFastaR} on a series of FASTA files.
 
-Do not work on Windows! If using Windows, please, use RandomSeqWindows
+This function works on any operating system and can handle large files,
+but may be slow. For Linux-like systems, consider the \code{RandomSeq} function,
+which is faster.
 }
 \examples{
 \dontrun{
-fastainfo_df <- RandomSeq(fastainfo, 
-   fasta_dir="data/fasta", 
-   outdir="data/randomseq"
-   )
+RandomSeq(
+  fastainfo = fastainfo_df, 
+  n = 100, 
+  fasta_dir = "out/fasta", 
+  outdir = "out/randomseq", 
+  randseed = 2261, 
+  compress = TRUE
+)
 }
+
 }

@@ -2,6 +2,14 @@
 
 ## rewise Rowing doc, using ` when necessary.
 ## revise return(invisible(x)) when necessary
+## test if count_seq or count in random_seqR is more effifient for files in different size.
+
+## General section in tuto on 
+- compression
+- use of PATH
+- quiet
+- num_theads
+
 
 ## OptimizeLFNreadCountLFNvariant => referr to missing occurrences instaed of printing missing asv to the terminale
 ## add asv_id to missing occurrences (if there are any)
@@ -431,14 +439,70 @@ Used in
 -RandomSeq
 -TrimPrimer_OneFile
 -SortReads
+-RandomSeq
 installation, tuto and from_fastq-to-df vignettes are adjusted
+
+
+## 2025/10/31 smart_gzip-RandomSeqR
+
+## 2025/11/05  smart_gzip-RandomSample
+
+Merge
+	input of vsearch must be uncompressed on windows
+		Windows: smart_gzip
+		Linux: gziped input to vsearch => no effect if pigs=TRUE
+	output uncompressed in all systems
+		Windows: smart_gzip
+		Linux: smart_gzip
+
+
+RandomSeq2 => It replaces both RandomSeqR RandomSeq, RandomSeqWindows
+RandomSeqR RandomSeq, RandomSeqWindows => to R_tmp/backup_functions.R
+rename RandomSeq2 to RandomSeq
+
+###########
+Test Copmression/decompression with different compress_methods in smart_gz.
+/home/meglecz/vtamR_test_EPI09_COI/time_tests/smart_gzip_linux.ods
+
+action	method	Step	user	system	elapsed
+compress	R.utils	smart_gzip_R	843.736	11.652	962.547
+compress	gzip	smart_gzip_gzip	0.0879999999999654	0.0719999999999992	789.820000000002
+compress	pigz	smart_gzip_pigz	0.0320000000000391	0.0199999999999996	185.854000000003
+uncompress	R.utils	smart_gzip_R_unzip	59.7399999999999	13.428	197.835000000003
+uncompress	gzip	smart_gzip_gzip_unzip	0.0320000000001528	0.0319999999999965	182.359999999997
+uncompress	pigz	smart_gzip_pigz_unzip	0.0319999999999254	0.0399999999999991	103.018
+
+Speed: R.utils < gzip < pigz
+uncompression is quicker than compression
+###########
+
+
+RandomSampleFastaR
+	cross platform
+	count sequences by reading files by chunks
+	random sample by reading files lines by line
+	file compression is determined gzfile or file for read/write files
+RandomSampleFastaLinux (equivalent of RandomSampleFastaR)
+	only linux
+	count sequences by bash command
+	random sample by rvsearch
+	if compress output => smart_gzip
+
+RandomSample
+A wrapper to deal with files in a loop and determine I/O filenames 
+then run RandomSampleFastaR or RandomSampleFastaLinux foreach file
+	Input/output can be compressed or uncompressed
+	Files are read and written without explicit compression/decompression
+
+
+
+
+
+
+TODO
 !! Compress in Merge SortReads, TrimPrimer might need to be adjusted
 afetr test on linux, and clean up of SortReads
 
 !!! zip intermadiate files, and sort them out after the analyses.
 
-Incude RandomSampleFastaR to RandomSeqR => tuto => TO do after cleaning up 
-the linux version.
-
-
-
+RandomSeqR => update tuto after cleaning up the linux version nd test

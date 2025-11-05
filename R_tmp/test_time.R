@@ -3,9 +3,9 @@
 ## load
 library(vtamR)
 library(dplyr)
-library(ggplot2)
-library(rRDP)
-library(rRDPData)
+#library(ggplot2)
+#library(rRDP)
+#library(rRDPData)
 
 setwd("/home/meglecz/vtamR/")
 library("devtools")
@@ -31,340 +31,140 @@ taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 
-taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
+#################Big Data
+outdir <- "/home/meglecz/vtamR_test_EPI09_COI/test_Merge_SortReads"
+fastq_dir <- "/home/meglecz/vtamR_large_files/EPI09"
+fastqinfo <- "/home/meglecz/vtamR_large_files/EPI09/metainfo/mock_composition_EPI09_COI.csv"
 
+time_df <- data.frame(
+  Step = character(),
+  user = numeric(),
+  system = numeric(),
+  elapsed = numeric(),
+  stringsAsFactors = FALSE)
 
+###### Test merge 
+# input compressed
+# output: compressed/uncompressed
+# compress_methode: R/pigz 
 
-
-### Merge
-merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
+### Merge  output: uncompressed; compress_methode: R
+t1 <- proc.time()
+merged_dir_uncompress <- file.path(outdir, "Merge_uncompress")
 fastainfo_df_uncompress <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      pigz=TRUE,
-                      pigz_path = pigz_path,
-                      vsearch_path=vsearch_path, 
-                      outdir=merged_dir_uncompress,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=FALSE)
+                                 fastq_dir=fastq_dir, 
+                                 vsearch_path=vsearch_path, 
+                                 compress_method="R",
+                                 outdir=merged_dir_uncompress,
+                                 compress=FALSE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "Merge_uncompress_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-merged_dir_gz <- file.path(outdir, "merged_gz")
-fastainfo_df_gz <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      pigz=TRUE,
-                      pigz_path = pigz_path,
-                      vsearch_path=vsearch_path, 
-                      outdir=merged_dir_gz,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=TRUE)
+# Merge  output: compressed; compress_methode: R
+t1 <- proc.time()
+merged_dir_compress <- file.path(outdir, "Merge_compress")
+fastainfo_df_compress <- Merge(fastqinfo, 
+                         fastq_dir=fastq_dir, 
+                         vsearch_path=vsearch_path, 
+                         compress_method="R",
+                         outdir=merged_dir_compress,
+                         compress=TRUE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "Merge_compress_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
 
-outdir_RandomSeqR_gz <- file.path(outdir, "RandomSeqR_gz")
-fastainfo_randomSeqR_gz <-RandomSeqR(fastainfo_df_gz, 
-           n=40000,
-           fasta_dir=merged_dir_gz,
-           outdir=outdir_RandomSeqR_gz, 
-           randseed=0, 
-           compress=T, 
-           quiet=TRUE)
+# Merge  output: uncompressed; compress_methode: pigz
+t1 <- proc.time()
+merged_dir_uncompress <- file.path(outdir, "Merge_uncompress")
+fastainfo_df_uncompress <- Merge(fastqinfo, 
+                                 fastq_dir=fastq_dir, 
+                                 vsearch_path=vsearch_path, 
+                                 compress_method="pigz",
+                                 outdir=merged_dir_uncompress,
+                                 compress=FALSE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "Merge_uncompress_pigz",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-outdir_RandomSeqR_uncompress <- file.path(outdir, "RandomSeqR_uncompress")
-fastainfo_randomSeqR_uncompress <-RandomSeqR(fastainfo_df_uncompress, 
-                                     n=40000,
-                                     fasta_dir=merged_dir_uncompress,
-                                     outdir=outdir_RandomSeqR_uncompress, 
-                                     randseed=0, 
-                                     compress=FALSE, 
-                                     quiet=TRUE)
+# Merge  output: compressed; compress_methode: pigz
+t1 <- proc.time()
+merged_dir_compress <- file.path(outdir, "Merge_compress")
+fastainfo_df_compress <- Merge(fastqinfo, 
+                               fastq_dir=fastq_dir, 
+                               vsearch_path=vsearch_path, 
+                               compress_method="pigz",
+                               outdir=merged_dir_compress,
+                               compress=TRUE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "Merge_compress_pigz",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-outdir_RandomSeq_gz <- file.path(outdir, "RandomSeq_gz")
-fastainfo_randomSeq_gz <- RandomSeq(fastainfo=fastainfo_df_gz, 
-                      n=40000,
-                      fasta_dir=merged_dir_gz,
-                      outdir=outdir_RandomSeq_gz, 
-                      vsearch_path=vsearch_path,
-                      pigz= FALSE,
-                      pigz_path= "pigz",
-                      num_threads = 0,
-                      randseed=123,
-                      compress=TRUE,
-                      quiet=F)
+write.csv(time_df, file="/home/meglecz/vtamR_test_EPI09_COI/time_tests/Merge_demo_linux.csv")
 
 
-#' RandomSampleFastaLinux
-#' 
-#' Randomly select `n` sequences from an input FASTA file. 
-#'  
-# This function is Linux-specific. For a cross-platform version,
-# use `RandomSampleFastaR`.
-#' 
-#' The input FASTA can be uncompressed or gzipped. The output compression is
-#' determined automatically from the output file name (i.e., ends with `.gz` → gzip).
-#' 
-#' If the number of sequences in the input file is less than or equal to the
-#' requested number (`n`), the input file is simply copied to the output,
-#' respecting the compression inferred from the output file name.
-#'
-#' @param fasta Character string: Path to the input FASTA file. Can be gzipped.
-#' @param outfile Character string: Path to the output FASTA file. If it ends with `.gz`,
-#'   the output will be gzip-compressed.
-#' @param n Positive integer: Number of sequences to randomly select.
-#' @param vsearch_path Character string: path to vsearch executables.
-#' @param randseed Positive integer or NULL: seed for random sampling.
-#'  NULL or 0 by default means to use a pseudo-random seed. 
-#'  A given non-zero seed produces always the same result.
-#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
-#' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.
-#' @return Invisibly the number of sequences in the output file.
-#' @examples
-#' \dontrun{
-#' RandomSampleFastaLinux(
-#'   fasta = "all_sequences.fasta.gz",
-#'   outfile = "subset_100.fasta.gz",
-#'   vsearch_path="vsearch",
-#'   n = 100,
-#'   randseed = 123,
-#'   quiet = FALSE
-#' )
-#' }
-#' @export
-#' 
-RandomSampleFastaLinux <- function(fasta, outfile, n=1000000, vsearch_path="vsearch", randseed = NULL, quiet=TRUE, num_threads=0) {
+###### Test RandomSample 
+# input: uncompressed
+# output: uncompressed
+# compress_methode: R => irrelevant, since I/O are uncompressed 
+# use_vsearch: TRUE/FALSE
 
-  if(!is_linux()){
-    stop("This parameter setting is suppored only on linux")
-  }
-  
-  check_dir(outfile, is_file=TRUE)
-  
-  if(is.null(randseed)){
-    randseed <- 0
-  }
+time_df <- data.frame(
+  Step = character(),
+  user = numeric(),
+  system = numeric(),
+  elapsed = numeric(),
+  stringsAsFactors = FALSE)
 
-  # --- Count sequences
-  if(endsWith(fasta, '.gz')){
-      cmd <- paste("zcat", fasta, "| grep '>' | wc -l", sep=" ")
-  }else{
-      cmd <- paste("grep '>' ",fasta, "| wc -l", sep=" ")
-  }
-  total <- as.integer(system(cmd, intern=TRUE))
-
-  if(!quiet){ cat("Total sequences:", total, "\n")}
-  
-  # --- Check if n >= total
-  if (n >= total) {
-    txt <- paste(fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
-    warning(txt)
-    
-    # copy input to outfile, and compress/uncomress if necessary
-    if (grepl("\\.gz$", fasta) && !grepl("\\.gz$", outfile)) { #input gz, output not
-      outfile_tmp <- paste(outfile, "gz", sep=".")
-      cmd <- paste("cp", fasta, outfile_tmp, sep=" ")
-      system(cmd)
-      cmd <- paste("gunzip", outfile_tmp, sep=" ")
-      system(cmd)
-    } else if (!grepl("\\.gz$", fasta) && grepl("\\.gz$", outfile)) { #input not uncompressed - output gz
-      outfile_tmp <- sub("\\.gz", "", outfile)
-      cmd <- paste("cp", fasta, outfile_tmp, sep=" ")
-      system(cmd)
-      cmd <- paste("gzip", outfile_tmp, sep=" ")
-      system(cmd)
-    } else{ # same compression, simply copy file
-      cmd <- paste("cp", fasta, outfile, sep=" ")
-      system(cmd)
-    }
-    return(invisible(total))
-  }
-  
-  # --- total > n => random sample with vsearch
-  # do not transform large numbers to scientific forms, since it would lead to an error in vsearch
-  options(scipen=100)
-  if(grepl("\\.gz$", outfile)){ # ouput should be compressed
-    outfile_tmp <- gsub("\\.gz", "", outfile) # vsearch makes decompressed files
-  }else{
-    outfile_tmp <- outfile
-  }
-  
-  ##### run vsearch
-  # Build argument vector
-  args <- c("--fastx_subsample", fasta,
-            "--fastaout", outfile_tmp,
-            "--sample_size",  n,
-            "--randseed", randseed
-  )
-  if(num_threads > 0){
-    args <- append(args, c("--threads", num_threads), after = 2)
-  }
-  run_system2(vsearch_path, args, quiet=quiet)
-  options(scipen=0)
-  
-  if(grepl("\\.gz$", outfile)){ # ouput should be compressed
-    cmd <- paste("gzip", outfile_tmp, sep=" ")
-    system(cmd)
-  }
-  return(invisible(total))
-}
+## Vsearch
+t1 <- proc.time()
+RandomSeqdir <- file.path(outdir, "RandomSeq_uncompress_vsearch_R")
+fastainfo_random_uncompress <- RandomSeq(fastainfo=fastainfo_df_uncompress, 
+                                       n = 40000,
+                                        fasta_dir=merged_dir_uncompress,
+                                        outdir=RandomSeqdir, 
+                                        use_vsearch=TRUE,
+                                        vsearch_path=vsearch_path,
+                                        randseed=123, 
+                                        compress_method="R",
+                                        pigz_path=pigz_path,
+                                        num_threads=0,
+                                        compress=F, 
+                                        quiet=TRUE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "RandomSeq_uncompress_vsearch_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
 
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_uncompress/mfzr_2_fw.fasta",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE) 
+## No Vsearch 
+t1 <- proc.time()
+RandomSeqdir <- file.path(outdir, "RandomSeq_uncompress_NOvsearch_R")
+fastainfo_random_uncompress <- RandomSeq(fastainfo=fastainfo_df_uncompress, 
+                                         n = 40000,
+                                         fasta_dir=merged_dir_uncompress,
+                                         outdir=RandomSeqdir, 
+                                         use_vsearch=FALSE,
+                                         vsearch_path=vsearch_path,
+                                         randseed=123, 
+                                         compress_method="R",
+                                         pigz_path=pigz_path,
+                                         num_threads=0,
+                                         compress=F, 
+                                         quiet=TRUE)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "RandomSeq_uncompress_NOvsearch_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_uncompress/mfzr_2_fw.fasta",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta.gz",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE) 
-
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_gz/mfzr_2_fw.fasta.gz",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE)
-
-
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_gz/mfzr_2_fw.fasta.gz",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta.gz",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE)
+write.csv(time_df, file="/home/meglecz/vtamR_test_EPI09_COI/time_tests/RandomSeq_demo_linux.csv")
 
 
 
 
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_uncompress/mfzr_1_fw.fasta",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE) 
-
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_uncompress/mfzr_1_fw.fasta",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta.gz",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE) 
-
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_gz/mfzr_1_fw.fasta.gz",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE)
-
-
-RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/merged_gz/mfzr_1_fw.fasta.gz",
-                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta.gz",
-                       n=40000,
-                       randseed = NULL, 
-                       quiet=TRUE)
 
 
 
-#' RandomSeq2
-#' 
-#' Randomly select `n` sequences from each input FASTA file in the input data frame.
-#' This is a wrapper to run `RandomSampleFastaR` on a series of FASTA files.
-#'  
-#' This function works on any operating system and can handle large files, 
-#' but may be slow. For Linux-like systems, consider the `RandomSeq` function, 
-#' which is faster.
-#'  
-#' @param fastainfo Data frame or CSV file containing a `fasta` column with input file names. 
-#'   Files can be gzipped.
-#' @param fasta_dir Character string: directory containing the input FASTA files.
-#' @param n Positive integer: number of sequences to randomly select from each file.
-#' @param outdir Character string: directory to write the output FASTA files.
-#' @param use_vsearch Logical: If TRUE, use vsearch for random sampling. Only available 
-#' on Linux. Otherwise uses a cross-platform version`.
-#' @param vsearch_path Character string: path to vsearch executables.
-#' @param randseed Positive integer or NULL: seed for random sampling.
-#'  NULL or 0 means to use a pseudo-random seed. 
-#'  A given non-zero seed produces always the same result.
-#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
-#' @param compress Logical: If TRUE, output files are compressed in gzip format.
-#' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.
-#' @param sep Character: field separator for input and output CSV files.
-#' @return Updated input data frame with file name extensions adjusted (if needed) 
-#'   and `read_counts` updated.
-#' @examples
-#' \dontrun{
-#' RandomSeqR(
-#'   fastainfo = fastainfo_df, 
-#'   n = 100, 
-#'   fasta_dir = "out/fasta", 
-#'   outdir = "out/randomseq", 
-#'   randseed = 2261, 
-#'   compress = TRUE
-#' )
-#' }
-#' 
-#' @export
-#' 
-RandomSeq2 <- function(fastainfo, 
-                       n,
-                       fasta_dir="",
-                       outdir="", 
-                       use_vsearch=FALSE,
-                       vsearch_path="vsearch",
-                       randseed=NULL, 
-                       num_threads=0,
-                       compress=T, 
-                       sep=",",
-                       quiet=TRUE){
-  
-  # can accept df or file as an input
-  if(is.character(fastainfo)){
-    # read known occurrences
-    fastainfo_df <- read.csv(fastainfo, header=T, sep=sep)
-  }else{
-    fastainfo_df <- fastainfo
-  }
-  
-  check_dir(fasta_dir)
-  check_dir(outdir)
-  
-  unique_fasta <- unique(fastainfo_df$fasta)
-  
-  for(i in 1:length(unique_fasta)){ # go through all fasta files
-    input_fasta <- unique_fasta[i]
-    input_fasta_p <- file.path(fasta_dir, input_fasta)
-    
-    # outline name is the same as the input, but different folder
-    # adjusted compression
-    outfile <- input_fasta
-    if(!compress && grepl("\\.gz$", input_fasta)){
-      outfile <- sub("\\.gz$", "", outfile)
-    }
-    if(compress && !grepl("\\.gz$", input_fasta)){
-      outfile <- paste(outfile, "gz", sep=".")
-    }
-    outfile_p <- file.path(outdir, outfile)
-    if(use_vsearch){
-      seqn <- RandomSampleFastaLinux(fasta=input_fasta_p,
-                                     outfile=outfile_p,
-                                     n=n,
-                                     vsearch_path=vsearch_path,
-                                     randseed = randseed,
-                                     quiet=quiet,
-                                     num_threads=num_threads)
-    }else{
-      seqn <- RandomSampleFastaR(fasta=input_fasta_p, 
-                                 outfile = outfile_p,
-                                 n=n, 
-                                 randseed = randseed,
-                                 quiet=quiet)
-    }
-    
-    fastainfo_df$fasta[which(fastainfo_df$fasta == input_fasta)] <- outfile
-    fastainfo_df$read_count[which(fastainfo_df$fasta == outfile)] <- seqn
-  } # end for
-  write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
-  return(fastainfo_df)
-}
+
+
+
+
+
+
+
 
 ### R
 fastainfo_df <- RandomSeq2(fastainfo="/home/meglecz/vtamR_demo_out/merged_uncompress/fastainfo.csv", 
@@ -1204,3 +1004,143 @@ asv_table_df <- WriteASVtable(read_count_16S,
                               outfile=out,
                               mock_composition=mock
 )
+
+
+
+
+##########################################################################
+##########################################################################
+##########################################################################
+# DONE
+
+#################"smart_gzip
+#### compress with smart_gzip Input file 19 Gb
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/Epi09-COI-R2_S17_R1_001.fasta",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/R.fasta.gz",
+           remove = F,
+           method = "R",
+           num_threads = 0,
+           quiet = F,
+           compress = T)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/Epi09-COI-R2_S17_R1_001.fasta",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/gzip.fasta.gz",
+           remove = F,
+           method = "gzip",
+           num_threads = 0,
+           quiet = F,
+           compress = T)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_gzip",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/Epi09-COI-R2_S17_R1_001.fasta",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/pigz.fasta.gz",
+           remove = F,
+           method = "pigz",
+           num_threads = 0,
+           quiet = F,
+           compress = T)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_pigz",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+
+#### uncompress with smart_gzip
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/R.fasta.gz",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/R.fasta",
+           remove = F,
+           method = "R",
+           num_threads = 0,
+           quiet = F,
+           compress = F)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_R_unzip",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/R.fasta.gz",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/gzip.fasta",
+           remove = F,
+           method = "gzip",
+           num_threads = 0,
+           quiet = F,
+           compress = F)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_gzip_unzip",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+t1 <- proc.time()
+smart_gzip(file = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/R.fasta.gz",
+           outfile = "/home/meglecz/vtamR_test_EPI09_COI/test_zip/pigz.fasta",
+           remove = F,
+           method = "pigz",
+           num_threads = 0,
+           quiet = F,
+           compress = F)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "smart_gzip_pigz_unzip",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+write.csv(time_df, file="/home/meglecz/vtamR_test_EPI09_COI/time_tests/smart_gzip_linux.csv", row.names=FALSE)
+
+#################"
+# RandomSampleFastaLinux on demo dataset
+#### RandomSampleFastaLinux total < n
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_1_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE) 
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_1_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta.gz",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE) 
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_1_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE)
+
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_compress/mfzr_1_fw.fasta.gz",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_1_fw_random_seq.fasta.gz",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE)
+
+#### RandomSampleFastaLinux total > n
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_2_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE) 
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_2_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta.gz",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE) 
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_uncompress/mfzr_2_fw.fasta",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE)
+
+
+RandomSampleFastaLinux(fasta="/home/meglecz/vtamR_demo_out/Merge_compress/mfzr_2_fw.fasta.gz",
+                       outfile="/home/meglecz/vtamR_demo_out/tmp/mfzr_2_fw_random_seq.fasta.gz",
+                       n=40000,
+                       randseed = NULL, 
+                       quiet=TRUE)
+

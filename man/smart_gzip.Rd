@@ -9,7 +9,7 @@ smart_gzip(
   outfile = "",
   remove = FALSE,
   pigz_path = "pigz",
-  pigz = FALSE,
+  method = "R",
   num_threads = 0,
   quiet = TRUE,
   compress = FALSE
@@ -22,9 +22,14 @@ smart_gzip(
 
 \item{remove}{Logical: Remove input file after successful operation.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable.}
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
 
-\item{pigz}{Logical: Use pigz for compression/decompression. If FALSE uses \code{R.utils}.}
+\item{method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig}
 
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
