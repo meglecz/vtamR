@@ -8,6 +8,7 @@ library(dplyr)
 #library(rRDPData)
 
 setwd("/home/meglecz/vtamR/")
+setwd("C:/Users/emese/vtamR")
 library("devtools")
 library("roxygen2")
 load_all(".")
@@ -21,8 +22,17 @@ blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
 swarm_path <- "swarm"
 pigz_path <- "pigz"
 sep <- ","
-outdir <- "~/vtamR_demo_out"
 
+### Win
+cutadapt_path <- "C:/Users/Public/cutadapt"
+vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
+swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
+pigz_path <- "C:/Users/Public/pigz-win32/pigz"
+num_threads <- 0
+sep <- ","
+
+### Demo data
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
@@ -32,9 +42,18 @@ blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 
 #################Big Data
+# Bombyx
 outdir <- "/home/meglecz/vtamR_test_EPI09_COI/test_Merge_SortReads"
 fastq_dir <- "/home/meglecz/vtamR_large_files/EPI09"
 fastqinfo <- "/home/meglecz/vtamR_large_files/EPI09/metainfo/mock_composition_EPI09_COI.csv"
+# Win
+outdir <- "C:/data/EPI09/out"
+fastq_dir <- "C:/data/EPI09"
+fastqinfo <- "C:/data/EPI09/metainfo/fastqinfo_Epi09_COI.csv"
+stat_dir <- "C:/data/EPI09/out/time_stat"
+syst <- "windows"
+ds <- "demo"
+
 
 time_df <- data.frame(
   Step = character(),
@@ -97,7 +116,9 @@ fastainfo_df_compress <- Merge(fastqinfo,
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "Merge_compress_pigz",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-write.csv(time_df, file="/home/meglecz/vtamR_test_EPI09_COI/time_tests/Merge_demo_linux.csv")
+file_stat <- paste("Merge_", ds, "_", syst, ".csv", sep="")
+file_stat <- file.path(stat_dir, file_stat)
+write.csv(time_df, file=file_stat)
 
 
 ###### Test RandomSample 
@@ -132,11 +153,20 @@ t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "RandomSeq_uncompress_vsearch_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
 
+
+time_df <- data.frame(
+  Step = character(),
+  user = numeric(),
+  system = numeric(),
+  elapsed = numeric(),
+  stringsAsFactors = FALSE)
+
 ## No Vsearch 
+fastainfo_df_uncompress <- read.csv("C:/data/EPI09/out/Merge_uncompress/fastainfo.csv")
 t1 <- proc.time()
 RandomSeqdir <- file.path(outdir, "RandomSeq_uncompress_NOvsearch_R")
 fastainfo_random_uncompress <- RandomSeq(fastainfo=fastainfo_df_uncompress, 
-                                         n = 40000,
+                                         n = 10000000,
                                          fasta_dir=merged_dir_uncompress,
                                          outdir=RandomSeqdir, 
                                          use_vsearch=FALSE,
@@ -150,7 +180,9 @@ fastainfo_random_uncompress <- RandomSeq(fastainfo=fastainfo_df_uncompress,
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "RandomSeq_uncompress_NOvsearch_R",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-write.csv(time_df, file="/home/meglecz/vtamR_test_EPI09_COI/time_tests/RandomSeq_demo_linux.csv")
+file_stat <- paste("RandomSeq_", ds, "_", syst, ".csv", sep="")
+file_stat <- file.path(stat_dir, file_stat)
+write.csv(time_df, file=file_stat)
 
 
 

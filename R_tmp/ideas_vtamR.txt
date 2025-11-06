@@ -506,3 +506,5 @@ afetr test on linux, and clean up of SortReads
 !!! zip intermadiate files, and sort them out after the analyses.
 
 RandomSeqR => update tuto after cleaning up the linux version nd test
+
+Id windows and use_vsearch for RandomSeq => Warning, and change to R.
