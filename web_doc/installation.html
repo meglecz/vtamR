@@ -275,6 +275,7 @@ BiocManager::install(&quot;rRDPData&quot;)</code></pre>
 <h2>Install third party programs</h2>
 <div id="option-1-install-third-party-programs-using-conda-environment" class="section level3">
 <h3>Option 1: Install third party programs using conda environment</h3>
+<p><strong>NOTE:</strong> Should be updated to include pigz and tested</p>
 <p><strong>In R</strong>, find the full path to the YAML environment file:</p>
 <pre class="r"><code>environment_vtamR_yml_path &lt;- system.file(&quot;environment_vtamR.yml&quot;, package = &quot;vtamR&quot;)
 cat(environment_vtamR_yml_path)</code></pre>
@@ -282,7 +283,7 @@ cat(environment_vtamR_yml_path)</code></pre>
 <pre class="bash"><code>conda env create -f PATH_TO_YML
 conda activate vtamRenv</code></pre>
 <p>This creates a Conda environment <code>vtamRenv</code> with all required tools.</p>
-<p>If using <strong>RStudio</strong>, you must manually set the paths to these tools in your R session or scripts. See the <a href="tutorial-vtamr-pipeline.html#set-up">Set up section of the tutorial</a> for details.</p>
+<p>If using <strong>RStudio</strong>, you must manually set the paths to these tools in your R session or scripts. See the <a href="tutorial-vtamr-pipeline.html#setup">Set up section of the tutorial</a> for details.</p>
 <p>Get paths to third-party programs:</p>
 <pre class="bash"><code>conda activate vtamRenv
 
@@ -305,7 +306,9 @@ swarm --version # &gt;= v2.1.12</code></pre>
 <li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
 <li><code>cutadapt</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
 <li><code>swarm</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
+<li><code>pigz</code> (optional) <a href="https://github.com/madler/pigz">https://github.com/madler/pigz</a></li>
 </ul>
+<p><strong>Add the executables to your PATH</strong> to avoid specifying their full path each time you run a function that uses them.</p>
 </div>
 <div id="windows" class="section level4">
 <h4>Windows</h4>
@@ -327,12 +330,21 @@ swarm --version # &gt;= v2.1.12</code></pre>
 <li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code> directory</li>
 </ul>
 <p><strong>BLAST</strong></p>
+<p>Detailed instructions: <a href="https://www.ncbi.nlm.nih.gov/books/NBK52637/" class="uri">https://www.ncbi.nlm.nih.gov/books/NBK52637/</a></p>
 <ul>
-<li>Detailed instructions: <a href="https://www.ncbi.nlm.nih.gov/books/NBK52637/">https://www.ncbi.nlm.nih.gov/books/NBK52637/</a></li>
-<li>Download executable (ncbi-blast-x.xx.x+-win64.exe) from <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
-<li>Double click on the .exe file, accept the license agreement and specify the install location when prompted. Attention! Do not accept the standard location (C:/Program Files/…) since it contains a space. Chose a directory with a path without space (e.g. <code>C:/Users/Public/</code>).</li>
-<li>The executable are found in <code>blast-x.xx.x+/bin/</code></li>
+<li>Download the installer (ncbi-blast-x.xx.x+-win64.exe) from: <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/" class="uri">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
+<li>Double-click the .exe file, accept the license agreement, and keep the suggested installation path. This will automatically add BLAST to your system PATH, so you won’t need to specify its location when using it.</li>
+<li>The executables will be installed in: <code>C:\Program Files\NCBI\blast-x.xx.x+\bin</code></li>
 </ul>
+<p><strong>pigz</strong> (Optional)</p>
+<ul>
+<li>Download <a href="https://sourceforge.net/projects/pigz-for-windows/files/">pigz-win32.zip</a></li>
+<li>Decompress the zip file</li>
+<li>The executable (pigz.exe) is in the pigz-win32 directory</li>
+</ul>
+<p><strong>Add executables to your PATH</strong></p>
+<p>This step is optional. If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
+<p>If you choose <strong>not</strong> to add them to your PATH, remember to specify the full path to each program when calling those functions.</p>
 </div>
 </div>
 </div>
@@ -351,7 +363,7 @@ download_osf(filename = &quot;COInr_for_vtam_2025_05_23_dbV5.tar.gz&quot;,
 <p>To check for newer versions:</p>
 <ul>
 <li>Go to: <a href="https://osf.io/vrfwz/files/osfstorage">https://osf.io/vrfwz/files/osfstorage</a></li>
-<li>Navigate to the dbV5 folder.</li>
+<li>In <strong>Files</strong> open the the <strong>dbV5</strong> folder.</li>
 <li>Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.</li>
 </ul>
 <p>Alternatively, you can also create a custom version from the <strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860">Zenodo</a> and make a custom version using <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz, 2023</a>).</p>

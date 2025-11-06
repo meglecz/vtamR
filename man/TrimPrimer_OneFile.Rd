@@ -39,7 +39,8 @@ TrimPrimer_OneFile(
 \code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
 \code{"gzip"} is Linux-only.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
+Speed: R.utils < gzip (only linux) < pig
+Only needed if \code{check_reverse} is TRUE.}
 
 \item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
 is used for file compression, and it is not in the PATH.}
@@ -70,8 +71,9 @@ NA; Produces an output fasta file.
 \description{
 Trim primers from the input fasta file
 
-Input fasta can be uncompressed or gzip, bz2 compressed file,
+Input fasta can be uncompressed or gzip compressed file,
 but other compression types are not supported.
+The outfut file compression is determined from the output filename.
 }
 \examples{
 \dontrun{

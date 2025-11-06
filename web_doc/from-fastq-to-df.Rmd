@@ -43,12 +43,14 @@ library(vtamR)
 # Example for Windows
 cutadapt_path <- "C:/Users/Public/cutadapt"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional to speed file compression
 ```
 
 ```{r set_path_linux}
 #  Example for Linux
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
+pigz_path <- "~/miniconda3/envs/vtam/bin/pigz" # optional to speed file compression
 ```
 
 * **Adapt the path** to third party programs according to your installation
@@ -89,6 +91,7 @@ version of fastqinfo, where fastq file names have been replaced by fasta file
 names and the read counts are included for each file. 
 * `outdir`: Name of the output directory.
 
+
 The demo files below are included with the `vtamR` package, which is why we
 use `system.file()` to access them in this tutorial. 
 When using your own data, simply provide the file and directory names (e.g. `~/vtamR/fastq`).
@@ -108,9 +111,15 @@ merged_dir <- file.path(outdir, "merged")
 sampleinfo_df <- Merge(fastqinfo, 
                        fastq_dir=fastq_dir, 
                        vsearch_path=vsearch_path, 
-                       outdir=merged_dir
+                       outdir=merged_dir,
+                       compress=FALSE,
                        )
 ```
+
+`compress = FALSE` In the tutorial we will use uncompressed files, but see
+[To compress or not to compress](tutorial-vtamr-pieline.html#to-compress-or-not-to-compress) for the best
+strategy for you. See also [Files to keep](#files-to-keep) on how to handle the 
+large intermediate files that should be compressed or deleted once the analyses are complete.
 
 **Dereplicate**
 
@@ -175,12 +184,15 @@ merged_dir <- file.path(outdir, "merged")
 ```
 
 **Merge fastq file pairs and quality filter reads**
+Since the next step will be `TrimPrimer` using CUTADAPT, that handles correctly 
+file compression, it is better to compress the output files.
 
 ```{r merge2}
 fastainfo_df <- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
-                      outdir=merged_dir
+                      outdir=merged_dir,
+                      compress=FALSE
                       )
 ```
 
@@ -195,7 +207,8 @@ sampleinfo_df <- TrimPrimer(fastainfo_df,
                             cutadapt_path=cutadapt_path, 
                             vsearch_path=vsearch_path, 
                             check_reverse=T,
-                            primer_to_end=F
+                            primer_to_end=F,
+                            compress=FALSE
                             )
 ```
 
@@ -266,7 +279,8 @@ demultiplexed_dir <- file.path(outdir, "demultiplexed")
 fastainfo_df <- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
-                      outdir=merged_dir
+                      outdir=merged_dir,
+                      compress=FALSE
                       )
 ```
 
@@ -277,7 +291,8 @@ sampleinfo_df <- SortReads(fastainfo_df,
                            outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
-                           vsearch_path=vsearch_path
+                           vsearch_path=vsearch_path,
+                           compress=FALSE
                            )
 ```
 

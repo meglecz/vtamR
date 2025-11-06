@@ -72,7 +72,7 @@ cutadapt_path <- "C:/Users/Public/cutadapt"
 vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
 blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
 swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
-pigz_path <- "C:/Users/Public/pigz-win32/pigz"
+pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional
 ```
 
 ```{r set_path_linux}
@@ -80,7 +80,8 @@ pigz_path <- "C:/Users/Public/pigz-win32/pigz"
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-swarm_path <- "swarm"
+swarm_path <- "swarm" # swarm is in the PATH
+pigz_path <- "pigz" # pigz is in the PATH
 ```
 
 * **Adapt the path** to third party programs according to your installation
@@ -91,7 +92,6 @@ swarm_path <- "swarm"
 ```{r general-parameters}
 sep <- ","
 outdir <- "~/vtamR_demo_out"
-outdir <- "vtamR_demo_out"
 ```
 
 
@@ -154,10 +154,18 @@ CheckFileinfo(file=mock_composition, file_type="mock_composition")
 CheckFileinfo(file=asv_list, file_type="asv_list")
 ```
 
+> **Before starting the analyses, check the [Tips – Good to Know](#tips---good-to-know) section.
+> It summarizes several general features and options of `vtamR` and will 
+> help you better understand how to run the functions effectively.**
+
+
+
+
 ## Merge - Demultiplex
 
 According to your wetlab and sequencing protocol each fastq file can 
 contain one or more [sample-replicates](#glossary), and sequences may or may 
+
 not contain [tags](#glossary) (for [demultiplexing](#glossary)) and primer sequences. 
 
 In this tutorial, the fastq files contain reads from several samples, so read pairs 
@@ -171,32 +179,65 @@ how to deal with other experimental design.
 
 **Merge and quality filter**
 
-* [fastqinfo](#fastqinfo): Either a csv file, or a data frame. 
-* `fastq_dir`: Directory containing the input fastq files.
-* [fastainfo_df](#fastainfo): is the output of `Merge`. 
-It is the updated version of `fastqinfo`, where fastq file names have been 
-replaced by fasta file names.
-* `fasta_dir`: Directory containing the input fasta files for `SortReads`. 
-This directory is created by `Merge`.
-* `compress = FALSE` produces uncompressed files, even if the input files are compressed.
-  Compression and decompression on Windows can be slow, so in this tutorial we will use uncompressed files.
-  This will generate large intermediate files that should be compressed or deleted once the analyses are complete.
-  For more details, see [Files to keep](#files-to-keep).
+`Merge` will make a single sequence from each read-pair. It can also be used for 
+quality filtering.
 
-See `?Merge` for the options of quality filtering.
+`compress = FALSE` In the tutorial we will use uncompressed files, but see
+[To compress or not to compress](#to-compress-or-not-to-compress) for the best
+strategy for you. See also [Files to keep](#files-to-keep) on how to handle the 
+large intermediate files that should be compressed or deleted once the analyses are complete.
+
+See `?Merge` for more options on quality filtering.
 
 ```{r merge}
 merged_dir <- file.path(outdir, "merged")
-fastainfo_df <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
+fastainfo_df <- Merge(fastqinfo=fastqinfo, # csv or data frame with input filenames
+                      fastq_dir=fastq_dir, # directory of input fasta files
                       vsearch_path=vsearch_path, 
-                      outdir=merged_dir,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=FALSE
+                      outdir=merged_dir, # directory of output fasta files
+                      fastq_maxee=1, # Maximum Expected Error for each read
+                      fastq_maxns=0, # no Ns in output
+                      fastq_allowmergestagger=T, # reads might be longer than the marker
+                      compress=FALSE # uncompressed output
                       )
 ```
+
+
+**Randomly select sequences**
+
+The `RandomSeq` function randomly selects `n` sequences (without replacement) 
+from each input FASTA file listed in the `fastainfo` data frame.
+
+This step can be useful to **normalize the number of reads across sequencing libraries**,
+but it is entirely up to you whether to include it in your workflow.
+
+In this tutorial, I use `RandomSeq` to ensure that all replicate series
+(i.e., each FASTA file contains different replicates of the same samples)
+contain the same number of reads.
+
+There are two different methods to perform random sampling:
+
+*1. Using fastx_subsample command of VSEARCH (`use_vsearch = TRUE`)*
+This method is very **fast but only available on Linux-like** operating systems.
+
+*2. Using R Only (`use_vsearch = FALSE`)*
+This version is slower but works on all operating systems.
+
+The following example uses a **slower but cross-platform** version.
+See [RandomSeq](#randomseq) for more information.
+
+```{r RandomSeq}
+randomseq_dir <- file.path(outdir, "random_seq")
+fastainfo_df <- RandomSeq(fastainfo = fastainfo_df, # input df (output of Merge)
+                          fasta_dir = merged_dir, # directory of input fasta files.
+                          outdir = randomseq_dir,  # directory of output fasta files.
+                          use_vsearch  = FALSE, # use cross-platform version
+                          n = 40000, # select n sequences from each file
+                          compress = FALSE) # uncompressed output
+```
+A **warning** indicates that the file `mfzr_1_fw.fasta` contains fewer than 40,000 sequences.
+Since sampling is performed without replacement, this file is simply copied to 
+the output directory and will contain slightly fewer reads than the other two files.
 
 **Demultiplex and Trim**
 
@@ -210,24 +251,18 @@ correct parameters for demultiplexing and primer trimming:
 * If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
 * `sampleinfo_df` is  updated version of `fastainfo`. 
 This data frame and the files listed in it are the input of the `Dereplicate`.
-* `compress = TRUE` produces gzip-compressed files, even if the input files are uncompressed.
-  Since the next step, `Dereplicate`, can read compressed files directly, it makes sense to generate compressed output here to save disk space.
-* I am using `pigz=TRUE` to speed up the file compression, but it is not essential.
-
 
 ```{r demultiplex}
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo_df <- SortReads(fastainfo_df, 
-                           fasta_dir=merged_dir, 
-                           outdir=demultiplexed_dir, 
+sampleinfo_df <- SortReads(fastainfo=fastainfo_df,  # input df (output of RandomSeq)
+                           fasta_dir=randomseq_dir, # input directory
+                           outdir=demultiplexed_dir,  # output directory
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
                            cutadapt_minimum_length = 170,
                            cutadapt_maximum_length = 185,
-                           compress=TRUE,
-                           pigz=TRUE,
-                           pigz_path = pigz_path
+                           compress=FALSE
                            )
 ```
 
@@ -450,7 +485,7 @@ The `conta_file` will contain the data corresponding to the removed ASVs.
 conta_file <- file.path(outdir, "filter", "external_contamination.csv")
 outfile <- file.path(outdir, "filter", "6_FilterCodonStop.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
-                          sample_types=sampleinfo_df, 
+                          sampleinfo=sampleinfo_df, 
                           conta_file=conta_file,
                           outfile=outfile)
 
@@ -518,7 +553,7 @@ file (in the `vtamR_demo_out/demultiplexed/` directory).
 own data will likely look quite different.
 
 ```{r renkonen-dist-barplot}
-Barplot_RenkonenDistance(renkonen_within_df, sample_types=sampleinfo_df, x_axis_label_size=6)
+Barplot_RenkonenDistance(renkonen_within_df, sampleinfo=sampleinfo_df, x_axis_label_size=6)
 ```
 In this example, there are only a few distance values, so the density plot is 
 not very informative. The bar plot shows that replicate 1 of the `tnegtag` 
@@ -1118,33 +1153,264 @@ Print the number of reads, ASVs, samples and replicates after each step to a CSV
 write.csv(stat_df, file = file.path(outdir, "Summary.csv"))
 ```
 
+# Tips - Good to know
+
+## Data Frame or CSV File
+
+Most `vtamR` functions can accept either a **data frame** or a **CSV file** as input.
+This is a convenient feature that allows you to resume your analysis without 
+rerunning previous steps — for example, if you have closed your R session but 
+saved the data frame to a file.
+
+Below is a non-exhaustive list of arguments that can take either a data frame or a CSV file,
+as long as they contain the required columns:
+
+* `read_count`
+* `fastqinfo`
+* `fastainfo`
+* `sampleinfo`
+* `input_asv_list`
+* `mock_composition`
+* `asv`
+* `ltg_params`
+* `asv_tax`
+
+See the help of the functions to check for the required columns: `?function_name`
+
+Similarly, many functions return a **data frame**, and if **outfile** is specified at the same time,
+the function will also write the data frame to a CSV file.
+
+Saving outputs as CSV files is a good practice for **long workflows**,
+as it allows you to inspect the dataset after each filtering step and resume 
+processing later if needed.
+
+
+## To Compress or Not to Compress
+
+During the first steps of the workflow (`Merge`, `RandomSeq`, `TrimPrimers`, `SortReads`),
+many intermediate files are produced. Some of these can be **very large**, especially 
+before dereplication (`Dereplicate`).
+
+**File Size vs. Processing Time**
+
+Compressing and decompressing files between steps can take significant time.
+For this reason, **`vtamR` outputs uncompressed files by default** to improve speed.
+However, this can quickly consume disk space, so remember to 
+**delete intermediate files** once your analysis is complete.
+See [Files to keep](#tutorial-vtamr-pipeline.html#files-to-keep) 
+for guidance on which files to retain.
+
+If storage space is limited, you can enable file compression by setting
+`compress = TRUE` in the relevant functions (e.g., `RandomSeq`, `TrimPrimers`, `SortReads`).
+This will produce **gzip-compressed output files**.
+
+**Compression Methods**
+
+The compression and decompression method is defined by the argument `compress_method`.
+Three options are available:
+
+* **`"pigz"`** – Uses the `pigz` program (parallel gzip).
+  Requires installation and, if not in the system `PATH`, its location must be provided via `pigz_path`.
+  Available on Linux-like systems and Windows (with WSL or binaries).
+  Uses **multithreading**, making it the **fastest option**.
+
+* **`"gzip"`** – Uses the standard `gzip` command available on Linux-like systems.
+  **Slower** than `pigz` and **not available on Windows**.
+
+* **`"R"`** – Fully implemented in R via the **`R.utils`** package.
+  **Cross-platform**, works everywhere, but is the **slowest** method.
+
+**Example: Compression Speed Comparison**
+
+The table below shows an example of compression and decompression times
+for a 19 GB FASTA file (compressed size: 3 GB) on a Linux system.
+
+| Method  | Compression (min) | Decompression (min) |
+| ------- | ----------------: | ------------------: |
+| R.utils |                16 |                   3 |
+| gzip    |                13 |                   3 |
+| pigz    |                 3 |                   2 |
+
+**Summary:**
+
+- The fastest workflow is to **avoid compression during processing** and **clean up intermediate files** afterward.
+- If you prefer to work with compressed files, **`pigz` is clearly the best option**.
+- (See [Installation](#installation.html) for setup instructions.)
+
+**Notes on Compatibility**
+
+The effect of compression may vary depending on which external programs are used:
+
+* **Cutadapt** and **VSEARCH** can directly process gzip-compressed files in most cases.
+* On Windows, some **VSEARCH** commands may not accept compressed files.
+* **Cutadapt** can produce gzip-compressed outputs directly on all systems.
+* **VSEARCH** typically produces **uncompressed output files**, even when reading compressed inputs.
+
+## num_threads
+
+By default, **vtamR** automatically uses **all available CPU cores** for multithreaded processes.
+If you want to take full advantage of your computer’s resources, there is **no need to specify** the `num_threads` argument.
+
+However, if you wish to **limit the number of cores** used (for example, to leave resources available for other tasks or users),
+you can specify this parameter manually in the functions:
+
+**Example:**
+This will restrict vtamR to using 8 CPU threads during runnin Merge.
+```{bash, eval=FALSE}
+fastainfo_df <- Merge(fastqinfo, 
+                      fastq_dir=fastq_dir, 
+                      vsearch_path=vsearch_path, 
+                      outdir=merged_dir,
+                      num_threads=8
+                      )
+```
+
+
+## PATH
+
+Some **vtamR** functions rely on **third-party programs** (e.g., VSEARCH, Cutadapt, BLAST, Swarm, Pigz).
+To run these tools, vtamR needs to know where to find their executables.
+
+If these programs are already available in your **system PATH**,
+you don’t need to specify their locations when calling vtamR functions.
+
+However, if they are **not** in your PATH, you must provide their paths explicitly using the corresponding arguments:
+`vsearch_path`, `cutadapt_path`, `pigz_path`, `blast_path`, or `swarm_path`.
+
+To check which external programs a function uses, refer to its help page (`?function_name`).
+
+## quiet
+
+Some external programs produce a large amount of output on the screen, even when run in their own “quiet” mode.
+This can make it difficult to see important **warnings** or **error messages**.
+
+The `quiet` argument controls whether this output is displayed.
+By default, `quiet = TRUE`, which suppresses most messages for cleaner logs.
+
+If something goes wrong, re-run the function with `quiet = FALSE` to view the full output and help identify the problem.
+
+
+## sep
+
+Separator used in csv files. Comma by default.
+Use the same separator in all CSV files 
+except for the [taxonomy](#reference-database-for-taxonomic-assignments) 
+file of the reference database, which is tab separated.
+
+## Files to keep
+
+At the first steps (Merge, RandomSeq, Sortreads), many files are produced,
+and some of them can be very large, especially before the dereplication 
+(before `Dereplicate`).
+
+Compressing and decompressing between the different steps can take a while. Therefore, 
+`vtamR` uses by default uncompressed files. This behavior can be changed by the 
+[compress](#options) option.
+
+Here is a list of files I would tend to keep, delete or compress.
+
+* `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for 
+information on read counts after `Merge`.
+* `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility 
+in case of re-analyse.
+* `SortReads`: Delete the output fasta files, but keep `sampleinfo.csv` for 
+information on read counts after `SortReads`. 
+* `Dereplicate`: Write the dereplicated info to a file 
+(`1_before_filter.csv` in the tutorial) and compress it after the analyses. 
+This is an important file, since you can restart the analyses from here,
+without re-doing the longest merging, and demultiplexing steps. 
+Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), 
+since this can be used when analyzing subsequent data sets to synchronyse the asv_ids.
+* Output of different filtering steps: Compress them if they are too large. 
+They are useful for tracing back the history of a sample or an ASV 
+(see [HistoryBy](#historyby)) or making summary files (see [SummarizeBy](#summarizeby)).
+
+
 # Supplementary functions
 
 ## RandomSeq
 
-Random select `n` sequences from each input fasta file. 
-It can be used before or after demultiplexing (`SortReads`). 
-However, if using `LFNvariant` and `LFNreadCount` which are partially 
-based on the number of reads in negative controls, standardizing the number of 
-reads among samples does not make sense. Thus I use `RandomSeq` after `Merge`, 
-to get the same number of reads for each replicate series 
-(same samples, different replicates in each fasta file).
+The `RandomSeq` function randomly selects `n` sequences (without replacement) 
+from each input FASTA file listed in the `fastainfo` data frame.
 
+This step can be useful to normalize the number of reads across sequencing libraries.
+`RandomSeq` can be applied before or after demultiplexing (`SortReads`).
 
-* [fastainfo](#fastainfo): Either a csv file, or a data frame, with the following columns: 
-tag_fw, primer_fw, tag_rv, primer_rv, sample, sample_type, habitat, replicate, fasta.
-* `fasta_dir`: Directory containing the input fasta files.
-* `n`: Number of sequences to be taken randomly (without replacement).
+However, if your workflow includes `LFNvariant` or `LFNreadCount`, 
+which partially rely on the total number of reads in negative controls, 
+standardizing read numbers across samples is not recommended.
+For this reason, it is generally best to use `RandomSeq` after `Merge` 
+and before `SortReads`, in order to ensure that all replicate series 
+(i.e., the same samples with different replicates in separate FASTA files) 
+contain the same number of reads.
 
+### Available Algorithms
+
+There are two different methods to perform random sampling:
+
+**1. Using VSEARCH (`use_vsearch = TRUE`)**
+
+Random sampling can be done with the [`fastx_subsample`](https://github.com/torognes/vsearch) 
+command from VSEARCH.
+This method is very fast but only available on Linux-like operating systems.
+
+If compression of input/output files is required, three compression methods are supported:
+
+* **`pigz`** – *Fastest method.* Requires the `pigz` program 
+(if not in your `PATH`, specify its location via `pigz_path`).
+* **`gzip`** – *Slower method.* Works only on Linux-like systems.
+* **`R`** – *Slowest but cross-platform method.* Uses the `R.utils` 
+package, no external dependencies.
+
+**2. Using R Only (`use_vsearch = FALSE`)**
+
+Random sampling can also be performed entirely in R.
+This version is slower but works on all operating systems and does not depend 
+on any third-party software for file compression or decompression.
+
+### Input Parameters
+
+* **`fastainfo`**: A CSV file or data frame containing metadata with the following columns:
+  `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, `sample`, `sample_type`, `habitat`, `replicate`, `fasta`.
+* **`fasta_dir`**: Directory containing the input FASTA files.
+* **`n`**: Number of sequences to sample (without replacement).
+* **`outdir`**: Directory where the output FASTA files will be written.
+
+### Example Commands
+
+**Fast version (Linux-like systems)**
+
+The following example uses VSEARCH and `pigz` for fast compression:
 
 ```{r, eval=FALSE}
-randomseq_dir = file.path(outdir, "random_seq")
-fastainfo_df <- RandomSeq(fastainfo_df, 
-                          fasta_dir=merged_dir, 
-                          outdir=randomseq_dir, 
-                          vsearch_path=vsearch_path, 
-                          n=10000
-                          )
+randomseq_dir <- file.path(outdir, "random_seq")
+
+fastainfo_df <- RandomSeq(
+                fastainfo    = fastainfo_df,
+                fasta_dir    = merged_dir,
+                outdir       = randomseq_dir,
+                use_vsearch  = TRUE,
+                vsearch_path = vsearch_path,
+                compress_method = "pigz",
+                pigz_path    = pigz_path,
+                n            = 10000,
+                compress     = TRUE)
+```
+
+#### Cross-platform version (no external dependencies)
+
+This example runs entirely in R and works on any operating system:
+
+```{r, eval=FALSE}
+randomseq_dir <- file.path(outdir, "random_seq")
+
+fastainfo_df <- RandomSeq(
+                fastainfo    = fastainfo_df,
+                fasta_dir    = merged_dir,
+                outdir       = randomseq_dir,
+                use_vsearch  = FALSE,
+                n            = 10000,
+                compress     = TRUE)
 ```
 
 
@@ -1562,13 +1828,13 @@ or [sample-replicate](#glossary) (`sample_replicate=T`).
 Can use different colors for different sample types ([real/mock/negative](#glossary))
 
 * [read_count_df](#read_count_df): Input data frame
-* `sample_types`: data frame or CSV file containing info on sample types for each sample
+* `sampleinfo`: data frame or CSV file containing info on sample types for each sample
 
 ```{r}
 sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
 Barplot_ReadCountBySample(read_count_df=read_count_df, 
                           sample_replicate=F, 
-                          sample_types=sampleinfo
+                          sampleinfo=sampleinfo
                           )
 ```
 
@@ -1595,12 +1861,12 @@ Calculate the Renkonen distances among all replicates (compare_all=TRUE)
 or among replicates of the same sample (compare_all=FALSE) and plot them.
 
 * [read_count_df](#read_count_df): Input data frame.
-* `sample_types`: Data frame or CSV file containing info on sample types for each sample.
+* `sampleinfo`: Data frame or CSV file containing info on sample types for each sample.
 
 ```{r}
 sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
 renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
-Barplot_RenkonenDistance(renkonen_within_df, sample_types=sampleinfo)
+Barplot_RenkonenDistance(renkonen_within_df, sampleinfo=sampleinfo)
 DensityPlot_RenkonenDistance(renkonen_within_df)
 
 renkonen_all_df <- MakeRenkonenDistances(read_count_df, compare_all=TRUE)
@@ -1759,31 +2025,6 @@ using mkCOInr. It can be dowloaded and extracted manually of using the
 
 
 
-
-# Options
-
-* `num_threads`: By default, vtamR uses all available CPU cores for 
-multithreaded processes. To limit the number of cores used, specify this parameter.
-* `compress`: If TRUE, output files of the `Merge`, `RandomSeq` and `SortReads` 
-functions are compressed. This saves space, but compressing/decompressing
-increases run time in some cases. I suggest to avoid compressing intermediate 
-files and delete/compress them as soon as the analyses are finished. 
-(See more in the [troubleshooting section](#troubleshooting)). 
-The input fasta and fastq files of these functions can be compressed 
-(`.gz`, `.bz2`, but NOT .zip) or uncompressed files and compression 
-is automatically detected based on the file extension.
-
-* `delete_tmp`: Delete automatically intermediate files. TRUE by default.
-
-* `sep`: Separator used in csv files. Use the same separator in all CSV files 
-except for the [taxonomy](#reference-database-for-taxonomic-assignments) 
-file of the reference database, which is tab separated.
-
-* `quiet`: If TRUE print as little information to the terminal as possible. 
-TRUE by default.
-
-
-
 # Glossary
 
 
@@ -1847,12 +2088,6 @@ and each column represents a sample. Read counts are in the cells.
 
 # Troubleshooting
 
-## tmp_FunctionName_######## in vtamR directory
-
-These are temporary directories, that are automatically deleted at the end of 
-the function. In some cases, if the function ends prematurely due to an error, 
-the directory is not deleted. Just delete them manually.
-
 ## LFNvariant eliminate most occurrences of a frequent ASV
 
 `LFNvariant` will filter out all occurrences where
@@ -1881,37 +2116,7 @@ Both solutions make swarm a bit less efficient, but at least your analyses can g
 ## Memory issues in Merge on Windows
 
 If input fastq files are very large and do not go through `Merge`, 
-try working with uncompressed input files.
-
-
-### Files to keep
-
-At the first steps (Merge, RandomSeq, Sortreads), many files are produced,
-and some of them can be very large, especially before the dereplication 
-(before `Dereplicate`).
-
-Compressing and decompressing between the different steps can take a while 
-and can have memory issues in some cases (especially on Windows). Therefore, 
-`vtamR` uses by default uncompressed files. This behavior can be changed by the 
-[compress](#options) option.
-
-Here is a list of files I would tend to keep, delete or compress.
-
-* `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for 
-information on read counts after `Merge`.
-* `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility 
-in case of re-analyse.
-* `SortReads`: Delete the output fasta files, but keep `sampleinfo.csv` for 
-information on read counts after `SortReads`. 
-* `Dereplicate`: Write the dereplicated info to a file 
-(`1_before_filter.csv` in the tutorial) and compress it after the analyses. 
-This is an important file, since you can restart the analyses from here,
-without re-doing the longest merging, and demultiplexing steps. 
-Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), 
-since this can be used when analyzing subsequent data sets to synchronyse the asv_ids.
-* Output of different filtering steps: Compress them if they are too large. 
-They are useful for tracing back the history of a sample or an ASV 
-(see [HistoryBy](#historyby)) or making summary files (see [SummarizeBy](#summarizeby)).
+Try working with uncompressed input files.
 
 ## No or few sequences passing merge
 

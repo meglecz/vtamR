@@ -620,8 +620,9 @@ count_seq <- function(file) {
 #' 
 #' Trim primers from the input fasta file
 #'  
-#' Input fasta can be uncompressed or gzip, bz2 compressed file, 
+#' Input fasta can be uncompressed or gzip compressed file, 
 #' but other compression types are not supported.
+#' The outfut file compression is determined from the output filename.
 #'   
 #' @param fasta Character string: input fasta file (icluding path). 
 #' @param outfile Character string: output fasta file (icluding path).
@@ -635,6 +636,7 @@ count_seq <- function(file) {
 #'   `"gzip"` is Linux-only.  
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.
 #'   Speed: R.utils < gzip (only linux) < pig
+#'   Only needed if `check_reverse` is TRUE.
 #' @param pigz_path Character string: Path to `pigz` executable. Only needed is pigz
 #' is used for file compression, and it is not in the PATH.
 #' @param check_reverse logical: if TRUE, check the reverse complementary 
@@ -798,7 +800,6 @@ TrimPrimer_OneFile <- function(fasta,
 #' @param fastainfo Data frame or csv file with the following columns: 
 #' tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count
 #' @param fasta_dir Character string: directory of the fasta files to be trimmed
-#' @param compress logical: Compress output files to gzip format.
 #' @param outdir Character string: output directory for the trimmed fasta files.
 #' @param cutadapt_path Character string: path to cutadapt executables. 
 #' @param vsearch_path Character string: path to vsearch executables.
@@ -811,6 +812,14 @@ TrimPrimer_OneFile <- function(fasta,
 #' trimmed sequence.
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
+#' @param compress logical: Compress output files to gzip format.
+#' @param compress_method Character or logical. Compression method: `"pigz"`, `"gzip"`, or `"R"`.  
+#'   `"pigz"` requires `pigz` to be installed and in the system path (or `pigz_path` specified).  
+#'   `"gzip"` is Linux-only.  
+#'   `"R"` uses `R.utils`, which is cross-platform but slower.
+#'   Speed: R.utils < gzip (only linux) < pig
+#' @param pigz_path Character string: Path to `pigz` executable. Only needed is pigz
+#' is used for file compression, and it is not in the PATH.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @returns fastainfo_df the input data frame, with updated files names and sequence counts.
@@ -834,6 +843,8 @@ TrimPrimer <- function(fastainfo,
                        fasta_dir="", 
                        outdir="", 
                        compress=F, 
+                       compress_method="R",
+                       pigz_path="pigz",
                        cutadapt_path="cutadapt", 
                        vsearch_path="vsearch", 
                        check_reverse=F, 
@@ -888,6 +899,8 @@ TrimPrimer <- function(fastainfo,
                        cutadapt_error_rate=cutadapt_error_rate, 
                        cutadapt_minimum_length=cutadapt_minimum_length, 
                        cutadapt_maximum_length=cutadapt_maximum_length, 
+                       compress_method=compress_method,
+                       pigz_path=pigz_path,
                        quiet=quiet
                        )
     # count reads
@@ -1509,7 +1522,7 @@ reverse_complement <- function(sequence){
 #' @param input_asv_list Data frame or CSV file with asvs and asv_ids 
 #' from earlier analyses. Optional. It is used to homogenize asv_ids 
 #' between different data sets.
-#' @param outut_asv_list Character string naming of the output file 
+#' @param output_asv_list Character string naming of the output file 
 #' with updated asv_id - asv pairs. Optional.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
@@ -1851,7 +1864,7 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv_id, sample, replicate, read_count, asv.
-#' @param sample_types Data frame or csv file with at least the following columns: 
+#' @param sampleinfo Data frame or csv file with at least the following columns: 
 #' sample,sample_type (negative/mock/real). 
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written. 
@@ -1862,11 +1875,11 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
 #' @returns Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterExternalContaminant(read_count_df, sample_types=sampleinfo)
+#' filtered_read_count_df <- FilterExternalContaminant(read_count_df, sampleinfo=sampleinfo)
 #' }
 #' @export
 #' 
-FilterExternalContaminant <- function (read_count, sample_types, outfile="", 
+FilterExternalContaminant <- function (read_count, sampleinfo, outfile="", 
                                        conta_file="",sep=",") {
   
   # can accept df or file as an input
@@ -1877,15 +1890,15 @@ FilterExternalContaminant <- function (read_count, sample_types, outfile="",
     read_count_df <- read_count
   }
   
-  if(is.character(sample_types)){
+  if(is.character(sampleinfo)){
     # read known occurrences
-    sample_types <- read.csv(sample_types, header=T, sep=sep)
+    sampleinfo <- read.csv(sampleinfo, header=T, sep=sep)
   }
   
-  sample_types <- sample_types %>%
+  sampleinfo <- sampleinfo %>%
     filter(sample_type == "negative")
   
-  negative_control_samples <- unique(sample_types$sample)
+  negative_control_samples <- unique(sampleinfo$sample)
   
   # get for each asv the sample that have the highest read_count
   df <- read_count_df %>%
@@ -7088,7 +7101,6 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
   return(invisible(n))
 }
 
-
 #' RandomSampleFastaLinux
 #' 
 #' Randomly select `n` sequences from an input FASTA file using `fastx_subsample` from
@@ -7226,14 +7238,22 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
   return(invisible(total))
 }
 
-#' RandomSeq
+
+
+
+
+#' Randomly Select Sequences from FASTA Files
 #' 
-#' Randomly select `n` sequences from each input FASTA file in the input data frame.
-#' This is a wrapper to run `RandomSampleFastaR` on a series of FASTA files.
-#'  
-#' This function works on any operating system and can handle large files, 
-#' but may be slow. For Linux-like systems, consider the `RandomSeq` function, 
-#' which is faster.
+#' Randomly selects `n` sequences (without replacement) from each input FASTA file
+#' listed in the `fastainfo` data frame.  
+#' Useful to standardize the number of reads across sequencing libraries.
+#'
+#' Can be used before or after demultiplexing (`SortReads`), but recommended 
+#' after `Merge` and before `SortReads`.
+#'
+#' Two algorithms are available:
+#'   - VSEARCH-based (`use_vsearch = TRUE`): Fast, but only on Linux-like systems.
+#'   - R-based (`use_vsearch = FALSE`): Slower, but works on all systems.
 #'  
 #' @param fastainfo Data frame or CSV file containing a `fasta` column with input file names. 
 #'   Files can be gzipped.
@@ -7248,11 +7268,14 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
 #'  A given non-zero seed produces always the same result.
 #' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
 #' @param compress Logical: If TRUE, output files are compressed in gzip format.
-#' @param compress_method Character or logical. Compression method: `"pigz"`, `"gzip"`, or `"R"`.  
-#'   `"pigz"` requires `pigz` to be installed and in the system path (or `pigz_path` specified).  
-#'   `"gzip"` is Linux-only.  
-#'   `"R"` uses `R.utils`, which is cross-platform but slower.
-#'   Speed: R.utils < gzip (only linux) < pig
+#' @param compress_method Character or logical. Compression method 
+#' (used only if `use_vsearch = TRUE`).  
+#' Options are:  
+#'   `pigz` – Fastest; requires `pigz` to be installed (or specify its path via `pigz_path`).  
+#'   `gzip` – Slower; available only on Linux-like systems.  
+#'   `R` – Cross-platform; uses `R.utils`, but is the slowest option.
+#' }
+#' Relative speed: \code{`R.utils` < `gzip` < `pigz`}.
 #' @param pigz_path Character string: Path to `pigz` executable. Only needed is pigz
 #'  is used for file compression, and it is not in the PATH.
 #' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.
@@ -7261,14 +7284,13 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
 #'   and `read_counts` updated.
 #' @examples
 #' \dontrun{
-#' RandomSeq(
-#'   fastainfo = fastainfo_df, 
-#'   n = 100, 
-#'   fasta_dir = "out/fasta", 
-#'   outdir = "out/randomseq", 
-#'   randseed = 2261, 
-#'   compress = TRUE
-#' )
+#' # Fast version (Linux)
+#' fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+#'                           use_vsearch = TRUE, n = 10000, compress = TRUE)
+#'
+#' # Cross-platform version
+#' fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+#'                           use_vsearch = FALSE, n = 10000, compress = TRUE)
 #' }
 #' 
 #' @export

@@ -6,7 +6,7 @@
 \usage{
 FilterExternalContaminant(
   read_count,
-  sample_types,
+  sampleinfo,
   outfile = "",
   conta_file = "",
   sep = ","
@@ -16,7 +16,7 @@ FilterExternalContaminant(
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv.}
 
-\item{sample_types}{Data frame or csv file with at least the following columns:
+\item{sampleinfo}{Data frame or csv file with at least the following columns:
 sample,sample_type (negative/mock/real).}
 
 \item{outfile}{Character string: csv file name to print the output data
@@ -38,6 +38,6 @@ the other samples.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- FilterExternalContaminant(read_count_df, sample_types=sampleinfo)
+filtered_read_count_df <- FilterExternalContaminant(read_count_df, sampleinfo=sampleinfo)
 }
 }

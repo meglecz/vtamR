@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{RandomSeq}
 \alias{RandomSeq}
-\title{RandomSeq}
+\title{Randomly Select Sequences from FASTA Files}
 \usage{
 RandomSeq(
   fastainfo,
@@ -39,12 +39,6 @@ on Linux. Otherwise uses a cross-platform version`.}
 NULL or 0 means to use a pseudo-random seed.
 A given non-zero seed produces always the same result.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
-\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
-
 \item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
 is used for file compression, and it is not in the PATH.}
 
@@ -61,23 +55,29 @@ Updated input data frame with file name extensions adjusted (if needed)
 and \code{read_counts} updated.
 }
 \description{
-Randomly select \code{n} sequences from each input FASTA file in the input data frame.
-This is a wrapper to run \code{RandomSampleFastaR} on a series of FASTA files.
+Randomly selects \code{n} sequences (without replacement) from each input FASTA file
+listed in the \code{fastainfo} data frame.
+Useful to standardize the number of reads across sequencing libraries.
+}
+\details{
+Can be used before or after demultiplexing (\code{SortReads}), but recommended
+after \code{Merge} and before \code{SortReads}.
 
-This function works on any operating system and can handle large files,
-but may be slow. For Linux-like systems, consider the \code{RandomSeq} function,
-which is faster.
+Two algorithms are available:
+\itemize{
+\item VSEARCH-based (\code{use_vsearch = TRUE}): Fast, but only on Linux-like systems.
+\item R-based (\code{use_vsearch = FALSE}): Slower, but works on all systems.
+}
 }
 \examples{
 \dontrun{
-RandomSeq(
-  fastainfo = fastainfo_df, 
-  n = 100, 
-  fasta_dir = "out/fasta", 
-  outdir = "out/randomseq", 
-  randseed = 2261, 
-  compress = TRUE
-)
+# Fast version (Linux)
+fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+                          use_vsearch = TRUE, n = 10000, compress = TRUE)
+
+# Cross-platform version
+fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+                          use_vsearch = FALSE, n = 10000, compress = TRUE)
 }
 
 }

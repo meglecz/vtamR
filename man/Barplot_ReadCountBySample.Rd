@@ -6,7 +6,7 @@
 \usage{
 Barplot_ReadCountBySample(
   read_count_df,
-  sample_types = "",
+  sampleinfo = "",
   sample_replicate = T,
   sep = ",",
   x_axis_label_size = 6
@@ -15,7 +15,7 @@ Barplot_ReadCountBySample(
 \arguments{
 \item{read_count_df}{data frame with sample, read_count and replicate (optional) columns}
 
-\item{sample_types}{file with sample and sample_type (real/mock/negative) columns}
+\item{sampleinfo}{file with sample and sample_type (real/mock/negative) columns}
 
 \item{sample_replicate}{Boolean. If TRUE barplot is made by sample-replicates,
 by sample otherwise}

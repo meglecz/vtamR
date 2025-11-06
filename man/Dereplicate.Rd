@@ -30,11 +30,11 @@ The fasta column contains the names of the fasta file to be dereplicated.}
 from earlier analyses. Optional. It is used to homogenize asv_ids
 between different data sets.}
 
+\item{output_asv_list}{Character string naming of the output file
+with updated asv_id - asv pairs. Optional.}
+
 \item{quiet}{logical: If TRUE, suppress informational messages and only
 show warnings or errors.}
-
-\item{outut_asv_list}{Character string naming of the output file
-with updated asv_id - asv pairs. Optional.}
 }
 \value{
 Data frame with the following columns:

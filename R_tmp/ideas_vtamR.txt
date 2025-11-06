@@ -1,36 +1,18 @@
 # Ideas for vtamR
 
-## rewise Rowing doc, using ` when necessary.
-## revise return(invisible(x)) when necessary
-## test if count_seq or count in random_seqR is more effifient for files in different size.
-
-## General section in tuto on 
-- compression
-- use of PATH
-- quiet
-- num_theads
-
-
 ## OptimizeLFNreadCountLFNvariant => referr to missing occurrences instaed of printing missing asv to the terminale
 ## add asv_id to missing occurrences (if there are any)
 
-## Merge is very long on compressed files on windows. work in decrompress, since this is a limiting step.
-Test Merge on decompressend files.
-when running Merge in windows, the memory and Diswue SSd are both saturated.
+## rewise Rowing doc, using ` when necessary.
 
+## revise return(invisible(x)) when necessary
 
-## test dereplicate with large dataset both in windows and linux. If too slow try the following algo:
-- read data file by file and dereplicate, do not add asv_id
-- add new data to a pooled data frame once the file have been read
-- after readind all files, add asv_ids.
-Alternativelly, try using vsearch dereplicate.
+## test if count_seq or count in random_seqR is more effifient for files in different size.
 
-
-
+## dereplicate with vsearch
 
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
-### Rename SortReads to Demultiplex ???
 
 
 
@@ -495,7 +477,7 @@ then run RandomSampleFastaR or RandomSampleFastaLinux foreach file
 	Files are read and written without explicit compression/decompression
 
 
-## 2025/11/06
+## 2025/11/06 time_SortReads
 
 If windows and use_vsearch for RandomSeq => Warning, and change to 
 RandomSampleFastaR, instead of stoping the run.
@@ -506,14 +488,17 @@ SortReads
 		If check_reverse == FALSE, cutadapt handles the zipping in all OS
 		If check_reverse == TRUE, fastx_revcomp of VSEARCH is used, then
 		the output should be zipped. This is handled by smart_gzip.
+		
+		
+		
+
+## 2025/11/06 tuto-tips
+
+RandomSeqR => update tuto after cleaning up the linux version and test
+Compress updated in tuto for Merge, SortReads, TrimPrimer, RandomSeq.
+Tips, Good to know seaction in tuto.
 
 
-TODO
-!! Compress in Merge SortReads, TrimPrimer might need to be adjusted
-afetr test on linux, and clean up of SortReads
 
-!!! zip intermadiate files, and sort them out after the analyses.
-
-RandomSeqR => update tuto after cleaning up the linux version nd test
 
 

@@ -249,10 +249,12 @@ div.tocify {
 <p><em>Set path to third party programs</em></p>
 <pre class="r"><code># Example for Windows
 cutadapt_path &lt;- &quot;C:/Users/Public/cutadapt&quot;
-vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch&quot;</code></pre>
+vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch&quot;
+pigz_path &lt;- &quot;C:/Users/Public/pigz-win32/pigz&quot; # optional to speed file compression</code></pre>
 <pre class="r"><code>#  Example for Linux
 cutadapt_path &lt;- &quot;~/miniconda3/envs/vtam/bin/cutadapt&quot; # v3.4
-vsearch_path &lt;- &quot;~/miniconda3/envs/vtam/bin/vsearch&quot; # v2.15.1</code></pre>
+vsearch_path &lt;- &quot;~/miniconda3/envs/vtam/bin/vsearch&quot; # v2.15.1
+pigz_path &lt;- &quot;~/miniconda3/envs/vtam/bin/pigz&quot; # optional to speed file compression</code></pre>
 <ul>
 <li><strong>Adapt the path</strong> to third party programs according to your installation (See <a href="installation.html">Installation</a>).</li>
 </ul>
@@ -285,8 +287,10 @@ merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
 <pre class="r"><code>sampleinfo_df &lt;- Merge(fastqinfo, 
                        fastq_dir=fastq_dir, 
                        vsearch_path=vsearch_path, 
-                       outdir=merged_dir
+                       outdir=merged_dir,
+                       compress=FALSE,
                        )</code></pre>
+<p><code>compress = FALSE</code> In the tutorial we will use uncompressed files, but see <a href="tutorial-vtamr-pieline.html#to-compress-or-not-to-compress">To compress or not to compress</a> for the best strategy for you. See also <a href="#files-to-keep">Files to keep</a> on how to handle the large intermediate files that should be compressed or deleted once the analyses are complete.</p>
 <p><strong>Dereplicate</strong></p>
 <p>The fasta files produced by <code>Merge</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
@@ -319,11 +323,12 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo2.csv&quot;, package = 
 
 outdir &lt;- &quot;vtamR_demo_case2&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
-<p><strong>Merge fastq file pairs and quality filter reads</strong></p>
+<p><strong>Merge fastq file pairs and quality filter reads</strong> Since the next step will be <code>TrimPrimer</code> using CUTADAPT, that handles correctly file compression, it is better to compress the output files.</p>
 <pre class="r"><code>fastainfo_df &lt;- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
-                      outdir=merged_dir
+                      outdir=merged_dir,
+                      compress=FALSE
                       )</code></pre>
 <p><strong>Trim primers</strong></p>
 <pre class="r"><code>
@@ -334,7 +339,8 @@ sampleinfo_df &lt;- TrimPrimer(fastainfo_df,
                             cutadapt_path=cutadapt_path, 
                             vsearch_path=vsearch_path, 
                             check_reverse=T,
-                            primer_to_end=F
+                            primer_to_end=F,
+                            compress=FALSE
                             )
 #&gt; WARNING: The fastx_revcomp command does not support multithreading.
 #&gt; WARNING: The fastx_revcomp command does not support multithreading.
@@ -375,7 +381,8 @@ demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)</code></pre
 <pre class="r"><code>fastainfo_df &lt;- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
-                      outdir=merged_dir
+                      outdir=merged_dir,
+                      compress=FALSE
                       )</code></pre>
 <p><strong>Demultiplex, trim off tags and pimers</strong></p>
 <pre class="r"><code>sampleinfo_df &lt;- SortReads(fastainfo_df, 
@@ -383,7 +390,8 @@ demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)</code></pre
                            outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
-                           vsearch_path=vsearch_path
+                           vsearch_path=vsearch_path,
+                           compress=FALSE
                            )</code></pre>
 <p><strong>Dereplicate</strong></p>
 <p>The fasta files produced by <code>Merge</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>

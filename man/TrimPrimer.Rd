@@ -9,6 +9,8 @@ TrimPrimer(
   fasta_dir = "",
   outdir = "",
   compress = F,
+  compress_method = "R",
+  pigz_path = "pigz",
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
   check_reverse = F,
@@ -28,6 +30,15 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,rea
 \item{outdir}{Character string: output directory for the trimmed fasta files.}
 
 \item{compress}{logical: Compress output files to gzip format.}
+
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
 
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 

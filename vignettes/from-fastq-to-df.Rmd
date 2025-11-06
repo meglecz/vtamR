@@ -90,6 +90,7 @@ version of fastqinfo, where fastq file names have been replaced by fasta file
 names and the read counts are included for each file. 
 * `outdir`: Name of the output directory.
 
+
 The demo files below are included with the `vtamR` package, which is why we
 use `system.file()` to access them in this tutorial. 
 When using your own data, simply provide the file and directory names (e.g. `~/vtamR/fastq`).
@@ -110,11 +111,14 @@ sampleinfo_df <- Merge(fastqinfo,
                        fastq_dir=fastq_dir, 
                        vsearch_path=vsearch_path, 
                        outdir=merged_dir,
-                       compress=TRUE,
-                       pigz=TRUE, # optional to speed up file compression
-                       pigz_path= pigz_path  # optional
+                       compress=FALSE,
                        )
 ```
+
+`compress = FALSE` In the tutorial we will use uncompressed files, but see
+[To compress or not to compress](tutorial-vtamr-pieline.html#to-compress-or-not-to-compress) for the best
+strategy for you. See also [Files to keep](#files-to-keep) on how to handle the 
+large intermediate files that should be compressed or deleted once the analyses are complete.
 
 **Dereplicate**
 
@@ -187,9 +191,7 @@ fastainfo_df <- Merge(fastqinfo,
                       fastq_dir=fastq_dir, 
                       vsearch_path=vsearch_path, 
                       outdir=merged_dir,
-                      compress=TRUE,
-                      pigz=TRUE, # optional to speed up file compression
-                      pigz_path= pigz_path  # optional
+                      compress=FALSE
                       )
 ```
 
@@ -205,7 +207,7 @@ sampleinfo_df <- TrimPrimer(fastainfo_df,
                             vsearch_path=vsearch_path, 
                             check_reverse=T,
                             primer_to_end=F,
-                            compress=TRUE
+                            compress=FALSE
                             )
 ```
 
@@ -289,9 +291,7 @@ sampleinfo_df <- SortReads(fastainfo_df,
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
                            vsearch_path=vsearch_path,
-                           copress=TRUE,
-                           pigz=TRUE, # optional to speed up file compression
-                           pigz_path=pigz_path # optional to speed up file compression
+                           compress=FALSE
                            )
 ```
 

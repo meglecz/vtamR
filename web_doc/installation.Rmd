@@ -75,6 +75,7 @@ on how to construct a full metabarcoding pipeline.
 ## Install third party programs
 
 ### Option 1: Install third party programs using conda environment
+**NOTE:** Should be updated to include pigz and tested
 
 **In R**, find the full path to the YAML environment file:
 
@@ -94,7 +95,7 @@ This creates a Conda environment `vtamRenv` with all required tools.
 
 If using **RStudio**, you must manually set the paths to these tools in 
 your R session or scripts.
-See the [Set up section of the tutorial](tutorial-vtamr-pipeline.html#set-up) 
+See the [Set up section of the tutorial](tutorial-vtamr-pipeline.html#setup) 
 for details.
 
 Get paths to third-party programs:
@@ -123,6 +124,10 @@ swarm --version # >= v2.1.12
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
 * `cutadapt` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
 * `swarm` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
+* `pigz` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
+
+**Add the executables to your PATH** to avoid specifying their full path each 
+time you run a function that uses them.
 
 #### Windows
 
@@ -149,14 +154,34 @@ Download binaries and save it a convenient place on your computer
 
 **BLAST**
 
-* Detailed instructions: 
-[https://www.ncbi.nlm.nih.gov/books/NBK52637/](https://www.ncbi.nlm.nih.gov/books/NBK52637/)
-* Download executable (ncbi-blast-x.xx.x+-win64.exe) from [https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/](https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/)
-* Double click on the .exe file, accept the license agreement and specify the 
-install location when prompted. Attention! 
-Do not accept the standard location (C:/Program Files/...) since it contains a space. 
-Chose a directory with a path without space (e.g. `C:/Users/Public/`).
-* The executable are found in `blast-x.xx.x+/bin/`
+Detailed instructions:
+https://www.ncbi.nlm.nih.gov/books/NBK52637/
+
+* Download the installer (ncbi-blast-x.xx.x+-win64.exe) from:
+https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/
+* Double-click the .exe file, accept the license agreement, 
+and keep the suggested installation path.
+This will automatically add BLAST to your system PATH, 
+so you won’t need to specify its location when using it.
+* The executables will be installed in:
+`C:\Program Files\NCBI\blast-x.xx.x+\bin`
+
+**pigz** (Optional)
+
+* Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
+* Decompress the zip file
+* The executable (pigz.exe) is in the pigz-win32 directory
+
+
+**Add executables to your PATH**
+
+This step is optional. If third-party executables are included in your 
+system PATH, you won’t need to manually specify their locations when running 
+functions that use them.
+
+If you choose **not** to add them to your PATH, remember to specify the full 
+path to each program when calling those functions.
+
 
 ## TaxAssign reference data base
 
@@ -178,7 +203,7 @@ download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
 To check for newer versions:
 
 - Go to: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
-- Navigate to the dbV5 folder.
+- In **Files** open the the **dbV5** folder.
 - Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.
 
 
