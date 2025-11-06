@@ -1,0 +1,5 @@
+"","Step","user","system","elapsed"
+"user.self","Merge_uncompress_R",0.256,0.236,1533.998
+"user.self1","Merge_compress_R",1783.248,22.712,2955.897
+"user.self2","Merge_uncompress_pigz",0.163999999999987,0.224,1168.69
+"user.self3","Merge_compress_pigz",0.155999999999949,3.324,1523.723

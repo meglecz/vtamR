@@ -30,7 +30,7 @@ Files can be gzipped.}
 
 \item{outdir}{Character string: directory to write the output FASTA files.}
 
-\item{use_vsearch}{Logical: If TRUE, use vsearch for random sampling. Only available
+\item{use_vsearch}{Logical: If TRUE, use VSEARCH for random sampling. Only available
 on Linux. Otherwise uses a cross-platform version`.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}

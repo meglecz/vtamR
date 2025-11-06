@@ -39,6 +39,7 @@ habitat(optional),replicate,fasta}
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+Only needed if \code{check_reverse == TRUE}.
 \code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
 \code{"gzip"} is Linux-only.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.

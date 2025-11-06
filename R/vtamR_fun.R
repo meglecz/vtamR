@@ -922,6 +922,7 @@ TrimPrimer <- function(fastainfo,
 #' @param vsearch_path Character string: path to vsearch executables. 
 #' @param cutadapt_path Character string: path to cutadapt executables. 
 #' @param compress_method Character or logical. Compression method: `"pigz"`, `"gzip"`, or `"R"`.  
+#' Only needed if `check_reverse == TRUE`.
 #'   `"pigz"` requires `pigz` to be installed and in the system path (or `pigz_path` specified).  
 #'   `"gzip"` is Linux-only.  
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.
@@ -1173,7 +1174,9 @@ return(df)
 #' Demultiplex each input fasta file using the tag combinations 
 #' at the extremities of the merged reads.
 #' Trim primers from demultiplexed reads.
-#'  
+#'
+#' Input can be compressed or uncompressed. Output compression is defined by `compress`.
+#' 
 #' The output sampleinfo.csv file is similar to the fastainfo file, 
 #' but the but do not have tag and primer columns.
 #'  
@@ -7237,7 +7240,7 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
 #' @param fasta_dir Character string: directory containing the input FASTA files.
 #' @param n Positive integer: number of sequences to randomly select from each file.
 #' @param outdir Character string: directory to write the output FASTA files.
-#' @param use_vsearch Logical: If TRUE, use vsearch for random sampling. Only available 
+#' @param use_vsearch Logical: If TRUE, use VSEARCH for random sampling. Only available 
 #' on Linux. Otherwise uses a cross-platform version`.
 #' @param vsearch_path Character string: path to vsearch executables.
 #' @param randseed Positive integer or NULL: seed for random sampling.
@@ -7311,7 +7314,17 @@ RandomSeq <- function(fastainfo,
       outfile <- paste(outfile, "gz", sep=".")
     }
     outfile_p <- file.path(outdir, outfile)
+    
+    ##### Change algo if windows and use_vsearch to avoid stopping the run 
+    if(!is_linux() && use_vsearch){
+      warning("The fastx_subsample commande in VSEARCH is not available for Windows\n
+              A slower, but cross-platform function (RandomSampleFastaR)\n
+              will be used for random sampling sequences (RandomSampleFastaR).")
+      use_vsearch <- FALSE
+    }
+    
     if(use_vsearch){
+
       seqn <- RandomSampleFastaLinux(fasta=input_fasta_p,
                                      outfile=outfile_p,
                                      n=n,

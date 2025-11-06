@@ -495,8 +495,17 @@ then run RandomSampleFastaR or RandomSampleFastaLinux foreach file
 	Files are read and written without explicit compression/decompression
 
 
+## 2025/11/06
 
+If windows and use_vsearch for RandomSeq => Warning, and change to 
+RandomSampleFastaR, instead of stoping the run.
 
+SortReads
+	Input can be compressed or uncompressed
+	Output is determined by compress argument. 
+		If check_reverse == FALSE, cutadapt handles the zipping in all OS
+		If check_reverse == TRUE, fastx_revcomp of VSEARCH is used, then
+		the output should be zipped. This is handled by smart_gzip.
 
 
 TODO
@@ -507,4 +516,4 @@ afetr test on linux, and clean up of SortReads
 
 RandomSeqR => update tuto after cleaning up the linux version nd test
 
-Id windows and use_vsearch for RandomSeq => Warning, and change to R.
+
