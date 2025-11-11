@@ -120,7 +120,7 @@ file.exists("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR")
 devtools::clean_dll()
 devtools::document()
 
-devtools::install(build_vignettes = FALSE, force = TRUE)
+devtools::install(build_vignettes = FALSE, force = TRUE, dependencies = TRUE)
 # test library
 library(vtamR)
 # install with vignettes (local)

@@ -3,8 +3,6 @@
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first 
 #' @importFrom dplyr relocate if_else across slice_head
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
-#' @importFrom Biostrings DNAStringSet
-#' @importFrom rRDP rdp
 NULL
 
 
@@ -13,7 +11,7 @@ NULL
 #' 
 #' Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
 #' 
-#' This function needs the rRDP and rRDPData packages.
+#' This function needs the rRDP, rRDPData and Biostrings packages.
 #' 
 #' By default, the 16S Bacterial/Archaea RDP database is used from rRDPData. 
 #' (http://sourceforge.net/projects/rdp-classifier/). 
@@ -66,6 +64,20 @@ TaxAssignRDP <- function(
     )
   }
   
+  if (!requireNamespace("Biostrings", quietly = TRUE)) {
+      stop("The Biostrings package is required for this function. Please install it via BiocManager::install('Biostrings').")
+      stop(
+        "The Biostrings package is required for this function.\n",
+        "Please install it with:\n",
+        "  if (!requireNamespace('BiocManager', quietly = TRUE))\n",
+        "    install.packages('BiocManager')\n",
+        "  BiocManager::install('Biostrings')",
+        call. = FALSE
+      )
+    }
+
+  
+  
   # can accept df or file as an input
   if(is.character(asv)){
     # read known occurrences
@@ -79,12 +91,12 @@ TaxAssignRDP <- function(
     group_by(asv_id) %>%
     summarize(asv = head(asv, n=1))
   #### make a DNAStringSet
-  dna_set <- DNAStringSet(asv_df$asv)
+  dna_set <- Biostrings::DNAStringSet(asv_df$asv)
   names(dna_set) <- asv_df$asv_id
   
   #### assign 
   java_arg = paste("-Xmx", max_memory, "g", sep="")
-  taxa <- predict(rdp(dir=dir), 
+  taxa <- rRDP::predict(rRDP::rdp(dir=dir), 
                   confidence=confidence, 
                   java_args=java_arg,
                   dna_set)

@@ -28,10 +28,11 @@ Imports:
     rlang,
     tidyselect,
     utils,
-	R.utils
+    R.utils
 Suggests:
     rRDP,
     rRDPData,
+    Biostrings,
     testthat,
     devtools,
     roxygen2,

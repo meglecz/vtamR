@@ -46,7 +46,7 @@ asv_id,domain,kingdom,phylum,class,order,family,genus
 Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
 }
 \details{
-This function needs the rRDP and rRDPData packages.
+This function needs the rRDP, rRDPData and Biostrings packages.
 
 By default, the 16S Bacterial/Archaea RDP database is used from rRDPData.
 (http://sourceforge.net/projects/rdp-classifier/).

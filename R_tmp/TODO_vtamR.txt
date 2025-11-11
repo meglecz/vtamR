@@ -498,6 +498,10 @@ RandomSeqR => update tuto after cleaning up the linux version and test
 Compress updated in tuto for Merge, SortReads, TrimPrimer, RandomSeq.
 Tips, Good to know seaction in tuto.
 
+## 2025/11/11 description
+
+
+
 
 
 

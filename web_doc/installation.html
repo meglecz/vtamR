@@ -260,15 +260,17 @@ div.tocify {
 <h2>Install vtamR</h2>
 <p><code>pkg_install</code> will handle conveniently the R dependencies of <code>vtamR</code>.</p>
 <pre class="r"><code>if(!requireNamespace(&quot;pak&quot;, quietly = TRUE)) install.packages(&quot;pak&quot;)
-pak::pkg_install(&quot;meglecz/vtamR@develop&quot;, )</code></pre>
-<p>Alternatively, you can use devtools.</p>
-<pre class="r"><code>if (!requireNamespace(&quot;devtools&quot;, quietly = TRUE)) {install.packages(&quot;devtools&quot;)}
-devtools::install_github(&quot;meglecz/vtamR@develop&quot;, dependencies=TRUE)</code></pre>
-<p>If you intend to use the <code>TaxAssignRDP</code> function, which is needed to use RDP classifier for taxonomic assignment of 16S markers, <strong>install the rRDP and rRDPData</strong> packages as well.</p>
-<pre class="r"><code>if (!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE))
-    install.packages(&quot;BiocManager&quot;)
-BiocManager::install(&quot;rRDP&quot;)
-BiocManager::install(&quot;rRDPData&quot;)</code></pre>
+pak::pkg_install(&quot;meglecz/vtamR@develop&quot;, dependencies=TRUE)</code></pre>
+<p>Alternatively, you can use devtools, but you need to install Bioconductor packages manually if you intend to use <code>TaxAssignRDP</code> function.</p>
+<pre class="r"><code># Install vtamR and all CRAN dependencies
+if (!requireNamespace(&quot;devtools&quot;, quietly = TRUE)) install.packages(&quot;devtools&quot;)
+devtools::install_github(&quot;meglecz/vtamR@develop&quot;, dependencies = TRUE)
+
+# Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
+if (!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE)) install.packages(&quot;BiocManager&quot;)
+if (!requireNamespace(&quot;rRDP&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDP&quot;)
+if (!requireNamespace(&quot;rRDPData&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDPData&quot;)
+if (!requireNamespace(&quot;Biostrings&quot;, quietly = TRUE)) BiocManager::install(&quot;Biostrings&quot;)</code></pre>
 <p>Read the <strong><a href="https://people.imbe.fr/~emeglecz/vtamR">Manual</a></strong> on how to construct a full metabarcoding pipeline.</p>
 </div>
 <div id="install-third-party-programs" class="section level2">
