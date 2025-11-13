@@ -194,14 +194,15 @@ Barplot_RenkonenDistance <- function(df,
 #' (can be produced by MakeRenkonenDistances)
 #' @export
 #' 
-DensityPlot_RenkonenDistance <- function(df){
+DensityPlot_RenkonenDistance <- function(df, out=""){
   
   df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
   
-  ggplot(df, aes(x = renkonen_d, fill = comparison)) +
+  p <- ggplot(df, aes(x = renkonen_d, fill = comparison)) +
     geom_density(alpha = 0.5) +  # Add transparency to the density plot
     labs(title = "Density of Renkonen distances",
          x = "Distribution of Renkonen Distances between pairs of replicates",
          y = "Density") +
     theme_minimal()
+  return(p)
 }

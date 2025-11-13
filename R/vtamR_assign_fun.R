@@ -96,7 +96,7 @@ TaxAssignRDP <- function(
   
   #### assign 
   java_arg = paste("-Xmx", max_memory, "g", sep="")
-  taxa <- rRDP::predict(rRDP::rdp(dir=dir), 
+  taxa <- predict(rRDP::rdp(dir=dir), 
                   confidence=confidence, 
                   java_args=java_arg,
                   dna_set)

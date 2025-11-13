@@ -13,6 +13,13 @@
 
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
+## add outfile to 
+Barplot_RenkonenDistance
+DensityPlot_RenkonenDistance
+MakeRenkonenDistances
+
+## FilterPCRerror too long
+
 
 
 
@@ -499,6 +506,44 @@ Compress updated in tuto for Merge, SortReads, TrimPrimer, RandomSeq.
 Tips, Good to know seaction in tuto.
 
 ## 2025/11/11 description
+
+Update github for TaxAssignRDP
+
+16 OK Linux
+COI OK Windows
+
+ t1 <- proc.time()
+> by_sample <- FALSE
+> d=1
+> fastidious= TRUE
+> out <- file.path(outdir, "filter", "2_Swarm.csv")
+> read_count_df <- ClusterASV(read_count_df,
++                             group=TRUE,
++                             by_sample=by_sample,
++                             method = "swarm",
++                             path=swarm_path,
++                             swarm_d=d,
++                             fastidious=fastidious,
++                             outfile=out,
++                             quiet=TRUE
++                             )
+Erreur : impossible d'allouer un vecteur de taille 20.3 Go
+
+> read_count_df <- ClusterASV(read_count_df,
++                             group=TRUE,
++                             by_sample=by_sample,
++                             method = "swarm",
++                             path=swarm_path,
++                             swarm_d=d,
++                             fastidious=fastidious,
++                             outfile=out,
++                             quiet=TRUE
++                             )
+Error in `filter()`:
+ℹ In argument: `!is.na(asv_id)`.
+Caused by error:
+! impossible d'allouer un vecteur de taille 3.5 Go
+Run `rlang::last_trace()` to see where the error occurred.
 
 
 

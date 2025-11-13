@@ -39,6 +39,14 @@ on Linux. Otherwise uses a cross-platform version`.}
 NULL or 0 means to use a pseudo-random seed.
 A given non-zero seed produces always the same result.}
 
+\item{compress_method}{Character or logical. Compression method
+(used only if \code{use_vsearch = TRUE}).
+Options are:
+\code{pigz} – Fastest; requires \code{pigz} to be installed (or specify its path via \code{pigz_path}).
+\code{gzip} – Slower; available only on Linux-like systems.
+\code{R} – Cross-platform; uses \code{R.utils}, but is the slowest option.
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
+
 \item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
 is used for file compression, and it is not in the PATH.}
 

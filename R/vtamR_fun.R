@@ -7274,8 +7274,7 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
 #'   `pigz` – Fastest; requires `pigz` to be installed (or specify its path via `pigz_path`).  
 #'   `gzip` – Slower; available only on Linux-like systems.  
 #'   `R` – Cross-platform; uses `R.utils`, but is the slowest option.
-#' }
-#' Relative speed: \code{`R.utils` < `gzip` < `pigz`}.
+#' Relative speed: `R.utils` < `gzip` < `pigz`.
 #' @param pigz_path Character string: Path to `pigz` executable. Only needed is pigz
 #'  is used for file compression, and it is not in the PATH.
 #' @param quiet Logical: If TRUE, suppress informational messages; only warnings and errors are shown.

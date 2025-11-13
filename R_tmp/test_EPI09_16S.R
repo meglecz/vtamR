@@ -81,6 +81,27 @@ if(syst == "linux"){
 }
 
 
+######################################"
+marker <- "16S"
+######################################"
+
+### EPI9 COI
+if(syst == "linux"){
+  fastq_dir <- "/home/meglecz/vtamR_large_files/EPI09"
+  fastqinfo <-  "/home/meglecz/vtamR_large_files/EPI09/metainfo/fastqinfo_Epi09_16S.csv"
+  mock_composition <-  "/home/meglecz/vtamR_large_files/EPI09/metainfo/mock_composition_EPI09_16S.csv"
+  asv_list <- "/home/meglecz/vtamR_large_files/EPI09/metainfo/asv_list_16S.csv"
+  outdir <- "/home/meglecz/vtamR_test_EPI09_COI/pipeline_16S_bis"
+}else{
+  fastq_dir <- "C:/data/EPI09"
+  fastqinfo <-  "C:/data/EPI09/metainfo/fastqinfo_Epi09_16S.csv"
+  mock_composition <-  "C:/data/EPI09/metainfo/mock_composition_EPI09_16S.csv"
+  asv_list <- "C:/data/EPI09/metainfo/asv_list_16S.csv"
+  outdir <- "C:/data/EPI09/pipeline_16S"
+}
+
+
+
 time_df <- data.frame(
   Step = character(),
   user = numeric(),
@@ -161,8 +182,8 @@ time_df <- rbind(time_df, data.frame(Step = "Dereplicate",user = t["user.self"],
 ########################## Filter
 ### stat
 
-read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/filter/1_Input.csv")
-sampleinfo_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/SortReads/sampleinfo.csv")
+#read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/filter/1_Input.csv")
+#sampleinfo_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/SortReads/sampleinfo.csv")
 
 stat_df <- data.frame(parameters=character(),
                       asv_count=integer(),
@@ -204,25 +225,27 @@ stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=par)
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "SWARM",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-#### FilterIndel
-t1 <- proc.time()
-out <- file.path(outdir, "filter", "4_FilterIndel.csv")
-read_count_df <- FilterIndel(read_count_df, 
-                             outfile=out)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
-t <- proc.time() - t1
-time_df <- rbind(time_df, data.frame(Step = "FilterIndel",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
-
-### FilterCodonStop
-t1 <- proc.time()
-out <- file.path(outdir, "filter", "5_FilterCodonStop.csv")
-genetic_code = 5
-read_count_df <- FilterCodonStop(read_count_df, 
-                                 genetic_code=genetic_code,
-                                 outfile=out)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=genetic_code)
-t <- proc.time() - t1
-time_df <- rbind(time_df, data.frame(Step = "FilterCodonStop",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+if(marker =="COI"){
+  #### FilterIndel
+  t1 <- proc.time()
+  out <- file.path(outdir, "filter", "4_FilterIndel.csv")
+  read_count_df <- FilterIndel(read_count_df, 
+                               outfile=out)
+  stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
+  t <- proc.time() - t1
+  time_df <- rbind(time_df, data.frame(Step = "FilterIndel",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+  
+  ### FilterCodonStop
+  t1 <- proc.time()
+  out <- file.path(outdir, "filter", "5_FilterCodonStop.csv")
+  genetic_code = 5
+  read_count_df <- FilterCodonStop(read_count_df, 
+                                   genetic_code=genetic_code,
+                                   outfile=out)
+  stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=genetic_code)
+  t <- proc.time() - t1
+  time_df <- rbind(time_df, data.frame(Step = "FilterCodonStop",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+}
 
 ### FilterExternalContaminant
 t1 <- proc.time()
@@ -255,7 +278,6 @@ t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "FilterChimera",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
 
-#### FilterRenkonen
 #### FilterRenkonen
 t1 <- proc.time()
 out <- file.path(outdir, "optimize", "Renkonen_within_dist.csv")
@@ -297,9 +319,22 @@ stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=renkon
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "FilterRenkonen",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-############################################################################################################
+###################################################################################
+###################################################################################
+read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline_16S/filter/8_FilterRenkonen.csv")
+sampleinfo_df  <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/SortReads/sampleinfo.csv")
+time_df <- data.frame(
+  Step = character(),
+  user = numeric(),
+  system = numeric(),
+  elapsed = numeric(),
+  stringsAsFactors = FALSE)
 
-
+stat_df <- data.frame(parameters=character(),
+                      asv_count=integer(),
+                      read_count=integer(),
+                      sample_count=integer(),
+                      sample_replicate_count=integer())
 ##### Vsearch makes OptimizePCRerror and FilterPCRerror useless with max_mismatch=1, but it dos give hit with max_mismatch=2
   ### OptimizePCRerror
   t1 <- proc.time()
@@ -308,16 +343,18 @@ time_df <- rbind(time_df, data.frame(Step = "FilterRenkonen",user = t["user.self
                                mock_composition=mock_composition, 
                                vsearch_path= vsearch_path, 
                                outfile=out, 
-                               max_mismatch=2, 
+                               max_mismatch=1, 
                                min_read_count=10)
   t <- proc.time() - t1
   time_df <- rbind(time_df, data.frame(Step = "OptimizePCRerror",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
   
-  
+###################################################################################
+################################################################################### 
+if(FALSE){  
   ### FilterPCRerror
   t1 <- proc.time()
   out <- file.path(outdir, "filter", "9_FilterPCRerror.csv")
-  pcr_error_var_prop <- 0.2
+  pcr_error_var_prop <- 0.1
   max_mismatch <- 2
   sample_prop <- 0.8
   read_count_df <- FilterPCRerror(read_count_df, 
@@ -330,7 +367,7 @@ time_df <- rbind(time_df, data.frame(Step = "FilterRenkonen",user = t["user.self
   t <- proc.time() - t1
   time_df <- rbind(time_df, data.frame(Step = "FilterPCRerror",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
-
+}
 
 #### OptimizeLFNsampleReplicate
 t1 <- proc.time()
@@ -341,11 +378,13 @@ optLFN_sample <- OptimizeLFNsampleReplicate(read_count_df,
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "OptimizeLFNsampleReplicate",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
+###################################################################################
+################################################################################### 
 
 ### LFNsampleReplicate
 t1 <- proc.time()
 out <- file.path(outdir, "filter", "10_LFNsampleReplicate.csv")
-lfn_sample_replicate_cutoff <- 0.001
+lfn_sample_replicate_cutoff <- 0.003
 read_count_df <- LFNsampleReplicate(read_count_df, 
                                     cutoff=lfn_sample_replicate_cutoff,
                                     outfile=out)
@@ -378,6 +417,8 @@ OptLFNreadCountLFNvariant <- OptimizeLFNreadCountLFNvariant(read_count_df,
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "OptimizeLFNreadCountLFNvariant",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
+###################################################################################
+################################################################################### 
 
 ### LFNvariant
 t1 <- proc.time()
@@ -454,6 +495,7 @@ time_df <- rbind(time_df, data.frame(Step = "MakeKnownOccurrences",user = t["use
 
 
 ### TaxAssign
+if(marker=="COI"){
 t1 <- proc.time()
 out <- file.path(outdir, "taxassign.csv")
 asv_tax <- TaxAssign(asv=read_count_df, 
@@ -461,9 +503,21 @@ asv_tax <- TaxAssign(asv=read_count_df,
                      blast_db=blast_db, 
                      blast_path=blast_path, 
                      outfile=out)
+
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "TaxAssign",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
-
+}else{
+  t1 <- proc.time()
+  out <- file.path(outdir, "TaxassignRDP.csv")
+  asv_tax <- TaxAssignRDP(asv=read_count_df,
+               max_memory = 20,
+               confidence = 0.8,
+               rm_chloroplast = TRUE,
+               outfile = out  )
+  t <- proc.time() - t1
+  time_df <- rbind(time_df, data.frame(Step = "TaxassignRDP",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+  
+}
 
 ### WriteASVtable
 t1 <- proc.time()
@@ -525,10 +579,12 @@ scatterplot_vsearch <- PlotClusterClasstification(
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "PlotClusterClasstification",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
+###################################################################################
+################################################################################### 
 
 t1 <- proc.time()
 out <- file.path(outdir, "mOTU", "16_mOTU_vsearch.csv")
-swarm_d = 10
+swarm_d = 7
 read_count_clustered <- ClusterASV(read_count_df,
                                                 method = "swarm",
                                                 swarm_d = swarm_d,

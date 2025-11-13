@@ -4,7 +4,7 @@
 \alias{DensityPlot_RenkonenDistance}
 \title{DensityPlot_RenkonenDistance}
 \usage{
-DensityPlot_RenkonenDistance(df)
+DensityPlot_RenkonenDistance(df, out = "")
 }
 \arguments{
 \item{df}{data frame with the following columns:
