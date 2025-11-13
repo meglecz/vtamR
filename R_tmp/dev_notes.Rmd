@@ -129,6 +129,13 @@ vignette(package = "vtamR")
 vignette("installation")
 # build tarball with vignettes
 devtools::build(vignettes = TRUE)
+
+#### from github
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
+
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
 ############################
 
 
