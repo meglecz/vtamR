@@ -583,3 +583,19 @@ WARNING: The following ASVs have lost a high proportion of their
 5  10914           283407            180714                 56                  15
 6  18316           767707            504635                 67                  14
 7  33806          4889366           3263811                 69                  10
+
+PlotClusterClasstification stuck if run more than on in a session => check file open and close
+FP is mucj lowen at the endo of pipline that expected from optimize LFN => check
+
+0.005 for 16S
+WARNING: The following ASVs have lost a high proportion of their 
+          reads during this filtering step. 
+          The cutoff value of LFNvariant function might need to be reduced.# A tibble: 6 × 5
+  asv_id read_count_input read_count_output sample_count_input sample_count_output
+   <int>            <int>             <dbl>              <int>               <dbl>
+1  37075           199315            126713                 67                  26
+2  14783           480682            317056                 68                  25
+3  15091           461604            306883                 68                  27
+4  16265           301612            201260                 65                  16
+5  48438           225547            152867                 67                  36
+6   7613          4304678           2932842                 68                  28

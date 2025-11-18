@@ -96,7 +96,7 @@ if(marker=="COI"){
     fastqinfo <-  "/home/meglecz/vtamR_large_files/EPI09/metainfo/fastqinfo_Epi09_16S.csv"
     mock_composition <-  "/home/meglecz/vtamR_large_files/EPI09/metainfo/mock_composition_EPI09_16S.csv"
     asv_list <- "/home/meglecz/vtamR_large_files/EPI09/metainfo/asv_list_16S.csv"
-    outdir <- "/home/meglecz/vtamR_test_EPI09_COI/test_run_EPI09_16S"
+    outdir <- "/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S_bis"
   }else{
     fastq_dir <- "C:/data/EPI09"
     fastqinfo <-  "C:/data/EPI09/metainfo/fastqinfo_Epi09_16S.csv"
@@ -410,10 +410,22 @@ time_df <- rbind(time_df, data.frame(Step = "OptimizeLFNreadCountLFNvariant",use
 ###################################################################################
 ################################################################################### 
 
+read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S/filter/11_FilterMinReplicate.csv")
+sampleinfo_df <- read.csv("/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S/SortReads/sampleinfo.csv")
+stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
+
+
+
+
+
+
+###################################################################################
+
 ### LFNvariant
 t1 <- proc.time()
 out <- file.path(outdir, "filter", "12_LFNvariant.csv")
 # lnf_variant_cutoff = 0.01
+lnf_variant_cutoff = 0.005
 by_replicate=TRUE
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
                                         cutoff=lnf_variant_cutoff,
@@ -429,6 +441,7 @@ time_df <- rbind(time_df, data.frame(Step = "LFNvariant",user = t["user.self"],s
 t1 <- proc.time()
 out <- file.path(outdir, "filter", "13_LFNreadCount.csv")
 # lfn_read_count_cutoff <- 25
+lfn_read_count_cutoff <- 100
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff,
                                              outfile=out)
