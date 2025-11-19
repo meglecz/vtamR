@@ -10,6 +10,7 @@ LFNvariant(
   asv_specific_cutoffs = NULL,
   by_replicate = FALSE,
   outfile = "",
+  lost_asv_file = "",
   sep = ",",
   min_read_count_prop = 0.7
 )
@@ -30,6 +31,10 @@ read counts of the ASV-replicate.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
+
+\item{lost_asv_file}{Character string: name of the CSV file in which to save
+information about ASVs whose read counts in the output fall below
+\code{min_read_count_prop} of their counts in the input.}
 
 \item{sep}{Field separator character in input and output csv files.}
 

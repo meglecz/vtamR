@@ -8,6 +8,7 @@ library(rRDP)
 library(rRDPData)
 
 setwd("/home/meglecz/vtamR/")
+setwd("C:/Users/emese/vtamR")
 library("devtools")
 library("roxygen2")
 load_all(".")

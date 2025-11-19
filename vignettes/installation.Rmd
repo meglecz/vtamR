@@ -45,20 +45,21 @@ operating systems.
 
 ## Install vtamR
 
-`pkg_install` will handle conveniently the R dependencies of `vtamR`. 
+Install `vtamR` and its CRAN dependencies by `pak`. 
 ```{r install_github_pak, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
 pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
 ```
 
-Alternatively, you can use devtools, but you need to install Bioconductor packages manually
-if you intend to use `TaxAssignRDP` function.
-
+Alternatively, you can use devtools,
 ```{r install_github_devtools, eval=FALSE}
-# Install vtamR and all CRAN dependencies
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
+```
 
+You also need to install Bioconductor packages manually
+if you intend to use `TaxAssignRDP` function.
+```{r install_github_devtools, eval=FALSE}
 # Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 if (!requireNamespace("rRDP", quietly = TRUE)) BiocManager::install("rRDP")

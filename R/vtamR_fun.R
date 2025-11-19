@@ -2216,6 +2216,9 @@ ASVspecificCutoff <- function(read_count,
 #' read counts of the ASV-replicate.
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
+#' @param lost_asv_file Character string: name of the CSV file in which to save
+#' information about ASVs whose read counts in the output fall below
+#' `min_read_count_prop` of their counts in the input.
 #' @param sep Field separator character in input and output csv files.
 #' @param min_read_count_prop Minimum proportion of total reads retained for
 #'   each ASV after filtering. ASVs dropping below this threshold trigger a
@@ -2236,7 +2239,8 @@ LFNvariant <- function(read_count,
                        cutoff=NULL, 
                        asv_specific_cutoffs = NULL,
                        by_replicate=FALSE, 
-                       outfile="", 
+                       outfile="",
+                       lost_asv_file ="",
                        sep=",", 
                        min_read_count_prop=0.7){
   
@@ -2338,7 +2342,7 @@ LFNvariant <- function(read_count,
   }
   
   ###
-  # Check if filter do not eliminate occurrences with relatively high read_count 
+  # Check if filter did not eliminate occurrences with relatively high read_count 
   ###
   asvs_output <- read_count_df %>%
     group_by(asv_id) %>%
@@ -2369,6 +2373,12 @@ LFNvariant <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  if(lost_asv_file != ""){
+    check_dir(lost_asv_file, is_file=TRUE)
+    write.table(asvs, file = lost_asv_file,  row.names = F, sep=sep)
+  }
+  
   return(read_count_df)
 }
 

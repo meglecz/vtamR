@@ -151,13 +151,13 @@ PairwiseIdentity <- function(asv,
 #' }
 #' @export
 GetClusterIdSwarm <- function(read_count, 
-                          swarm_d=1, 
-                          fastidious=FALSE,
-                          swarm_path="swarm", 
-                          num_threads=0, 
-                          outfile="", 
-                          sep=",", 
-                          quiet=TRUE){
+                               swarm_d=1, 
+                               fastidious=FALSE,
+                               swarm_path="swarm", 
+                               num_threads=0, 
+                               outfile="", 
+                               sep=",", 
+                               quiet=TRUE){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -198,12 +198,14 @@ GetClusterIdSwarm <- function(read_count,
              input_swarm)
   
   # Outfile name. Each line is a cluster, with asv_ids separated  by space
+  out_uclust <- file.path(tmp_dir, "out_swarm_uclust.tsv")
   out_swarm <- file.path(tmp_dir, "out_swarm.txt")
   
   ##### run swarm
   # Build argument vector
   args <- c(
     "-d", swarm_d,
+    "-u", out_uclust,
     "-o", out_swarm,
     input_swarm
   )
@@ -213,49 +215,46 @@ GetClusterIdSwarm <- function(read_count,
   if(fastidious){
     args <- append(args, c("-f"), after = 2)
   }
-
+  
   run_system2(swarm_path, args, quiet=quiet)
-
   
   #####
   # make a data frame with asv_id and cluster_id columns, 
   # where asv_id has all swarm input asv_id, 
   # and  cluster_id is the name of the cluster they belong to
+  #1. Record type: S, H, or C.
+  #2. Cluster number (ID) (zero-based).
+  #3. Centroid length (S), query length (H), or cluster size (C).
+  #4. Percentage of similarity with the centroid sequence (H), or set to ’*’ (S, C).
+  #5. Match orientation + or - (H), or set to ’*’ (S, C).
+  #6. Not used, always set to ’*’ (S, C) or to zero (H).
+  #7. Not used, always set to ’*’ (S, C) or to zero (H).
+  #8. set to ’*’ (S, C) or, for H, compact representation of the pairwise alignment using
+  #the CIGAR format (Compact Idiosyncratic Gapped Alignment Report): M
+  #(match), D (deletion) and I (insertion). The equal sign ’=’ indicates that the query
+  #is identical to the centroid sequence.
+  #9. Header of the query sequence (H), or of the centroid sequence (S, C).
+  #10. Header of the centroid sequence (H), or set to ’*’ (S, C)
   
-  # read.table is unpredictable, when the number of element is variable among lines. Use a more complicated, but more sure solution.
-  # Read the file line by line
-  lines <- readLines(out_swarm)
-  # Split each line by whitespace
-  split_lines <- strsplit(lines, "[[:space:]]+")
-  # Determine the maximum number of fields
-  max_cols <- max(sapply(split_lines, length))
-  # Convert to a data frame and fill empty cells by NA
-  cluster_df <- as.data.frame(
-    do.call(
-      rbind, lapply(
-        split_lines,
-        function(x) c(x, rep(NA, max_cols - length(x)))
-      )
-    ),
-    stringsAsFactors = FALSE
-  )
+  cluster_df <- read.table(out_uclust, header=FALSE, sep="\t")
+  cluster_df <- cluster_df[,c(1,9,10)]
+  colnames(cluster_df) <- c("record_type", "asv_id", "cluster_id")
   
-  ### Make output data frame with asv_id, cluster_id columns
-  #  repeat each cluster_id as many times as columns
-  # transpose and flatten to make asv_id
-  # This will produce some lines with NA for asv_id. Filter them out afterwards.
-  cluster_df <- data.frame(asv_id = as.vector(t(cluster_df[,])),
-                           cluster_id = rep(cluster_df$V1, 
-                                            each = ncol(cluster_df))
-  )
-  # delete lines with NA values in asv_id
-  cluster_df <- cluster_df %>%
-    filter(!is.na(asv_id))
-  # delete read_counts from id
-  cluster_df$cluster_id <- as.numeric(
-    sub("_[0-9]+", "", cluster_df$cluster_id ))
-  cluster_df$asv_id <- as.numeric(
-    sub("_[0-9]+", "", cluster_df$asv_id ))
+  hits <- cluster_df %>%
+    filter(record_type == "H") %>%
+    select(-record_type) %>%
+    mutate(asv_id = as.numeric(sub("_[0-9]+$", "", asv_id))) %>%
+    mutate(cluster_id = as.numeric(sub("_[0-9]+$", "", cluster_id)))
+  
+  centroids <- cluster_df %>%
+    filter(record_type == "C") %>%
+    select(-record_type) %>%
+    mutate(asv_id = as.numeric(sub("_[0-9]+$", "", asv_id))) %>%
+    mutate(cluster_id = asv_id)
+  
+  
+  cluster_df <- rbind(hits, centroids) %>%
+    arrange(cluster_id, asv_id)
   
   unlink(tmp_dir, recursive = TRUE)
   
@@ -265,8 +264,6 @@ GetClusterIdSwarm <- function(read_count,
   }
   return(cluster_df)
 }
-
-
 
 #' Cluster all input ASV by cluster_size function of Vsearch
 #' 
@@ -501,14 +498,18 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters (by Swarm's d)") +
     xlab("Pairwise Percent Identity Between ASVs") +
     ylab("Density") +
-    theme(plot.title = element_text(size=12, hjust=0.5))
+    theme(plot.title = element_text(size=12, hjust=0.5),
+          axis.text = element_text(size = 7),
+          axis.title = element_text(size = 10),
+          strip.text = element_text(size = 8)
+          )
   
   ### 
 
   
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
-    png(filename=plotfile) # one png file per plot
+    png(filename=plotfile, width = 2000, height = 1500, res = 300)
     print(p) # print plot to file
     dev.off()
   }
@@ -649,13 +650,17 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
      xlab("Pairwise Percent Identity Between ASVs") +
      ylab("Density") +
      ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters \n using different identity thresholds for clustering") +
-    theme(plot.title = element_text(size=12, hjust=0.5)) 
+     theme(plot.title = element_text(size=12, hjust=0.5),
+                axis.text = element_text(size = 7),
+                axis.title = element_text(size = 8),
+                strip.text = element_text(size = 10)
+          )
   
   ### 
 
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
-    png(filename=plotfile) # one png file per plot
+    png(filename=plotfile, width = 2000, height = 1500, res = 300)
     print(p) # print plot to file
     dev.off()
   }
@@ -911,7 +916,12 @@ PlotClusterClasstification <- function(read_count, taxa,
     ggtitle("Number of different cluster types \n according the the taxonomic assignment of ASVs")  +
     ylab("Number of clusters") +
     xlab(x_label) +
-    theme(plot.title = element_text(size=12, hjust=0.5)) 
+    theme(
+      plot.title = element_text(size = 12, hjust = 0.5),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 12)
+    )
+
   
   ### 
   if(outfile != ""){
@@ -921,7 +931,7 @@ PlotClusterClasstification <- function(read_count, taxa,
   
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
-    png(filename=plotfile) # one png file per plot
+    png(filename=plotfile, width = 2000, height = 1500, res = 300) # one png file per plot
     print(p) # print plot to file
     dev.off()
   }

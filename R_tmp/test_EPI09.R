@@ -25,13 +25,16 @@ marker <- "COI"
 use_FilterPCRError <- FALSE
 lfn_sample_replicate_cutoff <- 0.001
 lnf_variant_cutoff = 0.01
-lfn_read_count_cutoff <- 25
+by_replicate = TRUE
+lfn_read_count_cutoff <- 40
 swarm_d <- 10
+
 
 marker <- "16S"
 use_FilterPCRError <- FALSE
 lfn_sample_replicate_cutoff <- 0.003
 lnf_variant_cutoff = 0.01
+by_replicate = TRUE
 lfn_read_count_cutoff <- 25
 swarm_d <- 7
 ######################################"
@@ -79,7 +82,7 @@ if(marker=="COI"){
     taxonomy <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
     blast_db <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
     asv_list <- "/home/meglecz/vtamR_large_files/EPI09/metainfo/asv_list_COI.csv"
-    outdir <- "/home/meglecz/vtamR_test_EPI09_COI/test_run_EPI09_COI"
+    outdir <- "/home/meglecz/vtamR_test_EPI09/test_run_EPI09_COI_bis"
   }else{
     fastq_dir <- "C:/data/EPI09"
     fastqinfo <-  "C:/data/EPI09/metainfo/fastqinfo_Epi09_COI.csv"
@@ -87,7 +90,7 @@ if(marker=="COI"){
     taxonomy <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
     blast_db <- "C:/Users/Public/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam"
     asv_list <- "C:/data/EPI09/metainfo/asv_list_COI.csv"
-    outdir <- "C:/data/EPI09/test_run_EPI09_COI"
+    outdir <- "C:/data/EPI09/test_run_EPI09_COI_bis"
   }
 }else{
   ### EPI9 16S
@@ -107,7 +110,7 @@ if(marker=="COI"){
 }
 
 
-
+  
 time_df <- data.frame(
   Step = character(),
   user = numeric(),
@@ -185,6 +188,22 @@ t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "Dereplicate",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
 
+
+############################################################
+############################################################
+read_count_df <- read.csv("C:/data/EPI09/test_run_EPI09_COI/filter/1_Input.csv")
+sampleinfo_df <- read.csv("C:/data/EPI09/test_run_EPI09_COI/SOrtReads/sampleinfo.csv")
+
+time_df <- data.frame(
+  Step = character(),
+  user = numeric(),
+  system = numeric(),
+  elapsed = numeric(),
+  stringsAsFactors = FALSE)
+
+############################################################
+############################################################
+
 ########################## Filter
 ### stat
 #read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09_COI/pipeline/filter/1_Input.csv")
@@ -197,24 +216,12 @@ stat_df <- data.frame(parameters=character(),
                       sample_replicate_count=integer())
 stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 
-#### LFNglobalReadCount
-t1 <- proc.time()
-out <- file.path(outdir, "filter", "2_LFNglobalReadCount.csv")
-global_read_count_cutoff = 10
-read_count_df <- LFNglobalReadCount(read_count_df, 
-                                    cutoff=global_read_count_cutoff,
-                                    outfile=out)
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=global_read_count_cutoff)
-t <- proc.time() - t1
-time_df <- rbind(time_df, data.frame(Step = "LFNglobalReadCount",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
-
-
 #### swarm
 t1 <- proc.time()
 by_sample <- FALSE
 d=1
 fastidious= TRUE
-out <- file.path(outdir, "filter", "3_Swarm.csv")
+out <- file.path(outdir, "filter", "2_Swarm.csv")
 read_count_df <- ClusterASV(read_count_df,
                             group=TRUE,
                             by_sample=by_sample,
@@ -224,11 +231,25 @@ read_count_df <- ClusterASV(read_count_df,
                             fastidious=fastidious,
                             outfile=out,
                             quiet=TRUE
-                            )
+)
 par <- paste(d, by_sample, sep=";")
 stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=par)
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "SWARM",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
+#### LFNglobalReadCount
+t1 <- proc.time()
+out <- file.path(outdir, "filter", "3_LFNglobalReadCount.csv")
+global_read_count_cutoff = 10
+read_count_df <- LFNglobalReadCount(read_count_df, 
+                                    cutoff=global_read_count_cutoff,
+                                    outfile=out)
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=global_read_count_cutoff)
+t <- proc.time() - t1
+time_df <- rbind(time_df, data.frame(Step = "LFNglobalReadCount",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
+
+
 
 if(marker =="COI"){
   #### FilterIndel
@@ -396,7 +417,6 @@ time_df <- rbind(time_df, data.frame(Step = "FilterMinReplicate1",user = t["user
 #### OptimizeLFNreadCountLFNvariant
 t1 <- proc.time()
 dir_opt <- file.path(outdir, "optimize")
-by_replicate=TRUE
 OptLFNreadCountLFNvariant <- OptimizeLFNreadCountLFNvariant(read_count_df, 
                                            outdir = dir_opt,
                                            mock_composition = mock_composition,
@@ -410,9 +430,9 @@ time_df <- rbind(time_df, data.frame(Step = "OptimizeLFNreadCountLFNvariant",use
 ###################################################################################
 ################################################################################### 
 
-read_count_df <- read.csv("/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S/filter/11_FilterMinReplicate.csv")
-sampleinfo_df <- read.csv("/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S/SortReads/sampleinfo.csv")
-stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
+read_count_df <- read.csv("C:/data/EPI09/test_run_EPI09_COI_bis/filter/11_FilterMinReplicate.csv")
+#sampleinfo_df <- read.csv("/home/meglecz/vtamR_test_EPI09/test_run_EPI09_16S/SortReads/sampleinfo.csv")
+#stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 
 
 
@@ -424,11 +444,13 @@ stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 ### LFNvariant
 t1 <- proc.time()
 out <- file.path(outdir, "filter", "12_LFNvariant.csv")
+lost_asv_file <- file.path(outdir, "filter", "lost_in_LFNvariant.csv")
 # lnf_variant_cutoff = 0.01
-lnf_variant_cutoff = 0.005
-by_replicate=TRUE
+
 read_count_df_lnf_variant <- LFNvariant(read_count_df, 
                                         cutoff=lnf_variant_cutoff,
+                                        by_replicate=by_replicate,
+                                        lost_asv_file =lost_asv_file,
                                         outfile=out)
 par <- paste(lnf_variant_cutoff, by_replicate, sep=";")
 stat_df <- GetStat(read_count_df_lnf_variant, stat_df, stage="LFNvariant", params=par)
@@ -441,7 +463,6 @@ time_df <- rbind(time_df, data.frame(Step = "LFNvariant",user = t["user.self"],s
 t1 <- proc.time()
 out <- file.path(outdir, "filter", "13_LFNreadCount.csv")
 # lfn_read_count_cutoff <- 25
-lfn_read_count_cutoff <- 100
 read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
                                              cutoff=lfn_read_count_cutoff,
                                              outfile=out)
@@ -558,6 +579,18 @@ plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df,
 t <- proc.time() - t1
 time_df <- rbind(time_df, data.frame(Step = "PairwiseIdentityPlotPerSwarmD",user = t["user.self"],system = t["sys.self"], elapsed = t["elapsed"], stringsAsFactors = FALSE))
 
+#####
+out  <- file.path(outdir, "mOTU" ,"PairwiseIdentityPlotPerClusterIdentityThreshold.csv")
+png_file  <- file.path(outdir, "mOTU" ,"PairwiseIdentityPlotPerClusterIdentityThreshold.png")
+plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
+                                                                identity_min=0.9, 
+                                                                identity_max=0.99,
+                                                                identity_increment=0.01,
+                                                                min_id = 0.8, 
+                                            vsearch_path=vsearch_path, 
+                                            outfile=out,
+                                            plotfile=png_file)
+#####
 
 
 t1 <- proc.time()

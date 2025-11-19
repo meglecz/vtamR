@@ -418,3 +418,147 @@ compress_file <- function(filename="", remove_input=F){
   }
   return(outfile_gz)
 }
+
+#' Cluster all input ASV by swarm
+#' 
+#' Cluster all input ASV by swarm and return a data frame with asv_id, cluster_id
+#' columns
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv_id, asv, read_count.
+#' @param swarm_d Positive integer: d for Swarm.
+#' @param fastidious logical: when working with d = 1, perform a second 
+#' clustering pass to reduce the number of small clusters.
+#' @param swarm_path Character string: path to swarm executable. 
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param outfile Character string: name of the output csv file 
+#' with asv_id, cluster_id columns
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet Logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @returns Data frame with the following columns: asv_id, cluster_id
+#' @examples 
+#' \dontrun{
+#' cluster_df <- GetClusterIdSwarm(read_count_df, 
+#'                      swarm_d=7, 
+#'                      swarm_path="swarm",
+#'                      num_threads=8)
+#' }
+#' @export
+GetClusterIdSwarm <- function(read_count, 
+                              swarm_d=1, 
+                              fastidious=FALSE,
+                              swarm_path="swarm", 
+                              num_threads=0, 
+                              outfile="", 
+                              sep=",", 
+                              quiet=TRUE){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  ##### make df if read_count is file
+  if(is.character(read_count)){
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  # if called from a ClusterASV, without specifying the path, it has a "" value
+  if(swarm_path==""){
+    swarm_path<- "swarm"
+  }
+  
+  # check coherence between swarm_d and fastidious
+  if(fastidious && swarm_d != 1 ){
+    stop("ERROR: The fastidious argument must be use with swarm_d 1")
+  }
+  
+  #####
+  # make a df with unique asv, asv_id and readcount (sum)
+  asv_df <- read_count_df %>%
+    group_by(asv, asv_id) %>%
+    summarize(read_count = sum(read_count), .groups="drop")
+  
+  ##### make tmp dir and input files
+  tmp_dir <-paste('tmp_swarm_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+  tmp_dir <- file.path(tempdir(), tmp_dir)
+  check_dir(tmp_dir)
+  
+  # make a fasta file with unique asv format adapted to swarm
+  input_swarm <- file.path(tmp_dir, "swarm_input.fasta")
+  writeLines(paste(">", asv_df$asv_id, "_", 
+                   asv_df$read_count, "\n", 
+                   asv_df$asv, 
+                   sep=""), 
+             input_swarm)
+  
+  # Outfile name. Each line is a cluster, with asv_ids separated  by space
+  out_swarm <- file.path(tmp_dir, "out_swarm.txt")
+  
+  ##### run swarm
+  # Build argument vector
+  args <- c(
+    "-d", swarm_d,
+    "-o", out_swarm,
+    input_swarm
+  )
+  if(num_threads > 0){
+    args <- append(args, c("-t", num_threads), after = 2)
+  }
+  if(fastidious){
+    args <- append(args, c("-f"), after = 2)
+  }
+  
+  run_system2(swarm_path, args, quiet=quiet)
+  
+  print("SWARM finished")
+  
+  
+  #####
+  # make a data frame with asv_id and cluster_id columns, 
+  # where asv_id has all swarm input asv_id, 
+  # and  cluster_id is the name of the cluster they belong to
+  
+  # read.table is unpredictable, when the number of element is variable among lines. Use a more complicated, but more sure solution.
+  # Read the file line by line
+  lines <- readLines(out_swarm)
+  # Split each line by whitespace
+  split_lines <- strsplit(lines, "[[:space:]]+")
+  # Determine the maximum number of fields
+  max_cols <- max(sapply(split_lines, length))
+  # Convert to a data frame and fill empty cells by NA
+  cluster_df <- as.data.frame(
+    do.call(
+      rbind, lapply(
+        split_lines,
+        function(x) c(x, rep(NA, max_cols - length(x)))
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  ### Make output data frame with asv_id, cluster_id columns
+  #  repeat each cluster_id as many times as columns
+  # transpose and flatten to make asv_id
+  # This will produce some lines with NA for asv_id. Filter them out afterwards.
+  cluster_df <- data.frame(asv_id = as.vector(t(cluster_df[,])),
+                           cluster_id = rep(cluster_df$V1, 
+                                            each = ncol(cluster_df))
+  )
+  # delete lines with NA values in asv_id
+  cluster_df <- cluster_df %>%
+    filter(!is.na(asv_id))
+  # delete read_counts from id
+  cluster_df$cluster_id <- as.numeric(
+    sub("_[0-9]+", "", cluster_df$cluster_id ))
+  cluster_df$asv_id <- as.numeric(
+    sub("_[0-9]+", "", cluster_df$asv_id ))
+  
+  unlink(tmp_dir, recursive = TRUE)
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(cluster_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(cluster_df)
+}

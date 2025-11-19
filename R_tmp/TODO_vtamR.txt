@@ -20,7 +20,7 @@ MakeRenkonenDistances
 
 ## FilterPCRerror too long
 
-## add quality filer function
+## add quality filter function
 
 
 
@@ -511,91 +511,12 @@ Tips, Good to know seaction in tuto.
 
 Update github for TaxAssignRDP
 
-16 OK Linux
-COI OK Windows
 
- t1 <- proc.time()
-> by_sample <- FALSE
-> d=1
-> fastidious= TRUE
-> out <- file.path(outdir, "filter", "2_Swarm.csv")
-> read_count_df <- ClusterASV(read_count_df,
-+                             group=TRUE,
-+                             by_sample=by_sample,
-+                             method = "swarm",
-+                             path=swarm_path,
-+                             swarm_d=d,
-+                             fastidious=fastidious,
-+                             outfile=out,
-+                             quiet=TRUE
-+                             )
-Erreur : impossible d'allouer un vecteur de taille 20.3 Go
+## 2025/11/19 GetClusterIdSwarm
 
-> read_count_df <- ClusterASV(read_count_df,
-+                             group=TRUE,
-+                             by_sample=by_sample,
-+                             method = "swarm",
-+                             path=swarm_path,
-+                             swarm_d=d,
-+                             fastidious=fastidious,
-+                             outfile=out,
-+                             quiet=TRUE
-+                             )
-Error in `filter()`:
-ℹ In argument: `!is.na(asv_id)`.
-Caused by error:
-! impossible d'allouer un vecteur de taille 3.5 Go
-Run `rlang::last_trace()` to see where the error occurred.
+GetClusterIdSwarm => read uclust output
 
+LFNvariant => print ASV with significant read count loss to file
+Discrepancies in test run came from by_replicate=TRUE in optimize, FALSE in LFNvariant
+Discrepancies in FP disappear with corrected script.
 
-
-
-
-16S EPI09
-WARNING: The following ASVs have lost a high proportion of their 
-          reads during this filtering step. 
-          The cutoff value of LFNvariant function might need to be reduced.# A tibble: 27 × 5
-   asv_id read_count_input read_count_output sample_count_input sample_count_output
-    <dbl>            <int>             <dbl>              <int>               <dbl>
- 1  22555            94472             14426                 55                   8
- 2  48438           225547             39057                 67                   5
- 3   2698           371503             81344                 67                   6
- 4  57361           213937             56509                 64                  10
- 5  57069           420403            126062                 68                   8
- 6   7613          4304678           1297746                 68                   8
- 7  40968            61500             18545                 48                  10
- 8   3737            58104             18221                 47                  11
- 9  37075           199315             65441                 67                  12
-10  23436            54487             19582                 42                  12
-# ℹ 17 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
-COI EPI09
-WARNING: The following ASVs have lost a high proportion of their 
-          reads during this filtering step. 
-          The cutoff value of LFNvariant function might need to be reduced.# A tibble: 7 × 5
-  asv_id read_count_input read_count_output sample_count_input sample_count_output
-   <dbl>            <int>             <dbl>              <int>               <dbl>
-1   8804          2545570           1232903                 69                  14
-2  31857           368350            209788                 59                   8
-3  33141            93047             53161                 55                  15
-4  30026           168160            106006                 55                  11
-5  10914           283407            180714                 56                  15
-6  18316           767707            504635                 67                  14
-7  33806          4889366           3263811                 69                  10
-
-PlotClusterClasstification stuck if run more than on in a session => check file open and close
-FP is mucj lowen at the endo of pipline that expected from optimize LFN => check
-
-0.005 for 16S
-WARNING: The following ASVs have lost a high proportion of their 
-          reads during this filtering step. 
-          The cutoff value of LFNvariant function might need to be reduced.# A tibble: 6 × 5
-  asv_id read_count_input read_count_output sample_count_input sample_count_output
-   <int>            <int>             <dbl>              <int>               <dbl>
-1  37075           199315            126713                 67                  26
-2  14783           480682            317056                 68                  25
-3  15091           461604            306883                 68                  27
-4  16265           301612            201260                 65                  16
-5  48438           225547            152867                 67                  36
-6   7613          4304678           2932842                 68                  28
