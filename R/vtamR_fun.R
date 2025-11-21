@@ -3324,6 +3324,8 @@ calculate_renkonen_dist <- function(df1, df2){
 #' @param read_count_df Data frame with asv, sample, replicate, and read_count columns.
 #' @param compare_all logical: if TRUE calculate the Renkonen distance among all pairs 
 #' of sample-replicates. Only between replicates of the same sample otherwise.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
 #' @returns Data frame with the following columns: 
 #' sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp
 #' (within, if sample1 and sample2 are identical, between otherwise).
@@ -3333,7 +3335,9 @@ calculate_renkonen_dist <- function(df1, df2){
 #' }
 #' @export
 #' 
-MakeRenkonenDistances <- function(read_count_df, compare_all=FALSE){
+MakeRenkonenDistances <- function(read_count_df, 
+                                  compare_all=FALSE,
+                                  outfile=""){
   
   df <- read_count_df %>%
     select(asv, sample, replicate, read_count)
@@ -3390,6 +3394,10 @@ MakeRenkonenDistances <- function(read_count_df, compare_all=FALSE){
         }
       }
     }
+  }
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(renkonen_df, file = outfile,  row.names = F, sep=sep)
   }
   return(renkonen_df)
 }

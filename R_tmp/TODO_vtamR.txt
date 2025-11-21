@@ -1,9 +1,11 @@
 # Ideas for vtamR
 
-## OptimizeLFNreadCountLFNvariant => referr to missing occurrences instaed of printing missing asv to the terminale
+## check if possible to impose -overlen in demultiplexing if tags are not anchored, it is not checked by default
+		  
+## OptimizeLFNreadCountLFNvariant => refer to missing occurrences instaed of printing missing asv to the terminal
 ## add asv_id to missing occurrences (if there are any)
 
-## rewise Rowing doc, using ` when necessary.
+## rewise Roxygen doc, using ` when necessary.
 
 ## revise return(invisible(x)) when necessary
 
@@ -13,17 +15,10 @@
 
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
-## add outfile to 
-Barplot_RenkonenDistance
-DensityPlot_RenkonenDistance
-MakeRenkonenDistances
 
 ## FilterPCRerror too long
 
-## add quality filter function
-
-
-
+## Add quality filter function
 
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
@@ -520,3 +515,17 @@ LFNvariant => print ASV with significant read count loss to file
 Discrepancies in test run came from by_replicate=TRUE in optimize, FALSE in LFNvariant
 Discrepancies in FP disappear with corrected script.
 
+
+## 2025/11/20 plotfile-PATH
+
+add outfile to 
+Barplot_ReadCountBySample
+Histogram_ReadCountByVariant
+Barplot_RenkonenDistance
+DensityPlot_RenkonenDistance
+MakeRenkonenDistances
+
+Complete Installation Rmd with instructions to add executables to the PATH
+
+Modify tuto using programes in the PATH, but still using the xxx_path so 
+users will not forget it, if the executables are not in the PATH.

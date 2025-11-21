@@ -75,11 +75,20 @@ swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
 pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional
 ```
 
-```{r set_path_linux}
+```{r set_path_linux, eval=FALSE}
 #  Example for Linux
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
 blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
+swarm_path <- "swarm" # swarm is in the PATH
+pigz_path <- "pigz" # pigz is in the PATH
+```
+
+```{r set_path, eval=TRUE}
+#  All executables are in the PATH
+cutadapt_path <- "cutadapt"
+vsearch_path <- "vsearch"
+blast_path <- "blastn"
 swarm_path <- "swarm" # swarm is in the PATH
 pigz_path <- "pigz" # pigz is in the PATH
 ```
@@ -91,7 +100,7 @@ pigz_path <- "pigz" # pigz is in the PATH
 
 ```{r general-parameters}
 sep <- ","
-outdir <- "~/vtamR_demo_out"
+outdir <- "vtamR_demo_out"
 ```
 
 

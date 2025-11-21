@@ -22,6 +22,8 @@ NULL
 #' @param sample_replicate Boolean. If TRUE barplot is made by sample-replicates,
 #' by sample otherwise
 #' @param x_axis_label_size size of labels in x axis
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @export
 #' 
 #' 
@@ -29,7 +31,8 @@ Barplot_ReadCountBySample <- function(read_count_df,
                                       sampleinfo="", 
                                       sample_replicate=T, 
                                       sep=",", 
-                                      x_axis_label_size=6
+                                      x_axis_label_size=6,
+                                      plotfile=""
                                       ){
   
   if(sampleinfo != ""){
@@ -90,6 +93,13 @@ Barplot_ReadCountBySample <- function(read_count_df,
             plot.title = element_text(hjust = 0.5)) + # Center the title
       scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
   }
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile, width = 2000, height = 1500, res = 300) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
+  }
   return(p)
 }
 
@@ -102,10 +112,16 @@ Barplot_ReadCountBySample <- function(read_count_df,
 #' @param min_read_count filter out ASVs with less than min_read_count reads, 
 #' before making the graph
 #' @param binwidth width of the read count intervals 
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @export
 #' 
 
-Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwidth=100){
+Histogram_ReadCountByVariant <- function(read_count_df, 
+                                         min_read_count=0, 
+                                         binwidth=100,
+                                         plotfile= ""
+                                         ){
   
   # get read_count for each asv
   df <- read_count_df %>%
@@ -123,6 +139,13 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
            x = "Read Count",
            y = "Frequency") +
       theme_minimal()  
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile, width = 2000, height = 1500, res = 300) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
+  }
   return(p)
 }
 
@@ -138,12 +161,15 @@ Histogram_ReadCountByVariant <- function(read_count_df, min_read_count=0, binwid
 #' sample, sample_type (real/mock/negative)
 #' @param sep separator used in csv files
 #' @param x_axis_label_size size of labels in x axis
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @export
 #' 
 Barplot_RenkonenDistance <- function(df, 
                                      sampleinfo=NULL, 
                                      sep=",", 
-                                     x_axis_label_size=6
+                                     x_axis_label_size=6,
+                                     plotfile=""
                                      ){
   
   if(is.character(sampleinfo)){ # input file
@@ -182,6 +208,13 @@ Barplot_RenkonenDistance <- function(df,
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size), 
           plot.title = element_text(hjust = 0.5)) +  # Center the title
     scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile, width = 2000, height = 1500, res = 300) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
+  }
   return(p)
 }
 
@@ -192,9 +225,11 @@ Barplot_RenkonenDistance <- function(df,
 #' @param df data frame with the following columns: 
 #' sample1,sample2,replicate1,replicate2,renkonen_d 
 #' (can be produced by MakeRenkonenDistances)
+#' @param plotfile Character string: png file name for the output plot; 
+#' If empty, no file is written.
 #' @export
 #' 
-DensityPlot_RenkonenDistance <- function(df, out=""){
+DensityPlot_RenkonenDistance <- function(df, plotfile=""){
   
   df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
   
@@ -204,5 +239,13 @@ DensityPlot_RenkonenDistance <- function(df, out=""){
          x = "Distribution of Renkonen Distances between pairs of replicates",
          y = "Density") +
     theme_minimal()
+  
+  if(plotfile != ""){
+    check_dir(plotfile, is_file=TRUE)
+    png(filename=plotfile, width = 2000, height = 1500, res = 300) # one png file per plot
+    print(p) # print plot to file
+    dev.off()
+  }
+  
   return(p)
 }

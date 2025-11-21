@@ -4,7 +4,12 @@
 \alias{Histogram_ReadCountByVariant}
 \title{Histogram_ReadCountByVariant}
 \usage{
-Histogram_ReadCountByVariant(read_count_df, min_read_count = 0, binwidth = 100)
+Histogram_ReadCountByVariant(
+  read_count_df,
+  min_read_count = 0,
+  binwidth = 100,
+  plotfile = ""
+)
 }
 \arguments{
 \item{read_count_df}{data frame with asv and read_count columns}
@@ -13,6 +18,9 @@ Histogram_ReadCountByVariant(read_count_df, min_read_count = 0, binwidth = 100)
 before making the graph}
 
 \item{binwidth}{width of the read count intervals}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 }
 \description{
 Create histogram with the number of reads in each sample or sample-replicate;

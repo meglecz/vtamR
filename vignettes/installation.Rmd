@@ -32,26 +32,24 @@ programs. They should be installed on your computer:
 * vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
 * cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
 * swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
+* pigz (optional)
 
 `vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
+
 `vtamR` was tested on **Windows** and **Linux**, and should work in all 
 operating systems.
-
- - Help is available for all `vtamR` functions via `?function_name`.
- - Most functions accept either a **data frame** or a **CSV file** as input, 
- and return a data frame (optionally saved to a CSV file if a filename is provided).
 
 
 ## Install vtamR
 
-Install `vtamR` and its CRAN dependencies by `pak`. 
+Install `vtamR` and its CRAN dependencies by `pak`.
 ```{r install_github_pak, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
 pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
 ```
 
-Alternatively, you can use devtools,
+Alternatively, you can use `devtools`.
 ```{r install_github_devtools, eval=FALSE}
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
@@ -59,7 +57,7 @@ devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
 
 You also need to install Bioconductor packages manually
 if you intend to use `TaxAssignRDP` function.
-```{r install_github_devtools, eval=FALSE}
+```{r install_bioc, eval=FALSE}
 # Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 if (!requireNamespace("rRDP", quietly = TRUE)) BiocManager::install("rRDP")
@@ -72,51 +70,7 @@ on how to construct a full metabarcoding pipeline.
 
 ## Install third party programs
 
-### Option 1: Install third party programs using conda environment
-**NOTE:** Should be updated to include pigz and tested
-
-**In R**, find the full path to the YAML environment file:
-
-```{R environment_vtamR, eval=FALSE}
-environment_vtamR_yml_path <- system.file("environment_vtamR.yml", package = "vtamR")
-cat(environment_vtamR_yml_path)
-```
-
-**In a terminal**, replace PATH_TO_YML with the path you just printed:
-
-```{bash instal-conda, eval=FALSE}
-conda env create -f PATH_TO_YML
-conda activate vtamRenv
-```
-
-This creates a Conda environment `vtamRenv` with all required tools.
-
-If using **RStudio**, you must manually set the paths to these tools in 
-your R session or scripts.
-See the [Set up section of the tutorial](tutorial-vtamr-pipeline.html#setup) 
-for details.
-
-Get paths to third-party programs:
-```{bash access-path, eval=FALSE}
-conda activate vtamRenv
-
-which vsearch
-which blastn
-which cutadapt
-which swarm
-```
-
-Check the version of third-party programs:
-```{bash check-version, eval=FALSE}
-vsearch --version # >= v2.7.0
-blastn -v # >= v2.11.0+
-cutadapt --version  # >= v4.0
-swarm --version # >= v2.1.12
-```
-
-### Option 2: Install third party programs manually
-
-#### Linux
+### Linux
 
 * `vsearch` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
@@ -124,12 +78,58 @@ swarm --version # >= v2.1.12
 * `swarm` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
 * `pigz` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
-**Add the executables to your PATH** to avoid specifying their full path each 
-time you run a function that uses them.
 
-#### Windows
+**Add the executables to your PATH** so you don’t need to type their full location each time.
+If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
 
-Download binaries and save it a convenient place on your computer 
+
+You can add a directory to your PATH by editing your shell configuration file.
+
+1. Edit your shell configuration file
+
+Most Linux systems use **bash** or **zsh**.
+
+For bash (default on many systems)
+
+Edit the file:
+
+```bash
+nano ~/.bashrc
+```
+
+  For zsh (if your system uses zsh)
+
+```bash
+nano ~/.zshrc
+```
+
+2. Add the directory to the PATH
+
+```bash
+export PATH="$PATH:/home/user/tools/myprogram/bin"
+```
+
+3. Apply the changes
+
+```bash
+source ~/.bashrc
+```
+  (or `~/.zshrc` if using zsh)
+
+4. Verify that the programs are in your PATH
+
+```{}
+echo $PATH
+cutadapt --version
+swarm --version
+vsearch --version
+pigz --version
+blastn -version
+```
+
+### Windows
+
+Download binaries and save the to a convenient place on your computer 
 (path without space, e.g. `C:/Users/Public/`)
 
 **vsearch**
@@ -152,9 +152,6 @@ Download binaries and save it a convenient place on your computer
 
 **BLAST**
 
-Detailed instructions:
-https://www.ncbi.nlm.nih.gov/books/NBK52637/
-
 * Download the installer (ncbi-blast-x.xx.x+-win64.exe) from:
 https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/
 * Double-click the .exe file, accept the license agreement, 
@@ -170,16 +167,61 @@ so you won’t need to specify its location when using it.
 * Decompress the zip file
 * The executable (pigz.exe) is in the pigz-win32 directory
 
-
 **Add executables to your PATH**
 
 This step is optional. If third-party executables are included in your 
 system PATH, you won’t need to manually specify their locations when running 
 functions that use them.
 
-If you choose **not** to add them to your PATH, remember to specify the full 
-path to each program when calling those functions.
+If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
 
+You can use either **GUI** or **PowerShell** to add executables to your PATH.
+
+**1. Using the Windows GUI (System Settings)**
+
+1. Press **Win + R**, type `sysdm.cpl`, and press **Enter**.
+   *(Opens System Properties.)*
+2. Go to the **Advanced** tab.
+3. Click **Environment Variables…**
+4. In the **System variables** section, find and select **Path**.
+5. Click **Edit…**
+6. Click **New**, then paste the directory you want to add (for example:
+   `C:\Users\YourName\Tools\bin`)
+7. Click **OK** on all windows to save.
+
+**2. Using PowerShell**
+
+1. Press **Win + R**, type `powershell`, and press **Enter**.
+   *(Opens Powershell)*
+
+```{}
+setx PATH "$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm"
+```
+
+2. Close de Powershell, since the change applies only to **new** terminals, not the current one.
+
+
+**Verify Program Versions**
+
+Open a Command Prompt on Windows (**Win + R**, type `cmd`)
+
+```bash
+cutadapt --version
+swarm --version
+vsearch --version
+pigz --version
+blastn -version
+```
+
+**Note**
+*These commands will display the version of each program **if the executables are in your PATH**.
+Otherwise, don’t forget to provide the full path to the executables.*
+
+Example:
+
+```{}
+C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
+```
 
 ## TaxAssign reference data base
 
@@ -210,9 +252,14 @@ Alternatively, you can also create a custom version from the **TSV format** data
 [mkCOInr](https://github.com/meglecz/mkCOInr)
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
+
 **For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
 containing taxIDs and a 
 [taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
 If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
+
+Alternatively, you can use the `TaxAssignRDP` function to assign bacterial 16S sequences.
+The database is provided in the `rRDPData` R data package.
+
 

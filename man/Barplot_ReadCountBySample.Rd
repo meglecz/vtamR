@@ -9,7 +9,8 @@ Barplot_ReadCountBySample(
   sampleinfo = "",
   sample_replicate = T,
   sep = ",",
-  x_axis_label_size = 6
+  x_axis_label_size = 6,
+  plotfile = ""
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ by sample otherwise}
 \item{sep}{separator used in csv files}
 
 \item{x_axis_label_size}{size of labels in x axis}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 }
 \description{
 Create barplot with the number of reads in each sample or sample-replicate;
