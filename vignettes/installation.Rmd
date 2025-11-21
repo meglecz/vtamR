@@ -82,49 +82,35 @@ on how to construct a full metabarcoding pipeline.
 **Add the executables to your PATH** so you don’t need to type their full location each time.
 If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
 
+You can add a directory to your PATH so that R and RStudio can find the executables you want to use.
 
-You can add a directory to your PATH by editing your shell configuration file.
-
-1. Edit your shell configuration file
-
-Most Linux systems use **bash** or **zsh**.
-
-For bash (default on many systems)
-
-Edit the file:
+1. Edit (or create) your `~/.Renviron` file
 
 ```bash
-nano ~/.bashrc
-```
-
-  For zsh (if your system uses zsh)
-
-```bash
-nano ~/.zshrc
+nano ~/.Renviron
 ```
 
 2. Add the directory to the PATH
 
 ```bash
-export PATH="$PATH:/home/user/tools/myprogram/bin"
+PATH="/home/user/tools/myprogram/bin:${PATH}"
 ```
+**Note:** The PATH must contain a **directory**, not an executable file.
+For example, use: `/home/username/miniconda3/envs/vtamr/bin`
+and **not**: `/home/username/miniconda3/envs/vtamr/bin/cutadapt`
 
-3. Apply the changes
+### 3. Restart R or RStudio
 
-```bash
-source ~/.bashrc
-```
-  (or `~/.zshrc` if using zsh)
+The new PATH is loaded at startup.
 
-4. Verify that the programs are in your PATH
+### 4. Verify that R sees the correct executables
 
-```{}
-echo $PATH
-cutadapt --version
-swarm --version
-vsearch --version
-pigz --version
-blastn -version
+```r
+system("cutadapt --version")
+system("swarm --version")
+system("vsearch --version")
+system("blastn -version")
+system("pigz --version")
 ```
 
 ### Windows

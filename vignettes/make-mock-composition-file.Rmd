@@ -234,8 +234,21 @@ See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#tax
 ```{r}
 asv_tax <- TaxAssign(asv=read_count_mock, 
                      taxonomy=taxonomy, 
-                     blast_db=blast_db
+                     blast_db=blast_db,
+                     quiet=FALSE
                      )
+cmd <-"blastn -version"
+cmd <-"cutadapt --version"
+system(cmd)
+
+Sys.getenv("PATH")
+
+
+Sys.which("cutadapt")
+Sys.getenv("PATH")
+system("cutadapt --version")
+
+
 ```
 
 

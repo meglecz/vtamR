@@ -1,5 +1,13 @@
 # Ideas for vtamR
 
+## test script
+- if TPP in PATH, defile path argument as 
+blast_path="blastn" ...
+
+Then run test program IF OK => adding xxx_path arguments cen be ommited
+otherwise defile path argument using full path and rerun the script
+
+
 ## check if possible to impose -overlen in demultiplexing if tags are not anchored, it is not checked by default
 		  
 ## OptimizeLFNreadCountLFNvariant => refer to missing occurrences instaed of printing missing asv to the terminal
@@ -529,3 +537,7 @@ Complete Installation Rmd with instructions to add executables to the PATH
 
 Modify tuto using programes in the PATH, but still using the xxx_path so 
 users will not forget it, if the executables are not in the PATH.
+
+## 2025/11/20 linux-PATH
+
+modify ./Renviron to add path to TPP

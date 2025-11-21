@@ -9,7 +9,7 @@ Barplot_RenkonenDistance(
   sampleinfo = NULL,
   sep = ",",
   x_axis_label_size = 6,
-  plotfile
+  plotfile = ""
 )
 }
 \arguments{
