@@ -3557,11 +3557,11 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 }
 
 
-#' TaxAssign
+#' TaxAssignLTG using BLAST based Lowest Common Ancestor Method
 #' 
 #' Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
 #'  
-#' TaxAssign uses the mkLTG algorithm described 
+#' TaxAssignLTG uses the mkLTG algorithm described 
 #' in [Meglécz, 2024](https://rdcu.be/dxABF) and  
 #' [https://github.com/meglecz/mkLTG](https://github.com/meglecz/mkLTG).
 #' This is a BLAST based method using a series of identity percentage of cutoff
@@ -3603,12 +3603,12 @@ PoolReplicates <- function(read_count, digits=0, outfile="", sep=","){
 #' pid,pcov,phit,taxn,seqn,refres,ltgres,asv
 #' @examples
 #' \dontrun{
-#' TaxAssign(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
+#' TaxAssignLTG(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
 #' }
 #' @export
 #'
 #'
-TaxAssign <- function(asv, 
+TaxAssignLTG <- function(asv, 
                       taxonomy, 
                       blast_db, 
                       blast_path="blastn", 
@@ -6880,7 +6880,7 @@ MakeMockCompositionLTG <- function(read_count,
     "-out", bdmock,
     "-parse_seqids"
   )
-  run_system2(blastdb_path, args, quiet=FALSE)
+  run_system2(blastdb_path, args, quiet=quiet)
   
   if(is.character(sampleinfo)){
     # read known occurrences
@@ -6916,12 +6916,12 @@ MakeMockCompositionLTG <- function(read_count,
                                 refres=c(1,1,1,1,1),
                                 ltgres=c(8,8,8,8,8))
 
-  taxa <- TaxAssign(asv= mock_df, 
+  taxa <- TaxAssignLTG(asv= mock_df, 
                     taxonomy = taxonomy, 
                     blast_db = bdmock, 
                     blast_path=blast_path, 
                     ltg_params=ltg_params_df, 
-                    quiet=F, 
+                    quiet=quiet, 
                     fill_lineage=TRUE)
   
   
@@ -7055,8 +7055,12 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
   
   # --- Check if n >= total
   if (n >= total) {
-    txt <- paste(fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
-    warning(txt)
+    txt <- sprintf("%s contains %d sequences.\nThe input file is copied to output.",
+                   fasta, total)
+    warning(txt, call. = FALSE)
+    
+#    txt <- paste("\n", fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
+#    warning(txt)
     
     # determine compression for output
     if (grepl("\\.gz$", outfile)) {

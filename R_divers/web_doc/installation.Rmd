@@ -1,57 +1,59 @@
 ---
-output: github_document
+title:  "Install vtamR and Third Party Programs - v0.3.1"
+auhor: Emese Meglécz
+date: "2025-11-27"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 0
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+  message = FALSE,
+  warning = FALSE,
+  echo=TRUE,
+  eval=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
 )
 ```
-
-# vtamR
-
-<!-- badges: start -->
-<!-- badges: end -->
-
-**vtamR** is a revised, completed version of 
-[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
-(Validation and Taxonomic Assignation of Metabarcoding Data) 
-rewritten in R. It is a complete metabarcoding pipeline:
-
-* Sequence analyses **from raw fastq files** of amplicon sequences till 
-Amplicon Sequence Variant 
-([ASV](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)) 
-table of **validated ASVs assigned to taxonomic groups**.
-* Handles technical or biological **replicates** of the same sample.
-* Uses positive and negative **control samples to fine tune the filtering** and 
-reduce [false positive](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-and [false negative](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-occurrences.
-* Can pool multiple data sets (results of earlier analyses)
-* Can pool results from overlapping markers
-
-**Novelties compared to VTAM:**
-
-* As it is a series of R functions, `vtamR` is highly adaptable to 
-include/exclude and order different steps of the analyses
-* Includes SWARM for denoising
-* Graphic options
-* Include functions to get statistics of each filtering steps 
-(read and variant count etc.)
-* ASV clustering to mOTU 
-* The notion of marker and run has been dropped to simplify the analyses
-
-# Tutorial
-
-A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)**
-on how to construct a full metabarcoding pipeline is avalibale online.
-
-# Installation
 
 ## Implementation
 
@@ -62,28 +64,30 @@ programs. They should be installed on your computer:
 * VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
 * CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
 * SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-* PIGZ (optional)
+* VSEARCH (optional)
 
 `vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
+
 `vtamR` was tested on **Windows** and **Linux**, and should work in all 
 operating systems.
+
 
 ## Install vtamR
 
 Install `vtamR` and its CRAN dependencies by `pak`.
 ```{r install_github_pak, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
+pak::pkg_install("meglecz/vtamR", dependencies=TRUE)
 ```
 
 Alternatively, you can use `devtools`.
 ```{r install_github_devtools, eval=FALSE}
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
-devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
+devtools::install_github("meglecz/vtamR", dependencies = TRUE)
 ```
 
-You also need to install Bioconductor packages manually
+Install Bioconductor packages manually
 if you intend to use `TaxAssignRDP` function.
 ```{r install_bioc, eval=FALSE}
 # Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
@@ -104,13 +108,18 @@ on how to construct a full metabarcoding pipeline.
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
 * `CUTADAPT` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
 * `SWARM` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
-* `PIGZ` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
+* `VSEARCH` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
-**Add the executables to your PATH** so you don’t need to type their full location each time.
-If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
+**Add the executables to your PATH** 
 
-You can add a directory to your PATH so that R and RStudio can find the executables you want to use.
+This step is optional. If third-party executables are included in your `PATH`, 
+you won’t need to manually specify their locations when running functions that use them.
+
+If you prefer **not** to modify your `PATH`, be sure to provide the 
+full path to each program using the corresponding `vtamR` function argument 
+(e.g., `vsearch_path`).
+
 
 1. Edit (or create) your `~/.Renviron` file
 
@@ -143,7 +152,7 @@ system("pigz --version")
 
 ### Windows
 
-Download binaries and save the to a convenient place on your computer 
+Download binaries and save them to a convenient place on your computer 
 (path without space, e.g. `C:/Users/Public/`)
 
 **VSEARCH**
@@ -175,7 +184,7 @@ so you won’t need to specify its location when using it.
 * The executables will be installed in:
 `C:\Program Files\NCBI\blast-x.xx.x+\bin`
 
-**PIGZ** (Optional)
+**VSEARCH** (Optional)
 
 * Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
 * Decompress the zip file
@@ -273,7 +282,7 @@ Alternatively, you can also create a custom version from the **TSV format** data
 **For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
 containing taxIDs and a 
 [taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
-If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
+If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
 
@@ -284,3 +293,7 @@ The database is provided in the `rRDPData` R data package.
 
 It is also possible to provide to provide a trained classifier object created 
 with `trainRDP()`.
+
+
+
+

@@ -1,14 +1,45 @@
 ---
-title: "Install vtamR and Third Party Programs - v0.3.0"
+title: "Install vtamR and Third Party Programs - v0.3.1"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.0}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.1}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -29,10 +60,10 @@ The heavy lifting of sequence analyses are done by the following third party
 programs. They should be installed on your computer:
 
 * BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
-* vsearch ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
-* cutadapt([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
-* swarm ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-* pigz (optional)
+* VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
+* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
+* SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
+* VSEARCH (optional)
 
 `vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
@@ -46,16 +77,16 @@ operating systems.
 Install `vtamR` and its CRAN dependencies by `pak`.
 ```{r install_github_pak, eval=FALSE}
 if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
+pak::pkg_install("meglecz/vtamR", dependencies=TRUE)
 ```
 
 Alternatively, you can use `devtools`.
 ```{r install_github_devtools, eval=FALSE}
 if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
-devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
+devtools::install_github("meglecz/vtamR", dependencies = TRUE)
 ```
 
-You also need to install Bioconductor packages manually
+Install Bioconductor packages manually
 if you intend to use `TaxAssignRDP` function.
 ```{r install_bioc, eval=FALSE}
 # Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
@@ -72,17 +103,22 @@ on how to construct a full metabarcoding pipeline.
 
 ### Linux
 
-* `vsearch` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
+* `VSEARCH` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
-* `cutadapt` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
-* `swarm` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
-* `pigz` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
+* `CUTADAPT` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
+* `SWARM` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
+* `VSEARCH` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
-**Add the executables to your PATH** so you don’t need to type their full location each time.
-If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
+**Add the executables to your PATH** 
 
-You can add a directory to your PATH so that R and RStudio can find the executables you want to use.
+This step is optional. If third-party executables are included in your `PATH`, 
+you won’t need to manually specify their locations when running functions that use them.
+
+If you prefer **not** to modify your `PATH`, be sure to provide the 
+full path to each program using the corresponding `vtamR` function argument 
+(e.g., `vsearch_path`).
+
 
 1. Edit (or create) your `~/.Renviron` file
 
@@ -99,11 +135,11 @@ PATH="/home/user/tools/myprogram/bin:${PATH}"
 For example, use: `/home/username/miniconda3/envs/vtamr/bin`
 and **not**: `/home/username/miniconda3/envs/vtamr/bin/cutadapt`
 
-### 3. Restart R or RStudio
+3. Restart R or RStudio
 
 The new PATH is loaded at startup.
 
-### 4. Verify that R sees the correct executables
+4. Verify that R sees the correct executables
 
 ```r
 system("cutadapt --version")
@@ -115,21 +151,21 @@ system("pigz --version")
 
 ### Windows
 
-Download binaries and save the to a convenient place on your computer 
+Download binaries and save them to a convenient place on your computer 
 (path without space, e.g. `C:/Users/Public/`)
 
-**vsearch**
+**VSEARCH**
 
 * Download binaries from https://github.com/torognes/vsearch/releases/tag/v2.23.0
 * Decompress the zip file
 * The executable are found in `vsearch-x.xx.x-win-x86_64/bin/`
 
-**cutadapt**
+**CUTADAPT**
 
 * Download `cutadapt.exe` from 
 [https://github.com/marcelm/cutadapt/releases](https://github.com/marcelm/cutadapt/releases)
 
-**swarm**
+**SWARM**
 
 * Download binaries from 
 [https://github.com/torognes/swarm/releases](https://github.com/torognes/swarm/releases)
@@ -147,7 +183,7 @@ so you won’t need to specify its location when using it.
 * The executables will be installed in:
 `C:\Program Files\NCBI\blast-x.xx.x+\bin`
 
-**pigz** (Optional)
+**VSEARCH** (Optional)
 
 * Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
 * Decompress the zip file
@@ -163,28 +199,28 @@ If you prefer **not** to add them, make sure to provide the full path to each pr
 
 You can use either **GUI** or **PowerShell** to add executables to your PATH.
 
-**1. Using the Windows GUI (System Settings)**
+1. Using the Windows GUI (System Settings)
 
-1. Press **Win + R**, type `sysdm.cpl`, and press **Enter**.
+* Press **Win + R**, type `sysdm.cpl`, and press **Enter**.
    *(Opens System Properties.)*
-2. Go to the **Advanced** tab.
-3. Click **Environment Variables…**
-4. In the **System variables** section, find and select **Path**.
-5. Click **Edit…**
-6. Click **New**, then paste the directory you want to add (for example:
+* Go to the **Advanced** tab.
+* Click **Environment Variables…**
+* In the **System variables** section, find and select **Path**.
+* Click **Edit…**
+* Click **New**, then paste the directory you want to add (for example:
    `C:\Users\YourName\Tools\bin`)
-7. Click **OK** on all windows to save.
+* Click **OK** on all windows to save.
 
-**2. Using PowerShell**
+2. Using PowerShell
 
-1. Press **Win + R**, type `powershell`, and press **Enter**.
+* Press **Win + R**, type `powershell`, and press **Enter**.
    *(Opens Powershell)*
 
 ```{}
 setx PATH "$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm"
 ```
 
-2. Close de Powershell, since the change applies only to **new** terminals, not the current one.
+* Close de Powershell, since the change applies only to **new** terminals, not the current one.
 
 
 **Verify Program Versions**
@@ -211,7 +247,10 @@ C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
 
 ## TaxAssign reference data base
 
-A ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
+### TaxAssignLTG
+
+For `TaxAssignLTG` (BLAST based Lowest Common Ancestor method),
+a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 Download and extract using:
@@ -242,10 +281,18 @@ Alternatively, you can also create a custom version from the **TSV format** data
 **For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
 containing taxIDs and a 
 [taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
-If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
+If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
-Alternatively, you can use the `TaxAssignRDP` function to assign bacterial 16S sequences.
+
+### TaxAssignRDP
+
+`TaxAssignRDP` function uses de RDP algorithm to assign bacterial 16S sequences.
 The database is provided in the `rRDPData` R data package.
+
+It is also possible to provide to provide a trained classifier object created 
+with `trainRDP()`.
+
+
 
 

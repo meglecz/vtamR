@@ -200,7 +200,7 @@ Barplot_RenkonenDistance <- function(df,
   
   p <- ggplot(df, aes(x = replicate_pair, y = renkonen_d, fill = sample_type)) +
     geom_bar(stat = "identity") +
-    labs(title = "Renkonen distances between pairs of replicates of the same sample",
+    labs(title = "Renkonen distances \n between pairs of replicates of the same sample",
          x = "Replicate pair",
          y = "Renkonen distance",
          fill = "Sample Type") +
