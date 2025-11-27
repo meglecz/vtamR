@@ -19,8 +19,7 @@ number of lines for other files.
 \description{
 Count the number of sequences in a fasta or fastq file
 or the number of lines in other files.
-}
-\details{
+
 Efficient in linux-like systems, but slow on Windows for large files.
 Can handle gz compressed and uncompressed files, but not zip files.
 }

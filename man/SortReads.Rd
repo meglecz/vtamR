@@ -10,6 +10,9 @@ SortReads(
   outdir = "",
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
+  compress_method = "R",
+  pigz_path = "pigz",
+  num_threads = 0,
   check_reverse = F,
   tag_to_end = T,
   primer_to_end = T,
@@ -35,6 +38,18 @@ habitat(optional),replicate,fasta}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+Only needed if \code{check_reverse == TRUE}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
 \item{check_reverse}{logical: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}
 
@@ -44,7 +59,7 @@ sequences of the input fasta as well.}
 \item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
 between primers and reads (for tags, exact match is required).}
 
 \item{cutadapt_minimum_length}{Positive integer: minimum length of the
@@ -61,7 +76,7 @@ trimmed sequence.}
 show warnings or errors.}
 }
 \value{
-Data frame corresponding to the output sortedinfo.csv file
+Data frame corresponding to the output sampleinfo.csv file
 and one fasta file for each tag combination for each input fasta file,
 containing trimmed reads.
 }
@@ -69,9 +84,8 @@ containing trimmed reads.
 Demultiplex each input fasta file using the tag combinations at the
 extremities of the merged reads.
 Trim primers from demultiplexed reads.
-}
-\details{
-The output sortedinfo.csv file is similar to the input fastainfo,
+
+The output sampleinfo.csv file is similar to the input fastainfo,
 but the but do not have tag and primer columns.
 }
 \examples{

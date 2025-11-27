@@ -14,8 +14,7 @@ The number of sequences in the input file.
 }
 \description{
 Count the number of sequences in the input fasta file.
-}
-\details{
+
 Input can be uncompressed or gzip compressed file,
 but other compression types are not supported.
 }

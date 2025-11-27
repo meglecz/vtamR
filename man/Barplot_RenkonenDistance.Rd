@@ -6,9 +6,10 @@
 \usage{
 Barplot_RenkonenDistance(
   df,
-  sample_types = NULL,
+  sampleinfo = NULL,
   sep = ",",
-  x_axis_label_size = 6
+  x_axis_label_size = 6,
+  plotfile = ""
 )
 }
 \arguments{
@@ -16,12 +17,15 @@ Barplot_RenkonenDistance(
 sample1,sample2,replicate1,replicate2,renkonen_d
 (can be produced by make_renkonen_distance_matrix)}
 
-\item{sample_types}{Data frame or CSV file with the following columns:
+\item{sampleinfo}{Data frame or CSV file with the following columns:
 sample, sample_type (real/mock/negative)}
 
 \item{sep}{separator used in csv files}
 
 \item{x_axis_label_size}{size of labels in x axis}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 }
 \description{
 Create barplot with renkonen distances between pairs of sample-replicates

@@ -8,10 +8,12 @@ OptimizePCRerror(
   read_count,
   mock_composition = "",
   vsearch_path = "vsearch",
+  num_threads = 0,
   sep = ",",
   outfile = "",
   max_mismatch = 1,
-  min_read_count = 2
+  min_read_count = 2,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -23,6 +25,8 @@ sample, action (keep/tolerate), asv.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
 \item{sep}{Field separator character in input and output csv files.}
 
 \item{outfile}{Character string: csv file name to print the output data
@@ -33,6 +37,9 @@ allowed between two asv to be compared.}
 
 \item{min_read_count}{Positive integer: occurrences with fewer
 reads are ignored.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the following columns: sample,expected_read_count,

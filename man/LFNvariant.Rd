@@ -6,9 +6,11 @@
 \usage{
 LFNvariant(
   read_count,
-  cutoff = 0.001,
+  cutoff = NULL,
+  asv_specific_cutoffs = NULL,
   by_replicate = FALSE,
   outfile = "",
+  lost_asv_file = "",
   sep = ",",
   min_read_count_prop = 0.7
 )
@@ -17,38 +19,62 @@ LFNvariant(
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{Real (0-1): minimum proportion of the read count of
+\item{cutoff}{Numeric. Value between 0 and 1: minimum proportion of the read count of
 an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
 the occurrence is deleted.}
 
-\item{by_replicate}{logical: Compare read count of the occurrence to the
+\item{asv_specific_cutoffs}{A data frame or CSV file specifying ASV-specific
+cutoff values. May include a \code{replicate} column if \code{by_replicate = TRUE}.}
+
+\item{by_replicate}{Logical; If TRUEn compare read count of the occurrence to the
 read counts of the ASV-replicate.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
 
+\item{lost_asv_file}{Character string: name of the CSV file in which to save
+information about ASVs whose read counts in the output fall below
+\code{min_read_count_prop} of their counts in the input.}
+
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{min_read_count_prop}{Real (0-1): If the proportion of the read count
-of a variant in the output compared to the input is less then
-min_read_count_prop, prints out a warning, since it suggest a
-to high cutoff value}
+\item{min_read_count_prop}{Minimum proportion of total reads retained for
+each ASV after filtering. ASVs dropping below this threshold trigger a
+warning.}
 }
 \value{
 Filtered read_count_df data frame.
 }
 \description{
-If by_replicate is FALSE: Eliminate occurrences where the
-(read_count/read_count of the asv in the data set) is less than cutoff.
-If by_replicate is TRUE: Eliminate occurrences where the
-(read_count/read_count of the asv in its replicate) is less than cutoff.
-}
-\details{
-Issues a warning if the total read count of an ASV has been reduced
-bellow min_read_count_prop, since it can indicate a to high cutoff value.
+Filters out potential false positives arising from tag-jumps or low-level
+inter-sample contamination.
+
+When \emph{by_replicate = FALSE}, the function removes occurrences where the
+ratio (read_count/read_count of the asv in the dataset) is
+lower than \emph{cutoff}.
+
+When \emph{by_replicate = TRUE}, the function removes occurrences where the
+ratio (read_count/read_count of the ASV across all samples of the same replicate) is
+lower than \emph{cutoff}.
+
+A warning is issued if the total read count of an ASV is reduced below
+\emph{min_read_count_prop} after filtering, as this may indicate that the cutoff
+value is too high.
+
+By default, a single global cutoff value (argument \emph{cutoff}) is applied to
+all ASVs. Alternatively, ASV-specific cutoff values can be provided through
+the \emph{asv_specific_cutoffs} argument, either as a data frame or a CSV file.
+When both are provided, the global \emph{cutoff} is applied in cases where
+an ASV-specific cutoff is not defined or is lower than the global cutoff.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- LFNvariant(read_count_df, cutoff=0.005, min_read_count_prop=0.8)
+read_count_df <- LFNvariant2(
+  read_count = "read_counts.csv",
+  cutoff = 0.001,
+  asv_specific_cutoffs = "asv_cutoffs.csv",
+  by_replicate = FALSE
+)
 }
+
 }

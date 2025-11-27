@@ -27,7 +27,7 @@ Extracts the .tar.gz archive, if necessary
 }
 \examples{
 \dontrun{
-download_db(filename = "COInr_2025_05_23.tar.gz",
+download_zenodo(filename = "COInr_2025_05_23.tar.gz",
    url = "https://zenodo.org/records/15515860",
    dest_dir = "~/vtamR",
    untar = TRUE,

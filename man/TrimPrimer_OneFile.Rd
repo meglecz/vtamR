@@ -11,6 +11,9 @@ TrimPrimer_OneFile(
   primer_rv,
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
+  compress_method = "R",
+  pigz_path = "pigz",
+  num_threads = 0,
   check_reverse = F,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -32,13 +35,25 @@ TrimPrimer_OneFile(
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pig
+Only needed if \code{check_reverse} is TRUE.}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
 \item{check_reverse}{logical: if TRUE, check the reverse complementary
 sequences of the input fasta as well.}
 
 \item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
 between primers and reads (for tags, exact match is required).}
 
 \item{cutadapt_minimum_length}{Positive integer: minimum length of the
@@ -55,10 +70,10 @@ NA; Produces an output fasta file.
 }
 \description{
 Trim primers from the input fasta file
-}
-\details{
-Input fasta can be uncompressed or gzip, bz2 compressed file,
+
+Input fasta can be uncompressed or gzip compressed file,
 but other compression types are not supported.
+The outfut file compression is determined from the output filename.
 }
 \examples{
 \dontrun{

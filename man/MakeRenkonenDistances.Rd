@@ -4,13 +4,16 @@
 \alias{MakeRenkonenDistances}
 \title{Make Renkonen Distances}
 \usage{
-MakeRenkonenDistances(read_count_df, compare_all = FALSE)
+MakeRenkonenDistances(read_count_df, compare_all = FALSE, outfile = "")
 }
 \arguments{
 \item{read_count_df}{Data frame with asv, sample, replicate, and read_count columns.}
 
 \item{compare_all}{logical: if TRUE calculate the Renkonen distance among all pairs
 of sample-replicates. Only between replicates of the same sample otherwise.}
+
+\item{outfile}{Character string: csv file name to print the output data
+frame if necessary. If empty, no file is written.}
 }
 \value{
 Data frame with the following columns:

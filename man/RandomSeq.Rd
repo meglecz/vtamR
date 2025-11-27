@@ -2,58 +2,90 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{RandomSeq}
 \alias{RandomSeq}
-\title{Select random sequences}
+\title{Randomly Select Sequences from FASTA Files}
 \usage{
 RandomSeq(
   fastainfo,
   n,
   fasta_dir = "",
   outdir = "",
+  use_vsearch = FALSE,
   vsearch_path = "vsearch",
-  randseed = 0,
-  compress = F,
+  randseed = NULL,
+  compress_method = "R",
+  pigz_path = "pigz",
+  num_threads = 0,
+  compress = T,
   sep = ",",
-  quiet = T
+  quiet = TRUE
 )
 }
 \arguments{
-\item{fastainfo}{Data frame or csv file with a fasta column containing input
-fasta file names. Files can be gzip compressed.}
+\item{fastainfo}{Data frame or CSV file containing a \code{fasta} column with input file names.
+Files can be gzipped.}
 
-\item{n}{Positive integer: the number of randomly selected sequences from each input file.}
+\item{n}{Positive integer: number of sequences to randomly select from each file.}
 
-\item{fasta_dir}{Character string: directory that contains the
-input fasta files}
+\item{fasta_dir}{Character string: directory containing the input FASTA files.}
 
-\item{outdir}{Character string: output directory.}
+\item{outdir}{Character string: directory to write the output FASTA files.}
+
+\item{use_vsearch}{Logical: If TRUE, use VSEARCH for random sampling. Only available
+on Linux. Otherwise uses a cross-platform version`.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
-\item{randseed}{Positive integer: seed for random sampling.
-0 (default value) means to use a pseudo-random seed.
+\item{randseed}{Positive integer or NULL: seed for random sampling.
+NULL or 0 means to use a pseudo-random seed.
 A given non-zero seed produces always the same result.}
 
-\item{compress}{logical: Compress output files to gzip format.}
+\item{compress_method}{Character or logical. Compression method
+(used only if \code{use_vsearch = TRUE}).
+Options are:
+\code{pigz} – Fastest; requires \code{pigz} to be installed (or specify its path via \code{pigz_path}).
+\code{gzip} – Slower; available only on Linux-like systems.
+\code{R} – Cross-platform; uses \code{R.utils}, but is the slowest option.
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
+\item{compress}{Logical: If TRUE, output files are compressed in gzip format.}
+
+\item{sep}{Character: field separator for input and output CSV files.}
+
+\item{quiet}{Logical: If TRUE, suppress informational messages; only warnings and errors are shown.}
 }
 \value{
-The input data frame with updated file names and read counts.
+Updated input data frame with file name extensions adjusted (if needed)
+and \code{read_counts} updated.
 }
 \description{
-Random select n sequences from each input fasta file.
+Randomly selects \code{n} sequences (without replacement) from each input FASTA file
+listed in the \code{fastainfo} data frame.
+Useful to standardize the number of reads across sequencing libraries.
 }
 \details{
-Do not work on Windows! If using Windows, please, use RandomSeqWindows
+Can be used before or after demultiplexing (\code{SortReads}), but recommended
+after \code{Merge} and before \code{SortReads}.
+
+Two algorithms are available:
+\itemize{
+\item VSEARCH-based (\code{use_vsearch = TRUE}): Fast, but only on Linux-like systems.
+\item R-based (\code{use_vsearch = FALSE}): Slower, but works on all systems.
+}
 }
 \examples{
 \dontrun{
-fastainfo_df <- RandomSeq(fastainfo, 
-   fasta_dir="data/fasta", 
-   outdir="data/randomseq"
-   )
+# Fast version (Linux)
+fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+                          use_vsearch = TRUE, n = 10000, compress = TRUE)
+
+# Cross-platform version
+fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+                          use_vsearch = FALSE, n = 10000, compress = TRUE)
 }
+
 }

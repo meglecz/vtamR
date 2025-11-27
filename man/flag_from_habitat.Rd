@@ -8,7 +8,7 @@ flag_from_habitat(occurrence_df, habitat_proportion = 0.5)
 }
 \arguments{
 \item{occurrence_df}{Data frame with the following variables:
-asv, plate, marker, sample, read_count, sample_type, habitat, action.}
+asv, sample, read_count, sample_type, habitat, action.}
 
 \item{habitat_proportion}{For each of ASVs, if the proportion
 of reads in a habitat is below this cutoff, it is considered as an

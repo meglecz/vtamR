@@ -11,12 +11,13 @@ PoolDatasets(
   sep = ",",
   mean_over_markers = T,
   vsearch_path = "vsearch",
+  num_threads = 0,
   quiet = T
 )
 }
 \arguments{
 \item{files}{Data frame with the following variables: file (name of input files), marker.
-Input files must have asv, sample and read_count columns.}
+Input files must have asv_id, sample, replicate (optional), read_count and asv columns.}
 
 \item{outfile}{Character string: csv file name to print the output data
 frame if necessary. If empty, no file is written.}
@@ -32,19 +33,24 @@ over different ASVs of each cluster. Sum otherwise.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
 
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
 \item{quiet}{logical: If TRUE, suppress informational messages and only
 show warnings or errors.}
 }
 \value{
-Data frame with asv_id, sample, read_count, asv columns.
+Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
 }
 \description{
 Take several input files, each in long format containing
-asv_id, sample, read_count and asv columns.
+asv_id, sample, replicate (optional), read_count and asv columns.
 Pool the different data sets, if all have the same marker.
+
 If more than one markers, ASVs identical on their overlapping
 regions are pooled into groups, and different ASVs of the same group
-are pooled under the centroid (longest ASV of the group).
+are pooled under the centroid (longest ASV of the group). The asv_id are
+prefixed by the marker, to avoid confounding different ASVs of different
+markers, with the same id.
 Pooling can take the mean of the read counts of the ASV (default) or their sum.
 }
 \examples{

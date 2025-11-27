@@ -20,7 +20,7 @@ data frame with the content of the input file.}
 in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 
 \item{file_type}{Character string with the following possible values:
-"fastqinfo", "fastainfo", "sortedinfo", "mock_composition", "known_occurrences",
+"fastqinfo", "fastainfo", "sampleinfo", "mock_composition", "known_occurrences",
 "read_count", "read_count_sample", "asv_list".}
 
 \item{sep}{Field separator character in input and output csv files.}
@@ -29,14 +29,17 @@ in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
 show warnings or errors.}
 }
 \value{
-Error message if problem with the files and stop the prorgam.
+Error message if problem with the files and stop the script.
 }
 \description{
 Check the format and coherence of different file types:
 \itemize{
 \item Check if all obligatory columns are present (all file_type)
+\item Check if all sample names are alpha-numerical
+\item Check if asv, tag_fw, tag_rv primer_fw, primer_rv have only IUPAC codes
+\item Check if read_count is numerical
 \item Check sample type, habitat homogeneity across replicates
-(fastqinfo, fastainfo, sortedinfo)
+(fastqinfo, fastainfo, sampleinfo)
 \item Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)
 \item Check if tag combinations are unique within a file(pair)s (fastqinfo, fastainfo)
 \item Check action (mock_composition, known_occurrences)
@@ -45,7 +48,7 @@ Check the format and coherence of different file types:
 }
 \examples{
 \dontrun{
-CheckFileinfo(file="input/sortedinfo.csv", dir="fasta", file_type="sortedinfo")
-CheckFileinfo(file=sortedinfo_df, dir="fasta", file_type="read_count_sample")
+CheckFileinfo(file="input/sampleinfo.csv", dir="fasta", file_type="sampleinfo")
+CheckFileinfo(file=sampleinfo_df, dir="fasta", file_type="read_count_sample")
 }
 }

@@ -4,12 +4,15 @@
 \alias{DensityPlot_RenkonenDistance}
 \title{DensityPlot_RenkonenDistance}
 \usage{
-DensityPlot_RenkonenDistance(df)
+DensityPlot_RenkonenDistance(df, plotfile = "")
 }
 \arguments{
 \item{df}{data frame with the following columns:
 sample1,sample2,replicate1,replicate2,renkonen_d
 (can be produced by MakeRenkonenDistances)}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 }
 \description{
 Create density plot with Renkonen distances between pairs of sample-replicates

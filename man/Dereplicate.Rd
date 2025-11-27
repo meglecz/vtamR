@@ -5,17 +5,17 @@
 \title{Read all fasta files to a data frame and dereplicate}
 \usage{
 Dereplicate(
-  sortedinfo,
+  sampleinfo,
   dir = "",
   outfile = "",
   sep = ",",
-  asv_list = "",
-  updated_asv_list = "",
+  input_asv_list = "",
+  output_asv_list = "",
   quiet = T
 )
 }
 \arguments{
-\item{sortedinfo}{Data frame or csv file with columns:
+\item{sampleinfo}{Data frame or csv file with columns:
 sample,replicate,fasta, optional: sample_type,habitat.
 The fasta column contains the names of the fasta file to be dereplicated.}
 
@@ -26,11 +26,11 @@ The fasta column contains the names of the fasta file to be dereplicated.}
 
 \item{sep}{Field separator character in input and output csv files.}
 
-\item{asv_list}{Character string: file with asvs and asv_ids
+\item{input_asv_list}{Data frame or CSV file with asvs and asv_ids
 from earlier analyses. Optional. It is used to homogenize asv_ids
 between different data sets.}
 
-\item{updated_asv_list}{Character string naming of the output file
+\item{output_asv_list}{Character string naming of the output file
 with updated asv_id - asv pairs. Optional.}
 
 \item{quiet}{logical: If TRUE, suppress informational messages and only
@@ -41,20 +41,19 @@ Data frame with the following columns:
 asv_id,sample,replicate,read_count,asv
 }
 \description{
-Read all fasta files in the fasta columns of sortedinfo data frame (or csv file).
+Read all fasta files in the fasta columns of sampleinfo data frame (or csv file).
 Dereplicate reads to ASVs.
 Count the number of reads of each ASV in each input file.
 Add a unique asv_id to each asv.
-}
-\details{
-If asv_list is given (containing earlier asv and asv_id pairs),
+
+If input_asv_list is given (containing earlier asv and asv_id pairs),
 uses already existing asv_id when possible for the present data
 and adds new unique asv_id, to new ASVs.
-If updated_asv_list is given, writes an updated file containing
+If output_asv_list is given, writes an updated file containing
 all asv - asv_id pairs.
 }
 \examples{
 \dontrun{
-Dereplicate(sortedinfo=sortedinfo, dir="data/sorted", asv_list="data/asv_list.csv")
+Dereplicate(sampleinfo=sampleinfo, dir="data/sorted")
 }
 }

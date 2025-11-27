@@ -5,8 +5,8 @@
 \title{MakeKnownOccurrences}
 \usage{
 MakeKnownOccurrences(
-  read_count_samples,
-  sortedinfo,
+  read_count,
+  sampleinfo,
   mock_composition,
   sep = ",",
   known_occurrences = "",
@@ -16,10 +16,10 @@ MakeKnownOccurrences(
 )
 }
 \arguments{
-\item{read_count_samples}{Data frame or csv file with the following variables:
-asv_id, plate, marker, sample, read_count, asv.}
+\item{read_count}{Data frame or csv file with the following variables:
+asv_id, sample, replicate (optional), read_count, asv.}
 
-\item{sortedinfo}{Data frame or csv file with columns:
+\item{sampleinfo}{Data frame or csv file with columns:
 sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}
 
 \item{mock_composition}{Data frame or csv file with columns:
@@ -37,7 +37,7 @@ the missing occurrences (FN). If empty, no file is written.}
 \item{performance_metrics}{Character string: csv file containing performance
 metrics. If empty, no file is written.}
 
-\item{habitat_proportion}{Real (between 0-1): for each asv, if the proportion
+\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
 of reads in a habitat is below this cutoff,
 it is considered as an artifact in all samples of the habitat.}
 }
@@ -66,7 +66,7 @@ FN (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN)).
 \examples{
 \dontrun{
 results <- MakeKnownOccurrences(read_count_samples_df, 
-sortedinfo=sortedinfo_df, 
+sampleinfo=sampleinfo_df, 
 mock_composition="data/mock_composition.csv", 
 habitat_proportion=0.7
 )

@@ -9,6 +9,7 @@ SortReads_no_reverse(
   fasta_dir,
   outdir = "",
   cutadapt_path = "cutadapt",
+  num_threads = 0,
   tag_to_end = T,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -30,13 +31,15 @@ tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),habitat
 
 \item{cutadapt_path}{Character string: path to cutadapt executables.}
 
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+
 \item{tag_to_end}{logical: tags are at the extremity of the reads
 (starting at the first base).}
 
 \item{primer_to_end}{logical: primers follow directly the tags
 (no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Real (0-1): maximum proportion of errors
+\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
 between primers and reads (for tags, exact match is required).}
 
 \item{cutadapt_minimum_length}{Positive integer: minimum length of the
@@ -53,7 +56,7 @@ trimmed sequence.}
 show warnings or errors.}
 }
 \value{
-Data frame corresponding to the output sortedinfo.csv file
+Data frame corresponding to the output sampleinfo.csv file
 and one fasta file for each tag combination for each input fasta file,
 containing trimmed reads.
 }
@@ -64,7 +67,9 @@ at the extremities of the merged reads.
 Trim primers from demultiplexed reads.
 }
 \details{
-The output sortedinfo.csv file is similar to the fastainfo file,
+Input can be compressed or uncompressed. Output compression is defined by \code{compress}.
+
+The output sampleinfo.csv file is similar to the fastainfo file,
 but the but do not have tag and primer columns.
 }
 \examples{

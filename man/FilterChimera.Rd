@@ -8,10 +8,12 @@ FilterChimera(
   read_count,
   outfile = "",
   vsearch_path = "vsearch",
+  num_threads = 0,
   by_sample = T,
   sample_prop = 0.8,
   abskew = 2,
-  sep = ","
+  sep = ",",
+  quiet = TRUE
 )
 }
 \arguments{
@@ -22,6 +24,8 @@ asv_id, sample, replicate, read_count, asv.}
 frame if necessary. If empty, no file is written.}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{by_sample}{logical: ASVs are flagged as chimera separately
 for each sample.}
@@ -34,6 +38,9 @@ samples among the sample they are present.}
 times less frequent that the parental ASVs.}
 
 \item{sep}{Field separator character in input and output csv files.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Filtered read_count_df data frame.

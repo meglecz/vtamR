@@ -6,16 +6,17 @@
 \usage{
 Barplot_ReadCountBySample(
   read_count_df,
-  sample_types = "",
+  sampleinfo = "",
   sample_replicate = T,
   sep = ",",
-  x_axis_label_size = 6
+  x_axis_label_size = 6,
+  plotfile = ""
 )
 }
 \arguments{
 \item{read_count_df}{data frame with sample, read_count and replicate (optional) columns}
 
-\item{sample_types}{file with sample and sample_type (real/mock/negative) columns}
+\item{sampleinfo}{file with sample and sample_type (real/mock/negative) columns}
 
 \item{sample_replicate}{Boolean. If TRUE barplot is made by sample-replicates,
 by sample otherwise}
@@ -23,6 +24,9 @@ by sample otherwise}
 \item{sep}{separator used in csv files}
 
 \item{x_axis_label_size}{size of labels in x axis}
+
+\item{plotfile}{Character string: png file name for the output plot;
+If empty, no file is written.}
 }
 \description{
 Create barplot with the number of reads in each sample or sample-replicate;

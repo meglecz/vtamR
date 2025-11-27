@@ -10,7 +10,7 @@ LFNsampleReplicate(read_count, cutoff = 0.001, outfile = "", sep = ",")
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv.}
 
-\item{cutoff}{Real (0-1): minimum proportion of the read count of an
+\item{cutoff}{Numeric. Value between 0 and 1: minimum proportion of the read count of an
 occurrence within the reads of its sample-replicate. Bellow this cutoff
 the occurrence is deleted.}
 

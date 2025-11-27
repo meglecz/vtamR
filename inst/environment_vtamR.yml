@@ -1,21 +1,13 @@
 name: vtamRenv
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 dependencies:
-  - r-base=4.3
-  - r-devtools
-  - r-roxygen2
-  - r-testthat
-  - r-seqinr
-  - r-dplyr
-  - r-tidyr
-  - r-ggplot2
-  - r-roxygen2
+  - python=3.11
   - vsearch
-  - blast  # installs ncbi-blast+
-  - cutadapt
+  - blast
   - swarm
-  - r-remotes
-  - r-usethis
+  - pip
+  - pip:
+      - cutadapt==5.1

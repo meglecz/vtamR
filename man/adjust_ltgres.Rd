@@ -8,15 +8,15 @@ adjust_ltgres(taxres_df, tax_df)
 }
 \arguments{
 \item{taxres_df}{Data frame with the following columns: asv_id,ltg_taxid,
-ltg_name,ltg_rank,ltg_rank_index,superkingdom_taxid,
-superkingdom,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
+ltg_name,ltg_rank,ltg_rank_index,domain_taxid,
+domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
 order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
 pcov,phit,taxn,seqn,refres,ltgres,asv.}
 
 \item{tax_df}{Data frame with the following columns:
 tax_id, parent_tax_id, rank, name_txt, taxlevel
 (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
-2: kingdom, 1: superkingdom, 0: root).}
+2: kingdom, 1: domain, 0: root).}
 }
 \value{
 The modified input data frame with lower resolution of LTGs if necessary.

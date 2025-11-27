@@ -1,0 +1,136 @@
+---
+title: "vtamR Developer notes"
+auhor: Emese Meglecz
+date: "2024-06-24"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+
+```{r}
+### Developer
+# Creating a package
+install.packages(c("devtools", "roxygen2", "usethis", "testthat"))
+usethis::create_package("path/to/your/packageName")
+usethis::use_git()
+usethis::use_github()
+
+#### Write the package
+devtools::document() # generate doc
+# create a template for README.Rmd only the developer Edit. It is in .builtignore
+usethis::use_readme_rmd()
+# make a README.md from README.Rmd. This should not be edited manually
+# When building the readme, the Rmd and its chunks are executed, so all example codes should work. If not, make eval=FALSE
+devtools::build_readme()
+
+# creates vignette and adds modif to DESCRIPTION
+usethis::use_vignette("vtamR")
+# vignettes/ should be edited and built
+devtools::build_vignettes()
+
+ # Run checks before releasing a package
+devtools::check()     
+## OR rcmdcheck 
+results <- rcmdcheck::rcmdcheck()
+results$errors
+results$warnings
+results$notes
+
+# Load package without installing; Use during development
+library("vtamR")
+library("rRDP")
+library("devtools")
+library("roxygen2")
+library("seqinr")
+library("dplyr")
+library("tidyr")
+library("ggplot2") 
+### before release
+setwd("/home/meglecz/vtamR/")
+load_all(".")
+roxygenise()
+usethis::use_roxygen_md()
+
+### to test as a package 
+# Install the package with vignettes, but vignettes are not available for users it is only local
+devtools::install(build_vignettes = TRUE)
+
+# USER
+library("vtamR") 
+
+##see vignettes
+vignette(package = "vtamR")
+vignette("installation") 
+vignette("tutorial-vtamr-pipeline") 
+vignette("from-fastq-to-df") 
+vignette("make-mock-composition-file") 
+
+
+
+#######################
+### If pb with vignette not building correctly
+find.package("vtamR")
+remove.packages("vtamR")
+# clean package
+unlink("C:/Users/emese/AppData/Local/R/win-library/4.4/vtamR", recursive = TRUE, force = TRUE)
+file.exists("C:/Users/emese/AppData/Local/R/win-library/4.4/vtamR") 
+unlink("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR", recursive = TRUE, force = TRUE)
+file.exists("~/R/x86_64-pc-linux-gnu-library/4.0/vtamR") 
+# Clean and regenerate documentation:
+devtools::clean_dll()
+devtools::document()
+
+devtools::install(build_vignettes = FALSE, force = TRUE, dependencies = TRUE)
+# test library
+library(vtamR)
+# install with vignettes (local)
+devtools::install(build_vignettes = TRUE)
+vignette(package = "vtamR")
+vignette("installation")
+
+#### from github
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
+
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
+############################
+
+
+### Keep the vignettes and if changes are necessary modify these files
+# check if it builds correctly
+devtools::build_vignettes()
+# copy Rmd to web_doc modify TOC
+  html_document:
+    toc: true
+    toc_float: true
+# knit and put the html to webpage
+# make index to link the different pages
+
+## uninstall
+remove.packages("vtamR")
+# Restart R 
+library(vtamR)
+vignette(package="vtamR")
+?Merge
+
+
+
+############
+# create a rda with the asv_tax, so users can load it
+full_asv_tax <- asv_tax
+usethis::use_data(full_asv_tax, overwrite = TRUE)
+rm(full_asv_tax)
+data(full_asv_tax)
+############
+
+```
+
+

@@ -8,6 +8,9 @@ Merge(
   fastqinfo,
   fastq_dir,
   vsearch_path = "vsearch",
+  compress_method = "R",
+  pigz_path = "pigz",
+  num_threads = 0,
   outdir = "",
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
@@ -34,6 +37,17 @@ fastq_fw,fastq_rv}
 (listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
 
 \item{vsearch_path}{Character string: path to vsearch executables.}
+
+\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
+\code{"gzip"} is Linux-only.
+\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
+Speed: R.utils < gzip (only linux) < pigz}
+
+\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
+is used for file compression, and it is not in the PATH.}
+
+\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 
 \item{outdir}{Character string: output directory.}
 
