@@ -133,4 +133,8 @@ data(full_asv_tax)
 
 ```
 
+Update versions in
+DESCRIPTION
+vignettes
+inst/CITATION
 
