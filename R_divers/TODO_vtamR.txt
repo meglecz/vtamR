@@ -531,20 +531,12 @@ modify ./Renviron to add path to TPP
 - Add sensitivity, precision to Glossary
 - Add section Clustering or denosing and correct link in 'Denoising by swarm'
 - Impove html format
+- clean up unecessary files from github
+- merge develop to main
+- make prerelease with 0.3.1 tag
 
-DONE
+## 2025/11/27 version-update
 
-
-
-TODO
-
-
-clean up unecessary files from github
-push
-test on linux
-Update html webpage
-merge develop to main
-add tag on github 0.3.1
-
-
+Add NEWS.md
+Correct DESCRIPTION an README
 
