@@ -1,5 +1,16 @@
 # Ideas for vtamR
 
+## Add option sum the numer of reads instead on avrg in WriteASVtable and PoolReplicates.
+## Revise column names of output of WriteASVtable in function of mean or sum oevr replicates.
+LFNGlobalReadCount:                 FilterGlobalNoise
+FilterIndel:                                    FilterIndel
+FilterCodonStop:                          FilterStop
+FilterExternalContaminant:          FilterExt
+FilterChimera:                              FilterChimera
+FilterRenkonen:                            FilterReplicate
+FilterPCRerror:                             FilterPCRerror
+
+
 ## check if possible to impose -overlen in demultiplexing if tags are not anchored, it is not checked by default
 		  
 ## OptimizeLFNreadCountLFNvariant => refer to missing occurrences instaed of printing missing asv to the terminal

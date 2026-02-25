@@ -567,7 +567,7 @@ genuine contamination.
 
 ```{r filter-external-contaminant}
 conta_file <- file.path(outdir, "filter", "external_contamination.csv")
-outfile <- file.path(outdir, "filter", "6_FilterCodonStop.csv")
+outfile <- file.path(outdir, "filter", "6_FilterExternalContaminant.csv")
 
 read_count_df <- FilterExternalContaminant(read_count_df, 
                           sampleinfo=sampleinfo_df, 
