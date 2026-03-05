@@ -32,7 +32,7 @@ If empty, no file is written.}
 Filtered read_count_df data frame.
 }
 \description{
-Eliminate ASVs that are likely to be external contaminants, since
+Eliminate ASVs that are likely to be contaminants, since
 they have higher read count in at least one negative control, than in any of
 the other samples.
 }

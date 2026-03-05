@@ -22,7 +22,7 @@ NULL
 #' @param dest_dir path to the directory where the file should be downloaded.
 #' @param untar logical: If TRUE, the archive will be extracted after download.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
-#' @returns  full path to the directory where the file was downloaded.
+#' @return  Invisible full path to the directory where the file was downloaded to.
 #' show warnings or errors.
 #' @examples
 #' \dontrun{
@@ -58,7 +58,7 @@ download_zenodo <- function(
   unlink(destfile)
   
   if (!quiet) message("Extraction complete: ", dest_dir)
-  invisible(dest_dir)
+  return(invisible(dest_dir))
 }
 
 #' Download from OSF
@@ -72,7 +72,7 @@ download_zenodo <- function(
 #' @param untar logical: If TRUE, the archive will be extracted after download.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns  full path to the directory where the file was downloaded.
+#' @return Invisible full path to the directory where the file was downloaded to.
 #' @examples
 #' \dontrun{
 #' download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
@@ -106,5 +106,5 @@ download_osf <- function(
   unlink(destfile)
   
   if (!quiet) message("Extraction complete: ", dest_dir)
-  invisible(dest_dir)
+  return(invisible(dest_dir))
 }

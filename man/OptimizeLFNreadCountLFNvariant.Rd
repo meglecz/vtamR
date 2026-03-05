@@ -76,7 +76,7 @@ for \code{FilterMinReplicate}.}
 show warnings or errors.}
 }
 \value{
-data frame with the following columns:
+Data frame with the following columns:
 lfn_read_count_cutoff, lnf_variant_cutoff, FN, TP, FP.
 }
 \description{

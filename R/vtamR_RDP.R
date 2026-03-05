@@ -6,7 +6,6 @@
 NULL
 
 
-
 #' TaxAssignRDP
 #' 
 #' Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
@@ -32,7 +31,7 @@ NULL
 #' frame if necessary. If empty, no file is written.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns:
+#' @return Data frame with the following columns:
 #' asv_id,domain,kingdom,phylum,class,order,family,genus
 #' @examples
 #' \dontrun{

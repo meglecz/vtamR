@@ -15,7 +15,7 @@ The file will contain two tab-separated columns: \code{seq_id} and \code{tax_id}
 without headers or quotes.}
 }
 \value{
-A tab-delimited file is written to the specified \code{outfile} location.
+NULL; A tab-delimited file is written to the specified \code{outfile} location.
 }
 \description{
 This function reads a FASTA file and extracts sequence identifiers (\code{seq_id})

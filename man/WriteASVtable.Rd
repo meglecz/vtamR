@@ -10,6 +10,7 @@ WriteASVtable(
   asv_tax = NULL,
   sampleinfo = "",
   pool_replicates = FALSE,
+  method = "mean",
   add_empty_samples = FALSE,
   add_sums_by_sample = FALSE,
   add_sums_by_asv = FALSE,
@@ -36,11 +37,14 @@ If given, the output is completed with taxonomic assignment of each ASV.}
 \item{sampleinfo}{Data frame or csv file with columns: sample, sample_type.
 Only necessary if add_empty_samples==T or add_expected_asv==T.}
 
-\item{pool_replicates}{Logical: if replicate column is prensent in the
-input data, read counts are averaged over replicates (pool_replicates== TRUE),
+\item{pool_replicates}{Logical: if replicate column is present in the
+input data, read counts are aggregated (see method) over replicates (pool_replicates== TRUE),
 or kept separately (pool_replicates== FALSE).
 In this case, each column in the output df is a
 sample.replicate.}
+
+\item{method}{Character string specifying how replicate read counts should be aggregated
+Must be one of "mean", "max", "sum" or "min".}
 
 \item{add_empty_samples}{Logical: add a column for each samples
 in the original data set, even if they do not have reads after filtering.}
@@ -61,9 +65,10 @@ Only necessary if add_expected_asv==T.}
 \item{sep}{Field separator character in input and output csv files.}
 }
 \value{
-Data frame corresponding to the output file.
-Samples in columns, ASVs in lines, read_counts in cells, plus
-other information according to the input parameters.
+An invisible data frame corresponding to the output file.
+Columns represent samples, rows represent ASVs, and cells contain
+read counts, along with additional information depending on the
+input parameters.
 }
 \description{
 Write csv file with samples in columns, ASVs in lines, read_counts in cells.

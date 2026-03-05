@@ -8,7 +8,8 @@ make_missing_occurrences(
   read_count_samples,
   mock_composition,
   sep = ",",
-  out = ""
+  out = "",
+  quiet = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ sample, action (keep/tolerate), asv.}
 \item{sep}{Field separator character in input and output csv files.}
 
 \item{out}{Character string: output file. If empty, no file is written.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 Data frame with the following columns:

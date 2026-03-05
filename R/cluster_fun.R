@@ -32,7 +32,7 @@ NULL
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with asv pairs and their percentage of identity. 
+#' @return Data frame with asv pairs and their percentage of identity. 
 #' asv pairs with identity bellow min_id are not listed. Colums: query, target, identity 
 #' @examples 
 #' \dontrun{
@@ -141,7 +141,7 @@ PairwiseIdentity <- function(asv,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: asv_id, cluster_id
+#' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
 #' cluster_df <- GetClusterIdSwarm(read_count_df, 
@@ -280,7 +280,7 @@ GetClusterIdSwarm <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: asv_id, cluster_id
+#' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
 #' cluster_df <- GetClusterIdVsearch(read_count_df, 
@@ -398,7 +398,7 @@ GetClusterIdVsearch <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A density plot pairwise percentage of identities.
+#' @return A density plot pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
 #' plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
@@ -545,7 +545,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A density plot of pairwise percentage of identities.
+#' @return A density plot of pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
 #' plot <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
@@ -690,7 +690,7 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: cluster_id, classification
+#' @return Data frame with the following columns: cluster_id, classification
 #' for each taxonomic level
 #' @examples 
 #' \dontrun{
@@ -812,7 +812,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A connected scatterplot of the number of clusters in different classes 
+#' @return A connected scatterplot of the number of clusters in different classes 
 #' (open, closed, hybrid)
 #' @examples 
 #' \dontrun{
@@ -949,7 +949,7 @@ PlotClusterClasstification <- function(read_count, taxa,
 #' asv, sample, replicate (optional), read_count.
 #' @param cluster_df Data frame with the following variables: 
 #' asv_id, cluster_id.
-#' @returns Data frame: same structure as the input (read_count_df), but ASVs of 
+#' @return Data frame: same structure as the input (read_count_df), but ASVs of 
 #' the same cluster pooled to one row.
 #' @examples
 #' \dontrun{
@@ -991,26 +991,30 @@ pool_by_cluster <- function(read_count_df,
   return(read_count_df)
 }
 
-#' Cluster ASVs by Swarm or Vsearch
+
+
+#' Cluster ASVs Using Swarm or VSEARCH
 #' 
-#' This function runs Swarm or the cluster_size command of Vsearch 
-#' on the ASVs in the input data frame.
-#' Each ASV is assigned to a cluster, and the function provides 
-#' two possible output formats, controlled by the argument group.
+#' This function can **cluster** ASVs into mOTUs or perform **denoising**. 
+#' When using Swarm with `d = 1`, the clustering result corresponds to denoising.
 #'  
-#' If group = TRUE, the function aggregates the ASVs belonging to the same 
-#' cluster into a single row. In this case, the asv_id and asv columns contain 
-#' the identifier and the sequence of the cluster's centroid. 
-#' read_count is summed over ASVs, samples and replicates are unchanged.
+#' The function runs either Swarm or VSEARCH's `cluster_size` command on the ASVs 
+#' in the input data frame. Each ASV is assigned a cluster, and two output formats 
+#' are available, controlled by the `group` argument.
+#'   
+#' - If `group = TRUE`, ASVs in the same cluster are aggregated into a single row. 
+#'   In this case, the `asv_id` and `asv` columns contain the identifier and 
+#'   sequence of the cluster's centroid, and `read_count` is summed across ASVs. 
+#'   Sample and replicate information is retained.
 #'  
-#' If group = FALSE, the function returns the original input data frame 
-#' with an additional column: cluster_id. Each row still corresponds to one ASV.
+#' - If `group = FALSE`, the function returns the original data frame with an 
+#'   additional column, `cluster_id`. Each row corresponds to one ASV.
 #'  
-#' The clustering can be run on the whole data set at once, 
-#' or sample by sample (by_sample)
+#' Clustering can be performed on the entire data set or separately for each sample 
+#' (`by_sample` argument). 
 #'  
-#' Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
-#' `group==FALSE`, the same asv_id, can have different cluster_id in different samples.
+#' **Note:** If `by_sample = TRUE` and `group = FALSE`, the same `asv_id` may be 
+#' assigned different `cluster_id`s in different samples.
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
@@ -1032,7 +1036,7 @@ pool_by_cluster <- function(read_count_df,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns read_count_df: same structure as the input, but ASVs of 
+#' @return read_count_df: same structure as the input, but ASVs of 
 #' the same cluster pooled to one row if group==TRUE, or rows kept as in the input 
 #' and an additional cluster_id column is added if group==FALSE.
 #' @examples

@@ -14,7 +14,7 @@ write_fasta(sequences, filename, seq_as_id = F)
 \item{seq_as_id}{logical: Use sequences as seqID.}
 }
 \value{
-fasta file
+NULL; writes fasta file
 }
 \description{
 Write a vector of sequeces to a fasta file using

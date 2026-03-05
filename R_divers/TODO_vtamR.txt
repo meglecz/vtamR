@@ -1,7 +1,6 @@
 # Ideas for vtamR
 
-## Add option sum the numer of reads instead on avrg in WriteASVtable and PoolReplicates.
-## Revise column names of output of WriteASVtable in function of mean or sum oevr replicates.
+
 LFNGlobalReadCount:                 FilterGlobalNoise
 FilterIndel:                                    FilterIndel
 FilterCodonStop:                          FilterStop
@@ -10,46 +9,26 @@ FilterChimera:                              FilterChimera
 FilterRenkonen:                            FilterReplicate
 FilterPCRerror:                             FilterPCRerror
 
+## check examples , arguments and return in doc
 
-## check if possible to impose -overlen in demultiplexing if tags are not anchored, it is not checked by default
-		  
-## OptimizeLFNreadCountLFNvariant => refer to missing occurrences instaed of printing missing asv to the terminal
-## add asv_id to missing occurrences (if there are any)
+## replace test_filters by an R script to run with demo files (make test_run() function)
+
+## Add quality filter function
 
 ## rewise Roxygen doc, using ` when necessary.
 
-## revise return(invisible(x)) when necessary
+
 
 ## test if count_seq or count in random_seqR is more effifient for files in different size.
 
 ## dereplicate with vsearch
 
-## replace test_filters by an R script to run with demo files (make test_run() function)
 
 ## FilterPCRerror too long
 
-## Add quality filter function
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
-## make rdp_local
 
-## Impove pool runs before filtrage or add to troubleshooting
-
-## Reorganize PoolDatasets:
-1. Pool_data of the same marker
-	can deal with replicates optionally
-	if same sample in different dataset
-		sum
-		mean
-		max
-2. Pool data over markers
-	use ClsuterASV
-	deal with optional replicate
-	deal with homonymy of cluster_IDs (add a different difit for each marker)
-	Read_count within cluster (uven ASv of the same sample, replicate) can be 
-		sum
-		mean
-		max
 		
 ## Polish Histogram_ReadCountByVariant
 
@@ -60,7 +39,7 @@ FilterPCRerror:                             FilterPCRerror
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
 
-
+## make rdp_local ??
 
 # DONE 
 
@@ -546,8 +525,45 @@ modify ./Renviron to add path to TPP
 - merge develop to main
 - make prerelease with 0.3.1 tag
 
-## 2025/11/27 version-update
+## 2025/11/27 version-update ############## prerelease vtamR-v0.3.1
 
 Add NEWS.md
 Correct DESCRIPTION an README
+
+
+## 2026/03/03 PoolReplicates
+
+- Add option mean, sum, max min the numer of reads instead over replicates PoolReplicates.
+- Add option mean, sum, max min the numer of reads instead over replicates WriteASVtable.
+- correcte column name for the total read_coount in WriteASVtable.
+- Add to troubleshooting the pool runs before filtrage.
+- Check if possible to impose -overlen in demultiplexing if tags are not anchored => already included in SortReads
+- OptimizeLFNreadCountLFNvariant => refer to missing occurrences filename instead of printing missing asv to the terminal
+- Add asv_id to missing occurrences (if there are any)
+
+
+
+
+## 2026/03/04
+
+- revise return(invisible(x)) when necessary
+- @reruns corrected to @return in doc
+
+## Reorganize PoolDatasets:
+1. Pool_data of the same marker => PoolMarkers
+	can deal with replicates optionally
+	if same sample in different dataset
+		sum
+		mean
+		max
+2. Pool data over markers => PoolDatasets
+	use ClsuterASV
+	deal with optional replicate
+	deal with homonymy of cluster_IDs (add a different difit for each marker)
+	Read_count within cluster (over ASV of the same sample, replicate) can be 
+		sum
+		mean
+		max
+		
+ClsuterASV rename to ClusterOrDenoise
 

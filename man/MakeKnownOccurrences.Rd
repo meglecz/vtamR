@@ -12,7 +12,8 @@ MakeKnownOccurrences(
   known_occurrences = "",
   missing_occurrences = "",
   performance_metrics = "",
-  habitat_proportion = 0.5
+  habitat_proportion = 0.5,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ metrics. If empty, no file is written.}
 \item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
 of reads in a habitat is below this cutoff,
 it is considered as an artifact in all samples of the habitat.}
+
+\item{quiet}{logical: If TRUE, suppress informational messages and only
+show warnings or errors.}
 }
 \value{
 List of data frames:

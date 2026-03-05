@@ -24,6 +24,7 @@ NULL
 #' @param x_axis_label_size size of labels in x axis
 #' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
+#' @return Barplot
 #' @export
 #' 
 #' 
@@ -114,6 +115,7 @@ Barplot_ReadCountBySample <- function(read_count_df,
 #' @param binwidth width of the read count intervals 
 #' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
+#' @return Histogram
 #' @export
 #' 
 
@@ -163,6 +165,7 @@ Histogram_ReadCountByVariant <- function(read_count_df,
 #' @param x_axis_label_size size of labels in x axis
 #' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
+#' @return Barplot
 #' @export
 #' 
 Barplot_RenkonenDistance <- function(df, 
@@ -227,6 +230,7 @@ Barplot_RenkonenDistance <- function(df,
 #' (can be produced by MakeRenkonenDistances)
 #' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
+#' @return Density plot
 #' @export
 #' 
 DensityPlot_RenkonenDistance <- function(df, plotfile=""){

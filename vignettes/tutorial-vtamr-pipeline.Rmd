@@ -48,6 +48,7 @@ knitr::opts_chunk$set(
   warning = TRUE,
   echo=TRUE,
   eval=TRUE,
+  cache=TRUE,
   fig.width = 6,
   out.width = '100%',
   comment = "#>"
@@ -206,7 +207,7 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 * `taxonomy`: CSV file with taxonomic information
 * `blast_db`: BLAST database
 
-Details are in [Reference database for taxonomic assignments section](#reference-database-for-taxonomic-assignments)
+Details are in [Reference database for taxonomic assignments section](installation.html#reference-database-for-taxonomic-assignments)
 
 
 **Check the format of input files**
@@ -1073,7 +1074,7 @@ The `TaxAssignLTG` function is a BLAST base Last Common Ancestor method.
 See the brief description of the algorithm with `?TaxAssignLTG`.
 
 For the format of `taxonomy` and `blast_db` check the 
-[Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments) 
+[Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments-with-taxAssignltg) 
 section. You can also download a ready to use COI database 
 (See [Installation](installation.html#taxassignltg)).
 
@@ -1363,7 +1364,7 @@ for a 19 GB FASTA file (compressed size: 3 GB) on a Linux system.
 
 - The fastest workflow is to **avoid compression during processing** and **clean up intermediate files** afterward.
 - If you prefer to work with compressed files, **`PIGZ` is clearly the best option**.
-- (See [Installation](#installation.html) for setup instructions.)
+- (See [Installation](installation.html) for setup instructions.)
 
 **Notes on Compatibility**
 
@@ -1441,12 +1442,15 @@ results across multiple thresholds.
 For a series of thresholds, `vtamR` can produce density plots of pairwise identities:
 
 * `PairwiseIdentityPlotPerClusterIdentityThreshold()`
-  (for VSEARCH thresholds)
+  (for the thresholds of VSEARCH's `cluster_size`)
 
 * `PairwiseIdentityPlotPerSwarmD()`
-  (for SWARM `d` values)
+  (for SWARM's `d` values)
+  
 
 These plots show how ASV similarities vary *within* and *between* clusters.
+
+  ![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/PairwiseIdentityPlotPerClusterIdentityThreshold.png)
 
 **2. Cluster Classification**
 
@@ -1462,6 +1466,8 @@ Clusters can also be classified based on their taxonomic assignments:
 The function `PlotClusterClassification()` displays the number of clusters in each 
 class for a range of thresholds.
 
+![Plot ClusterClasstification for the original data](figures/PlotClusterClasstification_vsearch.png)
+
 **Interpreting the Plots**
 
 Together, these visualisations help identify an appropriate clustering threshold 
@@ -1472,13 +1478,15 @@ They allow you to evaluate:
 * how identity or `d` values influence cluster structure,
 * and where a balance exists between over-splitting and over-merging biological units.
 
+For more information see the [Make mOTUs](#make-motus) section.
+
 ## num_threads
 
 By default, **vtamR** automatically uses **all available CPU cores** for multithreaded processes.
 If you want to take full advantage of your computer’s resources, there is **no need to specify** the `num_threads` argument.
 
 However, if you wish to **limit the number of cores** used (for example, to leave resources available for other tasks or users),
-you can specify this parameter manually in the functions.
+you can specify this parameter in the functions.
 
 **Example:**
 This will restrict vtamR to using 8 CPU threads during running Merge.
@@ -2288,6 +2296,97 @@ and each column represents a sample. Read counts are in the cells.
 
 
 # Troubleshooting
+
+## Pool different runs of the same samples before filtering
+
+Pooling different sequencing runs may be necessary when the **same samples** 
+were sequenced in **multiple runs** 
+(e.g., if one sequencing run was of poor quality or if technical replication was done).
+
+It is possible to pool the datasets **before filtering**.
+
+I suggest the following protocol:
+
+### 1. Process each run separately up to the dereplication step
+
+For each sequencing run:
+
+* Merge paired-end reads
+* Demultiplex
+* Trim primers/adapters
+
+Follow the steps as described in [from-fastq-to-df](from-fastq-to-df.html), 
+appropriate for your wet lab and sequencing protocol.
+
+The trimmed, merged, and demultiplexed FASTA files should be stored in a **separate directory for each run**.
+
+
+### 2. Dereplicate each run separately, while keeping a shared ASV list
+
+Each run should be dereplicated independently. However, to ensure that 
+ASV identifiers (`asv_id`) are consistent across runs, you must:
+
+* Use the `output_asv_list` from the first `Dereplicate()` call
+* Provide it as `input_asv_list` to the second call
+* Then pass the updated list to the third call, and so on
+
+This ensures that:
+
+* ASVs already detected in previous runs retain the same `asv_id`
+* Newly detected ASVs receive new identifiers
+
+This step is essential to homogenize ASV identifiers across datasets.
+
+```{r, eval=FALSE}
+# Run 1
+updated_asv_list1 <- file.path(outdir, "ASV_list_with_IDs_1.csv")
+
+read_count_df1 <- Dereplicate(
+  sampleinfo_df1,
+  dir = demultiplexed_dir1,
+  input_asv_list = "",  # or an existing ASV list
+  output_asv_list = updated_asv_list1
+)
+
+# Run 2
+updated_asv_list2 <- file.path(outdir, "ASV_list_with_IDs_2.csv")
+
+read_count_df2 <- Dereplicate(
+  sampleinfo_df2,
+  dir = demultiplexed_dir2,
+  input_asv_list = updated_asv_list1,
+  output_asv_list = updated_asv_list2
+)
+
+# Run 3
+updated_asv_list3 <- file.path(outdir, "ASV_list_with_IDs_3.csv")
+
+read_count_df3 <- Dereplicate(
+  sampleinfo_df3,
+  dir = demultiplexed_dir3,
+  input_asv_list = updated_asv_list2,
+  output_asv_list = updated_asv_list3
+)
+```
+
+
+### 3. Pool the dereplicated datasets
+
+Once dereplication is complete and ASV identifiers are harmonized across runs, 
+the resulting `read_count_df` objects can be pooled.
+
+```{r, eval=FALSE}
+read_count_df <- rbind(read_count_df1, read_count_df2, read_count_df3) %>%
+  group_by(asv_id, sample, replicate, asv) %>%
+  summarize(read_count = sum(read_count), .groups = "drop")
+```
+
+This step:
+
+* Combines the runs
+* Sums read counts for identical ASV–sample–replicate combinations
+* Produces a unified dataset ready for downstream filtering
+
 
 ## LFNvariant eliminate most occurrences of a frequent ASV
 

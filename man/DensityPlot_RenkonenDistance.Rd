@@ -14,6 +14,9 @@ sample1,sample2,replicate1,replicate2,renkonen_d
 \item{plotfile}{Character string: png file name for the output plot;
 If empty, no file is written.}
 }
+\value{
+Density plot
+}
 \description{
 Create density plot with Renkonen distances between pairs of sample-replicates
 }

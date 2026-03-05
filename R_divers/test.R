@@ -41,7 +41,7 @@ taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/CO
 merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
 fastainfo_df_uncompress <- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
-                      pigz=TRUE,
+                      compress_method="pigz",
                       pigz_path = pigz_path,
                       vsearch_path=vsearch_path, 
                       outdir=merged_dir_uncompress,
@@ -50,33 +50,20 @@ fastainfo_df_uncompress <- Merge(fastqinfo,
                       fastq_allowmergestagger=F,
                       compress=FALSE)
 
-merged_dir_gz <- file.path(outdir, "merged_gz")
-fastainfo_df_gz <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      pigz=TRUE,
-                      pigz_path = pigz_path,
-                      vsearch_path=vsearch_path, 
-                      outdir=merged_dir_gz,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=TRUE)
 
-
-outdir_RandomSeqR_gz <- file.path(outdir, "RandomSeqR_gz")
-fastainfo_randomSeqR_gz <-RandomSeqR(fastainfo_df_gz, 
+outdir_RandomSeq <- file.path(outdir, "RandomSeqR_gz")
+fastainfo_randomSeq <-RandomSeq(fastainfo_df_uncompress, 
            n=40000,
-           fasta_dir=merged_dir_gz,
-           outdir=outdir_RandomSeqR_gz, 
+           fasta_dir=merged_dir_uncompress,
+           outdir=outdir_RandomSeq, 
            randseed=0, 
-           compress=T, 
            quiet=TRUE)
 
 
 ### demultiplex
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo_df <- SortReads(fastainfo_df, 
-                           fasta_dir=merged_dir, 
+sampleinfo_df <- SortReads(fastainfo_randomSeq, 
+                           fasta_dir=outdir_RandomSeq, 
                            outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
@@ -88,9 +75,7 @@ sampleinfo_df <- SortReads(fastainfo_df,
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
-demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
-read_count_df <- Dereplicate(sampleinfo, 
+read_count_df <- Dereplicate(sampleinfo_df, 
                              dir=demultiplexed_dir, 
                              input_asv_list=asv_list,
                              output_asv_list = updated_asv_list)
@@ -146,8 +131,8 @@ read_count_df_backup <- read_count_df
 ### FilterExternalContaminant
 conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
-                          sample_types=sampleinfo, 
-                          conta_file=conta_file)
+                                           sampleinfo=sampleinfo_df,
+                                           conta_file=conta_file)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
 
@@ -163,24 +148,91 @@ read_count_df <- FilterChimera(read_count_df,
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
 
+
+
+#####################################
+PoolReplicates_csv <- file.path(outdir, "PoolReplicates", "PoolReplicates_mean.csv")
+read_count_sample_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_max <- PoolReplicates(read_count_df, method="max", digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_sum <- PoolReplicates(read_count_df, method="sum", digits=0, outfile = PoolReplicates_csv)
+
+identical(read_count_sample_fun_max, read_count_sample_fun_mean)
+
+
+read_count_cluster_df <- ClusterASV(read_count_df,
+                            method = "swarm",
+                            swarm_d=7,
+                            fastidious=fastidious,
+                            by_sample=FALSE,
+                            group = FALSE,
+                            path=swarm_path
+                            )
+
+read_count_cluster_df_max <- PoolReplicates(read_count_cluster_df, method="max")
+#####################################
+
+tmp_replicate <- WriteASVtable(read_count_df, 
+                          sampleinfo=sampleinfo_df, 
+                          pool_replicates=FALSE,
+                          add_sums_by_asv=TRUE
+                     )
+tmp_sample <- WriteASVtable(read_count_df, 
+                               sampleinfo=sampleinfo_df, 
+                               pool_replicates=TRUE,
+                               add_sums_by_asv=TRUE
+                            )
+
+tmp_sample_new <- WriteASVtable(read_count_df, 
+                            sampleinfo=sampleinfo_df, 
+                            pool_replicates=TRUE,
+                            method="max",
+                            add_sums_by_asv=TRUE,
+                            add_sums_by_sample=FALSE
+)
+#####################################
+
+opt <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                               outdir=file.path(outdir, "optimize"),
+                               known_occurrences = NULL, 
+                               mock_composition = mock_composition_df,
+                               sampleinfo = sampleinfo_df,
+                               habitat_proportion = 0.5,
+                               min_replicate_number=2, 
+                               quiet=T
+                               )
+
+mock_composition_df <- read.csv(mock_composition)
+
+mock_composition_df[7,] <- c("tpos1", "keep", "TCTATACCTTATTTTCGGCGCAATTTCAGGTATTGCAGGTACCGCTTTATCTCTTTACATTCGAATTACTTTATCTCAACCTAATGGTAATTTTTTAGAATACAATCACCACTTTTATAATGTGATTATAACGGGTCACGCTCTTCTTATGATTTTTTTCATGGTAATGCCAATCTTGATT", NA, NA)
+
+read_count_samples <- PoolReplicates(read_count_df)
+missing <- make_missing_occurrences(read_count_samples, mock_composition_df, quiet = FALSE)
+
+
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' 
+#'     missing_asv_text <- paste(capture.output(print(df)), collapse = "\n")
+warning(
+  paste0(
+    "\n  Some expected ASVs are missing from the mock samples.\n",
+    "----------------------------------------------------------\n",
+    missing_asv_text,
+    "\n----------------------------------------------------------\n"
+  ),
+  call. = FALSE
+)
+#####################################
+  
+
+
+
 #### FilterRenkonen
 cutoff <- 0.4
 read_count_df <- FilterRenkonen(read_count_df, 
                                 cutoff=cutoff)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
-
-
-fas <- "/home/meglecz/vtamR/inst/extdata/demo/mock_ncbi.fasta"
-outdir <- "/home/meglecz/vtamR/inst/extdata/demo/mock"
-
-taxonomy <- taxonomy_COInr
-
-MakeMockCompositionLTG(read_count_df, 
-                      fas=fas,
-                      taxonomy=taxonomy_COInr,
-                      blast_path = blast_path,
-                      sampleinfo = sampleinfo_df,
-                      outdir= outdir)
 
 
 ### FilterPCRerror

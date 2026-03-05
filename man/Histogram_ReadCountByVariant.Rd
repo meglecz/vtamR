@@ -22,6 +22,9 @@ before making the graph}
 \item{plotfile}{Character string: png file name for the output plot;
 If empty, no file is written.}
 }
+\value{
+Histogram
+}
 \description{
 Create histogram with the number of reads in each sample or sample-replicate;
 If information is given on sample types, bars are colored in function of them

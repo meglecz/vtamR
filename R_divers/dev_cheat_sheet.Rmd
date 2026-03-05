@@ -131,6 +131,19 @@ rm(full_asv_tax)
 data(full_asv_tax)
 ############
 
+
+############
+### info package
+# Lists all  objects from namespace:
+getNamespaceExports("vtamR")
+l <- getNamespaceExports("vtamR")
+write.csv(l, "vtam_functions.csv")
+
+# Shows the package help page with an index of functions:
+help(package = "vtamR")
+?vtamR
+
+apropos("filter")
 ```
 
 Update versions in

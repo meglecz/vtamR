@@ -15,7 +15,7 @@ get_read_counts(df, dir)
 Data frame with the read_count column added to the input.
 }
 \description{
-Count the number of reads in all fatsa files in the fasta column of a df.
+Count the number of reads in all fasta files in the fasta column of a df.
 Add read_count column to df.
 }
 \examples{

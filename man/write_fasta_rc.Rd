@@ -9,10 +9,10 @@ write_fasta_rc(df, outfile)
 \arguments{
 \item{df}{Data frame with asv_id, read_count and asv columns}
 
-\item{outfile}{haracter string: output fasta file name}
+\item{outfile}{Character string: output fasta file name}
 }
 \value{
-outfile fasta file with definition lines in >label;size=### format
+NULL; Writes fasta file with definition lines in >label;size=### format
 }
 \description{
 Write a fasta file with definition lines in >label;size=### format

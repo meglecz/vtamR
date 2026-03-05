@@ -18,7 +18,7 @@ download_zenodo(filename, url, dest_dir = ".", untar = TRUE, quiet = FALSE)
 \item{quiet}{logical: If TRUE, suppress informational messages and only}
 }
 \value{
-full path to the directory where the file was downloaded.
+Invisible full path to the directory where the file was downloaded to.
 show warnings or errors.
 }
 \description{
