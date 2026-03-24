@@ -68,11 +68,13 @@ run_system2 <- function(path, args, quiet = FALSE) {
 
 #' Check directory
 #' 
-#' Check if directory exists, and create it if not.
-#' If it is a file path, get its directory path and create dir in necessary.
+#' Check if a directory exists and create it if necessary.
+#' If a file path is provided, extract its directory path 
+#' and create directory if needed.
 #'  
 #' @param path Character string naming a directory or a file including path.
 #' @param is_file logical; If TRUE, it is a file. Directory otherwise.
+#' @return NULL
 #' @examples 
 #' \dontrun{
 #' check_dir(path="data")

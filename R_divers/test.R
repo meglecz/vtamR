@@ -24,6 +24,15 @@ pigz_path <- "pigz"
 sep <- ","
 outdir <- "~/vtamR_demo_out"
 
+### set up windows
+cutadapt_path <- "cutadapt"
+vsearch_path <- "vsearch"
+blast_path <- "blastn"
+swarm_path <- "swarm"
+pigz_path <- "pigz"
+sep <- ","
+outdir <- "C:/Users/emese/vtamR_demo_out"
+
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
@@ -74,7 +83,7 @@ sampleinfo_df <- SortReads(fastainfo_randomSeq,
 ###############
 ### dereplicate
 ###############
-updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
+updated_asv_list <- file.path(outdir, "updated_asv_list.csv")
 read_count_df <- Dereplicate(sampleinfo_df, 
                              dir=demultiplexed_dir, 
                              input_asv_list=asv_list,
@@ -147,6 +156,8 @@ read_count_df <- FilterChimera(read_count_df,
                                abskew=abskew)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
+
+write.csv2(read_count_df, file=file.path(outdir, "mfzr.csv"), row.names = FALSE)
 
 
 

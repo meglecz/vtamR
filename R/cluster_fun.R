@@ -1150,4 +1150,224 @@ ClusterASV <- function(read_count,
   return(out_df)
 }
 
+#' Pool data from different markers
+#'
+#' Take two or more input files containing filtered results of the same samples 
+#' from different but strongly overlapping markers.
+#' Files are in long format with asv_id, sample, replicate (optional), 
+#' read_count and asv columns.
+#'  
+#' ASVs identical on their overlapping 
+#' regions are pooled into groups, and different ASVs of the same group 
+#' are pooled under the centroid (longest ASV of the group). The asv_id are
+#' prefixed by the marker, to avoid confounding different ASVs of different 
+#' markers, with the same id.
+#' Pooling can take the mean of the read counts of the ASV (default), their sum
+#' or maximum.
+#'  
+#' @param ... Data frames with the following variables: 
+#' marker, asv_id, sample, replicate (optional), read_count, asv.
+#' @param method Character string specifying how read counts should be pooled.
+#'   Must be one of "mean", "max" or "sum".
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param asv_with_centroids Character string: csv file name of the output file 
+#' containing the same information as the concatenated input files, 
+#' completed by centroid_id and centroid columns. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param vsearch_path Character string: path to vsearch executables. 
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
+#' @examples
+#' \dontrun{
+#' markers_pooled <- pool_markers(df_mfzr, df_zfzr, method="mean")
+#' }
+#' @export
+#'
+pool_markers <- function(..., 
+                         method="mean", 
+                         outfile="", 
+                         asv_with_centroids="", 
+                         sep=",", 
+                         vsearch_path="vsearch", 
+                         num_threads=0,
+                         quiet=T
+){
+  
+  #### method
+  method <- match.arg(method, c("mean", "max", "sum"))
+  fun <- switch(method,
+                mean = function(x) mean(x, na.rm = TRUE),
+                max  = function(x) max(x, na.rm = TRUE),
+                sum  = function(x) sum(x, na.rm = TRUE))
+  
+  #### num_threads
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  #### make tmp_dir
+  tmp_dir <-paste('tmp_pool_markers_', 
+                  trunc(as.numeric(Sys.time())), 
+                  sample(1:100, 1), 
+                  sep='')
+  tmp_dir <- file.path(tempdir(), tmp_dir)
+  check_dir(tmp_dir)
+  
+  #### concatenate input df
+  # take first, determine repl_bool
+#  df_list <- list(mfzr, zfzr)
+    df_list <- list(...)
+    df <-  df_list[[1]]
+    if("replicate" %in% colnames(df)){
+      repl_bool <- TRUE
+    }else{
+      repl_bool <- FALSE
+    }
+  # read the other df
+    for(i in 2:length(df_list)){
+      
+      if(repl_bool){
+        tmp <- df_list[[i]] %>%
+          select(marker, asv_id, sample, replicate, read_count, asv)
+      }else{
+        tmp <- df_list[[i]] %>%
+          select(marker, asv_id, sample, read_count, asv)
+      }
+      df <- rbind(df, tmp)
+    }
+    
+
+  ###
+  # Pool ASVs identical on their overlapping region
+  ###
+  # add marker to asv_id to avoid incompatibility among asv_id across markers 
+    df <- df %>%
+      mutate(asv_id = paste(marker, asv_id, sep="_"))
+    
+    asvs <- df %>%
+      group_by(asv_id, asv) %>%
+      summarize("rc" = sum(read_count), .groups="drop")
+    
+    # arrange ASVs by decreasing sequence length and then by read_count
+    asvs$length <- as.numeric(nchar(asvs$asv))
+    asvs <- asvs %>%
+      arrange(desc(length), desc(rc))
+    
+    # make a fasta file
+    fasta <- file.path(tmp_dir, "vsearch_input.fasta")
+    writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
+    
+    # cluster using cluster_smallmem and 1 as identity limit
+    centroids_file <- file.path(tmp_dir, "consout.txt")
+    #query sequences are shorter than subjects => centroids are in the subjects column
+    blastout_file <- file.path(tmp_dir, "blastout.tsv")  
+    ##### run cmd
+    args <- c(
+      "--cluster_smallmem", fasta,
+      "--consout", centroids_file,
+      "--blast6out", blastout_file,
+      "--id", 1 
+    )
+    if(num_threads > 0){
+      args <- append(args, c("-threads", num_threads))
+    }
+    if(quiet){
+      args <- append(args, c("--quiet"))
+    }
+    run_system2(vsearch_path, args, quiet=quiet)
+    
+    ###
+    # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
+    ###
+    # read the ids of centoids, and get the list of centroids
+    # >centroid=mfzr_2374;seqs=2
+    cent <- read.table(centroids_file)
+    colnames(cent) <- c("centroid_id")
+    cent <- cent %>%
+      filter(grepl(">centroid=", centroid_id)) # keep only fasta definition lines
+    cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
+    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
+    cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
+    cent$nbseq <- as.numeric(cent$nbseq)
+    
+    # add to centroide the asv_id that are in the same cluster
+    blastout <- read.table(blastout_file) %>%
+      select(1,2)
+    colnames(blastout) <- c("asv_id", "centroid_id")
+    cent <- left_join(cent, blastout, by= c("centroid_id"))
+    # add centroid_id to asv_id column for singletons
+    cent <- cent %>%
+      mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
+    # add a line for each non-singleton centroid, 
+    # with centroid id in both the centroid and in query columns
+    added_lines <- cent %>%
+      filter(nbseq>1) %>%
+      mutate(asv_id=centroid_id) %>%
+      unique # add just one line per centroid, not several if many sequences in cluster
+    cent<- rbind(cent, added_lines) %>%
+      arrange(centroid_id)
+    
+    ###
+    # Pool ASVs of the same cluster
+    ###
+    # add the centroid_id to each asv if df
+    df <- left_join(df, cent, by=c("asv_id")) %>%
+      select(-nbseq)
+    # add the centroid sequence to each centroid_id in df
+    df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
+      select(-length, -rc) %>%
+      rename("asv"=asv.x, "centroid"=asv.y) %>%
+      arrange(centroid_id, marker)
+    # order the columns
+    if(repl_bool){
+      df <- df %>%
+        select(centroid_id,asv_id,marker,sample,replicate,read_count,asv,centroid)
+    }else{
+      df <- df %>%
+        select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
+    }
+    
+    
+    if(repl_bool){
+      df_pool <- df %>%
+        group_by(centroid_id, sample, replicate) %>%
+        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+    }else{
+      df_pool <- df %>%
+        group_by(centroid_id, sample) %>%
+        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+    }
+    
+    
+    # add asv column and select columns
+    # df_pool is a simple output with the format identical to the read_count_sample dfs,
+    # but no info on the asv that has been pooled together
+    df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id"))
+    if(repl_bool){
+      df_pool <- df_pool %>%
+        select("asv_id"=centroid_id, sample, replicate, read_count, asv) 
+    }else{
+      df_pool <- df_pool %>%
+        select("asv_id"=centroid_id, sample, read_count, asv) 
+    }
+    
+    
+    if(asv_with_centroids != ""){
+      check_dir(asv_with_centroids, is_file=TRUE)
+      write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
+    }
+
+  
+  unlink(tmp_dir, recursive = TRUE)
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(df_pool, file=outfile, sep=sep, row.names = F)
+  }
+  
+  return(df_pool)
+}
+
 
