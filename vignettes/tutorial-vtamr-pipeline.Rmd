@@ -422,51 +422,90 @@ stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 * `params`: String containing the major parameters of each filtering steps.
 * `stage`: String referring to the filtering step.
 
-### Denoising by swarm
 
-**SWARM** ([Mahé et al., 2015](https://peerj.com/articles/1420/)) 
-is a powerful and quick computer program to denoise the data set by clustering ASVs 
-that are likely to be the result of sequencing errors to ASVs representing real 
-biological sequences. It will considerably reduce the number of ASVs. 
+### Denoising with SWARM
 
-SWARM can be run from the `ClusterASV` function of `vtamR`. For more detailed 
-information on `ClusterASV`, see the 
-[Clustering or denosing](#clustering-or-denoising) section.
+In metabarcoding datasets, sequencing errors often generate many low-frequency 
+ASVs that do not correspond to real biological sequences. A common way to clean 
+this noise is to use **SWARM** ([Mahé et al., 2015](https://peerj.com/articles/1420/)), 
+a fast and widely used algorithm that groups highly similar ASVs together.
 
-When the aim is to denoise the sequencing reads and not to cluster valid ASVs to mOTUs, 
-SWARM should be run with `d=1` and the `fastidious` algorithm. (See details in 
-[SWARM's Documentation](https://github.com/torognes/swarm/blob/master/man/swarm_manual.pdf))
+**Running SWARM in `vtamR`**
 
-It is possible to run SWARM separately for each sample (`by_sample=TRUE`)
-or all at once for the whole data set. 
-This second option is more efficient in reducing the number of ASVs but can 
-cluster very similar real sequences appearing in different samples. 
+You can run SWARM directly using the `denoise_by_swarm()` function.
 
-When interested in intra-specific variability, I suggest `by_sample=TRUE` 
-or skipping this step, since SWARM can cluster together very similar real ASV.
+Since our goal is **denoising** (not clustering into mOTUs), the recommended settings are:
 
-The `group` argument pools all ASVs belonging to the same swarm into one line 
-under the `asv_id` of the swarm’s centroid, summing read counts across ASVs 
-while keeping the sample and replicate structure unchanged.
+* `swarm_d = 1` (only 1 difference allowed between ASVs)
+* `fastidious = TRUE` (a second pass to reduce small clusters)
 
+These settings are specifically designed to remove sequencing errors while keeping real biological variation.
+
+**Whole dataset vs. per-sample clustering**
+
+There are two options:
+
+* `by_sample = FALSE` (default):
+  SWARM is applied to the whole dataset. This is more aggressive and reduces 
+  ASV numbers efficiently.
+
+* `by_sample = TRUE`:
+  SWARM is applied independently to each sample. This is more conservative and 
+  helps preserve biological variation.
+
+If you are interested in **intra-specific variability**, it is generally
+better to use `by_sample = TRUE`, because very similar real ASVs can otherwise be merged.
+
+**Refining clusters with `split_clusters`**
+
+Even with `d = 1` and `fastidious = TRUE`, SWARM can still group together ASVs that
+differ by only one nucleotide but have **similar read abundances**.
+In such cases, real biological variants (e.g., intra-specific variants) may 
+be merged into a single cluster.
+
+To avoid this issue, `denoise_by_swarm()` provides an optional
+post-processing step usig the `split_clusters = TRUE` option.
+This step attempts to recover abundant variants that may have been incorrectly merged.
+
+For each cluster:
+
+- ASVs are evaluated based on two criteria:
+
+   * Their read count relative to the cluster centroid (`min_abundance_ratio`)
+   * A minimum absolute read count (`min_read_count`)
+
+- ASVs that pass both thresholds are considered biologically meaningful and **each defines a new cluster**.
+
+- The total reads of the original cluster are then redistributed among these ASVs,
+while preserving their original proportions
+
+- If no ASV meets the criteria, the cluster is kept as a single unit (reads are pooled)
+
+
+The `split_clusters` option must be run using the following parameters:
+
+* `by_sample = TRUE` 
+* `swarm_d = 1` 
+* `fastidious = TRUE` 
 
 ```{r swarm}
+split_clusters <- TRUE
 by_sample <- TRUE
 d=1
 fastidious= TRUE
+
 outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
 
-read_count_df <- ClusterASV(read_count_df,# input df
-                            method = "swarm",
-                            swarm_d=d,
-                            fastidious=fastidious,
-                            by_sample=by_sample,
-                            group = TRUE,
-                            path=swarm_path, # can be omitted if SWARM is in the PATH
-                            outfile=outfile) # write the output data frame to this file
+read_count_df <- denoise_by_swarm(read_count_df,# input df
+                                  swarm_d=d,
+                                  fastidious=fastidious,
+                                  by_sample=by_sample,
+                                  split_clusters=split_clusters,
+                                  swarm_path=swarm_path, # can be omitted if SWARM is in the PATH
+                                  outfile=outfile) # write the output data frame to this file
 
-
-stat_df <- GetStat(read_count_df, stat_df, stage="SWARM", params=by_sample)
+param <- paste(split_clusters, by_sample, fastidious, d)
+stat_df <- GetStat(read_count_df, stat_df, stage="SWARM", params=param)
 ```
 
 Let's check the reduction of the number of variants after running `swarm`.
@@ -1418,6 +1457,12 @@ into the same cluster, causing a loss of true variability.
 However, SWARM denoising is extremely powerful for removing spurious 
 sequences and is recommended early in the bioinformatic pipeline — unless very 
 fine-scale intrataxon variation is the focus (e.g., biogeographic studies).
+
+To overcome this problem, the `denoise_by_swarm` can be used with the `split_clusters`
+option. In this case after running SWARM sample by sample, clusters can be split 
+if they have ASV with high relative abundance compared to the read count of the centroid.
+this is strongly recommended, if retaing intra-specific variability is important.
+
 
 **2. Clustering**
 

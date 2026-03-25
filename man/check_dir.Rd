@@ -12,8 +12,9 @@ check_dir(path, is_file = FALSE)
 \item{is_file}{logical; If TRUE, it is a file. Directory otherwise.}
 }
 \description{
-Check if directory exists, and create it if not.
-If it is a file path, get its directory path and create dir in necessary.
+Check if a directory exists and create it if necessary.
+If a file path is provided, extract its directory path
+and create directory if needed.
 }
 \examples{
 \dontrun{

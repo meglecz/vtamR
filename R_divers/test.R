@@ -44,8 +44,6 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
 
 
-
-
 ### Merge
 merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
 fastainfo_df_uncompress <- Merge(fastqinfo, 
@@ -62,11 +60,13 @@ fastainfo_df_uncompress <- Merge(fastqinfo,
 
 outdir_RandomSeq <- file.path(outdir, "RandomSeqR_gz")
 fastainfo_randomSeq <-RandomSeq(fastainfo_df_uncompress, 
-           n=40000,
-           fasta_dir=merged_dir_uncompress,
-           outdir=outdir_RandomSeq, 
-           randseed=0, 
-           quiet=TRUE)
+                                use_vsearch = TRUE,
+                                vsearch_path = vsearch_path, 
+                                n=40000,
+                                fasta_dir=merged_dir_uncompress,
+                                outdir=outdir_RandomSeq, 
+                                randseed=0, 
+                                quiet=TRUE)
 
 
 ### demultiplex
@@ -84,10 +84,12 @@ sampleinfo_df <- SortReads(fastainfo_randomSeq,
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.csv")
-read_count_df <- Dereplicate(sampleinfo_df, 
+sampleinfo <- "/home/meglecz/vtamR_demo/SortReads/sampleinfo.csv"
+demultiplexed_dir <-  "/home/meglecz/vtamR_demo/SortReads"
+read_count_df <- Dereplicate(sampleinfo, 
                              dir=demultiplexed_dir, 
-                             input_asv_list=asv_list,
-                             output_asv_list = updated_asv_list)
+                             input_asv_list=asv_list)
+
 
 ### stat
 stat_df <- data.frame(parameters=character(),
@@ -98,6 +100,154 @@ stat_df <- data.frame(parameters=character(),
 
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
+
+df_split <- denoise_by_swarm(read_count_df,
+                 by_sample=TRUE,
+                 split_clusters=TRUE,
+                 min_abundance_ratio = 0.2,
+                 min_read_count = 10,
+                 swarm_path=swarm_path, 
+                 swarm_d=1, 
+                 fastidious=TRUE, 
+                 quiet=TRUE)
+
+df_no_split <- denoise_by_swarm(read_count_df,
+                             by_sample=TRUE,
+                             split_clusters=FALSE,
+                             min_abundance_ratio = 0.2,
+                             min_read_count = 10,
+                             swarm_path=swarm_path, 
+                             swarm_d=1, 
+                             fastidious=TRUE, 
+                             quiet=TRUE)
+
+df_all <- denoise_by_swarm(read_count_df,
+                             by_sample=FALSE,
+                             split_clusters=FALSE,
+                             min_abundance_ratio = 0.2,
+                             min_read_count = 10,
+                             swarm_path=swarm_path, 
+                             swarm_d=1, 
+                             fastidious=TRUE, 
+                             quiet=TRUE)
+
+
+
+
+
+df_test <- read_count_df %>%
+  filter(sample %in% c("14ben02"))
+
+df_swarm <- ClusterASV(read_count = df_test, 
+                             group = FALSE,
+                             by_sample=TRUE,
+                             method = "swarm",
+                             path=swarm_path, 
+                             quiet=T
+                       )
+
+df_swarm_grouped <- ClusterASV(read_count = df_test, 
+                                     group = TRUE,
+                                     by_sample=TRUE,
+                                     method = "swarm",
+                                     path=swarm_path, 
+                                     quiet=T
+                                     )
+
+###############################
+# prepare list of clusters to split, and for each of them the list of ASV to keep apart
+clusters_to_split <- df_swarm %>%
+  group_by(asv_id, cluster_id) %>%
+  summarise(read_count = sum(read_count), .groups = "drop") %>%
+  # add centroid read count
+  group_by(cluster_id) %>%
+  mutate(centroid_read_count = read_count[asv_id == cluster_id]) %>%
+  ungroup() %>%
+  # keep only asv, that have at least 20% of the centroids reads
+  filter(read_count / centroid_read_count > 0.2 & 
+           read_count > 10 &
+           asv_id != cluster_id) %>%
+  select(asv_id, cluster_id) 
+
+# get a list of centroids of the clusters_to_split
+centroids <- data.frame(
+  asv_id = unique(clusters_to_split$cluster_id),
+  cluster_id = unique(clusters_to_split$cluster_id)
+)
+# add them to clusters_to_split
+clusters_to_split <- rbind(centroids, clusters_to_split) %>%
+  arrange(cluster_id)
+
+###############################
+
+# for all clusters that should be split up among selected ASV,
+# modify the original read count of the selected ASV to
+#  - keep their proportions among different replicates
+#  - Their sum should equal the total number of read of the cluster.
+# In other words, split of the total number of reads of a cluster among selected
+# ASV, and keep the proportions of the original read counts.
+# replace the cluster_id by the asv_id
+
+cluster_selected <- df_swarm %>% # add the total number of reads of the cluster
+  group_by(cluster_id) %>%
+  mutate(cluster_rc_all = sum(read_count)) %>%
+  ungroup() %>%
+  # keep only asv, that should be kept apart
+  filter(asv_id %in% clusters_to_split$asv_id) %>%
+  # get the total number of reads of the selected ASVs of the cluster
+  group_by(cluster_id) %>%
+  mutate(cluster_rc_selected = sum(read_count)) %>%
+  ungroup() %>%
+  # multiply all read count by the proportion of original and selected read_count of the cluster
+  mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0)) %>%
+  # Check if the sum of the modified read count equals of the original total read of the cluster
+#  group_by(cluster_id) %>%
+#  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
+#  ungroup() %>%
+  select(asv_id, sample, replicate, read_count = read_count_cis, asv)
+
+# make a list of asv_id asv for the centroids 
+cluster_seq <- df_swarm %>%
+  filter(asv_id == cluster_id) %>%
+  select(asv_id, asv) %>%
+  distinct()
+  
+unmodified_clusters <- df_swarm %>%
+  filter(!cluster_id %in% clusters_to_split$cluster_id) %>%
+  group_by(cluster_id, sample, replicate) %>%
+  summarize(read_count = sum(read_count), .groups = "drop") %>%
+  select(asv_id = cluster_id, sample, replicate, read_count) %>%
+  left_join(cluster_seq, by="asv_id")
+  
+
+grouped_swarm <- rbind(cluster_selected, unmodified_clusters)
+dim(grouped_swarm)
+dim(df_swarm)
+dim(df_swarm_grouped)
+
+length(unique(grouped_swarm$asv_id))
+length(unique(df_swarm$cluster_id))
+length(unique(df_swarm_grouped$asv_id))
+
+sum(grouped_swarm$read_count)
+sum(df_swarm$read_count)
+sum(df_swarm_grouped$read_count)
+
+#For each cluster in df_select
+#- get the total number of reads (n_cluster)
+#- get the total number of reads of the selected varinats (n_selected_asv)
+#- get all occurrences of all selected asv of the cluster
+#- multiply these occurrences by n_selected_asv/n_cluster
+
+
+denoise_by_swarm()
+group always TRUE
+by_sample TRUE/FALSE
+split_clusters TRUE/FALSE
+
+if split_clusters == TRUE => by_sample must be TRUE
+
+
 #### swarm
 by_sample <- TRUE
 d=1
@@ -105,7 +255,7 @@ fastidious= TRUE
 quiet=TRUE
 outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
 
-read_count_df <- ClusterASV(read_count_df,
+read_count_df <- ClusterASV(read_count = read_count_df,
                             method = "swarm",
                             swarm_d=d,
                             fastidious=fastidious,

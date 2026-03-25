@@ -7005,11 +7005,15 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
 #' }
 #' @export
 #' 
-RandomSampleFastaLinux <- function(fasta, outfile, n=1000000, 
+RandomSampleFastaLinux <- function(fasta, 
+                                   outfile, 
+                                   n=1000000, 
+                                   vsearch_path="vsearch", 
                                    compress_method= "R",
                                    pigz_path="pigz",
-                                   vsearch_path="vsearch", 
-                                   randseed = NULL, quiet=TRUE, num_threads=0) {
+                                   randseed = NULL, 
+                                   quiet=TRUE, 
+                                   num_threads=0) {
   
   if(!is_linux()){
     stop("This parameter setting is suppored only on linux")
@@ -7093,7 +7097,7 @@ RandomSampleFastaLinux <- function(fasta, outfile, n=1000000,
                          quiet = quiet,
                          compress = TRUE)
   }
-  return(invisible(total))
+  return(invisible(n))
 }
 
 
@@ -7180,7 +7184,7 @@ RandomSeq <- function(fastainfo,
     input_fasta <- unique_fasta[i]
     input_fasta_p <- file.path(fasta_dir, input_fasta)
     
-    # outline name is the same as the input, but different folder
+    # outfine name is the same as the input, but different folder
     # adjusted compression
     outfile <- input_fasta
     if(!compress && grepl("\\.gz$", input_fasta)){
@@ -7191,7 +7195,7 @@ RandomSeq <- function(fastainfo,
     }
     outfile_p <- file.path(outdir, outfile)
     
-    ##### Change algo if windows and use_vsearch to avoid stopping the run 
+    ##### Change algo if windows and use_vsearch=FALSE to avoid stopping the run 
     if(!is_linux() && use_vsearch){
       warning("The fastx_subsample commande in VSEARCH is not available for Windows\n
               A slower, but cross-platform function (RandomSampleFastaR)\n

@@ -1,15 +1,36 @@
 # Ideas for vtamR
 
-Add tuto marker 2
-SortReads with check_reverse in window long.
 
-LFNGlobalReadCount:                 FilterGlobalNoise
-FilterIndel:                                    FilterIndel
-FilterCodonStop:                          FilterStop
-FilterExternalContaminant:          FilterExt
-FilterChimera:                              FilterChimera
-FilterRenkonen:                            FilterReplicate
-FilterPCRerror:                             FilterPCRerror
+Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
+
+OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
+          reads during this filtering step. "
+
+PoolDatasets => read with replicates ?? 
+Add tuto marker 2
+
+Finish pool_marker and pool_dataset
+######## check if it is finished
+## Reorganize PoolDatasets:
+1. Pool_data of the same marker => PoolMarkers
+	can deal with replicates optionally
+	if same sample in different dataset
+		sum
+		mean
+		max
+2. Pool data over markers => PoolDatasets
+	use ClsuterASV
+	deal with optional replicate
+	deal with homonymy of cluster_IDs (add a different difit for each marker)
+	Read_count within cluster (over ASV of the same sample, replicate) can be 
+		sum
+		mean
+		max
+
+SortReads with check_reverse in windows islong.
+
+
+
 
 ## check examples , arguments and return in doc
 
@@ -552,22 +573,31 @@ Correct DESCRIPTION an README
 - @reruns corrected to @return in doc
 
 
+## 2026/03/24
 
-## Reorganize PoolDatasets:
-1. Pool_data of the same marker => PoolMarkers
-	can deal with replicates optionally
-	if same sample in different dataset
-		sum
-		mean
-		max
-2. Pool data over markers => PoolDatasets
-	use ClsuterASV
-	deal with optional replicate
-	deal with homonymy of cluster_IDs (add a different difit for each marker)
-	Read_count within cluster (over ASV of the same sample, replicate) can be 
-		sum
-		mean
-		max
-		
-ClsuterASV rename to ClusterOrDenoise
+- RandomSeq use_vsearch: the numer of sequneces returned was the toal in input,
+but the fontion worked otherwise. Return is corrected.
+
+
+## 2026/03/25 denoise_by_swarm
+
+denoising using SWARM.
+by_sample = TRUE/FALSE
+
+post-processing step (`split_clusters = TRUE`) to refine clusters. 
+Custers are split based on the relative
+abundance of ASVs compared to the centroid (see `?split_swarm_clusters`)
+and the total read cout of the original cluster is proportionnaly reditributed
+among ASVs. by_sample must be  TRUE.
+
+
+
+
+
+
+
+
+
+
+
 

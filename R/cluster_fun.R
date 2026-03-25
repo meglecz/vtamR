@@ -1150,6 +1150,320 @@ ClusterASV <- function(read_count,
   return(out_df)
 }
 
+
+#' Denoise data using SWARM
+#'
+#' This function performs **denoising** using SWARM.
+#'
+#' Clustering can be applied to the entire dataset or performed separately
+#' for each sample using the `by_sample` argument.
+#'
+#' By default, read counts of ASVs belonging to the same cluster are summed
+#' within each sample–replicate combination. Optionally, an experimental
+#' post-processing step (`split_clusters = TRUE`) can be applied to further
+#' refine clusters. In this step, clusters are split based on the relative
+#' abundance of ASVs compared to the centroid (see `?split_swarm_clusters`).
+#' This option is only available when clustering is performed by sample
+#' (`by_sample = TRUE`).
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param by_sample Logical. If `TRUE`, clustering is performed separately for
+#' each sample.
+#' @param split_clusters Logical. If `TRUE`, apply post-processing to split
+#' clusters based on relatively abundant ASVs compared to the centroid.
+#' @param min_abundance_ratio Numeric. Used when `split_clusters = TRUE`.
+#' Minimum ratio of an ASV's read count relative to the centroid's read count
+#' required for the ASV to define a new cluster.
+#' @param min_read_count Numeric. Used when `split_clusters = TRUE`.
+#' Minimum absolute read count required for an ASV to be considered for splitting.
+#' @param swarm_path Character string: path to swarm executable. 
+#' @param swarm_d Positive integer: d parameter for swarm (if applicable).
+#' Maximum number of differences allowed between two ASVs, 
+#' meaning that two ASVs will be grouped if they have d (or less) differences.
+#' @param fastidious Logical: When clustering with swarm and working with d = 1, 
+#' perform a second clustering pass to reduce the number of small clusters.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return A data frame with the same structure as the input, where ASVs
+#' belonging to the same cluster are pooled (summed) within each
+#' sample–replicate combination. If `split_clusters = TRUE`, clusters may be
+#' further subdivided according to the splitting criteria.
+#' @examples
+#' \dontrun{
+#' read_count_df <- denoise_by_swarm(
+#'   read_count = read_count_df,
+#'   by_sample = TRUE,
+#'   split_clusters = TRUE
+#' )
+#' }
+#' @export
+denoise_by_swarm <- function(read_count, 
+                       by_sample=FALSE,
+                       split_clusters=FALSE,
+                       min_abundance_ratio = 0.2,
+                       min_read_count = 10,
+                       swarm_path="swarm", 
+                       num_threads=0, 
+                       swarm_d=1, 
+                       fastidious=TRUE, 
+                       outfile="", 
+                       sep=",", 
+                       quiet=TRUE
+){
+  
+  if (split_clusters & (!by_sample | swarm_d != 1 | !fastidious)) {
+    stop(
+      "ERROR: When split_clusters is TRUE:\n",
+      "- by_sample must be TRUE\n",
+      "- swarm_d must be 1\n",
+      "- fastidious must be TRUE"
+    )
+  }
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(by_sample){
+    # make an empty output df, with the same columns and variable types as read_count_df
+    # can dela with df with out without replicates
+    out_df <- read_count_df %>%
+      filter(asv=="")
+
+    # get list of samples 
+    sample_list <- unique(read_count_df$sample)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      if(!quiet){
+        print(s)
+      }
+      
+      # select occurrences for sample
+      df_sample <- read_count_df %>%
+        filter(sample==s)
+      
+      # get cluster_id for all ASV
+      cluster_df <- GetClusterIdSwarm(df_sample, 
+                                      swarm_d=swarm_d, 
+                                      swarm_path=swarm_path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
+      
+      # pool ASV by cluster
+        if(split_clusters){
+          df_sample <- split_swarm_clusters(df_sample,
+                                            cluster_df,
+                                            min_abundance_ratio = min_abundance_ratio,
+                                            min_read_count = min_read_count
+                                            )
+        } else{
+          df_sample <- pool_by_cluster(df_sample, cluster_df)
+        }
+      # add output of the sample to the total data frame    
+      out_df <- rbind(out_df, df_sample)
+    }# end for each sample
+  }else{ # run swarm for all samples together
+    # get cluster_id for all ASV
+      cluster_df <- GetClusterIdSwarm(read_count_df, 
+                                      swarm_d=swarm_d, 
+                                      swarm_path=swarm_path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
+      out_df <- pool_by_cluster(read_count_df, cluster_df)
+  }
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(out_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(out_df)
+}
+
+#' Split swarm clusters
+#'
+#' During denoising with SWARM (even with `fastidious = TRUE` and `d = 1`),
+#' ASVs differing by a single nucleotide can be grouped into the same cluster,
+#' even when they have similar read abundances. This function refines such
+#' clusters by identifying ASVs whose read counts exceed a given proportion
+#' (`min_abundance_ratio`) of the centroid’s read count and are also above a
+#' minimum threshold (`min_read_count`).
+#'  
+#' For each cluster, ASVs meeting both criteria are retained as distinct units
+#' and each defines a new cluster. The total number of reads in the original
+#' cluster is then redistributed among these selected ASVs while preserving
+#' their original relative abundances.
+#'   
+#' If no ASVs meet the criteria, read counts are summed across ASVs within each
+#' cluster–sample–replicate combination, and the cluster is kept as a single unit.
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param cluster Data frame or csv file with the following columns: asv_id, cluster_id
+#' @param min_abundance_ratio Numeric. Minimum ratio of an ASV's read count
+#' relative to the centroid's read count required for the ASV to define a new
+#' split cluster (e.g., 0.2 means 20% of the centroid abundance).
+#' @param min_read_count Numeric. Minimum absolute read count required for an
+#' ASV to be considered for splitting.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return A data frame with the same structure as the input. For each
+#' cluster–sample–replicate combination, ASVs are either:
+#' \itemize{
+#'   \item split into multiple clusters defined by ASVs that meet the
+#'   `min_abundance_ratio` and `min_read_count` criteria, with read counts
+#'   redistributed among them while preserving their relative abundances, or
+#'   \item pooled into a single row (reads summed across ASVs) if no ASV meets
+#'   the splitting criteria.
+#' }
+#' @examples
+#' \dontrun{
+#' read_count_df <- split_swarm_clusters(
+#'   read_count = read_count_df,
+#'   min_abundance_ratio = 0.1,
+#'   min_read_count = 10
+#' )
+#' }
+#' @export
+
+split_swarm_clusters <-function(read_count,
+                                cluster,
+                                min_abundance_ratio = 0.1,
+                                min_read_count = 10,
+                                outfile = "",
+                                sep = ",",
+                                quiet = TRUE
+                                ){
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(is.character(cluster)){
+    # read known occurrences
+    cluster_df <- read.csv(cluster, header=T, sep=sep)
+  }else{
+    cluster_df <- cluster
+  }
+  
+  read_count_df <- left_join(read_count_df, cluster_df, by="asv_id")
+  
+  ###############################
+  # prepare list of clusters to split, and for each of them the list of ASV to keep apart
+  clusters_to_split <- read_count_df %>%
+    group_by(asv_id, cluster_id) %>%
+    summarise(read_count = sum(read_count), .groups = "drop") %>%
+    # add centroid read count
+    group_by(cluster_id) %>%
+    mutate(centroid_read_count = read_count[asv_id == cluster_id]) %>%
+    ungroup() %>%
+    # keep only asv, that have at least 20% of the centroids reads
+    filter(read_count / centroid_read_count > min_abundance_ratio & 
+             read_count > min_read_count &
+             asv_id != cluster_id) %>%
+    select(asv_id, cluster_id) 
+  
+  # get a list of centroids of the clusters_to_split
+  centroids <- data.frame(
+    asv_id = unique(clusters_to_split$cluster_id),
+    cluster_id = unique(clusters_to_split$cluster_id)
+  )
+  # add them to clusters_to_split
+  clusters_to_split <- rbind(centroids, clusters_to_split) %>%
+    arrange(cluster_id)
+  
+  ###############################
+  
+  # for all clusters that should be split up among selected ASVs,
+  # modify the original read count of the selected ASV to
+  #  - keep their proportions among different replicates
+  #  - Their sum should equal the total number of read of the cluster.
+  # In other words, split of the total number of reads of a cluster among selected
+  # ASV, and keep the proportions of the original read counts.
+  #
+  # Replace the cluster_id by the asv_id
+  
+  cluster_selected <- read_count_df %>% # add the total number of reads of the cluster
+    group_by(cluster_id) %>%
+    mutate(cluster_rc_all = sum(read_count)) %>%
+    ungroup() %>%
+    # keep only asv, that should be kept apart
+    filter(asv_id %in% clusters_to_split$asv_id) %>%
+    # get the total number of reads of the selected ASVs of the cluster
+    group_by(cluster_id) %>%
+    mutate(cluster_rc_selected = sum(read_count)) %>%
+    ungroup() %>%
+    # multiply all read count by the proportion of original and selected read_count of the cluster
+    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
+    # Check if the sum of the modified read count equals of the original total read of the cluster
+    #  group_by(cluster_id) %>%
+    #  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
+    #  ungroup() %>%
+  
+  if( "replicate" %in% colnames(read_count_df)){
+    cluster_selected <- cluster_selected %>%
+      select(asv_id, sample, replicate, read_count = read_count_cis, asv)
+  }else{
+    cluster_selected <- cluster_selected %>%
+      select(asv_id, sample, read_count = read_count_cis, asv)
+  }
+  
+  ###############################
+  # make a list of asv_id asv for the centroids 
+  cluster_seq <- read_count_df %>%
+    filter(asv_id == cluster_id) %>%
+    select(asv_id, asv) %>%
+    distinct()
+  
+  ###############################
+  unmodified_clusters <- read_count_df %>%
+    filter(!cluster_id %in% clusters_to_split$cluster_id)
+  
+  if( "replicate" %in% colnames(read_count_df)){
+    unmodified_clusters <- unmodified_clusters %>%
+      group_by(cluster_id, sample, replicate) %>%
+      summarize(read_count = sum(read_count), .groups = "drop") %>%
+      select(asv_id = cluster_id, sample, replicate, read_count) %>%
+      left_join(cluster_seq, by="asv_id")
+    
+  }else{
+    unmodified_clusters <- unmodified_clusters %>%
+      group_by(cluster_id, sample) %>%
+      summarize(read_count = sum(read_count), .groups = "drop") %>%
+      select(asv_id = cluster_id, sample, read_count) %>%
+      left_join(cluster_seq, by="asv_id")
+  }
+  
+  ###############################
+  # pool modified and unmodified clusters
+  grouped_swarm <- rbind(cluster_selected, unmodified_clusters)
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(grouped_swarm, file = outfile,  row.names = F, sep=sep)
+  }
+
+  return(grouped_swarm)
+}
+
 #' Pool data from different markers
 #'
 #' Take two or more input files containing filtered results of the same samples 
