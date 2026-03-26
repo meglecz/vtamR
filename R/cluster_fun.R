@@ -328,7 +328,7 @@ GetClusterIdVsearch <- function(read_count,
   # make a fasta file with unique asv format adapted to swarm
   input_fas <- file.path(tmp_dir, "input.fasta")
   # make fasta file with abundances
-  write_fasta_rc(asv_df, input_fas)
+  write_fasta_df(asv_df, input_fas, read_count = TRUE)
   # Outfile name. Each line is a cluster, with asv_ids separated  by space
   outfile <- file.path(tmp_dir, "out_cluster_size.txt")
   
@@ -341,7 +341,6 @@ GetClusterIdVsearch <- function(read_count,
   if(num_threads > 0){
     args <- append(args, c("--threads", num_threads))
   }
-  
   run_system2(vsearch_path, args, quiet=quiet)
   
   file_info <- file.info(outfile)
@@ -1412,7 +1411,13 @@ split_swarm_clusters <-function(read_count,
     mutate(cluster_rc_selected = sum(read_count)) %>%
     ungroup() %>%
     # multiply all read count by the proportion of original and selected read_count of the cluster
-    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
+    mutate(
+      read_count_cis = round(
+      as.numeric(read_count) * cluster_rc_all / cluster_rc_selected,
+      digits = 0
+      )
+    )
+#    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
     # Check if the sum of the modified read count equals of the original total read of the cluster
     #  group_by(cluster_id) %>%
     #  mutate(read_count_cis_sum = sum(read_count_cis)) %>%

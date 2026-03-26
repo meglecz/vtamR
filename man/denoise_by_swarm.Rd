@@ -6,7 +6,7 @@
 \usage{
 denoise_by_swarm(
   read_count,
-  by_sample = TRUE,
+  by_sample = FALSE,
   split_clusters = FALSE,
   min_abundance_ratio = 0.2,
   min_read_count = 10,

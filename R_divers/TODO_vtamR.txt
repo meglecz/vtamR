@@ -9,23 +9,7 @@ OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvarian
 PoolDatasets => read with replicates ?? 
 Add tuto marker 2
 
-Finish pool_marker and pool_dataset
-######## check if it is finished
-## Reorganize PoolDatasets:
-1. Pool_data of the same marker => PoolMarkers
-	can deal with replicates optionally
-	if same sample in different dataset
-		sum
-		mean
-		max
-2. Pool data over markers => PoolDatasets
-	use ClsuterASV
-	deal with optional replicate
-	deal with homonymy of cluster_IDs (add a different difit for each marker)
-	Read_count within cluster (over ASV of the same sample, replicate) can be 
-		sum
-		mean
-		max
+
 
 SortReads with check_reverse in windows islong.
 
@@ -590,7 +574,32 @@ abundance of ASVs compared to the centroid (see `?split_swarm_clusters`)
 and the total read cout of the original cluster is proportionnaly reditributed
 among ASVs. by_sample must be  TRUE.
 
+## 2026/03/26 pool_markers
 
+Finish pool_marker and pool_dataset
+1. Pool datasets of the same marker = > pool_datasets
+	can deal with replicates optionally
+	if same sample in different dataset
+		sum
+		mean
+		max
+		min
+2. Pool data over markers => pool_markers
+	Append marker id to asv_id, if provided
+	concatenate dataset
+	use ClsuterASV with id=1 method= vsearch (clsuter_size)
+	deal with optional replicate
+	read_count within cluster (over ASV of the same sample, replicate) can be 
+		sum
+		mean
+		max
+		min
+	provides pooled output (asvs of the same cluster pooled)
+	and simple concatenation + centroid_id + centroid
+	
+Roxygen documentation done
+
+TODO: modify tutoriel
 
 
 

@@ -42,6 +42,9 @@ show warnings or errors.}
 Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
 }
 \description{
+Deprecated: This function has been replaced bu pool_markers and pool_datasets.
+}
+\details{
 Take several input files, each in long format containing
 asv_id, sample, replicate (optional), read_count and asv columns.
 Pool the different data sets, if all have the same marker.

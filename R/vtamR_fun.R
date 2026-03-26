@@ -3387,7 +3387,7 @@ PoolReplicates <- function(read_count, method="mean", digits=0, outfile="", sep=
   t <- check_one_to_one_relationship(read_count_df)
   
   # method
-    method <- match.arg(method, c("mean", "max", "sum"))
+    method <- match.arg(method, c("mean", "max", "sum", "min"))
     fun <- switch(method,
                   mean = function(x) mean(x, na.rm = TRUE),
                   max  = function(x) max(x, na.rm = TRUE),
@@ -5444,7 +5444,278 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   return(out_df)
 }
 
+
+#' Pool data sets
+#' 
+#' Combine multiple data sets generated from the same marker (i.e., the same 
+#' genetic region and primer pair).
+#' 
+#' If identical samples (sample–replicates) are present across different data sets,
+#' their read counts can be aggregated using one of the following methods: sum, mean,
+#' minimum, or maximum.
+#' 
+#' Input files must be in long format and contain the following columns:
+#' `asv_id`, `sample`, `replicate` (optional), `read_count`, 
+#' and `asv`.
+#' 
+#' Consistency between `asv_id` and `asv` across data sets is checked.
+#'  
+#' @param files Character vector specifying the file paths of the data sets to pool.
+#' Each file must have the same format, with columns: `asv_id`, `sample`, 
+#' `replicate` (optional), `read_count`, and `asv`.
+#' @param outfile Character string specifying the name of the output CSV file.
+#' If empty, no file is written.
+#' @param method Character string specifying how read counts from identical 
+#' sample–replicates should be aggregated. Must be one of "mean", 
+#' "max", "sum", or "min".
+#' @param sep Character string specifying the field separator used in input 
+#' and output CSV files.
+#' @param quiet Logical; if TRUE, suppress informational messages and 
+#' display only warnings or errors.
+#' @return A data frame with the following columns: `asv_id`, `sample`, 
+#' `replicate` (optional), `read_count`, and `asv`.
+#' @examples
+#' \dontrun{
+#' files = c("vtamR_test/run1/1_Input.csv", 
+#'            "vtamR_test/run2/1_Input.csv")
+#' df <- pool_datasets(files, method="sum")
+#' }
+#' @export
+pool_datasets <- function(files, 
+                         outfile="", 
+                         method="mean",
+                         sep=",", 
+                         quiet=T
+                         ){
+  
+  # method
+  method <- match.arg(method, c("mean", "max", "sum", "min"))
+  fun <- switch(method,
+                mean = function(x) mean(x, na.rm = TRUE),
+                max  = function(x) max(x, na.rm = TRUE),
+                sum  = function(x) sum(x, na.rm = TRUE),
+                min  = function(x) min(x, na.rm = TRUE))
+  
+  
+  # read the first file
+  df_pool <- read.table(files[1], sep=sep, header=TRUE)
+  cols_sorted <- sort(colnames(df_pool))
+  cols <- colnames(df_pool)
+
+  for(i in 2:length(files)){
+    
+      df <- read.table(files[i], sep=sep, header=TRUE)
+      
+      # test if same columns
+      cols_sorted_tmp <-  sort(colnames(df))
+      if(!identical(cols_sorted_tmp, cols_sorted)){
+        stop("All input files must have the same columns")
+      }
+      
+      # use the same column order as in the first file
+      df <- df %>%
+        select(!!cols)
+      # concatenation 
+      df_pool <- rbind(df_pool, df)
+      # check if coherence among asv and asv_id
+      if(!check_one_to_one_relationship(df_pool)){
+        stop("Incoherence between asv and asv_id among different datasets")
+      }
+    }
+  
+  if("replicate" %in% cols){
+    df_pool <- df_pool %>%
+      group_by(asv_id, sample, replicate, asv) %>%
+      summarise(read_count = fun(read_count), .groups="drop")
+  }else{
+    df_pool <- df_pool %>%
+      group_by(asv_id, sample, asv) %>%
+      summarise(read_count = fun(read_count), .groups="drop") %>%
+      mutate(read_count = round(read_count, digits=0))
+  }
+ 
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(df_pool, file=outfile, sep=sep, row.names = F)
+  }
+
+  return(df_pool)
+}
+
+
+
+#' Pool markers
+#' 
+#' Combine multiple data sets of the same samples
+#'  generated from different markers targeting 
+#' overlapping regions.
+#' 
+#' Input files must be in long format and contain the following columns:
+#' `asv_id`, `sample`, `replicate` (optional), 
+#' `read_count`, and `asv`.
+#'  
+#' ASVs sharing identical sequences over their overlapping regions are grouped 
+#' together. Within each group, ASVs are merged under a centroid sequence 
+#' (defined as the ASV with the highest read count in the group). 
+#' Read counts are then aggregated 
+#' across ASVs within each group for each sample–replicate combination.
+#' 
+#' To avoid ambiguity between identical `asv_id`s originating from different 
+#' markers, marker identifiers can be appended to `asv_id`.
+#'  
+#' @param files Character vector specifying the file paths of the data sets to pool.
+#' Each file must have the same format, with columns: `asv_id`, `sample`, 
+#' `replicate` (optional), `read_count`, and `asv`.
+#' @param marker_ids Character vector specifying marker identifiers. 
+#' Marker IDs must be positive non-zero integers and provided in the same order 
+#' as `files`. They are appended to `asv_id` to prevent ambiguity 
+#' across markers. If not provided, all `asv_id`s must be unique across 
+#' all input data sets.
+#' @param outfile Character string specifying the name of the output CSV file.
+#' If empty, no file is written.
+#' @param asv_with_centroids Character string specifying the name of an optional 
+#' output CSV file containing the concatenated input data augmented with 
+#' `centroid_id` and `centroid` columns.
+#' @param method Character string specifying how read counts from identical 
+#' sample–replicates should be aggregated within groups. Must be one of `"mean"`, 
+#' `"max"`, `"sum"`, or `"min"`.
+#' @param vsearch_path Character string specifying the path to the 
+#' `vsearch` executable.
+#' @param num_threads Positive integer specifying the number of CPUs to use. 
+#' If 0, all available CPUs are used.
+#' @param sep Character string specifying the field separator used in input 
+#' and output CSV files.
+#' @param quiet Logical; if `TRUE`, suppress informational messages and 
+#' display only warnings or errors.
+#' 
+#' @return A data frame with columns `asv_id`, `sample`, 
+#' `replicate` (optional), `read_count`, and `asv`, where 
+#' ASVs belonging to the same group within each sample–replicate are pooled 
+#' into a single row. The `read_count` corresponds to the chosen 
+#' aggregation method (mean, max, min, or sum).
+#' 
+#' @examples
+#' \dontrun{
+#' files <- c(
+#'   "~/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  
+#'   "~/vtamR_demo/filter/7_FilterChimera.csv"
+#' )
+#' marker_ids <- c(1, 2)
+#' pool_markers(files, marker_ids = marker_ids, method = "mean")
+#' }
+#' 
+#' @export
+#' 
+pool_markers <- function(files, 
+                         marker_ids = NULL,
+                         outfile="", 
+                         asv_with_centroids="",
+                         method="mean", 
+                         vsearch_path="vsearch", 
+                         num_threads=0,
+                         sep=",", 
+                         quiet=T){
+  # method
+  method <- match.arg(method, c("mean", "max", "sum", "min"))
+  fun <- switch(method,
+                mean = function(x) mean(x, na.rm = TRUE),
+                max  = function(x) max(x, na.rm = TRUE),
+                sum  = function(x) sum(x, na.rm = TRUE),
+                min  = function(x) min(x, na.rm = TRUE))
+  
+  
+  #########################
+  # concatenate all data in csv
+  # read the first file
+  df_pool <- read.table(files[1], sep=sep, header=TRUE)
+  cols_sorted <- sort(colnames(df_pool))
+  cols <- colnames(df_pool)
+  if(!is.null(marker_ids)){
+    df_pool <- df_pool %>%
+      mutate(asv_id = paste(asv_id, marker_ids[1], sep=".")) %>%
+      mutate(asv_id = as.numeric(asv_id))
+    
+  }
+
+  for(i in 2:length(files)){
+    
+    df <- read.table(files[i], sep=sep, header=TRUE)
+    # test if same columns
+    cols_sorted_tmp <-  sort(colnames(df))
+    if(!identical(cols_sorted_tmp, cols_sorted)){
+      stop("All input files must have the same columns")
+    }
+    # use the same column order as in the first file
+    df <- df %>%
+      select(!!cols)
+    # prefix asv_id
+    if(!is.null(marker_ids)){
+      df <- df %>%
+        mutate(asv_id = paste(asv_id, marker_ids[i], sep=".")) %>%
+        mutate(asv_id = as.numeric(asv_id))
+    }
+    # concatenation 
+    df_pool <- rbind(df_pool, df)
+    # check if coherence among asv and asv_id
+    if(!check_one_to_one_relationship(df_pool)){
+      stop("Incoherence between asv and asv_id among different datasets")
+    }
+  }
+  ############################
+  # Make asv_with_centroids df: concatenated input + centroid_id + centroid
+  df_pool <- ClusterASV(read_count=df_pool,
+                     group = FALSE,
+                     by_sample = FALSE,
+                     method = "vsearch",
+                     path = vsearch_path,
+                     identity = 1,
+                     quiet = TRUE
+                     )
+  
+  asv_with_centroids_df <- df_pool %>%
+    rename(centroid_id = cluster_id) %>%
+    # add centroid seq
+    group_by(centroid_id) %>%
+    mutate(centroid = first(asv[centroid_id==asv_id])) %>%
+    ungroup()
+  
+  ############################
+  ### group lines of the same cluster
+  if("replicate" %in% cols){
+    df_pool <- asv_with_centroids_df %>%
+      select(-asv_id, -asv) %>%
+      rename(asv_id = centroid_id, asv=centroid) %>%
+      group_by(asv_id, sample, replicate, asv) %>%
+      summarize(read_count = fun(read_count), .groups = "drop") %>%
+      mutate(read_count = round(read_count, digits=0)) %>%
+      select(asv_id, sample, replicate, read_count, asv)
+  }else{
+    df_pool <- asv_with_centroids_df %>%
+      select(-asv_id, -asv) %>%
+      rename(asv_id = centroid_id, asv=centroid) %>%
+      group_by(asv_id, sample, asv) %>%
+      summarize(read_count = fun(read_count), .groups = "drop") %>%
+      mutate(read_count = round(read_count, digits=0)) %>%
+      select(asv_id, sample, read_count, asv)
+  }
+    
+  if(asv_with_centroids != ""){
+    check_dir(asv_with_centroids, is_file=TRUE)
+    write.table(asv_with_centroids_df, file=asv_with_centroids, sep=sep, row.names = F)
+  }
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(df_pool, file=outfile, sep=sep, row.names = F)
+  }
+  
+  return(df_pool)
+}
+
+
 #' Pool Datasets
+#' 
+#' Deprecated: This function has been replaced bu pool_markers and pool_datasets.
 #' 
 #' Take several input files, each in long format containing 
 #' asv_id, sample, replicate (optional), read_count and asv columns.
@@ -5480,7 +5751,6 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
 #' PoolDatasets(files, vsearch_path=vsearch_path)
 #' }
 #' @export
-#'
 PoolDatasets <- function(files, 
                          outfile="", 
                          asv_with_centroids="", 
@@ -5489,7 +5759,7 @@ PoolDatasets <- function(files,
                          vsearch_path="vsearch", 
                          num_threads=0,
                          quiet=T
-                         ){
+){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -5526,12 +5796,12 @@ PoolDatasets <- function(files,
   for(i in 2:nrow(files)){
     file <- files[i, "file"]
     marker <- files[i, "marker"]
-
+    
     tmp <- read.csv(file, sep=sep)
     
     if(replicate_col){
-        tmp <- tmp %>%
-          select(asv_id, sample, replicate, read_count, asv)
+      tmp <- tmp %>%
+        select(asv_id, sample, replicate, read_count, asv)
     }else{
       tmp <- tmp %>%
         select(asv_id, sample, read_count, asv)
@@ -5553,8 +5823,8 @@ PoolDatasets <- function(files,
     df <- rbind(df, tmp)
   }
   
-
-    
+  
+  
   ###
   # Pool ASVs identical on their overlapping region, if more than one marker
   ###
@@ -5566,7 +5836,7 @@ PoolDatasets <- function(files,
     df <- df %>%
       mutate(asv_id = paste(marker, asv_id, sep="_"))
     # get full list of ASVs
-
+    
     asvs <- df %>%
       group_by(asv_id, asv) %>%
       summarize("rc" = sum(read_count), .groups="drop")
@@ -5610,7 +5880,7 @@ PoolDatasets <- function(files,
     cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
     cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
     cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
-#    cent$centroid_id <- as.numeric(cent$centroid_id)
+    #    cent$centroid_id <- as.numeric(cent$centroid_id)
     cent$nbseq <- as.numeric(cent$nbseq)
     
     # add to centroide the asv_id that are in the same cluster
@@ -5650,7 +5920,7 @@ PoolDatasets <- function(files,
         select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
     }
     
-
+    
     
     if(mean_over_markers){
       if(replicate_col){
@@ -5685,7 +5955,7 @@ PoolDatasets <- function(files,
       df_pool <- df_pool %>%
         select("asv_id"=centroid_id, sample, read_count, asv) 
     }
-
+    
     
     if(asv_with_centroids != ""){
       check_dir(asv_with_centroids, is_file=TRUE)
@@ -5702,9 +5972,10 @@ PoolDatasets <- function(files,
     check_dir(outfile, is_file=TRUE)
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
-
+  
   return(df_pool)
 }
+
 
 #' History By
 #' 
@@ -6575,8 +6846,8 @@ read_blast6out <- function(filename) {
   df$merged_id <- gsub(';size=[0-9]+', '', df$merged_id)
   df$centroid_id <- gsub(';size=[0-9]+', '', df$centroid_id)
   
-  df$merged_id <- as.integer(df$merged_id)
-  df$centroid_id <- as.integer(df$centroid_id)
+  df$merged_id <- as.numeric(df$merged_id)
+  df$centroid_id <- as.numeric(df$centroid_id)
   
   return(df)
 }
@@ -6597,11 +6868,8 @@ write_fasta_df <- function(df, outfile, read_count=FALSE) {
   
   if(read_count){
     df <- df %>%
-      group_by(asv_id) %>%
-      summarize(
-        read_count = sum(read_count),
-        asv = first(asv)
-        ) 
+      group_by(asv_id, asv) %>%
+      summarize(read_count = sum(read_count)) 
 
   }else{
     df <- df %>%
