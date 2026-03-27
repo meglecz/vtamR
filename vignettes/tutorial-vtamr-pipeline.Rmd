@@ -1379,7 +1379,7 @@ pooled_read_count_df <- pool_datasets(
 )
 ```
 
-#### Make mOTUs
+#### Make mOTUs - pool_dataset
 
 If mOTUs have been generated separately for each plate, the cluster_ids 
 (corresponding to the centroid sequences of each cluster) are unlikely to be 
@@ -1387,7 +1387,7 @@ consistent across plates. Therefore, it is better to rerun the clustering
 to define mOTUs on the pooled dataset.
 
 ```{r, eval=FALSE}
-outfile <- file.path("pooled_dataset", "17_mOTU.csv")
+outfile <- file.path("pooled_dataset", "mOTU.csv")
 identity <- 0.97 
 read_count_motu <- ClusterASV(
   pooled_read_count_df,
@@ -1395,7 +1395,8 @@ read_count_motu <- ClusterASV(
   identity = 0.97,
   group = TRUE,
   path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outfile=outfile)
+  outfile=outfile
+  )
 ```
 
 #### Taxassign pooled data
@@ -1418,7 +1419,7 @@ asv_tax_pooled <- TaxAssignLTG(
 #### Print ASV table
 
 ```{r, eval=FALSE}
-outfile=file.path("pooled_dataset", "ASVtable_with_TaxAssignLTG.csv")
+outfile=file.path("pooled_dataset", "ASVtable_with_taxa.csv")
 
 asv_table_df <- WriteASVtable(
   read_count_motu, 
@@ -1431,17 +1432,87 @@ asv_table_df <- WriteASVtable(
 
 ### More than one overlappig markers
 
-It can be a good idea of using 2 or more overlapping markers on the same samples
-to increase taxonomic coverage of the PCR.
+It can be a good idea to use two or more overlapping markers on the same samples 
+to increase the taxonomic coverage of PCR amplification.
 
-The data should be analysed separately marker by marker, than the results can
-be pooled together by aggregationg ASV identical on their ovelapping region.
+The data should first be analyzed separately for each marker. 
+The results can then be pooled by aggregating ASVs that are identical over 
+their overlapping region.
 
+In this example, the pipeline was run on two markers: **MFZR** and **ZFZR**, 
+which amplify the same region of the COI gene. However, the MFZR marker 
+starts 18 nucleotides upstream of ZFZR. We will use the filtered results 
+in long format after pooling replicates within samples, 
+although the function works on data including both samples and replicates. 
+These files are bundled with the package:
 
+```{r, eval=FALSE}
+mfzr_filtered <- system.file("extdata/demo/16_pool_replicates_mfzr.csv", package = "vtamR")
+zfzr_filtered <- system.file("extdata/demo/16_pool_replicates_zfzr.csv", package = "vtamR")
+```
 
+To avoid confusion between ASV identifiers from the two markers, we assign a 
+numerical identifier to each marker (1 for MFZR and 2 for ZFZR). 
+These identifiers are appended to the ASV IDs.
 
+```{r, eval=FALSE}
+input_files <- c(mfzr_filtered, zfzr_filtered)
+marker_ids <- c(1, 2)
 
+# TODO: consider improving file structure
+outfile <- file.path(outdir, "pool_markers", "pooled_markers.csv") 
+asv_with_centroids <- file.path(outdir, "pool_markers", "pooled_markers_asv_centroids.csv")
 
+pooled_markers <- pool_markers(
+  files = input_files,
+  marker_ids = marker_ids,
+  outfile = outfile,  # ASVs identical over their overlapping region are merged into a single line
+  asv_with_centroids = asv_with_centroids,  # same as input, with added centroid_id and centroid
+  method = "mean",  # mean read counts across pooled ASVs
+  vsearch_path = "vsearch",
+  quiet = TRUE
+)
+```
+
+#### Make mOTU  - Taxassign - ASV table
+
+As previously, for different datasets of the same markers, clustering should be done 
+on the pooled data than assigned to taxa.
+
+```{r, eval=FALSE}
+#### Cluster
+outfile <- file.path(outdir, "pool_markers", "mOTU.csv") 
+identity <- 0.97 
+read_count_motu <- ClusterASV(
+  pooled_markers,
+  method = "vsearch",
+  identity = 0.97,
+  group = TRUE,
+  path=vsearch_path, 
+  outfile=outfile)
+
+#### TaxAssign
+outfile <- file.path(outdir, "pool_markers", "TaxAssignLTG.csv") 
+
+asv_tax_pooled <- TaxAssignLTG(
+  asv=read_count_motu, 
+  taxonomy=taxonomy, 
+  blast_db=blast_db, 
+  blast_path=blast_path, 
+  outfile=outfile
+  )
+
+#### Print ASV table
+outfile <- file.path(outdir, "pool_markers", "ASVtable_with_taxa.csv") 
+
+asv_table_df <- WriteASVtable(
+  read_count_motu, 
+  outfile=outfile, 
+  asv_tax=asv_tax_pooled, 
+  add_sums_by_sample=T, 
+  add_sums_by_asv=T
+  )
+```
 
 
 # Tips - Good to know

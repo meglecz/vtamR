@@ -1,22 +1,30 @@
 # Ideas for vtamR
 
+Add test demo file for plate2 MFZR
+
 
 Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
 
 OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
           reads during this filtering step. "
 
-PoolDatasets => read with replicates ?? 
-Add tuto marker 2
 
 Make example file for 2 datasets with the same marker
 
 SortReads with check_reverse in windows islong.
 
 
+Revise file stucture of the tutriel. outdir/marker/...
+Use demo_pipeline.R 
+ -from fastq till mOTU 
+ - input file bundled with packade
+ - demo mock composition
+ - do not add cluster graphics
+ 
+Add info on tolerate occurrences
 
 
-## check examples , arguments and return in doc
+## check examples , arguments in doc
 
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
@@ -599,7 +607,10 @@ Finish pool_marker and pool_dataset
 	
 Roxygen documentation done
 
-TODO: modify tutoriel
+## 2026/03/27
+
+pool_markers tutoriel with 2 markers
+
 
 
 

@@ -5615,6 +5615,7 @@ pool_markers <- function(files,
                          num_threads=0,
                          sep=",", 
                          quiet=T){
+  
   # method
   method <- match.arg(method, c("mean", "max", "sum", "min"))
   fun <- switch(method,

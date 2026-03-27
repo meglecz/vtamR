@@ -1,5 +1,5 @@
 
-computer = "Endoume" # Bombyx/Endoume/Win
+computer = "Bombyx" # Bombyx/Endoume/Win
 if(computer == "Bombyx"){
   setwd("/home/meglecz/vtamR/")
   cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
@@ -8,7 +8,7 @@ if(computer == "Bombyx"){
   swarm_path <- "swarm"
   pigz_path <- "pigz"
   sep <- ","
-  outdir <- "~/vtamR_demo_out_mfzr"
+  outdir <- "~/vtamR_demo_out_zfzr"
 }else if(computer == "Endoume"){
   setwd("/home/emese/vtamR")
   cutadapt_path <- "cutadapt"
@@ -17,7 +17,7 @@ if(computer == "Bombyx"){
   swarm_path <- "swarm"
   pigz_path <- "pigz"
   sep <- ","
-  outdir <- "~/vtamR_demo_out_mfzr"
+  outdir <- "~/vtamR_demo_out_zfzr"
 }else{
   setwd("C:/Users/emese/vtamR")
   cutadapt_path <- "cutadapt"
@@ -26,7 +26,7 @@ if(computer == "Bombyx"){
   swarm_path <- "swarm"
   pigz_path <- "pigz"
   sep <- ","
-  outdir <- "C:/Users/emese/vtamR_demo_out_mfzr"
+  outdir <- "C:/Users/emese/vtamR_demo_out_zfzr"
 }
 
 ## load
@@ -44,7 +44,7 @@ usethis::use_roxygen_md()
 
 
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
-fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
+#fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
 asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
@@ -53,7 +53,7 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
 
 #zfzr
-#fastqinfo <-  system.file("extdata/demo/fastqinfo_marker2.csv", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo_marker2.csv", package = "vtamR")
 
 
 #taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
