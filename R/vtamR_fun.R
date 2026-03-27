@@ -374,9 +374,9 @@ Merge <- function(fastqinfo,
                   fastq_maxns=0, 
                   fastq_truncqual=10, 
                   fastq_minovlen=50, 
-                  fastq_allowmergestagger=F, 
+                  fastq_allowmergestagger=FALSE, 
                   sep=",", 
-                  compress=F, 
+                  compress=FALSE, 
                   quiet=T){
   
   check_dir(fastq_dir)
@@ -950,14 +950,14 @@ SortReads <- function(fastainfo,
                       compress_method="R",
                       pigz_path="pigz",
                       num_threads=0,
-                      check_reverse=F, 
-                      tag_to_end=T, 
-                      primer_to_end=T, 
+                      check_reverse=FALSE, 
+                      tag_to_end=TRUE, 
+                      primer_to_end=TRUE, 
                       cutadapt_error_rate=0.1,
                       cutadapt_minimum_length=50,
                       cutadapt_maximum_length=500,
                       sep=",",
-                      compress=F,
+                      compress=FALSE,
                       quiet=T
                       ){
   
@@ -7431,7 +7431,7 @@ RandomSeq <- function(fastainfo,
                        compress_method="R",
                        pigz_path="pigz",
                        num_threads=0,
-                       compress=T, 
+                       compress=FALSE, 
                        sep=",",
                        quiet=TRUE){
   

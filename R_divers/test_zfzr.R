@@ -1,4 +1,33 @@
 
+computer = "Endoume" # Bombyx/Endoume/Win
+if(computer == "Bombyx"){
+  setwd("/home/meglecz/vtamR/")
+  cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
+  vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
+  blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
+  swarm_path <- "swarm"
+  pigz_path <- "pigz"
+  sep <- ","
+  outdir <- "~/vtamR_demo_out_mfzr"
+}else if(computer == "Endoume"){
+  setwd("/home/emese/vtamR")
+  cutadapt_path <- "cutadapt"
+  vsearch_path <- "vsearch"
+  blast_path <- "blastn"
+  swarm_path <- "swarm"
+  pigz_path <- "pigz"
+  sep <- ","
+  outdir <- "~/vtamR_demo_out_mfzr"
+}else{
+  setwd("C:/Users/emese/vtamR")
+  cutadapt_path <- "cutadapt"
+  vsearch_path <- "vsearch"
+  blast_path <- "blastn"
+  swarm_path <- "swarm"
+  pigz_path <- "pigz"
+  sep <- ","
+  outdir <- "C:/Users/emese/vtamR_demo_out_mfzr"
+}
 
 ## load
 library(vtamR)
@@ -7,693 +36,343 @@ library(ggplot2)
 library(rRDP)
 library(rRDPData)
 
-setwd("/home/meglecz/vtamR/")
-setwd("C:/Users/emese/vtamR")
 library("devtools")
 library("roxygen2")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
 
-### set up
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-swarm_path <- "swarm"
-pigz_path <- "pigz"
-sep <- ","
-outdir <- "~/vtamR_demo_out_zfzr"
-
-### set up windows
-cutadapt_path <- "cutadapt"
-vsearch_path <- "vsearch"
-blast_path <- "blastn"
-swarm_path <- "swarm"
-pigz_path <- "pigz"
-sep <- ","
-outdir <- "C:/Users/emese/vtamR_demo_out_zfzr"
 
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
-fastqinfo <-  system.file("extdata/demo/fastqinfo_marker2.csv", package = "vtamR")
-#mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
-#asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
+mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
+asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
+mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
 
-taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
+#zfzr
+#fastqinfo <-  system.file("extdata/demo/fastqinfo_marker2.csv", package = "vtamR")
+
+
+#taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
 
 
 ### Merge
-merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
-fastainfo_df_uncompress <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      compress_method="pigz",
-                      pigz_path = pigz_path,
-                      vsearch_path=vsearch_path, 
-                      outdir=merged_dir_uncompress,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=FALSE)
+merged_dir <- file.path(outdir, "1_merged")
+fastainfo_df <- Merge(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, 
+  outdir=merged_dir,
+  fastq_maxee=1,
+  fastq_maxns=0,
+  fastq_allowmergestagger=F,
+  quiet=TRUE)
 
-
-outdir_RandomSeq <- file.path(outdir, "RandomSeqR_gz")
-fastainfo_randomSeq <-RandomSeq(fastainfo_df_uncompress, 
-                                use_vsearch = TRUE,
-                                vsearch_path = vsearch_path, 
-                                n=40000,
-                                fasta_dir=merged_dir_uncompress,
-                                outdir=outdir_RandomSeq, 
-                                randseed=0, 
-                                quiet=TRUE)
+random_dir <- file.path(outdir, "2_RandomSeq")
+fastainfo_random_seq <-RandomSeq(
+  fastainfo_df, 
+  n=40000,
+  fasta_dir=merged_dir,
+  outdir=random_dir, 
+  randseed=0, 
+  quiet=TRUE
+  )
 
 
 ### demultiplex
-demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo_df <- SortReads(fastainfo_randomSeq, 
-                           fasta_dir=outdir_RandomSeq, 
-                           outdir=demultiplexed_dir, 
-                           check_reverse=TRUE, 
-                           cutadapt_path=cutadapt_path, 
-                           vsearch_path=vsearch_path,
-                           tag_to_end = T,
-                           primer_to_end=T)
+demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
+sampleinfo_df <- SortReads(
+  fastainfo_random_seq, 
+  fasta_dir=random_dir, 
+  outdir=demultiplexed_dir, 
+  check_reverse=TRUE, 
+  cutadapt_path=cutadapt_path, 
+  vsearch_path=vsearch_path,
+  quiet=TRUE
+  )
 
 ###############
 ### dereplicate
 ###############
 updated_asv_list <- file.path(outdir, "updated_asv_list.csv")
-sampleinfo <- "/home/meglecz/vtamR_demo/SortReads/sampleinfo.csv"
-demultiplexed_dir <-  "/home/meglecz/vtamR_demo/SortReads"
-outfile <- file.path(outdir, "filter", "1_Input.csv")
-read_count_df <- Dereplicate(sampleinfo_df, 
-                             outfile=outfile,
-                             dir=demultiplexed_dir)
+outfile <- file.path(outdir, "4_filter", "1_Input.csv")
+read_count_df <- Dereplicate(
+  sampleinfo_df, 
+  outfile=outfile,
+  dir=demultiplexed_dir
+  )
 
 
 ### stat
-stat_df <- data.frame(parameters=character(),
-                      asv_count=integer(),
-                      read_count=integer(),
-                      sample_count=integer(),
-                      sample_replicate_count=integer())
+stat_df <- data.frame(
+  parameters=character(),
+  asv_count=integer(),
+  read_count=integer(),
+  sample_count=integer(),
+  sample_replicate_count=integer()
+  )
 
-stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
+stat_df <- GetStat(read_count_df, stat_df, stage="Input", params=NA)
 
 #### swarm
 by_sample <- TRUE
 split_clusters <- TRUE
-d=1
-fastidious= TRUE
-outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
-read_count_df <- denoise_by_swarm(read_count_df,
-                                  outfile=outfile,
-                                  by_sample=TRUE,
-                                  split_clusters=TRUE,
-                                  min_abundance_ratio = 0.2,
-                                  min_read_count = 10,
-                                  swarm_path=swarm_path, 
-                                  swarm_d=1, 
-                                  fastidious=TRUE, 
-                                  quiet=TRUE)
+outfile <- file.path(outdir, "4_filter", "2_Swarm.csv")
+read_count_df <- denoise_by_swarm(
+  read_count_df,
+  outfile=outfile,
+  by_sample=by_sample,
+  split_clusters=split_clusters,
+  min_abundance_ratio = 0.2,
+  min_read_count = 10,
+  swarm_path=swarm_path,
+  quiet=TRUE)
 
-stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=by_sample)
+param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters, sep=" ")
+stat_df <- GetStat(read_count_df, stat_df, stage="Swarm", params=param)
 
 #### LFNglobalReadCount
 global_read_count_cutoff = 2
-outfile <- file.path(outdir, "filter", "3_LFNglobalReadCount.csv")
-read_count_df <- LFNglobalReadCount(read_count_df, 
-                                    outfile=outfile,
-                                    cutoff=global_read_count_cutoff)
+outfile <- file.path(outdir, "4_filter", "3_LFNglobalReadCount.csv")
+read_count_df <- LFNglobalReadCount(
+  read_count_df, 
+  outfile=outfile,
+  cutoff=global_read_count_cutoff)
+
+param <- paste("global_read_count_cutoff:", global_read_count_cutoff, sep=" ")
 stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=NA)
 
 #### FilterIndel
-outfile <- file.path(outdir, "filter", "4_FilterIndel.csv")
-read_count_df <- FilterIndel(read_count_df,
-                             outfile=outfile
-                             )
+outfile <- file.path(outdir, "4_filter", "4_FilterIndel.csv")
+read_count_df <- FilterIndel(
+  read_count_df,
+  outfile=outfile
+  )
+
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
 
 ### FilterCodonStop
-outfile <- file.path(outdir, "filter", "5_FilterCodonStop.csv")
+outfile <- file.path(outdir, "4_filter", "5_FilterCodonStop.csv")
 genetic_code = 5
-read_count_df <- FilterCodonStop(read_count_df, 
-                                 genetic_code=genetic_code,
-                                 outfile=outfile
-                                 )
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=NA)
+read_count_df <- FilterCodonStop(
+  read_count_df, 
+  genetic_code=genetic_code,
+  outfile=outfile
+  )
+
+param <- paste("genetic_code:", genetic_code, sep=" ")
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=param)
 
 ### FilterExternalContaminant
-outfile <- file.path(outdir, "filter", "6_FilterExternalContaminant.csv")
-conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
-read_count_df <- FilterExternalContaminant(read_count_df, 
-                                           sampleinfo=sampleinfo_df,
-                                           conta_file=conta_file,
-                                           outfile=outfile
-                                           )
+outfile <- file.path(outdir, "4_filter", "6_FilterExternalContaminant.csv")
+conta_file <- file.path(outdir, "4_filter", "Potential_contamination.csv")
+read_count_df <- FilterExternalContaminant(
+  read_count_df, 
+  sampleinfo=sampleinfo_df,
+  conta_file=conta_file,
+  outfile=outfile
+  )
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
 
 ### FilterChimera
-outfile <- file.path(outdir, "filter", "7_FilterChimera.csv")
-abskew=2
-by_sample = T
-sample_prop = 0.8
-read_count_df <- FilterChimera(read_count_df, 
-                               vsearch_path=vsearch_path, 
-                               by_sample=by_sample, 
-                               sample_prop=sample_prop, 
-                               abskew=abskew,
-                               outfile=outfile
-                               )
+outfile <- file.path(outdir, "4_filter", "7_FilterChimera.csv")
+read_count_df <- FilterChimera(
+  read_count_df, 
+  vsearch_path=vsearch_path, 
+  outfile=outfile
+  )
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
 
+### FilterRenkonen
+outfile <- file.path(outdir, "4_filter", "8_FilterRenkonen.csv")
+renkonen_distance_quantile <- 0.9
+read_count_df <- FilterRenkonen(
+  read_count_df, 
+  renkonen_distance_quantile = renkonen_distance_quantile,
+  outfile = outfile
+  )
 
-############
-# pool_markers
-method <- "sum"  
-files <- c("/home/meglecz/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  "/home/meglecz/vtamR_demo/filter/7_FilterChimera.csv")
-marker_ids <- c(1, 2)
+param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile, sep=" ")
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=param)
 
-outfile <- file.path(outdir, "pool_markers", "pooled.csv")
-asv_with_centroids <- file.path(outdir, "pool_markers", "asv_with_centroids.csv")
-df_2markers <- pool_markers(files= c("/home/meglecz/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  "/home/meglecz/vtamR_demo/filter/7_FilterChimera.csv"),
-                         marker_ids = c(3, 4),
-                         outfile= outfile, 
-                         asv_with_centroids= asv_with_centroids,
-                         method="mean", 
-                         vsearch_path=vsearch_path, 
-                         quiet=T)
+### Make Mock_composition
 
+outdir_mock <- file.path(outdir, "mock_composition")
 
-outfile <- file.path(outdir, "pool_markers", "pooled.csv")
-asv_with_centroids <- file.path(outdir, "pool_markers", "asv_with_centroids.csv")
-df_2markers <- pool_markers(files= c("/home/meglecz/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  "/home/meglecz/vtamR_demo/filter/7_FilterChimera.csv"),
-                            outfile= outfile, 
-                            asv_with_centroids= asv_with_centroids,
-                            method="mean", 
-                            vsearch_path=vsearch_path, 
-                            quiet=T)
+mock_template <- MakeMockCompositionLTG(
+  read_count=read_count_df,
+  fas=mock_ncbi_fasta,
+  taxonomy=taxonomy,
+  sampleinfo = sampleinfo_df,
+  outdir= outdir_mock,
+  blast_path=blast_path
+  )
 
-
-#####################################
-PoolReplicates_csv <- file.path(outdir, "PoolReplicates", "PoolReplicates_mean.csv")
-read_count_sample_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
-read_count_sample_fun_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
-read_count_sample_fun_max <- PoolReplicates(read_count_df, method="max", digits=0, outfile = PoolReplicates_csv)
-read_count_sample_fun_sum <- PoolReplicates(read_count_df, method="sum", digits=0, outfile = PoolReplicates_csv)
-
-identical(read_count_sample_fun_max, read_count_sample_fun_mean)
-
-
-read_count_cluster_df <- ClusterASV(read_count_df,
-                            method = "swarm",
-                            swarm_d=7,
-                            fastidious=fastidious,
-                            by_sample=FALSE,
-                            group = FALSE,
-                            path=swarm_path
-                            )
-
-read_count_cluster_df_max <- PoolReplicates(read_count_cluster_df, method="max")
-#####################################
-
-tmp_replicate <- WriteASVtable(read_count_df, 
-                          sampleinfo=sampleinfo_df, 
-                          pool_replicates=FALSE,
-                          add_sums_by_asv=TRUE
-                          )
-tmp_sample <- WriteASVtable(read_count_df, 
-                               sampleinfo=sampleinfo_df, 
-                               pool_replicates=TRUE,
-                               add_sums_by_asv=TRUE
-                            )
-
-tmp_sample_new <- WriteASVtable(read_count_df, 
-                            sampleinfo=sampleinfo_df, 
-                            pool_replicates=TRUE,
-                            method="max",
-                            add_sums_by_asv=TRUE,
-                            add_sums_by_sample=FALSE
-)
-#####################################
-
-opt <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                               outdir=file.path(outdir, "optimize"),
-                               known_occurrences = NULL, 
-                               mock_composition = mock_composition_df,
-                               sampleinfo = sampleinfo_df,
-                               habitat_proportion = 0.5,
-                               min_replicate_number=2, 
-                               quiet=T
-                               )
-
-mock_composition_df <- read.csv(mock_composition)
-
-mock_composition_df[7,] <- c("tpos1", "keep", "TCTATACCTTATTTTCGGCGCAATTTCAGGTATTGCAGGTACCGCTTTATCTCTTTACATTCGAATTACTTTATCTCAACCTAATGGTAATTTTTTAGAATACAATCACCACTTTTATAATGTGATTATAACGGGTCACGCTCTTCTTATGATTTTTTTCATGGTAATGCCAATCTTGATT", NA, NA)
-
-read_count_samples <- PoolReplicates(read_count_df)
-missing <- make_missing_occurrences(read_count_samples, mock_composition_df, quiet = FALSE)
-
-
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' 
-#'     missing_asv_text <- paste(capture.output(print(df)), collapse = "\n")
-warning(
-  paste0(
-    "\n  Some expected ASVs are missing from the mock samples.\n",
-    "----------------------------------------------------------\n",
-    missing_asv_text,
-    "\n----------------------------------------------------------\n"
-  ),
-  call. = FALSE
-)
-#####################################
-  
-
-
-
-#### FilterRenkonen
-cutoff <- 0.4
-read_count_df <- FilterRenkonen(read_count_df, 
-                                cutoff=cutoff)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
-
-
-### FilterPCRerror
-
-mock_composition_df <- read.csv(mock_composition)
-
-mock_composition_df[5,"asv"] <- "TTTTTTTTTTTT"
-mock_composition_df[6,"asv"] <- "AAAAAAAAAa"
-
-dir_opt = file.path(outdir, "OptimizeLFNreadCountLFNvariant") 
-opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                           outdir = dir_opt,
-                                           known_occurrences = NULL, 
-                                           mock_composition = mock_composition_df,
-                                           sampleinfo = sampleinfo_df,
-                                           habitat_proportion = 0.5,
-                                           sep=",",
-                                           min_lfn_read_count_cutoff=10, 
-                                           max_lfn_read_count_cutoff=100, 
-                                           increment_lfn_read_count_cutoff=5, 
-                                           min_lnf_variant_cutoff=0.001, 
-                                           max_lnf_variant_cutoff=0.01, 
-                                           increment_lnf_variant_cutoff=0.001, 
-                                           by_replicate=FALSE, 
-                                           min_replicate_number=2, 
-                                           quiet=T)
-
-opt_rc_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                             outdir = dir_opt,
-                                             known_occurrences = "/home/meglecz/vtamR_demo_out/OptimizeLFNreadCountLFNvariant/known_occurrences.csv", 
-                                             sep=",",
-                                             min_lfn_read_count_cutoff=10, 
-                                             max_lfn_read_count_cutoff=100, 
-                                             increment_lfn_read_count_cutoff=5, 
-                                             min_lnf_variant_cutoff=0.001, 
-                                             max_lnf_variant_cutoff=0.01, 
-                                             increment_lnf_variant_cutoff=0.001, 
-                                             by_replicate=FALSE, 
-                                             min_replicate_number=2, 
-                                             quiet=T)
-
-
-
-
-optPCR <- OptimizePCRerror(read_count=read_count_df, 
-                 mock_composition=mock_composition_df, 
-                 vsearch_path=vsearch_path, 
-                 max_mismatch=2, 
-                 min_read_count=5)
-
-optLFN_sample <- OptimizeLFNsampleReplicate(read_count_df, mock_composition=mock_composition_df)
-
-optLFN_var <- OptimizeLFNreadCountLFNvariant(read_count_df, 
-                                           known_occurrences, 
-                                           sep=",",
-                                           outfile="", 
-                                           min_lfn_read_count_cutoff=10, 
-                                           max_lfn_read_count_cutoff=100, 
-                                           increment_lfn_read_count_cutoff=5, 
-                                           min_lnf_variant_cutoff=0.001, 
-                                           max_lnf_variant_cutoff=0.01, 
-                                           increment_lnf_variant_cutoff=0.001, 
-                                           by_replicate=FALSE, 
-                                           min_replicate_number=2, 
-                                           quiet=T
-)
-
-
-pcr_error_var_prop <- 0.05
-max_mismatch <- 2
-read_count_df <- FilterPCRerror(read_count_df, 
-                                vsearch_path=vsearch_path, 
-                                pcr_error_var_prop=pcr_error_var_prop, 
-                                max_mismatch=max_mismatch)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterPCRerror", params=NA)
+mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
 
 ### LFNsampleReplicate
-lfn_sample_replicate_cutoff <- 0.004
-read_count_df <- LFNsampleReplicate(read_count_df, 
-                                    cutoff=lfn_sample_replicate_cutoff)
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=NA)
 
-### FilterMinReplicate
+#### Suggest 
+outfile = file.path(outdir, "4_filter", "optimize", "OptimizeLFNsampleReplicate.csv")
+  
+OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(
+  read_count=read_count_df,
+  mock_composition=mock_composition,
+  outfile=outfile
+  )
+
+head(OptimizeLFNsampleReplicate_df)
+
+#### LFNsampleReplicate
+    
+lfn_sample_replicate_cutoff <- 0.001
+outfile <- file.path(outdir, "4_filter", "9_LFNsampleReplicate.csv")
+  
+read_count_df <- LFNsampleReplicate(
+  read_count_df, 
+  cutoff=lfn_sample_replicate_cutoff, 
+  outfile=outfile
+  )
+
+param <- paste("cutoff:", lfn_sample_replicate_cutoff, sep=" ")
+stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=param)
+  
+
+  
+### FilterMinReplicate 1
+
 min_replicate_number <- 2
-read_count_df <- FilterMinReplicate(read_count_df, 
-                                    cutoff=min_replicate_number)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+outfile <- file.path(outdir, "4_filter", "11_FilterMinReplicate.csv")
+  
+read_count_df <- FilterMinReplicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )
 
+param <- paste("cutoff:", min_replicate_number, sep=" ")
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=param)
+  
+
+### LFNvariant and LFNreadCount
+
+#### Suggest
+outdir_optimize = file.path(outdir, "4_filter", "optimize")
+              
+OptimizeLFNreadCountLFNvariant_df <- OptimizeLFNreadCountLFNvariant(
+  read_count_df,
+  mock_composition = mock_composition,
+  sampleinfo = sampleinfo_df,
+  habitat_proportion = 0.5,
+  outdir= outdir_optimize, 
+  min_replicate_number=2
+)
+
+head(OptimizeLFNreadCountLFNvariant_df)
 
 ### LFNvariant
+
+outfile <- file.path(outdir, "4_filter", "12_LFNvariant.csv")
 lnf_variant_cutoff = 0.001
-read_count_df_lnf_variant <- LFNvariant(read_count_df, 
-                                        cutoff=lnf_variant_cutoff)
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNvariant", params=NA)
+              
+read_count_df_lnf_variant <- LFNvariant(
+  read_count_df, 
+  cutoff=lnf_variant_cutoff, 
+  outfile=outfile
+  )
 
-### LFNreadCount
-lfn_read_count_cutoff <- 10
-read_count_df_lfn_read_count <- LFNreadCount(read_count_df, 
-                                             cutoff=lfn_read_count_cutoff)
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNreadCount", params=NA)
+param <- paste("cutoff:", lnf_variant_cutoff, sep=" ")         
+stat_df <- GetStat(read_count_df_lnf_variant, stat_df, stage="LFNvariant", params=param)
 
+#### LFNreadCount
 
+lfn_read_count_cutoff <- 25
+outfile <- file.path(outdir, "4_filter", "13_LFNreadCount.csv")
+              
+read_count_df_lfn_read_count <- LFNreadCount(
+  read_count_df, 
+  cutoff=lfn_read_count_cutoff, 
+  outfile=outfile
+  )
 
+param <- paste("cutoff:", lfn_read_count_cutoff, sep=" ")        
+stat_df <- GetStat(read_count_df_lfn_read_count, stat_df, stage="LFNreadCount", params=param)
 
-### Combine results
-read_count_df <- PoolFilters(read_count_df_lfn_read_count, 
-                             read_count_df_lnf_variant)
-stat_df <- GetStat(read_count_df, stat_df, stage="Combine results", params=NA)
+####  Combine results
 
+outfile <- file.path(outdir, "4_filter", "14_poolLFN.csv")
+read_count_df <- PoolFilters(
+  read_count_df_lfn_read_count, read_count_df_lnf_variant,    
+  outfile=outfile
+  )
+
+stat_df <- GetStat(read_count_df, stat_df, stage="PoolFilters", params=NA)
+              
 # delete temporary data frames
 rm(read_count_df_lfn_read_count)
 rm(read_count_df_lnf_variant)
+              
 
-### FilterMinReplicate
+### FilterMinReplicate 2
+
 min_replicate_number <- 2
-read_count_df <- FilterMinReplicate(read_count_df, 
-                                    cutoff=min_replicate_number)
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=NA)
+outfile <- file.path(outdir, "4_filter", "15_FilterMinReplicate.csv")
 
-read_count_df_backup <- read_count_df
+read_count_df <- FilterMinReplicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )
 
-plot_swarm <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-                                      swarm_d_min=1, 
-                                      swarm_d_max=15,
-                                      swarm_d_increment=3,
-                                      min_id = 0.8, 
-                                      vsearch_path=vsearch_path, 
-                                      swarm_path=swarm_path,
-                                      outfile="13_FilterMinReplicate.png")
+param <- paste("cutoff:", min_replicate_number, sep=" ")  
+stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=param)
 
+### Pool replicates
 
+outfile <- file.path(outdir, "4_filter", "16_pool_replicates.csv")
 
-
-
-### MakeKnownOccurrences performance_metrics
-results <- MakeKnownOccurrences(read_count_samples_df, 
-                                sortedinfo=sortedinfo_df, 
-                                mock_composition=mock_composition)
-
-
-updated_asv_list <- file.path(outdir, "updated_asv_list_end.tsv")
-UpdateASVlist(asv_list1 = read_count_samples_df,
-              asv_list2 =asv_list, 
-              outfile=updated_asv_list
+read_count_sample_df <- PoolReplicates(
+  read_count_df,
+  method = "mean",   # Aggregate replicates using the mean read count
+  digits = 0,        # Round aggregated read counts to integers
+  outfile = outfile
 )
 
-### TaxAssign
-asv_tax <- TaxAssign(asv=read_count_samples_df, 
-                     taxonomy=taxonomy, 
-                     blast_db=blast_db, 
-                     blast_path=blast_path, 
-                     num_threads=num_threads)
+### Get performance metrics
+
+missing_occurrences <- file.path(outdir, "4_filter", "Missing_occurrences.csv")
+performance_metrics <- file.path(outdir, "4_filter", "Performance_metrics.csv")
+known_occurrences <- file.path(outdir, "4_filter", "Known_occurrences.csv")
+
+results <- MakeKnownOccurrences(
+  read_count_sample_df, 
+  sampleinfo=sampleinfo_df, 
+  mock_composition=mock_composition, 
+  known_occurrences=known_occurrences, 
+  missing_occurrences=missing_occurrences,
+  performance_metrics=performance_metrics
+  )
+
+# give explicit names to the 3 output data frames
+known_occurrences_df <- results[[1]]
+missing_occurrences_df <- results[[2]]
+performance_metrics_df <- results[[3]]
+
+print(performance_metrics_df)
+
+## Taxonomic Assignment
+
+outfile <- file.path(outdir, "4_filter", "TaxAssignLTG.csv")
+asv_tax <- TaxAssignLTG(
+  asv=read_count_sample_df, 
+  taxonomy=taxonomy, 
+  blast_db=blast_db, 
+  blast_path=blast_path, # can be omitted if BLAST is in the PATH
+  outfile=outfile
+  )
 
-
-plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-                                      swarm_d_min=1, 
-                                      swarm_d_max=15,
-                                      swarm_d_increment=3,
-                                      min_id = 0.8, 
-                                      vsearch_path=vsearch_path, 
-                                      swarm_path=swarm_path,
-                                      num_threads=num_threads,
-                                      outfile="2_swarm.png")
-
-
-### WriteASVtable
-outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
-asv_table_df <- WriteASVtable(read_count_samples_df, 
-                              outfile=outfile, 
-                              asv_tax=asv_tax, 
-                              sortedinfo=sortedinfo_df, 
-                              add_empty_samples=T, 
-                              add_sums_by_sample=T, 
-                              add_sums_by_asv=T, 
-                              add_expected_asv=T, 
-                              mock_composition=mock_composition)
-
-
-#####################
-#####################
-#####################
-# make mOTU
-
-#####################
-### mOTU with swarm
-
-stat_df <- GetStat(read_count_samples_df, stat_df, stage="PoolReplicates", params=NA)
-
-by_sample <- FALSE
-d = 7
-read_count_df_swarm_motu <- Swarm(read_count_samples_df, 
-                       swarm_path=swarm_path, 
-                       swarm_d=d,
-                       fastidious=FALSE,
-                       num_threads=num_threads, 
-                       by_sample=by_sample)
-
-stat_df <- GetStat(read_count_df_swarm_motu, stat_df, stage="swarm_motu_7", params=d)
-
-### mOTU with ClusterSize
-identity <- 0.97 
-read_count_df_clustersize_motu <- ClusterSize(read_count_samples_df,
-                                     id=identity, 
-                                     vsearch_path=vsearch_path,
-                                     num_threads=num_threads,
-                                     by_sample=FALSE)
-
-stat_df <- GetStat(read_count_df_clustersize_motu, stat_df, stage="clustersize_motu_7", params=identity)
-
-
-
-### ClusterSize
-identity <- 0.97 
-read_count_samples_df <- ClusterSize(read_count_samples_df,
-                                     id=identity, 
-                                     vsearch_path=vsearch_path,
-                                     by_sample=FALSE)
-
-### TaxAssign
-asv_tax <- TaxAssign(asv=read_count_samples_df, 
-                     taxonomy=taxonomy, 
-                     blast_db=blast_db, 
-                     blast_path=blast_path, 
-                     num_threads=num_threads)
-
-### WriteASVtable
-outfile=file.path(outdir, "Final_asvtable_with_TaxAssign.csv")
-asv_table_df <- WriteASVtable(read_count_samples_df, 
-                              outfile=outfile, 
-                              asv_tax=asv_tax, 
-                              sortedinfo=sortedinfo_df, 
-                              add_empty_samples=T, 
-                              add_sums_by_sample=T, 
-                              add_sums_by_asv=T, 
-                              add_expected_asv=T, 
-                              mock_composition=mock_composition)
-
-
-
-
-#################
-#################
-################
-# test ClusterSize after dereplicate
-################
-
-#### ClusterSize by sample
-## sample_replicate
-by_sample <- TRUE
-read_count_df_ClusterSize_sample_replicate <- ClusterSize(read_count_df, 
-                                                          id= 0.97,
-                                                          vsearch_path=vsearch_path, 
-                                                          num_threads=num_threads, 
-                                                          by_sample=by_sample)
-
-
-stat_df <- GetStat(read_count_df_ClusterSize_sample_replicate, stat_df, stage="ClusterSize_sample_replicate", params=by_sample)
-
-## sample
-read_count_df_ClusterSize_sample <- ClusterSize(read_count_sample_df, 
-                                          id= 0.97,
-                                          vsearch_path=vsearch_path, 
-                                          num_threads=num_threads, 
-                                          by_sample=by_sample)
-
-
-stat_df <- GetStat(read_count_df_ClusterSize_sample, stat_df, stage="ClusterSize_sample", params=by_sample)
-
-#### ClusterSize by sample=FALSE
-
-## sample_replicate
-by_sample <- FALSE
-read_count_df_ClusterSize_all_sample_replicate <- ClusterSize(read_count_df, 
-                                                              id= 0.97,
-                                                              vsearch_path=vsearch_path, 
-                                                              num_threads=num_threads, 
-                                                              by_sample=by_sample)
-
-stat_df <- GetStat(read_count_df_ClusterSize_all_sample_replicate, stat_df, stage="ClusterSize_all_sample_replicate", params=by_sample)
-
-## sample
-read_count_df_ClusterSize_all_sample <- ClusterSize(read_count_sample_df, 
-                                             id= 0.97,
-                                             vsearch_path=vsearch_path, 
-                                       num_threads=num_threads, 
-                                       by_sample=by_sample)
-
-
-stat_df <- GetStat(read_count_df_ClusterSize_all_sample, stat_df, stage="ClusterSize_all_sample", params=by_sample)
-
-
-
-
-
-################
-# test swarm after dereplicate
-################
-#### Swarm by sample
-## sample_replicate
-by_sample <- TRUE
-read_count_df_swam_sample_replicate <- Swarm(read_count_df, 
-                       swarm_path=swarm_path, 
-                       num_threads=num_threads, 
-                       by_sample=by_sample
-)
-stat_df <- GetStat(read_count_df_swam_sample_replicate, stat_df, stage="Swarm_sample_replicate", params=by_sample)
-
-## sample
-read_count_df_swam_sample <- Swarm(read_count_sample_df, 
-                                   swarm_path=swarm_path, 
-                                   num_threads=num_threads, 
-                                   by_sample=by_sample)
-
-
-stat_df <- GetStat(read_count_df_swam_sample, stat_df, stage="Swarm_sample", params=by_sample)
-
-#### Swarm by sample=FALSE
-
-## sample_replicate
-by_sample <- FALSE
-read_count_df_swam_all_sample_replicate <- Swarm(read_count_df, 
-                                             swarm_path=swarm_path, 
-                                             num_threads=num_threads, 
-                                             by_sample=by_sample
-)
-stat_df <- GetStat(read_count_df_swam_all_sample_replicate, stat_df, stage="Swarm_all_sample_replicate", params=by_sample)
-
-## sample
-read_count_df_swam_all_sample <- Swarm(read_count_sample_df, 
-                                   swarm_path=swarm_path, 
-                                   num_threads=num_threads, 
-                                   by_sample=by_sample)
-
-
-stat_df <- GetStat(read_count_df_swam_all_sample, stat_df, stage="Swarm_all_sample", params=by_sample)
-
-
-
-plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
-                                      swarm_d_min=1, 
-                                      swarm_d_max=15,
-                                      swarm_d_increment=3,
-                                      min_id = 0.8, 
-                                      vsearch_path=vsearch_path, 
-                                      swarm_path=swarm_path,
-                                      num_threads=num_threads,
-                                      outfile="density_plot_1_15_3.png")
-
-tmp <- PairwiseIdentity(read_count_df, 
-                             min_id = 0.8, 
-                             num_threads=num_threads,
-                             vsearch_path=vsearch_path)
-
-
-###################################
-###################################
-# test TaxAssignRDP
-file <- "/home/meglecz/vtamR/tmp/test_rdp/9_PoolReplicates_TAS2_16S.csv"
-read_count_16S <- read.csv(file)
-
-taxa <- TaxAsssignRDP(asv=read_count_16S, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
-
-plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_16S,
-                                                                identity_min=0.9,
-                                                                identity_max=0.99,
-                                                                identity_increment=0.01,
-                                                                min_id = 0.8, 
-                                                                vsearch_path=vsearch_path)
-
-scatterplot_vsearch <- PlotClusterClasstification(
-  read_count=read_count_16S,
-  taxa=taxa,
-  clustering_method="vsearch",
-  cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
-  vsearch_path=vsearch_path,
-  taxlevels= c("species", "genus"))
-
-
-
-read_count_samples_df_ClusterSize <- ClusterASV(read_count_16S,
-                                                method = "vsearch",
-                                                identity = 0.97,
-                                                group = TRUE,
-                                                by_sample=FALSE,
-                                                path=vsearch_path)
-
-dim(read_count_16S)
-dim(read_count_samples_df_ClusterSize)
-
-meta_info <- "/home/meglecz/vtamR/tmp/test_rdp/fastqinfo.csv"
-mock <- "/home/meglecz/vtamR/tmp/test_rdp/mock_composition.csv"
-out <- "/home/meglecz/vtamR/tmp/test_rdp/asv_table.csv"
-asv_table_df <- WriteASVtable(read_count_16S, 
-                              asv_tax=taxa, 
-                              sortedinfo=meta_info, 
-                              pool_replicates=TRUE,
-                              add_empty_samples=T, 
-                              add_sums_by_sample=T, 
-                              add_sums_by_asv=T, 
-                              add_expected_asv=T, 
-                              outfile=out,
-                              mock_composition=mock
-)
-
-
-
-
-files <- c("/home/meglecz/vtamR_demo/filter/12_LFNreadCount.csv", "/home/meglecz/vtamR_demo/filter/11_LFNvariant.csv")
-tmp1 <- read.csv("/home/meglecz/vtamR_demo/filter/12_LFNreadCount.csv")
-tmp2 <- read.csv("/home/meglecz/vtamR_demo/filter/11_LFNvariant.csv")
-tmp <- pool_datasets(files, 
-              outfile="", 
-              method="mean",
-              sep=",", 
-              quiet=T
-              )

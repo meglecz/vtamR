@@ -33,31 +33,34 @@ pool_markers(
 Each file must have the same format, with columns: \code{asv_id}, \code{sample},
 \code{replicate} (optional), \code{read_count}, and \code{asv}.}
 
-\item{marker_ids}{Character vector specifying marker IDs.
-Markers ID must be positive non-zero integers. They should be in the same order
-as the csv file. Marker ids are post-fixed to the asv_id, to avoid confusion
-between the same asv_ids across different markers. If not provided, the asv_id
-of the different markers must be all unique among all ASVs of all markers.}
+\item{marker_ids}{Character vector specifying marker identifiers.
+Marker IDs must be positive non-zero integers and provided in the same order
+as \code{files}. They are appended to \code{asv_id} to prevent ambiguity
+across markers. If not provided, all \code{asv_id}s must be unique across
+all input data sets.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the name of the output CSV file.
+If empty, no file is written.}
 
-\item{asv_with_centroids}{Character string: csv file name of the output file
-containing the same information as the concatenated input files,
-completed by centroid_id and centroid columns.}
+\item{asv_with_centroids}{Character string specifying the name of an optional
+output CSV file containing the concatenated input data augmented with
+\code{centroid_id} and \code{centroid} columns.}
 
 \item{method}{Character string specifying how read counts from identical
-sample–replicates should be aggregated. Must be one of "mean",
-"max", "sum", or "min".}
+sample–replicates should be aggregated within groups. Must be one of \code{"mean"},
+\code{"max"}, \code{"sum"}, or \code{"min"}.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPUs to use.
+If 0, all available CPUs are used.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input
+and output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and
+display only warnings or errors.}
 
 \item{...}{Data frames with the following variables:
 marker, asv_id, sample, replicate (optional), read_count, asv.}
@@ -65,9 +68,11 @@ marker, asv_id, sample, replicate (optional), read_count, asv.}
 \value{
 Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
 
-Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
-where the asvs of the same group-sample-replicate are pooled into one line.
-read_count is the mean, max, min or sum over the pooled asvs.
+A data frame with columns \code{asv_id}, \code{sample},
+\code{replicate} (optional), \code{read_count}, and \code{asv}, where
+ASVs belonging to the same group within each sample–replicate are pooled
+into a single row. The \code{read_count} corresponds to the chosen
+aggregation method (mean, max, min, or sum).
 }
 \description{
 Take two or more input files containing filtered results of the same samples
@@ -83,24 +88,35 @@ markers, with the same id.
 Pooling can take the mean of the read counts of the ASV (default), their sum
 or maximum.
 
-Take several input files, each in long format containing
-asv_id, sample, replicate (optional), read_count and asv columns.
+Combine multiple data sets of the same samples
+generated from different markers targeting
+overlapping regions.
+}
+\details{
+Input files must be in long format and contain the following columns:
+\code{asv_id}, \code{sample}, \code{replicate} (optional),
+\code{read_count}, and \code{asv}.
 
-ASVs identical on their overlapping regions are pooled into groups,
-and different ASVs of the same group are pooled under the centroid
-(longest ASV of the group). The asv_id are
-prefixed by the marker, to avoid confounding different ASVs of different
-markers, with the same id.
-Pooling can take the mean, max, min, or sum of the read counts of the asv.
+ASVs sharing identical sequences over their overlapping regions are grouped
+together. Within each group, ASVs are merged under a centroid sequence
+(defined as the ASV with the highest read count in the group).
+Read counts are then aggregated
+across ASVs within each group for each sample–replicate combination.
+
+To avoid ambiguity between identical \code{asv_id}s originating from different
+markers, marker identifiers can be appended to \code{asv_id}.
 }
 \examples{
 \dontrun{
 markers_pooled <- pool_markers(df_mfzr, df_zfzr, method="mean")
 }
 \dontrun{
-files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", 
-    "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
-    marker=c("MFZR", "ZFZR"))
-PoolDatasets(files, vsearch_path=vsearch_path)
+files <- c(
+  "~/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  
+  "~/vtamR_demo/filter/7_FilterChimera.csv"
+)
+marker_ids <- c(1, 2)
+pool_markers(files, marker_ids = marker_ids, method = "mean")
 }
+
 }

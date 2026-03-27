@@ -9,7 +9,7 @@ OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvarian
 PoolDatasets => read with replicates ?? 
 Add tuto marker 2
 
-
+Make example file for 2 datasets with the same marker
 
 SortReads with check_reverse in windows islong.
 

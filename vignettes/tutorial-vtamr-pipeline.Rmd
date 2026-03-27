@@ -1074,6 +1074,29 @@ stat_df <- GetStat(read_count_df,
 knitr::kable(stat_df, format = "markdown")
 ```
 
+
+### Pool replicates
+
+For each sample, replicates can be pooled. The read count for a given sample 
+and ASV can be computed as the mean of non-zero read counts across replicates, 
+or alternatively as the sum, maximum, or minimum.
+
+For compatibility with other functions where read_count data frame is used as an input, 
+the read_count heading is retained on the output, even when it represents a mean 
+or another aggregate across replicates.
+
+
+```{r filter-min-replicate2}
+outfile <- file.path(outdir, "filter", "16_pool_replicates.csv")
+
+read_count_sample_df <- PoolReplicates(
+  read_count_df,
+  method = "mean",   # Aggregate replicates using the mean read count
+  digits = 0,        # Round aggregated read counts to integers
+  outfile = outfile
+)
+```
+
 ### Get performance metrics
 
 Run `MakeKnownOccurrences` again to get performance metrics (FP, FN, FP). 
@@ -1088,7 +1111,7 @@ missing_occurrences <- file.path(outdir, "Missing_occurrences.csv")
 performance_metrics <- file.path(outdir, "Performance_metrics.csv")
 known_occurrences <- file.path(outdir, "Known_occurrences.csv")
 
-results <- MakeKnownOccurrences(read_count_df, 
+results <- MakeKnownOccurrences(read_count_sample_df, 
                                 sampleinfo=sampleinfo_df, 
                                 mock_composition=mock_composition, 
                                 known_occurrences=known_occurrences, 
@@ -1121,7 +1144,7 @@ section. You can also download a ready to use COI database
 ```{r taxassign}
 outfile <- file.path(outdir, "TaxAssignLTG.csv")
 
-asv_tax <- TaxAssignLTG(asv=read_count_df, 
+asv_tax <- TaxAssignLTG(asv=read_count_sample_df, 
                      taxonomy=taxonomy, 
                      blast_db=blast_db, 
                      blast_path=blast_path, # can be omitted if BLAST is in the PATH
@@ -1163,7 +1186,7 @@ outfile <- file.path(outdir, "cluster", "pairwise_identities_vsearch.csv")
 plotfile <- file.path(outdir, "cluster", "PairwiseIdentityPlotPerClusterIdentityThreshold.png")
 
 plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(
-                read_count_df,
+                read_count_sample_df,
                 identity_min=0.9,
                 identity_max=0.99,
                 identity_increment=0.01,
@@ -1202,7 +1225,7 @@ outfile <- file.path(outdir, "cluster", "classification_vsearch.csv")
 plotfile <- file.path(outdir, "cluster", "PlotClusterClasstification_vsearch.png")
 
 scatterplot_vsearch <- PlotClusterClasstification(
-                        read_count=read_count_df,
+                        read_count=read_count_sample_df,
                         taxa=asv_tax,
                         clustering_method="vsearch",
                         cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
@@ -1261,7 +1284,7 @@ Below, we’ll cluster the data using VSEARCH with an identity threshold of `0.9
 outfile <- file.path(outdir, "filter", "16_mOTU_vsearch.csv")
 identity <- 0.97 
 read_count_samples_df_ClusterSize <- ClusterASV(
-      read_count_df,
+      read_count_sample_df,
       method = "vsearch",
       identity = 0.97,
       group = TRUE,
@@ -1303,11 +1326,10 @@ For further details, see `?WriteASVtable`.
 ```{r write-asv-table}
 outfile=file.path(outdir, "Final_asvtable_with_TaxAssignLTG.csv")
 
-asv_table_df <- WriteASVtable(read_count_df, 
+asv_table_df <- WriteASVtable(read_count_sample_df, 
                               outfile=outfile, 
                               asv_tax=asv_tax, 
                               sampleinfo=sampleinfo_df, 
-                              pool_replicates=TRUE,
                               add_empty_samples=T, 
                               add_sums_by_sample=T, 
                               add_sums_by_asv=T, 
@@ -1320,6 +1342,107 @@ Print the number of reads, ASVs, samples and replicates after each step to a CSV
 ```{r}
 write.csv(stat_df, file = file.path(outdir, "Summary.csv"))
 ```
+
+## Multiple datasets
+
+### One marker
+
+Our datasets typically contain sequences obtained from 96 samples, 
+corresponding to a 96-well plate used for PCR amplification. 
+These include negative controls, mock samples, and biological samples. 
+Each set of 96 PCR reactions is processed into a single sequencing library, 
+with one library generated per replicate.
+
+For projects involving more than 96 samples, analyses are typically 
+performed plate by plate. This approach ensures comparability between sequences 
+obtained from different libraries or at different time points 
+(e.g., in longitudinal studies monitoring the same sites over time).
+
+The filtered data sets can then be easily pooled using results in long format 
+(columns: `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`). 
+In the example below, results from different plates are stored in separate 
+directories, each with the same structure and filenames, as they were processed 
+independently using the same pipeline.
+
+#### Pool datasets
+```{r, eval=FALSE}
+filtered_files <- c(
+  "plate1/filter/16_pool_replicates.csv", 
+  "plate2/filter/16_pool_replicates.csv", 
+  "plate3/filter/16_pool_replicates.csv"
+)
+
+pooled_read_count_df <- pool_datasets(
+  files = filtered_files, 
+  outfile = "", 
+  method = "mean"  # If a sample appears in multiple plates, take the mean read count
+)
+```
+
+#### Make mOTUs
+
+If mOTUs have been generated separately for each plate, the cluster_ids 
+(corresponding to the centroid sequences of each cluster) are unlikely to be 
+consistent across plates. Therefore, it is better to rerun the clustering 
+to define mOTUs on the pooled dataset.
+
+```{r, eval=FALSE}
+outfile <- file.path("pooled_dataset", "17_mOTU.csv")
+identity <- 0.97 
+read_count_motu <- ClusterASV(
+  pooled_read_count_df,
+  method = "vsearch",
+  identity = 0.97,
+  group = TRUE,
+  path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outfile=outfile)
+```
+
+#### Taxassign pooled data
+
+Although it is possible to extract the taxonomic assignment from the different
+TaxAssignLTG.csv file, it is easier to rerun the TaxAssign on the pooled dataset.
+
+```{r, eval=FALSE}
+outfile <- file.path("pooled_dataset", "TaxAssignLTG.csv")
+
+asv_tax_pooled <- TaxAssignLTG(
+  asv=read_count_motu, 
+  taxonomy=taxonomy, 
+  blast_db=blast_db, 
+  blast_path=blast_path, # can be omitted if BLAST is in the PATH
+  outfile=outfile
+  )
+```
+
+#### Print ASV table
+
+```{r, eval=FALSE}
+outfile=file.path("pooled_dataset", "ASVtable_with_TaxAssignLTG.csv")
+
+asv_table_df <- WriteASVtable(
+  read_count_motu, 
+  outfile=outfile, 
+  asv_tax=asv_tax_pooled, 
+  add_sums_by_sample=T, 
+  add_sums_by_asv=T
+  )
+```
+
+### More than one overlappig markers
+
+It can be a good idea of using 2 or more overlapping markers on the same samples
+to increase taxonomic coverage of the PCR.
+
+The data should be analysed separately marker by marker, than the results can
+be pooled together by aggregationg ASV identical on their ovelapping region.
+
+
+
+
+
+
+
 
 # Tips - Good to know
 
