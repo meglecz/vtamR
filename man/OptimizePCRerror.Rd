@@ -12,7 +12,7 @@ OptimizePCRerror(
   sep = ",",
   outfile = "",
   max_mismatch = 1,
-  min_read_count = 2,
+  min_read_count = 5,
   quiet = TRUE
 )
 }

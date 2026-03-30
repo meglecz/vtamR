@@ -2,6 +2,8 @@
 
 Add test demo file for plate2 MFZR
 
+Add read-count info for mock_composition_template_to_check.csv
+
 
 Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
 
@@ -610,6 +612,10 @@ Roxygen documentation done
 ## 2026/03/27
 
 pool_markers tutoriel with 2 markers
+
+## 2026/03/30 examples for pool_xxx
+
+Doc and example file for pool_datasets and pool_markers
 
 
 
