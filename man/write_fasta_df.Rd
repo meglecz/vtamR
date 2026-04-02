@@ -14,7 +14,7 @@ write_fasta_df(df, outfile, read_count = FALSE)
 \item{read_count}{Boolean; If TRUE  definition line is >label;size=### format}
 }
 \value{
-outfile fasta file with definition lines in >label;size=### format or >label format
+NULL; Write fasta file with definition lines in >label;size=### format or >label format
 }
 \description{
 Write a fasta file with definition lines in >label;size=### format (read_count=T)

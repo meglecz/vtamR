@@ -8,9 +8,9 @@ RandomSampleFastaLinux(
   fasta,
   outfile,
   n = 1e+06,
+  vsearch_path = "vsearch",
   compress_method = "R",
   pigz_path = "pigz",
-  vsearch_path = "vsearch",
   randseed = NULL,
   quiet = TRUE,
   num_threads = 0
@@ -24,6 +24,8 @@ the output will be gzip-compressed.}
 
 \item{n}{Positive integer: Number of sequences to randomly select.}
 
+\item{vsearch_path}{Character string: path to vsearch executables.}
+
 \item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
 \code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
 \code{"gzip"} is Linux-only.
@@ -32,8 +34,6 @@ Speed: R.utils < gzip (only linux) < pig}
 
 \item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
 is used for file compression, and it is not in the PATH.}
-
-\item{vsearch_path}{Character string: path to vsearch executables.}
 
 \item{randseed}{Positive integer or NULL: seed for random sampling.
 NULL or 0 by default means to use a pseudo-random seed.

@@ -21,7 +21,7 @@ in feature in the input files.}
 \item{sep}{Field separator character in input and output csv files.}
 }
 \value{
-Data frame with the selected lines of the input files.
+An invisible data frame with the selected lines of the input files.
 }
 \description{
 Filters a feature (asv_id/asv/sample/replicate),

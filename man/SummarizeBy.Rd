@@ -23,7 +23,7 @@ frame if necessary. If empty, no file is written.}
 \item{sep}{Field separator character in input and output csv files.}
 }
 \value{
-Data frame with input file names in columns, \code{grouped_by} values in
+An invisible data frame with input file names in columns, \code{grouped_by} values in
 lines, and the number of features or the read counts in the cells.
 }
 \description{

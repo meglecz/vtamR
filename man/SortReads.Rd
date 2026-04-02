@@ -13,14 +13,14 @@ SortReads(
   compress_method = "R",
   pigz_path = "pigz",
   num_threads = 0,
-  check_reverse = F,
-  tag_to_end = T,
-  primer_to_end = T,
+  check_reverse = FALSE,
+  tag_to_end = TRUE,
+  primer_to_end = TRUE,
   cutadapt_error_rate = 0.1,
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
   sep = ",",
-  compress = F,
+  compress = FALSE,
   quiet = T
 )
 }

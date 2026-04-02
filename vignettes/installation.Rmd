@@ -1,11 +1,11 @@
 ---
-title: "Install vtamR and Third Party Programs - v0.3.1"
+title: "Install vtamR and Third Party Programs - v0.3.2"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.1}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

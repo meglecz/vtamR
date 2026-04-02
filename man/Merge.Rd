@@ -22,9 +22,9 @@ Merge(
   fastq_maxns = 0,
   fastq_truncqual = 10,
   fastq_minovlen = 50,
-  fastq_allowmergestagger = F,
+  fastq_allowmergestagger = FALSE,
   sep = ",",
-  compress = F,
+  compress = FALSE,
   quiet = T
 )
 }

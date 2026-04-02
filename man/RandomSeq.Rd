@@ -15,7 +15,7 @@ RandomSeq(
   compress_method = "R",
   pigz_path = "pigz",
   num_threads = 0,
-  compress = T,
+  compress = FALSE,
   sep = ",",
   quiet = TRUE
 )

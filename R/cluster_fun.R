@@ -32,7 +32,7 @@ NULL
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with asv pairs and their percentage of identity. 
+#' @return Data frame with asv pairs and their percentage of identity. 
 #' asv pairs with identity bellow min_id are not listed. Colums: query, target, identity 
 #' @examples 
 #' \dontrun{
@@ -141,7 +141,7 @@ PairwiseIdentity <- function(asv,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: asv_id, cluster_id
+#' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
 #' cluster_df <- GetClusterIdSwarm(read_count_df, 
@@ -280,7 +280,7 @@ GetClusterIdSwarm <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: asv_id, cluster_id
+#' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
 #' cluster_df <- GetClusterIdVsearch(read_count_df, 
@@ -328,7 +328,7 @@ GetClusterIdVsearch <- function(read_count,
   # make a fasta file with unique asv format adapted to swarm
   input_fas <- file.path(tmp_dir, "input.fasta")
   # make fasta file with abundances
-  write_fasta_rc(asv_df, input_fas)
+  write_fasta_df(asv_df, input_fas, read_count = TRUE)
   # Outfile name. Each line is a cluster, with asv_ids separated  by space
   outfile <- file.path(tmp_dir, "out_cluster_size.txt")
   
@@ -341,7 +341,6 @@ GetClusterIdVsearch <- function(read_count,
   if(num_threads > 0){
     args <- append(args, c("--threads", num_threads))
   }
-  
   run_system2(vsearch_path, args, quiet=quiet)
   
   file_info <- file.info(outfile)
@@ -398,7 +397,7 @@ GetClusterIdVsearch <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A density plot pairwise percentage of identities.
+#' @return A density plot pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
 #' plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
@@ -545,7 +544,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A density plot of pairwise percentage of identities.
+#' @return A density plot of pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
 #' plot <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
@@ -690,7 +689,7 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns Data frame with the following columns: cluster_id, classification
+#' @return Data frame with the following columns: cluster_id, classification
 #' for each taxonomic level
 #' @examples 
 #' \dontrun{
@@ -812,7 +811,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet Logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns A connected scatterplot of the number of clusters in different classes 
+#' @return A connected scatterplot of the number of clusters in different classes 
 #' (open, closed, hybrid)
 #' @examples 
 #' \dontrun{
@@ -949,7 +948,7 @@ PlotClusterClasstification <- function(read_count, taxa,
 #' asv, sample, replicate (optional), read_count.
 #' @param cluster_df Data frame with the following variables: 
 #' asv_id, cluster_id.
-#' @returns Data frame: same structure as the input (read_count_df), but ASVs of 
+#' @return Data frame: same structure as the input (read_count_df), but ASVs of 
 #' the same cluster pooled to one row.
 #' @examples
 #' \dontrun{
@@ -991,26 +990,30 @@ pool_by_cluster <- function(read_count_df,
   return(read_count_df)
 }
 
-#' Cluster ASVs by Swarm or Vsearch
+
+
+#' Cluster ASVs Using Swarm or VSEARCH
 #' 
-#' This function runs Swarm or the cluster_size command of Vsearch 
-#' on the ASVs in the input data frame.
-#' Each ASV is assigned to a cluster, and the function provides 
-#' two possible output formats, controlled by the argument group.
+#' This function can **cluster** ASVs into mOTUs or perform **denoising**. 
+#' When using Swarm with `d = 1`, the clustering result corresponds to denoising.
 #'  
-#' If group = TRUE, the function aggregates the ASVs belonging to the same 
-#' cluster into a single row. In this case, the asv_id and asv columns contain 
-#' the identifier and the sequence of the cluster's centroid. 
-#' read_count is summed over ASVs, samples and replicates are unchanged.
+#' The function runs either Swarm or VSEARCH's `cluster_size` command on the ASVs 
+#' in the input data frame. Each ASV is assigned a cluster, and two output formats 
+#' are available, controlled by the `group` argument.
+#'   
+#' - If `group = TRUE`, ASVs in the same cluster are aggregated into a single row. 
+#'   In this case, the `asv_id` and `asv` columns contain the identifier and 
+#'   sequence of the cluster's centroid, and `read_count` is summed across ASVs. 
+#'   Sample and replicate information is retained.
 #'  
-#' If group = FALSE, the function returns the original input data frame 
-#' with an additional column: cluster_id. Each row still corresponds to one ASV.
+#' - If `group = FALSE`, the function returns the original data frame with an 
+#'   additional column, `cluster_id`. Each row corresponds to one ASV.
 #'  
-#' The clustering can be run on the whole data set at once, 
-#' or sample by sample (by_sample)
+#' Clustering can be performed on the entire data set or separately for each sample 
+#' (`by_sample` argument). 
 #'  
-#' Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
-#' `group==FALSE`, the same asv_id, can have different cluster_id in different samples.
+#' **Note:** If `by_sample = TRUE` and `group = FALSE`, the same `asv_id` may be 
+#' assigned different `cluster_id`s in different samples.
 #' 
 #' @param read_count Data frame or csv file with the following variables: 
 #' asv, sample, replicate (optional), read_count.
@@ -1032,7 +1035,7 @@ pool_by_cluster <- function(read_count_df,
 #' @param sep Field separator character in input and output csv files.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
-#' @returns read_count_df: same structure as the input, but ASVs of 
+#' @return read_count_df: same structure as the input, but ASVs of 
 #' the same cluster pooled to one row if group==TRUE, or rows kept as in the input 
 #' and an additional cluster_id column is added if group==FALSE.
 #' @examples
@@ -1144,6 +1147,546 @@ ClusterASV <- function(read_count,
     write.table(out_df, file = outfile,  row.names = F, sep=sep)
   }
   return(out_df)
+}
+
+
+#' Denoise data using SWARM
+#'
+#' This function performs **denoising** using SWARM.
+#'
+#' Clustering can be applied to the entire dataset or performed separately
+#' for each sample using the `by_sample` argument.
+#'
+#' By default, read counts of ASVs belonging to the same cluster are summed
+#' within each sample–replicate combination. Optionally, an experimental
+#' post-processing step (`split_clusters = TRUE`) can be applied to further
+#' refine clusters. In this step, clusters are split based on the relative
+#' abundance of ASVs compared to the centroid (see `?split_swarm_clusters`).
+#' This option is only available when clustering is performed by sample
+#' (`by_sample = TRUE`).
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param by_sample Logical. If `TRUE`, clustering is performed separately for
+#' each sample.
+#' @param split_clusters Logical. If `TRUE`, apply post-processing to split
+#' clusters based on relatively abundant ASVs compared to the centroid.
+#' @param min_abundance_ratio Numeric. Used when `split_clusters = TRUE`.
+#' Minimum ratio of an ASV's read count relative to the centroid's read count
+#' required for the ASV to define a new cluster.
+#' @param min_read_count Numeric. Used when `split_clusters = TRUE`.
+#' Minimum absolute read count required for an ASV to be considered for splitting.
+#' @param swarm_path Character string: path to swarm executable. 
+#' @param swarm_d Positive integer: d parameter for swarm (if applicable).
+#' Maximum number of differences allowed between two ASVs, 
+#' meaning that two ASVs will be grouped if they have d (or less) differences.
+#' @param fastidious Logical: When clustering with swarm and working with d = 1, 
+#' perform a second clustering pass to reduce the number of small clusters.
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return A data frame with the same structure as the input, where ASVs
+#' belonging to the same cluster are pooled (summed) within each
+#' sample–replicate combination. If `split_clusters = TRUE`, clusters may be
+#' further subdivided according to the splitting criteria.
+#' @examples
+#' \dontrun{
+#' read_count_df <- denoise_by_swarm(
+#'   read_count = read_count_df,
+#'   by_sample = TRUE,
+#'   split_clusters = TRUE
+#' )
+#' }
+#' @export
+denoise_by_swarm <- function(read_count, 
+                       by_sample=FALSE,
+                       split_clusters=FALSE,
+                       min_abundance_ratio = 0.2,
+                       min_read_count = 10,
+                       swarm_path="swarm", 
+                       num_threads=0, 
+                       swarm_d=1, 
+                       fastidious=TRUE, 
+                       outfile="", 
+                       sep=",", 
+                       quiet=TRUE
+){
+  
+  if (split_clusters & (!by_sample | swarm_d != 1 | !fastidious)) {
+    stop(
+      "ERROR: When split_clusters is TRUE:\n",
+      "- by_sample must be TRUE\n",
+      "- swarm_d must be 1\n",
+      "- fastidious must be TRUE"
+    )
+  }
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(by_sample){
+    # make an empty output df, with the same columns and variable types as read_count_df
+    # can dela with df with out without replicates
+    out_df <- read_count_df %>%
+      filter(asv=="")
+
+    # get list of samples 
+    sample_list <- unique(read_count_df$sample)
+    
+    # run swarm for each sample
+    for(s in sample_list){
+      if(!quiet){
+        print(s)
+      }
+      
+      # select occurrences for sample
+      df_sample <- read_count_df %>%
+        filter(sample==s)
+      
+      # get cluster_id for all ASV
+      cluster_df <- GetClusterIdSwarm(df_sample, 
+                                      swarm_d=swarm_d, 
+                                      swarm_path=swarm_path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
+      
+      # pool ASV by cluster
+        if(split_clusters){
+          df_sample <- split_swarm_clusters(df_sample,
+                                            cluster_df,
+                                            min_abundance_ratio = min_abundance_ratio,
+                                            min_read_count = min_read_count
+                                            )
+        } else{
+          df_sample <- pool_by_cluster(df_sample, cluster_df)
+        }
+      # add output of the sample to the total data frame    
+      out_df <- rbind(out_df, df_sample)
+    }# end for each sample
+  }else{ # run swarm for all samples together
+    # get cluster_id for all ASV
+      cluster_df <- GetClusterIdSwarm(read_count_df, 
+                                      swarm_d=swarm_d, 
+                                      swarm_path=swarm_path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
+      out_df <- pool_by_cluster(read_count_df, cluster_df)
+  }
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(out_df, file = outfile,  row.names = F, sep=sep)
+  }
+  return(out_df)
+}
+
+#' Split swarm clusters
+#'
+#' During denoising with SWARM (even with `fastidious = TRUE` and `d = 1`),
+#' ASVs differing by a single nucleotide can be grouped into the same cluster,
+#' even when they have similar read abundances. This function refines such
+#' clusters by identifying ASVs whose read counts exceed a given proportion
+#' (`min_abundance_ratio`) of the centroid’s read count and are also above a
+#' minimum threshold (`min_read_count`).
+#'  
+#' For each cluster, ASVs meeting both criteria are retained as distinct units
+#' and each defines a new cluster. The total number of reads in the original
+#' cluster is then redistributed among these selected ASVs while preserving
+#' their original relative abundances.
+#'   
+#' If no ASVs meet the criteria, read counts are summed across ASVs within each
+#' cluster–sample–replicate combination, and the cluster is kept as a single unit.
+#' 
+#' @param read_count Data frame or csv file with the following variables: 
+#' asv, sample, replicate (optional), read_count.
+#' @param cluster Data frame or csv file with the following columns: asv_id, cluster_id
+#' @param min_abundance_ratio Numeric. Minimum ratio of an ASV's read count
+#' relative to the centroid's read count required for the ASV to define a new
+#' split cluster (e.g., 0.2 means 20% of the centroid abundance).
+#' @param min_read_count Numeric. Minimum absolute read count required for an
+#' ASV to be considered for splitting.
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return A data frame with the same structure as the input. For each
+#' cluster–sample–replicate combination, ASVs are either:
+#' \itemize{
+#'   \item split into multiple clusters defined by ASVs that meet the
+#'   `min_abundance_ratio` and `min_read_count` criteria, with read counts
+#'   redistributed among them while preserving their relative abundances, or
+#'   \item pooled into a single row (reads summed across ASVs) if no ASV meets
+#'   the splitting criteria.
+#' }
+#' @examples
+#' \dontrun{
+#' read_count_df <- split_swarm_clusters(
+#'   read_count = read_count_df,
+#'   min_abundance_ratio = 0.1,
+#'   min_read_count = 10
+#' )
+#' }
+#' @export
+
+split_swarm_clusters <-function(read_count,
+                                cluster,
+                                min_abundance_ratio = 0.1,
+                                min_read_count = 10,
+                                outfile = "",
+                                sep = ",",
+                                quiet = TRUE
+                                ){
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
+  
+  if(is.character(cluster)){
+    # read known occurrences
+    cluster_df <- read.csv(cluster, header=T, sep=sep)
+  }else{
+    cluster_df <- cluster
+  }
+  
+  read_count_df <- left_join(read_count_df, cluster_df, by="asv_id")
+  
+  ###############################
+  # prepare list of clusters to split, and for each of them the list of ASV to keep apart
+  clusters_to_split <- read_count_df %>%
+    group_by(asv_id, cluster_id) %>%
+    summarise(read_count = sum(read_count), .groups = "drop") %>%
+    # add centroid read count
+    group_by(cluster_id) %>%
+    mutate(centroid_read_count = read_count[asv_id == cluster_id]) %>%
+    ungroup() %>%
+    # keep only asv, that have at least 20% of the centroids reads
+    filter(read_count / centroid_read_count > min_abundance_ratio & 
+             read_count > min_read_count &
+             asv_id != cluster_id) %>%
+    select(asv_id, cluster_id) 
+  
+  # get a list of centroids of the clusters_to_split
+  centroids <- data.frame(
+    asv_id = unique(clusters_to_split$cluster_id),
+    cluster_id = unique(clusters_to_split$cluster_id)
+  )
+  # add them to clusters_to_split
+  clusters_to_split <- rbind(centroids, clusters_to_split) %>%
+    arrange(cluster_id)
+  
+  ###############################
+  
+  # for all clusters that should be split up among selected ASVs,
+  # modify the original read count of the selected ASV to
+  #  - keep their proportions among different replicates
+  #  - Their sum should equal the total number of read of the cluster.
+  # In other words, split of the total number of reads of a cluster among selected
+  # ASV, and keep the proportions of the original read counts.
+  #
+  # Replace the cluster_id by the asv_id
+  
+  cluster_selected <- read_count_df %>% # add the total number of reads of the cluster
+    group_by(cluster_id) %>%
+    mutate(cluster_rc_all = sum(read_count)) %>%
+    ungroup() %>%
+    # keep only asv, that should be kept apart
+    filter(asv_id %in% clusters_to_split$asv_id) %>%
+    # get the total number of reads of the selected ASVs of the cluster
+    group_by(cluster_id) %>%
+    mutate(cluster_rc_selected = sum(read_count)) %>%
+    ungroup() %>%
+    # multiply all read count by the proportion of original and selected read_count of the cluster
+    mutate(
+      read_count_cis = round(
+      as.numeric(read_count) * cluster_rc_all / cluster_rc_selected,
+      digits = 0
+      )
+    )
+#    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
+    # Check if the sum of the modified read count equals of the original total read of the cluster
+    #  group_by(cluster_id) %>%
+    #  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
+    #  ungroup() %>%
+  
+  if( "replicate" %in% colnames(read_count_df)){
+    cluster_selected <- cluster_selected %>%
+      select(asv_id, sample, replicate, read_count = read_count_cis, asv)
+  }else{
+    cluster_selected <- cluster_selected %>%
+      select(asv_id, sample, read_count = read_count_cis, asv)
+  }
+  
+  ###############################
+  # make a list of asv_id asv for the centroids 
+  cluster_seq <- read_count_df %>%
+    filter(asv_id == cluster_id) %>%
+    select(asv_id, asv) %>%
+    distinct()
+  
+  ###############################
+  unmodified_clusters <- read_count_df %>%
+    filter(!cluster_id %in% clusters_to_split$cluster_id)
+  
+  if( "replicate" %in% colnames(read_count_df)){
+    unmodified_clusters <- unmodified_clusters %>%
+      group_by(cluster_id, sample, replicate) %>%
+      summarize(read_count = sum(read_count), .groups = "drop") %>%
+      select(asv_id = cluster_id, sample, replicate, read_count) %>%
+      left_join(cluster_seq, by="asv_id")
+    
+  }else{
+    unmodified_clusters <- unmodified_clusters %>%
+      group_by(cluster_id, sample) %>%
+      summarize(read_count = sum(read_count), .groups = "drop") %>%
+      select(asv_id = cluster_id, sample, read_count) %>%
+      left_join(cluster_seq, by="asv_id")
+  }
+  
+  ###############################
+  # pool modified and unmodified clusters
+  grouped_swarm <- rbind(cluster_selected, unmodified_clusters)
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(grouped_swarm, file = outfile,  row.names = F, sep=sep)
+  }
+
+  return(grouped_swarm)
+}
+
+#' Pool data from different markers
+#'
+#' Take two or more input files containing filtered results of the same samples 
+#' from different but strongly overlapping markers.
+#' Files are in long format with asv_id, sample, replicate (optional), 
+#' read_count and asv columns.
+#'  
+#' ASVs identical on their overlapping 
+#' regions are pooled into groups, and different ASVs of the same group 
+#' are pooled under the centroid (longest ASV of the group). The asv_id are
+#' prefixed by the marker, to avoid confounding different ASVs of different 
+#' markers, with the same id.
+#' Pooling can take the mean of the read counts of the ASV (default), their sum
+#' or maximum.
+#'  
+#' @param ... Data frames with the following variables: 
+#' marker, asv_id, sample, replicate (optional), read_count, asv.
+#' @param method Character string specifying how read counts should be pooled.
+#'   Must be one of "mean", "max" or "sum".
+#' @param outfile Character string: csv file name to print the output data 
+#' frame if necessary. If empty, no file is written.
+#' @param asv_with_centroids Character string: csv file name of the output file 
+#' containing the same information as the concatenated input files, 
+#' completed by centroid_id and centroid columns. If empty, no file is written.
+#' @param sep Field separator character in input and output csv files.
+#' @param vsearch_path Character string: path to vsearch executables. 
+#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' @return Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
+#' @examples
+#' \dontrun{
+#' markers_pooled <- pool_markers(df_mfzr, df_zfzr, method="mean")
+#' }
+#' @export
+#'
+pool_markers <- function(..., 
+                         method="mean", 
+                         outfile="", 
+                         asv_with_centroids="", 
+                         sep=",", 
+                         vsearch_path="vsearch", 
+                         num_threads=0,
+                         quiet=T
+){
+  
+  #### method
+  method <- match.arg(method, c("mean", "max", "sum"))
+  fun <- switch(method,
+                mean = function(x) mean(x, na.rm = TRUE),
+                max  = function(x) max(x, na.rm = TRUE),
+                sum  = function(x) sum(x, na.rm = TRUE))
+  
+  #### num_threads
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  #### make tmp_dir
+  tmp_dir <-paste('tmp_pool_markers_', 
+                  trunc(as.numeric(Sys.time())), 
+                  sample(1:100, 1), 
+                  sep='')
+  tmp_dir <- file.path(tempdir(), tmp_dir)
+  check_dir(tmp_dir)
+  
+  #### concatenate input df
+  # take first, determine repl_bool
+#  df_list <- list(mfzr, zfzr)
+    df_list <- list(...)
+    df <-  df_list[[1]]
+    if("replicate" %in% colnames(df)){
+      repl_bool <- TRUE
+    }else{
+      repl_bool <- FALSE
+    }
+  # read the other df
+    for(i in 2:length(df_list)){
+      
+      if(repl_bool){
+        tmp <- df_list[[i]] %>%
+          select(marker, asv_id, sample, replicate, read_count, asv)
+      }else{
+        tmp <- df_list[[i]] %>%
+          select(marker, asv_id, sample, read_count, asv)
+      }
+      df <- rbind(df, tmp)
+    }
+    
+
+  ###
+  # Pool ASVs identical on their overlapping region
+  ###
+  # add marker to asv_id to avoid incompatibility among asv_id across markers 
+    df <- df %>%
+      mutate(asv_id = paste(marker, asv_id, sep="_"))
+    
+    asvs <- df %>%
+      group_by(asv_id, asv) %>%
+      summarize("rc" = sum(read_count), .groups="drop")
+    
+    # arrange ASVs by decreasing sequence length and then by read_count
+    asvs$length <- as.numeric(nchar(asvs$asv))
+    asvs <- asvs %>%
+      arrange(desc(length), desc(rc))
+    
+    # make a fasta file
+    fasta <- file.path(tmp_dir, "vsearch_input.fasta")
+    writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
+    
+    # cluster using cluster_smallmem and 1 as identity limit
+    centroids_file <- file.path(tmp_dir, "consout.txt")
+    #query sequences are shorter than subjects => centroids are in the subjects column
+    blastout_file <- file.path(tmp_dir, "blastout.tsv")  
+    ##### run cmd
+    args <- c(
+      "--cluster_smallmem", fasta,
+      "--consout", centroids_file,
+      "--blast6out", blastout_file,
+      "--id", 1 
+    )
+    if(num_threads > 0){
+      args <- append(args, c("-threads", num_threads))
+    }
+    if(quiet){
+      args <- append(args, c("--quiet"))
+    }
+    run_system2(vsearch_path, args, quiet=quiet)
+    
+    ###
+    # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
+    ###
+    # read the ids of centoids, and get the list of centroids
+    # >centroid=mfzr_2374;seqs=2
+    cent <- read.table(centroids_file)
+    colnames(cent) <- c("centroid_id")
+    cent <- cent %>%
+      filter(grepl(">centroid=", centroid_id)) # keep only fasta definition lines
+    cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
+    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
+    cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
+    cent$nbseq <- as.numeric(cent$nbseq)
+    
+    # add to centroide the asv_id that are in the same cluster
+    blastout <- read.table(blastout_file) %>%
+      select(1,2)
+    colnames(blastout) <- c("asv_id", "centroid_id")
+    cent <- left_join(cent, blastout, by= c("centroid_id"))
+    # add centroid_id to asv_id column for singletons
+    cent <- cent %>%
+      mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
+    # add a line for each non-singleton centroid, 
+    # with centroid id in both the centroid and in query columns
+    added_lines <- cent %>%
+      filter(nbseq>1) %>%
+      mutate(asv_id=centroid_id) %>%
+      unique # add just one line per centroid, not several if many sequences in cluster
+    cent<- rbind(cent, added_lines) %>%
+      arrange(centroid_id)
+    
+    ###
+    # Pool ASVs of the same cluster
+    ###
+    # add the centroid_id to each asv if df
+    df <- left_join(df, cent, by=c("asv_id")) %>%
+      select(-nbseq)
+    # add the centroid sequence to each centroid_id in df
+    df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
+      select(-length, -rc) %>%
+      rename("asv"=asv.x, "centroid"=asv.y) %>%
+      arrange(centroid_id, marker)
+    # order the columns
+    if(repl_bool){
+      df <- df %>%
+        select(centroid_id,asv_id,marker,sample,replicate,read_count,asv,centroid)
+    }else{
+      df <- df %>%
+        select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
+    }
+    
+    
+    if(repl_bool){
+      df_pool <- df %>%
+        group_by(centroid_id, sample, replicate) %>%
+        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+    }else{
+      df_pool <- df %>%
+        group_by(centroid_id, sample) %>%
+        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+    }
+    
+    
+    # add asv column and select columns
+    # df_pool is a simple output with the format identical to the read_count_sample dfs,
+    # but no info on the asv that has been pooled together
+    df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id"))
+    if(repl_bool){
+      df_pool <- df_pool %>%
+        select("asv_id"=centroid_id, sample, replicate, read_count, asv) 
+    }else{
+      df_pool <- df_pool %>%
+        select("asv_id"=centroid_id, sample, read_count, asv) 
+    }
+    
+    
+    if(asv_with_centroids != ""){
+      check_dir(asv_with_centroids, is_file=TRUE)
+      write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
+    }
+
+  
+  unlink(tmp_dir, recursive = TRUE)
+  
+  if(outfile != ""){
+    check_dir(outfile, is_file=TRUE)
+    write.table(df_pool, file=outfile, sep=sep, row.names = F)
+  }
+  
+  return(df_pool)
 }
 
 

@@ -16,7 +16,7 @@ sample, action (keep/tolerate), asv.}
 \item{sep}{Field separator character in input and output csv files.}
 }
 \value{
-Data fram with the following columns:
+Data frame with the following columns:
 asv_id, sample, read_count, asv, sample_type, habitat, action.
 }
 \description{

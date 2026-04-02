@@ -28,6 +28,9 @@ by sample otherwise}
 \item{plotfile}{Character string: png file name for the output plot;
 If empty, no file is written.}
 }
+\value{
+Barplot
+}
 \description{
 Create barplot with the number of reads in each sample or sample-replicate;
 If information is given on sample types, bars are colored in function of them

@@ -1,55 +1,58 @@
 # Ideas for vtamR
 
-## check if possible to impose -overlen in demultiplexing if tags are not anchored, it is not checked by default
-		  
-## OptimizeLFNreadCountLFNvariant => refer to missing occurrences instaed of printing missing asv to the terminal
-## add asv_id to missing occurrences (if there are any)
+## stage
+- Install vtamR
+- faire tourner le demo
+- lire et corriger le tuto
+- verifier tout les liens
+
+## pool_datasets rearrange columns in output
+
+## Add read-count info for mock_composition_template_to_check.csv
+
+## Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
+
+## OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
+          reads during this filtering step. "
+
+## SortReads with check_reverse in windows islong.
+
+
+Revise file stucture of the tutriel. outdir/marker/...
+Use demo_pipeline.R 
+ -from fastq till mOTU 
+ - input file bundled with packade
+ - demo mock composition
+ - do not add cluster graphics
+ 
+## Add info on tolerate occurrences
+
+## check examples , arguments in doc
+
+## replace test_filters by an R script to run with demo files (make test_run() function)
+
+## Add quality filter function
 
 ## rewise Roxygen doc, using ` when necessary.
-
-## revise return(invisible(x)) when necessary
 
 ## test if count_seq or count in random_seqR is more effifient for files in different size.
 
 ## dereplicate with vsearch
 
-## replace test_filters by an R script to run with demo files (make test_run() function)
-
 ## FilterPCRerror too long
 
-## Add quality filter function
-
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
-## make rdp_local
 
-## Impove pool runs before filtrage or add to troubleshooting
-
-## Reorganize PoolDatasets:
-1. Pool_data of the same marker
-	can deal with replicates optionally
-	if same sample in different dataset
-		sum
-		mean
-		max
-2. Pool data over markers
-	use ClsuterASV
-	deal with optional replicate
-	deal with homonymy of cluster_IDs (add a different difit for each marker)
-	Read_count within cluster (uven ASv of the same sample, replicate) can be 
-		sum
-		mean
-		max
-		
 ## Polish Histogram_ReadCountByVariant
 
 ## taxassign with vsearch global
 
 ## make useable examples
-	
+
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
 
-
+## make rdp_local
 
 # DONE 
 
@@ -535,8 +538,88 @@ modify ./Renviron to add path to TPP
 - merge develop to main
 - make prerelease with 0.3.1 tag
 
-## 2025/11/27 version-update
+## 2025/11/27 version-update ############## prerelease vtamR-v0.3.1
 
 Add NEWS.md
 Correct DESCRIPTION an README
+
+
+## 2026/03/03 
+
+- Add option mean, sum, max min the numer of reads instead over replicates PoolReplicates.
+- Add option mean, sum, max min the numer of reads instead over replicates WriteASVtable.
+- correcte column name for the total read_coount in WriteASVtable.
+- Add to troubleshooting the pool runs before filtrage.
+- Check if possible to impose -overlen in demultiplexing if tags are not anchored => already included in SortReads
+- OptimizeLFNreadCountLFNvariant => refer to missing occurrences filename instead of printing missing asv to the terminal
+- Add asv_id to missing occurrences (if there are any)
+
+
+
+
+## 2026/03/04 PoolReplicates
+
+- revise return(invisible(x)) when necessary
+- @reruns corrected to @return in doc
+
+
+## 2026/03/24
+
+- RandomSeq use_vsearch: the numer of sequneces returned was the total in input,
+but the fonction worked otherwise. Return is corrected.
+
+
+## 2026/03/25 denoise_by_swarm
+
+denoising using SWARM.
+by_sample = TRUE/FALSE
+
+post-processing step (`split_clusters = TRUE`) to refine clusters. 
+Custers are split based on the relative
+abundance of ASVs compared to the centroid (see `?split_swarm_clusters`)
+and the total read cout of the original cluster is proportionnaly reditributed
+among ASVs. by_sample must be  TRUE.
+
+## 2026/03/26 pool_markers
+
+Finish pool_marker and pool_dataset
+1. Pool datasets of the same marker = > pool_datasets
+	can deal with replicates optionally
+	if same sample in different dataset
+		sum
+		mean
+		max
+		min
+2. Pool data over markers => pool_markers
+	Append marker id to asv_id, if provided
+	concatenate dataset
+	use ClsuterASV with id=1 method= vsearch (clsuter_size)
+	deal with optional replicate
+	read_count within cluster (over ASV of the same sample, replicate) can be 
+		sum
+		mean
+		max
+		min
+	provides pooled output (asvs of the same cluster pooled)
+	and simple concatenation + centroid_id + centroid
+	
+Roxygen documentation done
+
+## 2026/03/27
+
+pool_markers tutoriel with 2 markers
+
+## 2026/03/30 examples for pool_xxx
+
+Doc and example file for pool_datasets and pool_markers
+
+Add test demo file for plate2 MFZR
+
+
+
+
+
+
+
+
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{ClusterASV}
 \alias{ClusterASV}
-\title{Cluster ASVs by Swarm or Vsearch}
+\title{Cluster ASVs Using Swarm or VSEARCH}
 \usage{
 ClusterASV(
   read_count,
@@ -58,24 +58,26 @@ the same cluster pooled to one row if group==TRUE, or rows kept as in the input
 and an additional cluster_id column is added if group==FALSE.
 }
 \description{
-This function runs Swarm or the cluster_size command of Vsearch
-on the ASVs in the input data frame.
-Each ASV is assigned to a cluster, and the function provides
-two possible output formats, controlled by the argument group.
+This function can \strong{cluster} ASVs into mOTUs or perform \strong{denoising}.
+When using Swarm with \code{d = 1}, the clustering result corresponds to denoising.
 
-If group = TRUE, the function aggregates the ASVs belonging to the same
-cluster into a single row. In this case, the asv_id and asv columns contain
-the identifier and the sequence of the cluster's centroid.
-read_count is summed over ASVs, samples and replicates are unchanged.
+The function runs either Swarm or VSEARCH's \code{cluster_size} command on the ASVs
+in the input data frame. Each ASV is assigned a cluster, and two output formats
+are available, controlled by the \code{group} argument.
+\itemize{
+\item If \code{group = TRUE}, ASVs in the same cluster are aggregated into a single row.
+In this case, the \code{asv_id} and \code{asv} columns contain the identifier and
+sequence of the cluster's centroid, and \code{read_count} is summed across ASVs.
+Sample and replicate information is retained.
+\item If \code{group = FALSE}, the function returns the original data frame with an
+additional column, \code{cluster_id}. Each row corresponds to one ASV.
+}
 
-If group = FALSE, the function returns the original input data frame
-with an additional column: cluster_id. Each row still corresponds to one ASV.
+Clustering can be performed on the entire data set or separately for each sample
+(\code{by_sample} argument).
 
-The clustering can be run on the whole data set at once,
-or sample by sample (by_sample)
-
-Attention! If clustering is done by_sample (\code{by_sample = TRUE}) and
-\code{group==FALSE}, the same asv_id, can have different cluster_id in different samples.
+\strong{Note:} If \code{by_sample = TRUE} and \code{group = FALSE}, the same \code{asv_id} may be
+assigned different \code{cluster_id}s in different samples.
 }
 \examples{
 \dontrun{

@@ -27,7 +27,7 @@ show warnings or errors.}
 \item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
 }
 \value{
-The input data frame completed by chimera \code{column}.
+The input data frame completed by \code{chimera} column.
 1 if potential chimera, 0 otherwise.
 }
 \description{

@@ -66,7 +66,7 @@ trimmed sequence.}
 show warnings or errors.}
 }
 \value{
-NA; Produces an output fasta file.
+NULL; Produces an output fasta file.
 }
 \description{
 Trim primers from the input fasta file

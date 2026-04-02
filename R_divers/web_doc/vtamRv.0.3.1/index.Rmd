@@ -1,0 +1,83 @@
+---
+title: "vtamR tutorials - v0.3.1"
+auhor: Emese Meglécz
+date: "2025-11-27"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 0
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  echo=TRUE,
+  eval=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+
+
+**vtamR** is a revised, completed version of 
+[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
+(Validation and Taxonomic Assignation of Metabarcoding Data) 
+rewritten in R. It is a complete metabarcoding pipeline:
+
+* Sequence analyses **from raw fastq files** of amplicon sequences till 
+Amplicon Sequence Variant 
+([ASV](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)) 
+table of **validated ASVs assigned to taxonomic groups**.
+* Handles technical or biological **replicates** of the same sample.
+* Uses positive and negative **control samples to fine tune the filtering** and 
+reduce [false positive](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
+and [false negative](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
+occurrences.
+* Can pool multiple data sets (results of earlier analyses)
+* Can pool results from overlapping markers
+
+**Novelties compared to VTAM:**
+
+* As it is a series of R functions, `vtamR` is highly adaptable to 
+include/exclude and order different steps of the analyses
+* Includes SWARM for denoising
+* Graphic options
+* Include functions to get statistics of each filtering steps 
+(read and variant count etc.)
+* ASV clustering to mOTU 
+* The notion of marker and run has been dropped to simplify the analyses
+
+## [Installation](installation.html)
+
+* Installation of vtamR package
+* Installation of third party programs
+* TaxAsssign data base
+
+## [Tutorial: vtamR pipeline](tutorial-vtamr-pipeline.html)
+ 
+* How to construct a full metabarcoding pipeline
+* Supplementary functions
+* I/O files and data frames
+* Glossary
+* Trouble shooting
+ 
+## [From fastq to data frame](from-fastq-to-df.html)
+
+Quality filtering, merging, trimming demultiplexing, dereplication according to 
+different fastq content.
+
+ * One sample per fastq - no tag - no primer
+ * One sample per fastq - primer - no tag
+ * Several samples per fastq - tags - primers
+
+## [Make mock_composition file](make-mock-composition-file.html)
+
+How to pick the expected sequences in mock samples from your own data (in case you do not know them in advance).
+

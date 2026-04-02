@@ -10,7 +10,7 @@ calculate_renkonen_dist(df1, df2)
 \item{df1, df2}{Data frames with asv and read_count columns.}
 }
 \value{
-Renkonen distance (Numeric. Value between 0 and 1) between the two date frames.
+Renkonen distance (Numeric. Value between 0 and 1) between the two data frames.
 }
 \description{
 Calculate renkonen distance between two data frames with ASVs and read counts.

@@ -19,7 +19,7 @@ download_osf(filename, url, dest_dir = ".", untar = TRUE, quiet = FALSE)
 show warnings or errors.}
 }
 \value{
-full path to the directory where the file was downloaded.
+Invisible full path to the directory where the file was downloaded to.
 }
 \description{
 Downloads file from \href{https://osf.io/}{OSF}

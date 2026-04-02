@@ -38,7 +38,7 @@ Speed: R.utils < gzip (only linux) < pig}
 \item{compress}{Logical: If \code{TRUE}, compress (\code{gzip}); if \code{FALSE}, decompress (\code{gunzip}).}
 }
 \value{
-Character string: Name of the output file including path.
+Character string (invisibly): Name of the output file including path.
 }
 \description{
 Compress or uncompress a file using \code{pigz} (if available, faster) or fallback to \code{R.utils}.

@@ -24,6 +24,15 @@ pigz_path <- "pigz"
 sep <- ","
 outdir <- "~/vtamR_demo_out"
 
+### set up windows
+cutadapt_path <- "cutadapt"
+vsearch_path <- "vsearch"
+blast_path <- "blastn"
+swarm_path <- "swarm"
+pigz_path <- "pigz"
+sep <- ","
+outdir <- "C:/Users/emese/vtamR_demo_out"
+
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
 mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
@@ -35,13 +44,11 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/COInr_for_vtam_taxonomy.tsv"
 
 
-
-
 ### Merge
 merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
 fastainfo_df_uncompress <- Merge(fastqinfo, 
                       fastq_dir=fastq_dir, 
-                      pigz=TRUE,
+                      compress_method="pigz",
                       pigz_path = pigz_path,
                       vsearch_path=vsearch_path, 
                       outdir=merged_dir_uncompress,
@@ -50,33 +57,22 @@ fastainfo_df_uncompress <- Merge(fastqinfo,
                       fastq_allowmergestagger=F,
                       compress=FALSE)
 
-merged_dir_gz <- file.path(outdir, "merged_gz")
-fastainfo_df_gz <- Merge(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      pigz=TRUE,
-                      pigz_path = pigz_path,
-                      vsearch_path=vsearch_path, 
-                      outdir=merged_dir_gz,
-                      fastq_maxee=1,
-                      fastq_maxns=0,
-                      fastq_allowmergestagger=F,
-                      compress=TRUE)
 
-
-outdir_RandomSeqR_gz <- file.path(outdir, "RandomSeqR_gz")
-fastainfo_randomSeqR_gz <-RandomSeqR(fastainfo_df_gz, 
-           n=40000,
-           fasta_dir=merged_dir_gz,
-           outdir=outdir_RandomSeqR_gz, 
-           randseed=0, 
-           compress=T, 
-           quiet=TRUE)
+outdir_RandomSeq <- file.path(outdir, "RandomSeqR_gz")
+fastainfo_randomSeq <-RandomSeq(fastainfo_df_uncompress, 
+                                use_vsearch = TRUE,
+                                vsearch_path = vsearch_path, 
+                                n=40000,
+                                fasta_dir=merged_dir_uncompress,
+                                outdir=outdir_RandomSeq, 
+                                randseed=0, 
+                                quiet=TRUE)
 
 
 ### demultiplex
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo_df <- SortReads(fastainfo_df, 
-                           fasta_dir=merged_dir, 
+sampleinfo_df <- SortReads(fastainfo_randomSeq, 
+                           fasta_dir=outdir_RandomSeq, 
                            outdir=demultiplexed_dir, 
                            check_reverse=TRUE, 
                            cutadapt_path=cutadapt_path, 
@@ -87,13 +83,13 @@ sampleinfo_df <- SortReads(fastainfo_df,
 ###############
 ### dereplicate
 ###############
-updated_asv_list <- file.path(outdir, "updated_asv_list.tsv")
-demultiplexed_dir <- file.path(outdir, "demultiplexed")
-sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
+updated_asv_list <- file.path(outdir, "updated_asv_list.csv")
+sampleinfo <- "/home/meglecz/vtamR_demo/SortReads/sampleinfo.csv"
+demultiplexed_dir <-  "/home/meglecz/vtamR_demo/SortReads"
 read_count_df <- Dereplicate(sampleinfo, 
                              dir=demultiplexed_dir, 
-                             input_asv_list=asv_list,
-                             output_asv_list = updated_asv_list)
+                             input_asv_list=asv_list)
+
 
 ### stat
 stat_df <- data.frame(parameters=character(),
@@ -104,6 +100,154 @@ stat_df <- data.frame(parameters=character(),
 
 stat_df <- GetStat(read_count_df, stat_df, stage="input_sample_replicate", params=NA)
 
+
+df_split <- denoise_by_swarm(read_count_df,
+                 by_sample=TRUE,
+                 split_clusters=TRUE,
+                 min_abundance_ratio = 0.2,
+                 min_read_count = 10,
+                 swarm_path=swarm_path, 
+                 swarm_d=1, 
+                 fastidious=TRUE, 
+                 quiet=TRUE)
+
+df_no_split <- denoise_by_swarm(read_count_df,
+                             by_sample=TRUE,
+                             split_clusters=FALSE,
+                             min_abundance_ratio = 0.2,
+                             min_read_count = 10,
+                             swarm_path=swarm_path, 
+                             swarm_d=1, 
+                             fastidious=TRUE, 
+                             quiet=TRUE)
+
+df_all <- denoise_by_swarm(read_count_df,
+                             by_sample=FALSE,
+                             split_clusters=FALSE,
+                             min_abundance_ratio = 0.2,
+                             min_read_count = 10,
+                             swarm_path=swarm_path, 
+                             swarm_d=1, 
+                             fastidious=TRUE, 
+                             quiet=TRUE)
+
+
+
+
+
+df_test <- read_count_df %>%
+  filter(sample %in% c("14ben02"))
+
+df_swarm <- ClusterASV(read_count = df_test, 
+                             group = FALSE,
+                             by_sample=TRUE,
+                             method = "swarm",
+                             path=swarm_path, 
+                             quiet=T
+                       )
+
+df_swarm_grouped <- ClusterASV(read_count = df_test, 
+                                     group = TRUE,
+                                     by_sample=TRUE,
+                                     method = "swarm",
+                                     path=swarm_path, 
+                                     quiet=T
+                                     )
+
+###############################
+# prepare list of clusters to split, and for each of them the list of ASV to keep apart
+clusters_to_split <- df_swarm %>%
+  group_by(asv_id, cluster_id) %>%
+  summarise(read_count = sum(read_count), .groups = "drop") %>%
+  # add centroid read count
+  group_by(cluster_id) %>%
+  mutate(centroid_read_count = read_count[asv_id == cluster_id]) %>%
+  ungroup() %>%
+  # keep only asv, that have at least 20% of the centroids reads
+  filter(read_count / centroid_read_count > 0.2 & 
+           read_count > 10 &
+           asv_id != cluster_id) %>%
+  select(asv_id, cluster_id) 
+
+# get a list of centroids of the clusters_to_split
+centroids <- data.frame(
+  asv_id = unique(clusters_to_split$cluster_id),
+  cluster_id = unique(clusters_to_split$cluster_id)
+)
+# add them to clusters_to_split
+clusters_to_split <- rbind(centroids, clusters_to_split) %>%
+  arrange(cluster_id)
+
+###############################
+
+# for all clusters that should be split up among selected ASV,
+# modify the original read count of the selected ASV to
+#  - keep their proportions among different replicates
+#  - Their sum should equal the total number of read of the cluster.
+# In other words, split of the total number of reads of a cluster among selected
+# ASV, and keep the proportions of the original read counts.
+# replace the cluster_id by the asv_id
+
+cluster_selected <- df_swarm %>% # add the total number of reads of the cluster
+  group_by(cluster_id) %>%
+  mutate(cluster_rc_all = sum(read_count)) %>%
+  ungroup() %>%
+  # keep only asv, that should be kept apart
+  filter(asv_id %in% clusters_to_split$asv_id) %>%
+  # get the total number of reads of the selected ASVs of the cluster
+  group_by(cluster_id) %>%
+  mutate(cluster_rc_selected = sum(read_count)) %>%
+  ungroup() %>%
+  # multiply all read count by the proportion of original and selected read_count of the cluster
+  mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0)) %>%
+  # Check if the sum of the modified read count equals of the original total read of the cluster
+#  group_by(cluster_id) %>%
+#  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
+#  ungroup() %>%
+  select(asv_id, sample, replicate, read_count = read_count_cis, asv)
+
+# make a list of asv_id asv for the centroids 
+cluster_seq <- df_swarm %>%
+  filter(asv_id == cluster_id) %>%
+  select(asv_id, asv) %>%
+  distinct()
+  
+unmodified_clusters <- df_swarm %>%
+  filter(!cluster_id %in% clusters_to_split$cluster_id) %>%
+  group_by(cluster_id, sample, replicate) %>%
+  summarize(read_count = sum(read_count), .groups = "drop") %>%
+  select(asv_id = cluster_id, sample, replicate, read_count) %>%
+  left_join(cluster_seq, by="asv_id")
+  
+
+grouped_swarm <- rbind(cluster_selected, unmodified_clusters)
+dim(grouped_swarm)
+dim(df_swarm)
+dim(df_swarm_grouped)
+
+length(unique(grouped_swarm$asv_id))
+length(unique(df_swarm$cluster_id))
+length(unique(df_swarm_grouped$asv_id))
+
+sum(grouped_swarm$read_count)
+sum(df_swarm$read_count)
+sum(df_swarm_grouped$read_count)
+
+#For each cluster in df_select
+#- get the total number of reads (n_cluster)
+#- get the total number of reads of the selected varinats (n_selected_asv)
+#- get all occurrences of all selected asv of the cluster
+#- multiply these occurrences by n_selected_asv/n_cluster
+
+
+denoise_by_swarm()
+group always TRUE
+by_sample TRUE/FALSE
+split_clusters TRUE/FALSE
+
+if split_clusters == TRUE => by_sample must be TRUE
+
+
 #### swarm
 by_sample <- TRUE
 d=1
@@ -111,7 +255,7 @@ fastidious= TRUE
 quiet=TRUE
 outfile <- file.path(outdir, "filter", "2_Swarm_by_sample.csv")
 
-read_count_df <- ClusterASV(read_count_df,
+read_count_df <- ClusterASV(read_count = read_count_df,
                             method = "swarm",
                             swarm_d=d,
                             fastidious=fastidious,
@@ -146,8 +290,8 @@ read_count_df_backup <- read_count_df
 ### FilterExternalContaminant
 conta_file <- file.path(outdir, "tmp", "external_contamination.csv")
 read_count_df <- FilterExternalContaminant(read_count_df, 
-                          sample_types=sampleinfo, 
-                          conta_file=conta_file)
+                                           sampleinfo=sampleinfo_df,
+                                           conta_file=conta_file)
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
 
@@ -163,24 +307,93 @@ read_count_df <- FilterChimera(read_count_df,
 
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=NA)
 
+write.csv2(read_count_df, file=file.path(outdir, "mfzr.csv"), row.names = FALSE)
+
+
+
+#####################################
+PoolReplicates_csv <- file.path(outdir, "PoolReplicates", "PoolReplicates_mean.csv")
+read_count_sample_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_mean <- PoolReplicates(read_count_df, digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_max <- PoolReplicates(read_count_df, method="max", digits=0, outfile = PoolReplicates_csv)
+read_count_sample_fun_sum <- PoolReplicates(read_count_df, method="sum", digits=0, outfile = PoolReplicates_csv)
+
+identical(read_count_sample_fun_max, read_count_sample_fun_mean)
+
+
+read_count_cluster_df <- ClusterASV(read_count_df,
+                            method = "swarm",
+                            swarm_d=7,
+                            fastidious=fastidious,
+                            by_sample=FALSE,
+                            group = FALSE,
+                            path=swarm_path
+                            )
+
+read_count_cluster_df_max <- PoolReplicates(read_count_cluster_df, method="max")
+#####################################
+
+tmp_replicate <- WriteASVtable(read_count_df, 
+                          sampleinfo=sampleinfo_df, 
+                          pool_replicates=FALSE,
+                          add_sums_by_asv=TRUE
+                     )
+tmp_sample <- WriteASVtable(read_count_df, 
+                               sampleinfo=sampleinfo_df, 
+                               pool_replicates=TRUE,
+                               add_sums_by_asv=TRUE
+                            )
+
+tmp_sample_new <- WriteASVtable(read_count_df, 
+                            sampleinfo=sampleinfo_df, 
+                            pool_replicates=TRUE,
+                            method="max",
+                            add_sums_by_asv=TRUE,
+                            add_sums_by_sample=FALSE
+)
+#####################################
+
+opt <- OptimizeLFNreadCountLFNvariant(read_count_df, 
+                               outdir=file.path(outdir, "optimize"),
+                               known_occurrences = NULL, 
+                               mock_composition = mock_composition_df,
+                               sampleinfo = sampleinfo_df,
+                               habitat_proportion = 0.5,
+                               min_replicate_number=2, 
+                               quiet=T
+                               )
+
+mock_composition_df <- read.csv(mock_composition)
+
+mock_composition_df[7,] <- c("tpos1", "keep", "TCTATACCTTATTTTCGGCGCAATTTCAGGTATTGCAGGTACCGCTTTATCTCTTTACATTCGAATTACTTTATCTCAACCTAATGGTAATTTTTTAGAATACAATCACCACTTTTATAATGTGATTATAACGGGTCACGCTCTTCTTATGATTTTTTTCATGGTAATGCCAATCTTGATT", NA, NA)
+
+read_count_samples <- PoolReplicates(read_count_df)
+missing <- make_missing_occurrences(read_count_samples, mock_composition_df, quiet = FALSE)
+
+
+#' @param quiet logical: If TRUE, suppress informational messages and only 
+#' show warnings or errors.
+#' 
+#'     missing_asv_text <- paste(capture.output(print(df)), collapse = "\n")
+warning(
+  paste0(
+    "\n  Some expected ASVs are missing from the mock samples.\n",
+    "----------------------------------------------------------\n",
+    missing_asv_text,
+    "\n----------------------------------------------------------\n"
+  ),
+  call. = FALSE
+)
+#####################################
+  
+
+
+
 #### FilterRenkonen
 cutoff <- 0.4
 read_count_df <- FilterRenkonen(read_count_df, 
                                 cutoff=cutoff)
 stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=cutoff)
-
-
-fas <- "/home/meglecz/vtamR/inst/extdata/demo/mock_ncbi.fasta"
-outdir <- "/home/meglecz/vtamR/inst/extdata/demo/mock"
-
-taxonomy <- taxonomy_COInr
-
-MakeMockCompositionLTG(read_count_df, 
-                      fas=fas,
-                      taxonomy=taxonomy_COInr,
-                      blast_path = blast_path,
-                      sampleinfo = sampleinfo_df,
-                      outdir= outdir)
 
 
 ### FilterPCRerror
@@ -584,3 +797,16 @@ asv_table_df <- WriteASVtable(read_count_16S,
                               outfile=out,
                               mock_composition=mock
 )
+
+
+
+
+files <- c("/home/meglecz/vtamR_demo/filter/12_LFNreadCount.csv", "/home/meglecz/vtamR_demo/filter/11_LFNvariant.csv")
+tmp1 <- read.csv("/home/meglecz/vtamR_demo/filter/12_LFNreadCount.csv")
+tmp2 <- read.csv("/home/meglecz/vtamR_demo/filter/11_LFNvariant.csv")
+tmp <- pool_datasets(files, 
+              outfile="", 
+              method="mean",
+              sep=",", 
+              quiet=T
+              )

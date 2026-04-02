@@ -4,11 +4,20 @@
 \alias{PoolReplicates}
 \title{Pool replicates sample by sample}
 \usage{
-PoolReplicates(read_count, digits = 0, outfile = "", sep = ",")
+PoolReplicates(
+  read_count,
+  method = "mean",
+  digits = 0,
+  outfile = "",
+  sep = ","
+)
 }
 \arguments{
 \item{read_count}{Data frame or csv file with the following variables:
 asv_id, sample, replicate, read_count, asv, cluster_id (optional).}
+
+\item{method}{Character string specifying how replicate read counts should be pooled.
+Must be one of "mean", "max", "sum" or "min".}
 
 \item{digits}{Positive integer: round the mean read counts to digits.}
 
@@ -22,7 +31,9 @@ Data frame with the following columns:
 asv, sample, read_count (over replicates), cluster_id (optional)
 }
 \description{
-Take the mean non-zero read counts over replicates for each sample and asv.
+For each sample, replicates are pooled. The read count for a given
+sample and ASV can be calculated as the mean of non-zero read counts
+across replicates, or alternatively as the sum, maximum, or minimum.
 }
 \examples{
 \dontrun{
