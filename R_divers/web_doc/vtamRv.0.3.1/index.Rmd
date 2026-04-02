@@ -1,7 +1,7 @@
 ---
-title: "vtamR tutorials - v0.3.2"
+title: "vtamR tutorials - v0.3.1"
 auhor: Emese Meglécz
-date: "2026-04-02"
+date: "2025-11-27"
 output:
   html_document:
     toc: true

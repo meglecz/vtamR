@@ -1,11 +1,11 @@
 ---
-title: "From fastq to data frame - v0.3.1"
+title: "From fastq to data frame - v0.3.2"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{From fastq to data frame - v0.3.1}
+  %\VignetteIndexEntry{From fastq to data frame - v0.3.2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -286,7 +286,7 @@ Make sure there is **no space in the path and file names**.
 
 ```{r set-input3}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
-fastqinfo <-  system.file("extdata/demo/fastqinfo.csv", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
 
 outdir <- "vtamR_demo_case3"
 merged_dir <- file.path(outdir, "merged")

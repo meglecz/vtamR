@@ -1,11 +1,11 @@
 ---
-title: "Tutorial - vtamR pipeline - v0.3.1"
+title: "Tutorial - vtamR pipeline - v0.3.2"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v0.3.1}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v0.3.2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -93,12 +93,12 @@ Please, follow the [Installation](installation.html) instructions.
 
 ## Set up
 
-**Load library**
+### Load library
 ```{r setup}
 library(vtamR)
 ```
 
-**Set the path to third-party programs**
+### Set the path to third-party programs
 
 If the third-party programs are **not** in your `PATH` 
 (see [Installation](installation.html)),
@@ -153,41 +153,77 @@ read_count_df <- FilterChimera(
   vsearch_path = vsearch_path) # can be omitted if VSEARCH is in the PATH
 ```
 
+### Input Data
 
-**Set general parameters**
+**Data Structure and Workflow**
+
+Our datasets typically consist of sequences obtained from 96 samples, 
+corresponding to a 96-well plate used for PCR amplification. These include 
+negative controls, mock samples, and biological samples. Each set of 96 PCR 
+reactions is processed into a single sequencing library, with one library 
+generated per replicate.
+
+While vtamR can analyze datasets without positive/negative controls or replicates, 
+its strength lies in the use of these features. Controls enable robust 
+data filtering based on control sample content, while replicates ensure 
+reproducibility to reduce variations due to technial replicates.
+
+For projects with more than 96 samples, analyses are typically 
+performed plate by plate. Using consistent control samples ensures 
+comparability between sequences from different libraries or time points 
+(e.g., in longitudinal studies monitoring the same sites over time). 
+Filtered datasets can then be pooled using the `pool_dataset()` function.
+
+**Multi-Marker Analysis**
+
+It is also possible to analyze the same samples using different 
+but strongly overlapping markers. Our example dataset comes from a project 
+(XXXX ref) using two markers: **MFZR** and **ZFZR**.
+
+Both markers amplify overlapping regions of the COI gene, with MFZR 
+starting 18 nucleotides upstream of ZFZR.
+
+**Demo Dataset**
+
+The demo files included in the vtamR package contain only 2 real samples, 
+a mock, and a negative control for each marker-plate combination. 
+As a result, numerical values and graphs may not be very informative.
+In the example below, results from different marker-plate combinations are 
+stored in separate directories, each with the same structure and 
+filenames, as they are processed independently using the same pipeline.
+
+We will go through the analyses using the first "plate" of the MFZR marker, than
+see how to pool the results of different plates and markers.
+
+Let's set the output directory for plate 1 of MFZR
 
 ```{r general-parameters}
-sep <- ","
-outdir <- "vtamR_demo_out/mfzr1"
+outdir <- "vtamR_demo_out/mfzr_plate1"
 ```
 
 
-* `sep`: Separator used in csv files
-* `outdir`: Name of the output directory. Make sure there is **no space in the path**.
+**Loading Data**
 
-**Input Data**
+To load the demo files (included with vtamR), we use the `system.file()` function.
 
-The demo files below are included with the `vtamR` package, which is why we
-use `system.file()` to access them in this tutorial. 
-When using your own data, simply provide the file and directory names (e.g. `~/vtamR/fastq`)
+For your own data, simply provide the file and directory names (e.g., `~/vtamR/fastq`).
 
 ```{r set-demo-file}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
-fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr1.csv", package = "vtamR")
-#mock_composition <-  system.file("extdata/demo/mock_composition.csv", package = "vtamR")
+fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
 mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
 asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 ```
 
-
 * `fastq_dir`: Directory containing the input fastq files.
 * [fastqinfo](#fastqinfo): CSV file with information on input files, primers, 
 tags, samples.
-* [mock_composition](#mock_composition): CSV file with expected ASVs in mock samples. 
-See [How to make a mock composition file](make-mock-composition-file.html) on
-how to create this file.
+* `mock_ncbi_fasta`: A FASTA file containing COI sequences of the species in the mock samples. 
+These sequences may not be trimmed to the marker region and can differ slightly 
+from the ASVs in the mock samples. They are used to identify which ASVs correspond 
+to the expected species in the mock, helping create a [mock_composition](#mock_composition)
+file that defines the expected content of the mock samples.
 * [asv_list](#asv_list): CSV file with ASVs and `asv_id`s from earlier data sets. Optional.
-
 
 **Database for taxonomic assignment**
 
@@ -210,8 +246,7 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 
 Details are in [Reference database for taxonomic assignments section](installation.html#reference-database-for-taxonomic-assignments)
 
-
-**Check the format of input files**
+### Check the format of input files
 
 The `CheckFileinfo` function tests if all obligatory columns are present, 
 and makes some sanity checks. This can be helpful, since these files are produced 
@@ -219,7 +254,6 @@ by the users, and may contain errors difficult to spot by eye.
 
 ```{r check-fileinfo}
 CheckFileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
-#CheckFileinfo(file=mock_composition, file_type="mock_composition")
 CheckFileinfo(file=asv_list, file_type="asv_list")
 ```
 
@@ -495,8 +529,8 @@ while preserving their original proportions
 The `split_clusters` option must be run using the following parameters:
 
 * `by_sample = TRUE` 
-* `swarm_d = 1` 
-* `fastidious = TRUE` 
+* `swarm_d = 1` (default)
+* `fastidious = TRUE` (default)
 
 ```{r swarm}
 split_clusters <- TRUE
@@ -984,7 +1018,7 @@ stat_df <- GetStat(read_count_df_lfn_read_count, stat_df, stage="LFNreadCount", 
 
 ```
 
-Combine results
+Combine results of LFNvariant and LFNreadCount
 ```{r combine-results}
 outfile <- file.path(outdir, "4_filter", "13_poolLFN.csv")
 
@@ -1230,7 +1264,7 @@ Below, we’ll cluster the data using VSEARCH with an identity threshold of `0.9
 (See `?ClusterASV` for guidance on adjusting parameters when using SWARM.)
 
 ```{r motu-clustersize}
-outfile <- file.path(outdir, "4_filter", "16_mOTU_vsearch.csv")
+outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
 identity <- 0.97 
 read_count_samples_df_ClusterSize <- ClusterASV(
       read_count_sample_df,
@@ -1296,27 +1330,30 @@ write.csv(stat_df, file = file.path(outdir, "summary.csv"))
 
 ### One marker
 
-Our datasets typically contain sequences obtained from 96 samples, 
-corresponding to a 96-well plate used for PCR amplification. 
-These include negative controls, mock samples, and biological samples. 
-Each set of 96 PCR reactions is processed into a single sequencing library, 
-with one library generated per replicate.
+The second plate of the MFZR marker can be processed in the same way as the first plate.
 
-For projects involving more than 96 samples, analyses are typically 
-performed plate by plate. This approach ensures comparability between sequences 
-obtained from different libraries or at different time points 
-(e.g., in longitudinal studies monitoring the same sites over time).
+Do not forget to
 
-The filtered data sets can then be easily pooled using results in long format 
-(columns: `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`). 
-In the example below, results from different plates are stored in separate 
-directories, each with the same structure and file names, as they were processed 
-independently using the same pipeline.
+- specify a different output directory to avoid overwriting the results from the first plate.
+- use **mfzr_plate1/ASV_list_with_IDs.csv** as the `input_asv_list` in the `Dereplicate` step. 
+This ensures that the `asv_id`s remain consistent across both plates.
+
+An R script for analyzing the second MFZR plate is available here: xxxxxxxxxxxxx
+
+The filtered datasets can be easily pooled using results in long format 
+(columns: `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`).
+For pooling results from different plates, I recommend using the filtered 
+ASV tables (e.g., **15_pool_replicates_xxx.csv**) before clustering ASVs into mOTUs. 
+This approach avoids discrepancies in cluster centroids between data sets. Here, we will:
+
+- Pool the filtered ASVs from both MFZR plates.
+- Cluster the pooled ASVs into mOTUs.
+- Run TaxAssign on the centroids
 
 #### Pool datasets
 ```{r, eval=FALSE}
-pooled_replicates_mfzr1 <-  system.file("extdata/demo/15_pool_replicates_mfzr1.csv", package = "vtamR")
-pooled_replicates_mfzr2 <-  system.file("extdata/demo/15_pool_replicates_mfzr2.csv", package = "vtamR")
+pooled_replicates_mfzr1 <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate1.csv", package = "vtamR")
+pooled_replicates_mfzr2 <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate2.csv", package = "vtamR")
 
 filtered_files <- c(pooled_replicates_mfzr1, pooled_replicates_mfzr2)
 
@@ -1328,16 +1365,10 @@ pooled_read_count_df <- pool_datasets(
 )
 ```
 
-#### Make mOTUs - pool_dataset
-
-If mOTUs have been generated separately for each plate, the `cluster_id`s 
-(i.e. the centroid sequences defining each cluster) are unlikely to be 
-consistent across plates. It is therefore recommended to rerun the clustering 
-on the pooled dataset to define mOTUs consistently.
-
+#### Make mOTUs from pooled data
 
 ```{r, eval=FALSE}
-outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "mOTU.csv")
+outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "motu.csv")
 identity <- 0.97 
 read_count_motu <- ClusterASV(
   pooled_read_count_df,
@@ -1390,27 +1421,32 @@ The data should first be analyzed separately for each marker. The results can
 then be combined by aggregating ASVs that are identical over their overlapping 
 region.
 
-In this example, the pipeline was run using two markers: **MFZR** and **ZFZR**, 
-which amplify overlapping regions of the COI gene. The MFZR marker starts 
-18 nucleotides upstream of ZFZR. We will use the filtered results in long 
-format, after pooling replicates within samples, although the function also 
-accepts data that include both samples and replicates.
+As for the second plate of the MFZR marker, the first plate of ZFZR can be 
+processed in the same way as for the MFZR.
 
-These files are bundled with the package:
+Do not forget to
 
+- specify a different output directory to avoid overwriting earlier results from the first plate.
+- use **mfzr_plate2/ASV_list_with_IDs.csv** as the `input_asv_list` in the `Dereplicate` step. 
+This ensures that the `asv_id`s remain consistent across both plates and markers.
+
+The results are included in the package:
 ```{r, eval=FALSE}
-mfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_mfzr1.csv", package = "vtamR")
-zfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_zfzr1.csv", package = "vtamR")
+mfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate1.csv", package = "vtamR")
+zfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_zfzr_plate1.csv", package = "vtamR")
 ```
 
-To avoid confusion between ASV identifiers from the two markers, we assign a 
-numerical identifier to each marker (1 for MFZR and 2 for ZFZR). These 
-identifiers are appended to the ASV IDs.
+If you have consistently used the **ASV_list_with_IDs.csv** file generated from earlier 
+runs for processing the ZFZR plate, the asv_ids will already be compatible
+and can be used directly.
+However, if the `asv_ids` are not compatible 
+(e.g., the same `asv_id` refers to different sequences across markers), 
+you can resolve this by assigning a numerical identifier to each marker: 
+1 for MFZR and 2 for ZFZR in this example.
 
-This step is essential if ASV identifiers were not harmonized using the 
-`asv_id.csv` files during dereplication or at an early filtering step (see 
-`?UpdateASVlist`). If ASV identifiers are already consistent across datasets, 
-the `marker_id`s can be omitted.
+These identifiers are appended to the ASV IDs, ensuring clarity and 
+preventing confusion between markers.
+
 
 ```{r, eval=FALSE}
 input_files <- c(mfzr_filtered, zfzr_filtered)
@@ -1437,7 +1473,7 @@ clustering should be performed on the pooled data before taxonomic assignment.
 
 ```{r, eval=FALSE}
 #### Cluster
-outfile <- file.path("vtamR_demo_out", "pooled_markers", "mOTU.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "motu.csv") 
 identity <- 0.97 
 read_count_motu <- ClusterASV(
   pooled_markers,
@@ -2087,7 +2123,7 @@ has a `value` we are looking for.
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
-filter_dir <- file.path(outdir, "filter")
+filter_dir <- file.path(outdir, "4_filter")
 tmp_ASV_27 <- HistoryBy(dir=filter_dir, 
                         feature="asv_id", 
                         value="27")

@@ -1,13 +1,14 @@
 ---
-title: "How to make a mock_composition file - v0.3.2"
-output: 
-  rmarkdown::html_vignette:
+title: "How to make a mock_composition file - v0.3.1"
+auhor: Emese Meglécz
+date: "2025-11-27"
+output:
+  html_document:
     toc: true
-    toc_depth: 3
-vignette: >
-  %\VignetteIndexEntry{How to make a mock_composition file - v0.3.2}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 0
 ---
 
 
@@ -235,9 +236,9 @@ We will use some of the files created by the first part of the
 library(vtamR)
 library(dplyr)
 
-read_count_file <- system.file("extdata/demo/8_FilterRenkonen.csv", package = "vtamR")
+read_count_file <- system.file("extdata/demo/7_FilterChimera.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
-sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
+sampleinfo <- system.file("extdata/demo/sampleinfo.csv", package = "vtamR")
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
@@ -246,6 +247,7 @@ blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
 Let's limit the analyses to the mock samples
 
 ```{r}
+
 read_count_df <- read.csv(read_count_file)
 sampleinfo_df <- read.csv(sampleinfo)
 

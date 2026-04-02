@@ -1,19 +1,21 @@
 # Ideas for vtamR
 
-Add test demo file for plate2 MFZR
+## stage
+- Install vtamR
+- faire tourner le demo
+- lire et corriger le tuto
+- verifier tout les liens
 
-Add read-count info for mock_composition_template_to_check.csv
+## pool_datasets rearrange columns in output
 
+## Add read-count info for mock_composition_template_to_check.csv
 
-Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
+## Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
 
-OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
+## OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
           reads during this filtering step. "
 
-
-Make example file for 2 datasets with the same marker
-
-SortReads with check_reverse in windows islong.
+## SortReads with check_reverse in windows islong.
 
 
 Revise file stucture of the tutriel. outdir/marker/...
@@ -23,8 +25,7 @@ Use demo_pipeline.R
  - demo mock composition
  - do not add cluster graphics
  
-Add info on tolerate occurrences
-
+## Add info on tolerate occurrences
 
 ## check examples , arguments in doc
 
@@ -34,29 +35,24 @@ Add info on tolerate occurrences
 
 ## rewise Roxygen doc, using ` when necessary.
 
-
-
 ## test if count_seq or count in random_seqR is more effifient for files in different size.
 
 ## dereplicate with vsearch
 
-
 ## FilterPCRerror too long
-
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
 
-		
 ## Polish Histogram_ReadCountByVariant
 
 ## taxassign with vsearch global
 
 ## make useable examples
-	
+
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
 
-## make rdp_local ??
+## make rdp_local
 
 # DONE 
 
@@ -569,8 +565,8 @@ Correct DESCRIPTION an README
 
 ## 2026/03/24
 
-- RandomSeq use_vsearch: the numer of sequneces returned was the toal in input,
-but the fontion worked otherwise. Return is corrected.
+- RandomSeq use_vsearch: the numer of sequneces returned was the total in input,
+but the fonction worked otherwise. Return is corrected.
 
 
 ## 2026/03/25 denoise_by_swarm
@@ -617,7 +613,7 @@ pool_markers tutoriel with 2 markers
 
 Doc and example file for pool_datasets and pool_markers
 
-
+Add test demo file for plate2 MFZR
 
 
 

@@ -103,9 +103,11 @@ if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
 ############################
 
-
+######################
+# Making doc in html
 ### Keep the vignettes and if changes are necessary modify these files
 # check if it builds correctly
+library("devtools")
 devtools::build_vignettes()
 # copy Rmd to web_doc modify TOC
   html_document:
@@ -132,6 +134,7 @@ data(full_asv_tax)
 ############
 
 
+
 ############
 ### info package
 # Lists all  objects from namespace:
@@ -146,8 +149,41 @@ help(package = "vtamR")
 apropos("filter")
 ```
 
-Update versions in
-DESCRIPTION
-vignettes
-inst/CITATION
+# Building new version
+- DESCRIPTION
+- vignettes
+- inst/citation
+- complete NEWS.md
 
+## check package
+```{r}
+library("devtools")
+devtools::check()  
+```
+## install package localy and build vignettes
+```{r}
+library("devtools")
+devtools::install(build_vignettes = TRUE)
+```
+
+## build vignettes
+
+### It creates Rmd and html in doc
+```{r}
+setwd("/home/meglecz/vtamR")
+library("devtools")
+devtools::build_vignettes()
+```
+
+### Make an html with toc float
+
+# copy Rmd to web_doc modify TOC
+```{r}
+  html_document:
+    toc: true
+    toc_float: true
+# knit and put the html to webpage
+# make index to link the different pages
+```
+
+## Making doc in html

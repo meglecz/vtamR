@@ -1,3 +1,14 @@
+# vtamR 0.3.2 (prerelease)
+
+- PoolDatasets is split to pool_datasets and pool_markers
+- Add mean, sum, min, max as aggregation methods to pool_datasets, pool_markers
+PoolReplicates, WriteASVtable, 
+- Correct the read_counts returned by RandomSeq
+- Add denoise_by_swarm
+- Complete tutorial with pooling two plates or two markers
+- Troubleshooting section to pool runs before filtering
+- Correct output file stucture
+
 # vtamR 0.3.1 (prerelease)
 
 - Fixed version number in `DESCRIPTION` to match the prerelease tag.
