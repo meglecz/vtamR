@@ -1,0 +1,15 @@
+"","parameters","asv_count","read_count","sample_count","sample_replicate_count"
+"input",NA,10013,116447,4,12
+"swarm_denoise","by_sample: TRUE split_clusters: TRUE",1111,116446,4,12
+"filter_asv_global","global_read_count_cutoff: 2",155,115442,4,12
+"filter_indel",NA,149,115282,4,12
+"filter_stop_codon","genetic_code: 5",149,115282,4,12
+"filter_contaminant",NA,137,115172,4,12
+"filter_chimera","by_sample: TRUE sample_prop: 0.8 abskew: 2",132,115152,4,12
+"filter_replicate","renkonen_distance_quantile: 0.9",132,115125,4,11
+"filter_occurrence_sample","cutoff: 0.004",51,112905,4,11
+"filter_min_replicate","cutoff: 2",32,111561,4,11
+"filter_occurrence_variant","cutoff: 0.001",32,111482,4,11
+"filter_occurrence_read_count","cutoff: 10",31,111518,4,11
+"pool_filters",NA,31,111454,4,10
+"filter_min_replicate_2","cutoff: 2",30,111364,3,9

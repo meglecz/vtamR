@@ -1,11 +1,11 @@
 ---
-title: "How to make a mock_composition file - v0.3.2"
+title: "How to make a mock_composition file - v1.0.0"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{How to make a mock_composition file - v0.3.2}
+  %\VignetteIndexEntry{How to make a mock_composition file - v1.0.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -82,7 +82,7 @@ procedure in terms of precision (TP / (TP + FP)) and sensitivity (TP / (TP + FN)
 * `ASVspecificCutoff`
 
 The [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) is also useful, 
-although not essential for the `WriteASVtable` function if you wish to add a column in 
+although not essential for the `write_asv_table` function if you wish to add a column in 
 the output to easily find expected occurrences in each mock sample.
 
 
@@ -260,7 +260,7 @@ read_count_mock <- read_count_df %>%
 
 ### Assign taxa to ASVs
 
-`TaxAssignLTG` will assign all ASV in the input csv file or data frame (`read_count_file`).
+`assign_taxonomy_ltg` will assign all ASV in the input csv file or data frame (`read_count_file`).
 
 See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#taxassign).
 
@@ -268,7 +268,7 @@ See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#tax
 you you can omit the `blast_path` argument.
 
 ```{r}
-asv_tax <- TaxAssignLTG(asv=read_count_mock, 
+asv_tax <- assign_taxonomy_ltg(asv=read_count_mock, 
                      taxonomy=taxonomy, 
                      blast_db=blast_db,
                      quiet=TRUE,
@@ -284,11 +284,11 @@ Make a data frame with ASVs and read counts in the
 and add their taxonomic assignment. 
 This format is easier to read for humans, than the `read_count_df`.
 
-See details of `WriteASVtable` [here](tutorial-vtamr-pipeline.html#print-output).
+See details of `write_asv_table` [here](tutorial-vtamr-pipeline.html#print-output).
 
 ```{r}
 
-asv_table_mock <- WriteASVtable(read_count_mock, 
+asv_table_mock <- write_asv_table(read_count_mock, 
                                sampleinfo=sampleinfo, 
                                asv_tax=asv_tax,
                                pool_replicates=TRUE)

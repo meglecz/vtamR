@@ -1,12 +1,13 @@
 ---
-title: "Install vtamR and Third Party Programs - v0.3.2"
-output: 
+title: "Install vtamR and Third Party Programs - v1.0.0"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
   html_document:
     toc: true
     toc_float: true
-    toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v0.3.2}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.0.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -64,7 +65,7 @@ programs. They should be installed on your computer:
 * VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
 * CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
 * SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-* VSEARCH (optional)
+* PIGZ (optional)
 
 `vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
@@ -88,9 +89,9 @@ devtools::install_github("meglecz/vtamR", dependencies = TRUE)
 ```
 
 Install Bioconductor packages manually
-if you intend to use `TaxAssignRDP` function.
+if you intend to use `assign_taxonomy_rdp` function.
 ```{r install_bioc, eval=FALSE}
-# Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
+# Install Bioconductor suggested packages manually if needed (only for assign_taxonomy_ltg)
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 if (!requireNamespace("rRDP", quietly = TRUE)) BiocManager::install("rRDP")
 if (!requireNamespace("rRDPData", quietly = TRUE)) BiocManager::install("rRDPData")
@@ -108,7 +109,7 @@ on how to construct a full metabarcoding pipeline.
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
 * `CUTADAPT` [https://cutadapt.readthedocs.io/en/stable/installation.html](https://cutadapt.readthedocs.io/en/stable/installation.html)
 * `SWARM` [https://github.com/torognes/swarm](https://github.com/torognes/swarm)
-* `VSEARCH` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
+* `PIGZ` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
 **Add the executables to your PATH** 
@@ -248,9 +249,9 @@ C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
 
 ## TaxAssign reference data base
 
-### TaxAssignLTG
+### assign_taxonomy_ltg
 
-For `TaxAssignLTG` (BLAST based Lowest Common Ancestor method),
+For `assign_taxonomy_ltg` (BLAST based Lowest Common Ancestor method),
 a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
@@ -279,19 +280,19 @@ Alternatively, you can also create a custom version from the **TSV format** data
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 
-**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
+**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg), 
 containing taxIDs and a 
-[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
+[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
 If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
 
-### TaxAssignRDP
+### assign_taxonomy_rdp
 
-`TaxAssignRDP` function uses de RDP algorithm to assign bacterial 16S sequences.
+`assign_taxonomy_rdp` function uses de RDP algorithm to assign bacterial 16S sequences.
 The database is provided in the `rRDPData` R data package.
 
-It is also possible to provide to provide a trained classifier object created 
+It is also possible to provide a trained classifier object created 
 with `trainRDP()`.
 
 

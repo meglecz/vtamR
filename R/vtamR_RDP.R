@@ -6,7 +6,7 @@
 NULL
 
 
-#' TaxAssignRDP
+#' assign_taxonomy_rdp
 #' 
 #' Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
 #' 
@@ -35,20 +35,20 @@ NULL
 #' asv_id,domain,kingdom,phylum,class,order,family,genus
 #' @examples
 #' \dontrun{
-#' taxa <- TaxAssignRDP(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
+#' taxa <- assign_taxonomy_rdp(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
 #' }
 #' @export
 #'
 #'
-TaxAssignRDP <- function(
-  asv,
-  dir=NULL,
-  max_memory=1,
-  confidence=0.8,
-  rm_chloroplast=TRUE,
-  outfile="",
-  quiet=TRUE,
-  sep=","){
+assign_taxonomy_rdp <- function(
+    asv,
+    dir=NULL,
+    max_memory=1,
+    confidence=0.8,
+    rm_chloroplast=TRUE,
+    outfile="",
+    quiet=TRUE,
+    sep=","){
   
   ###### test if rRDP is installed
   if (!requireNamespace("rRDP", quietly = TRUE) || !requireNamespace("rRDPData", quietly = TRUE)) {
@@ -64,17 +64,17 @@ TaxAssignRDP <- function(
   }
   
   if (!requireNamespace("Biostrings", quietly = TRUE)) {
-      stop("The Biostrings package is required for this function. Please install it via BiocManager::install('Biostrings').")
-      stop(
-        "The Biostrings package is required for this function.\n",
-        "Please install it with:\n",
-        "  if (!requireNamespace('BiocManager', quietly = TRUE))\n",
-        "    install.packages('BiocManager')\n",
-        "  BiocManager::install('Biostrings')",
-        call. = FALSE
-      )
-    }
-
+    stop("The Biostrings package is required for this function. Please install it via BiocManager::install('Biostrings').")
+    stop(
+      "The Biostrings package is required for this function.\n",
+      "Please install it with:\n",
+      "  if (!requireNamespace('BiocManager', quietly = TRUE))\n",
+      "    install.packages('BiocManager')\n",
+      "  BiocManager::install('Biostrings')",
+      call. = FALSE
+    )
+  }
+  
   
   
   # can accept df or file as an input
@@ -134,3 +134,4 @@ TaxAssignRDP <- function(
   
   return(taxa)
 }
+

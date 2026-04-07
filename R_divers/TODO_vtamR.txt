@@ -1,5 +1,30 @@
 # Ideas for vtamR
 
+Add info in I/O mock_ncbi_fasta
+Check links '(#'
+
+#makeknownoccurrences section do not extits chek and correct links
+Create `mock_composition` File section or make-mock-composition-file.html
+
+rename lfn_sample_replicate_cutoff in output of suggest, and tuto.
+lfn_variant_cutoff
+lfn_read_count_cutoff
+lfn_sample_replicate_cutoff
+
+suggest_filter_parameters_pcr_error
+suggest_filter_parameters_readcount_variant
+suggest_filter_parameters_sample
+
+suggest_pcr_error_cutoff
+suggest_variant_readcount_cutoffs
+suggest_sample_cutoff
+
+variant_cutoff
+read_count_cutoff
+sample_cutoff
+pcr_error_cutoff
+
+
 ## stage
 - Install vtamR
 - faire tourner le demo

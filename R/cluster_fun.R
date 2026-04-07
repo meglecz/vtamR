@@ -36,21 +36,21 @@ NULL
 #' asv pairs with identity bellow min_id are not listed. Colums: query, target, identity 
 #' @examples 
 #' \dontrun{
-#' identity_df <- PairwiseIdentity(asv, 
+#' identity_df <- pairwise_identity(asv, 
 #'                                 min_id = 0.8, 
 #'                                 vsearch_path=vsearch, 
 #'                                 num_threads=8)
 #' }
 #' @export
 #' 
-PairwiseIdentity <- function(asv, 
-                             min_id = 0.8, 
-                             vsearch_path=vsearch, 
-                             num_threads=0,
-                             outfile="",
-                             sep=",",
-                             quiet=TRUE
-                             ){
+pairwise_identity <- function(asv, 
+                              min_id = 0.8, 
+                              vsearch_path=vsearch, 
+                              num_threads=0,
+                              outfile="",
+                              sep=",",
+                              quiet=TRUE
+){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -71,10 +71,10 @@ PairwiseIdentity <- function(asv,
   asv_df <- asv_df %>%
     select(asv, asv_id) %>%
     distinct()
-  t <- check_one_to_one_relationship(asv_df) # stop execution, if FALSE
+  t <- check_one_to_one(asv_df) # stop execution, if FALSE
   
   fasta <- file.path(tempdir(), "asv.fasta")
-  write_fasta_df(asv_df, outfile=fasta, read_count=FALSE)
+  write_fasta_with_counts(asv_df, outfile=fasta, read_count=FALSE)
   
   ### run vsearch allpairs_global
   vsearch_out <- file.path(tempdir(), "vsearch_out.tsv")
@@ -82,7 +82,7 @@ PairwiseIdentity <- function(asv,
   args <- c(
     "--allpairs_global", fasta,
     "--userout", vsearch_out,
-#    "--userfields", '"query+target+id+ids+alnlen+aln"',
+    #    "--userfields", '"query+target+id+ids+alnlen+aln"',
     "--userfields", "query+target+id+ids+alnlen+aln",
     "--id", min_id,
     "--threads", num_threads
@@ -144,20 +144,20 @@ PairwiseIdentity <- function(asv,
 #' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
-#' cluster_df <- GetClusterIdSwarm(read_count_df, 
+#' cluster_df <- cluster_swarm(read_count_df, 
 #'                      swarm_d=7, 
 #'                      swarm_path="swarm",
 #'                      num_threads=8)
 #' }
 #' @export
-GetClusterIdSwarm <- function(read_count, 
-                               swarm_d=1, 
-                               fastidious=FALSE,
-                               swarm_path="swarm", 
-                               num_threads=0, 
-                               outfile="", 
-                               sep=",", 
-                               quiet=TRUE){
+cluster_swarm <- function(read_count, 
+                          swarm_d=1, 
+                          fastidious=FALSE,
+                          swarm_path="swarm", 
+                          num_threads=0, 
+                          outfile="", 
+                          sep=",", 
+                          quiet=TRUE){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -168,7 +168,7 @@ GetClusterIdSwarm <- function(read_count,
   }else{
     read_count_df <- read_count
   }
-  # if called from a ClusterASV, without specifying the path, it has a "" value
+  # if called from a cluster_asv, without specifying the path, it has a "" value
   if(swarm_path==""){
     swarm_path<- "swarm"
   }
@@ -283,19 +283,19 @@ GetClusterIdSwarm <- function(read_count,
 #' @return Data frame with the following columns: asv_id, cluster_id
 #' @examples 
 #' \dontrun{
-#' cluster_df <- GetClusterIdVsearch(read_count_df, 
+#' cluster_df <- cluster_vsearch(read_count_df, 
 #'                                       identity=0.97,
 #'                                       vsearch_path="vsearch",
 #'                                       num_threads=8)
 #' }
 #' @export
-GetClusterIdVsearch <- function(read_count, 
-                          identity=0.97, 
-                          vsearch_path="vsearch", 
-                          num_threads=0, 
-                          outfile="", 
-                          sep=",", 
-                          quiet=TRUE){
+cluster_vsearch <- function(read_count, 
+                            identity=0.97, 
+                            vsearch_path="vsearch", 
+                            num_threads=0, 
+                            outfile="", 
+                            sep=",", 
+                            quiet=TRUE){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -307,7 +307,7 @@ GetClusterIdVsearch <- function(read_count,
     read_count_df <- read_count
   }
   
-  # if called from a ClusterASV, without specifying the path, it has a "" value
+  # if called from a cluster_asv, without specifying the path, it has a "" value
   if(vsearch_path==""){
     vsearch_path<- "vsearch"
   }
@@ -328,7 +328,7 @@ GetClusterIdVsearch <- function(read_count,
   # make a fasta file with unique asv format adapted to swarm
   input_fas <- file.path(tmp_dir, "input.fasta")
   # make fasta file with abundances
-  write_fasta_df(asv_df, input_fas, read_count = TRUE)
+  write_fasta_with_counts(asv_df, input_fas, read_count = TRUE)
   # Outfile name. Each line is a cluster, with asv_ids separated  by space
   outfile <- file.path(tmp_dir, "out_cluster_size.txt")
   
@@ -352,7 +352,7 @@ GetClusterIdVsearch <- function(read_count,
     # read clustering results to df_centroids
     # merged_id (include to a cluster), centroid_id (most abundant asv_id of the cluster)
     # if sequence is not in a cluster or if it is a centroid, asv not in blast6_file
-    cluster_df1 <- read_blast6out(outfile)
+    cluster_df1 <- read_vsearch_cluster_size_outmft6(outfile)
     cluster_df1 <- cluster_df1 %>%
       rename(cluster_id = centroid_id) %>%
       rename(asv_id = merged_id)
@@ -400,7 +400,7 @@ GetClusterIdVsearch <- function(read_count,
 #' @return A density plot pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
-#' plot <- PairwiseIdentityPlotPerSwarmD(read_count_df, 
+#' plot <- plot_pairwise_identity_swarm(read_count_df, 
 #'                                       swarm_d_min=2, 
 #'                                       swarm_d_max=12,
 #'                                       swarm_d_increment=2,
@@ -411,18 +411,18 @@ GetClusterIdVsearch <- function(read_count,
 #'                                       plotfile="density_plot.png")
 #' }
 #' @export
-PairwiseIdentityPlotPerSwarmD <- function(read_count, 
-                                          swarm_d_min=1, 
-                                          swarm_d_max=15,
-                                          swarm_d_increment=1,
-                                          min_id = 0.8, 
-                                          vsearch_path="vsearch", 
-                                          swarm_path="swarm",
-                                          num_threads=0,
-                                          outfile="", 
-                                          plotfile="", 
-                                          sep=",", 
-                                          quiet=TRUE
+plot_pairwise_identity_swarm <- function(read_count, 
+                                         swarm_d_min=1, 
+                                         swarm_d_max=15,
+                                         swarm_d_increment=1,
+                                         min_id = 0.8, 
+                                         vsearch_path="vsearch", 
+                                         swarm_path="swarm",
+                                         num_threads=0,
+                                         outfile="", 
+                                         plotfile="", 
+                                         sep=",", 
+                                         quiet=TRUE
 ){
   
   if(num_threads == 0){
@@ -440,14 +440,14 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
   if(!quiet){
     print("Calculating pairwise identities")
   }
-  pairwise_id <- PairwiseIdentity(read_count_df, min_id = 0.8, vsearch_path=vsearch_path, quiet=TRUE, num_threads=0)
+  pairwise_id <- pairwise_identity(read_count_df, min_id = 0.8, vsearch_path=vsearch_path, quiet=TRUE, num_threads=0)
   
   
   #####
   # initialize data frame (cluster: same/different)
   pairwise_id_final <- data.frame(pairwise_asv_identity = numeric(),
-                              cluster = character(),
-                              clustering_parameter= factor())
+                                  cluster = character(),
+                                  clustering_parameter= factor())
   
   #####
   # for each d
@@ -458,8 +458,8 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     }
     #### Run swarm 
     # cluster_df : avs_id, clsuter_id
-    cluster_df <- GetClusterIdSwarm(read_count_df, swarm_d=d,fastidious=FALSE,
-                  swarm_path=swarm_path, num_threads=num_threads, quiet=quiet)
+    cluster_df <- cluster_swarm(read_count_df, swarm_d=d,fastidious=FALSE,
+                                swarm_path=swarm_path, num_threads=num_threads, quiet=quiet)
     #####
     # add to pairwise_id the clusters of each query and target and define 
     # if they are in the same or different clusters
@@ -471,7 +471,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
     # add same/different column, and the d for each line
     pairwise_id_local <- pairwise_id_local %>%
       mutate(cluster = ifelse(cluster_id_query == cluster_id_target, "same", "different")) %>%
-#      mutate(clustering_parameter=paste0("swarm's d: ",d)) %>%
+      #      mutate(clustering_parameter=paste0("swarm's d: ",d)) %>%
       mutate(clustering_parameter=d) %>%
       select(pairwise_asv_identity=identity, cluster, clustering_parameter)
     # add lines to the overall df
@@ -501,10 +501,10 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
           axis.text = element_text(size = 7),
           axis.title = element_text(size = 10),
           strip.text = element_text(size = 8)
-          )
+    )
   
   ### 
-
+  
   
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
@@ -547,7 +547,7 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #' @return A density plot of pairwise percentage of identities.
 #' @examples 
 #' \dontrun{
-#' plot <- PairwiseIdentityPlotPerClusterIdentityThreshold(read_count_df, 
+#' plot <- plot_pairwise_identity_vsearch(read_count_df, 
 #'                                       identity_min=0.9, 
 #'                                       identity_max=0.99,
 #'                                       identity_increment=0.01,
@@ -557,17 +557,17 @@ PairwiseIdentityPlotPerSwarmD <- function(read_count,
 #'                                       plotfile="density_plot.png")
 #' }
 #' @export
-PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count, 
-                                          identity_min=0.9, 
-                                          identity_max=0.99,
-                                          identity_increment=0.01,
-                                          min_id = 0.8, 
-                                          vsearch_path="vsearch", 
-                                          num_threads=0,
-                                          outfile="", 
-                                          plotfile="",
-                                          sep=",", 
-                                          quiet=TRUE){
+plot_pairwise_identity_vsearch <- function(read_count, 
+                                           identity_min=0.9, 
+                                           identity_max=0.99,
+                                           identity_increment=0.01,
+                                           min_id = 0.8, 
+                                           vsearch_path="vsearch", 
+                                           num_threads=0,
+                                           outfile="", 
+                                           plotfile="",
+                                           sep=",", 
+                                           quiet=TRUE){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -584,13 +584,13 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
   if(!quiet){
     print("Calculating pairwise identities")
   }
-  pairwise_id <- PairwiseIdentity(read_count_df, min_id = 0.8, vsearch_path=vsearch_path, quiet=quiet, num_threads=0)
+  pairwise_id <- pairwise_identity(read_count_df, min_id = 0.8, vsearch_path=vsearch_path, quiet=quiet, num_threads=0)
   
   #####
   # initialize data frame (cluster: same/different)
   pairwise_id_final <- data.frame(pairwise_asv_identity = numeric(),
-                              cluster = character(),
-                              clustering_parameter= factor())
+                                  cluster = character(),
+                                  clustering_parameter= factor())
   
   #####
   # for each  identity threshold
@@ -602,27 +602,27 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
     
     #####
     # run vsearch
-    cluster_size <- GetClusterIdVsearch(read_count_df, 
-                                                 identity=d, 
-                                                 vsearch_path=vsearch_path, 
-                                                 num_threads=num_threads, 
-                                                 quiet=TRUE)
-  
+    cluster_size <- cluster_vsearch(read_count_df, 
+                                    identity=d, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads, 
+                                    quiet=TRUE)
+    
     #####
     # add to pairwise_id the clusters of each query and target and define 
     # if they are in the same or different clusters
-
+    
     # Add cluster of query
     pairwise_id_local <- left_join(pairwise_id, cluster_size, by=c("query"="asv_id")) %>%
       rename(cluster_id_query = cluster_id)
     # Add cluster of target
     pairwise_id_local <- left_join(pairwise_id_local, cluster_size, by=c("target"="asv_id")) %>%
       rename(cluster_id_target = cluster_id) 
-
+    
     # add within/between column, and the d for each line
     pairwise_id_local <- pairwise_id_local %>%
       mutate(cluster = ifelse(cluster_id_query == cluster_id_target, "same", "different")) %>%
-#      mutate(clustering_parameter= paste0("Clustering with ", d, "identity")) %>%
+      #      mutate(clustering_parameter= paste0("Clustering with ", d, "identity")) %>%
       mutate(clustering_parameter= d) %>%
       select(pairwise_asv_identity=identity, cluster, clustering_parameter)
     # add lines to the overall df
@@ -640,23 +640,23 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
   # Make the plot
   # fix order of d
   pairwise_id_final$clustering_parameter <- factor(pairwise_id_final$clustering_parameter, levels = unique(pairwise_id_final$clustering_parameter))
-
+  
   
   p <-ggplot(pairwise_id_final, aes(x = pairwise_asv_identity, fill = cluster, color = cluster)) +
-     geom_density(adjust = 1.5, alpha = 0.4) +
-     scale_x_continuous(limits = c(80, 100)) +
-     facet_wrap(~clustering_parameter, scales = "free_y") +  # one subplot per d
-     xlab("Pairwise Percent Identity Between ASVs") +
-     ylab("Density") +
-     ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters \n using different identity thresholds for clustering") +
-     theme(plot.title = element_text(size=12, hjust=0.5),
-                axis.text = element_text(size = 7),
-                axis.title = element_text(size = 8),
-                strip.text = element_text(size = 10)
-          )
+    geom_density(adjust = 1.5, alpha = 0.4) +
+    scale_x_continuous(limits = c(80, 100)) +
+    facet_wrap(~clustering_parameter, scales = "free_y") +  # one subplot per d
+    xlab("Pairwise Percent Identity Between ASVs") +
+    ylab("Density") +
+    ggtitle("Pairwise Percent Identity Between ASVs \n Within and Across Clusters \n using different identity thresholds for clustering") +
+    theme(plot.title = element_text(size=12, hjust=0.5),
+          axis.text = element_text(size = 7),
+          axis.title = element_text(size = 8),
+          strip.text = element_text(size = 10)
+    )
   
   ### 
-
+  
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
     png(filename=plotfile, width = 2000, height = 1500, res = 300)
@@ -693,15 +693,15 @@ PairwiseIdentityPlotPerClusterIdentityThreshold <- function(read_count,
 #' for each taxonomic level
 #' @examples 
 #' \dontrun{
-#' plot <- ClassifyClusters(read_count_df, 
+#' df <- classify_clusters(read_count_df, 
 #'                                       swarm_d=7, 
 #'                                       vsearch_path="vsearch",
 #'                                       num_threads=8)
 #' }
 #' @export
-ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE, 
-                             taxlevels=c("domain", "phylum", "class", "order","family", "genus", "species")
-                             ){
+classify_clusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE, 
+                              taxlevels=c("domain", "phylum", "class", "order","family", "genus", "species")
+){
   
   ##### make df if read_count is file
   if(is.character(cluster)){
@@ -735,7 +735,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
       rename(taxon = all_of(tl)) %>% # rename the actual taxlevel to taxon
       select(cluster_id, taxon) %>%
       filter(!is.na(taxon))
-
+    
     # group_by cluster
     taxa_df_tl <- taxa_df_tl %>%
       group_by(cluster_id) %>% # one line per cluster
@@ -748,7 +748,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
     
     # of all taxa in a vector instead of lists
     taxa_simple <- unlist(taxa_df_tl$unique_taxa)
-
+    
     # classify
     taxa_df_tl <- taxa_df_tl %>%
       mutate(
@@ -757,17 +757,17 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
           n_unique_taxa == 1 ~ {
             taxon <- unique_taxa[[1]]
             n = sum(taxa_simple == taxon, na.rm=TRUE) # number of clusters where 
-                                                      # the taxon is present
+            # the taxon is present
             if(n == 1) "closed" else "open"
-            },
+          },
           TRUE ~ "hybrid"
-          )
+        )
       ) %>%
       select(cluster_id, classification)
     
     new_name <- paste("classification", tl, sep = "_")
     class <- left_join(class, taxa_df_tl, by="cluster_id") %>%
-    rename(!!new_name := classification)
+      rename(!!new_name := classification)
     
   }
   return(class)
@@ -815,7 +815,7 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' (open, closed, hybrid)
 #' @examples 
 #' \dontrun{
-#' plot <- PlotClusterClasstification(read_count, 
+#' plot <- plot_cluster_classification(read_count, 
 #'                                    taxa,
 #'                                    clustering_method = "swarm"
 #'                                    cluster_params = c(2, 4, 6, 8, 10)
@@ -825,17 +825,17 @@ ClassifyClusters <- function(cluster, taxa, outfile="", sep=",", quiet=TRUE,
 #' }
 #' @export
 
-PlotClusterClasstification <- function(read_count, taxa, 
-                           clustering_method="swarm", 
-                           cluster_params=c(2,4,6,8,10), 
-                           vsearch_path="vsearch", 
-                           swarm_path="swarm", 
-                           taxlevels= c("species", "genus"),
-                           outfile="",
-                           plotfile="",
-                           sep= ",",
-                           num_threads=0,
-                           quiet = TRUE){
+plot_cluster_classification <- function(read_count, taxa, 
+                                        clustering_method="swarm", 
+                                        cluster_params=c(2,4,6,8,10), 
+                                        vsearch_path="vsearch", 
+                                        swarm_path="swarm", 
+                                        taxlevels= c("species", "genus"),
+                                        outfile="",
+                                        plotfile="",
+                                        sep= ",",
+                                        num_threads=0,
+                                        quiet = TRUE){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -865,38 +865,38 @@ PlotClusterClasstification <- function(read_count, taxa,
     "number_of_clusters" = numeric(),
     "taxlevel" = character(),
     "clustering_parameter" = numeric())
-
+  
   #### for each d or % id
   for(i in cluster_params){
     ### cluster
-      if(clustering_method =="swarm"){
-        cluster_df <- GetClusterIdSwarm(read_count_df, 
-                                       swarm_d=i, 
-                                       swarm_path=swarm_path, 
-                                       num_threads=num_threads, 
-                                       quiet=quiet)
-      }else{
-        cluster_df <- GetClusterIdVsearch(read_count_df, 
-                                                   identity=i, 
-                                                   vsearch_path=vsearch_path, 
-                                                   num_threads=num_threads, 
-                                                   quiet=quiet)
-      }
+    if(clustering_method =="swarm"){
+      cluster_df <- cluster_swarm(read_count_df, 
+                                  swarm_d=i, 
+                                  swarm_path=swarm_path, 
+                                  num_threads=num_threads, 
+                                  quiet=quiet)
+    }else{
+      cluster_df <- cluster_vsearch(read_count_df, 
+                                    identity=i, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads, 
+                                    quiet=quiet)
+    }
+    
+    ### classify
+    classification <- classify_clusters(cluster_df, taxa_df, quiet=quiet, 
+                                        taxlevels=taxlevels)
+    #### count the number of clusters in each class (open, closed, hybrid, NA)
+    for(tl in taxlevels){
+      col_name <- paste("classification", tl, sep="_")
       
-      ### classify
-      classification <- ClassifyClusters(cluster_df, taxa_df, quiet=quiet, 
-                                          taxlevels=taxlevels)
-      #### count the number of clusters in each class (open, closed, hybrid, NA)
-      for(tl in taxlevels){
-        col_name <- paste("classification", tl, sep="_")
-  
-          tmp <- classification %>%
-            dplyr::count(!!sym(col_name)) %>%
-            rename("classification" = !!sym(col_name), "number_of_clusters"=n) %>%
-            mutate("taxlevel" = tl, "clustering_parameter" = i) 
-          
-          clusters_count <- rbind(clusters_count, tmp)
-      }
+      tmp <- classification %>%
+        dplyr::count(!!sym(col_name)) %>%
+        rename("classification" = !!sym(col_name), "number_of_clusters"=n) %>%
+        mutate("taxlevel" = tl, "clustering_parameter" = i) 
+      
+      clusters_count <- rbind(clusters_count, tmp)
+    }
   } # end for each cluster_params
   
   clusters_count$taxlevel <- factor(clusters_count$taxlevel, levels = unique(clusters_count$taxlevel))
@@ -920,7 +920,7 @@ PlotClusterClasstification <- function(read_count, taxa,
       axis.text = element_text(size = 10),
       axis.title = element_text(size = 12)
     )
-
+  
   
   ### 
   if(outfile != ""){
@@ -935,7 +935,7 @@ PlotClusterClasstification <- function(read_count, taxa,
     dev.off()
   }
   return(p)
-
+  
 }
 
 
@@ -957,10 +957,10 @@ PlotClusterClasstification <- function(read_count, taxa,
 #' @export
 #' 
 pool_by_cluster <- function(read_count_df, 
-                          cluster_df){
+                            cluster_df){
   
   ### check if one to one relationship between asv and asv_id
-  t <- check_one_to_one_relationship(read_count_df)
+  t <- check_one_to_one(read_count_df)
   
   ### get unique list of asv and asv_id
   asv_unique <- read_count_df%>%
@@ -1040,24 +1040,24 @@ pool_by_cluster <- function(read_count_df,
 #' and an additional cluster_id column is added if group==FALSE.
 #' @examples
 #' \dontrun{
-#' read_count_df <- ClusterASV(read_count=read_count_df, group=TRUE,method="vsearch",
+#' read_count_df <- cluster_asv(read_count=read_count_df, group=TRUE,method="vsearch",
 #' by_sample=TRUE, path=swarm_path, 
 #' num_threads=4)
 #' }
 #' @export
 #' 
-ClusterASV <- function(read_count, 
-                      group = TRUE,
-                      by_sample=FALSE,
-                      method = "swarm",
-                      path="", 
-                      num_threads=0, 
-                      swarm_d=1, 
-                      fastidious=T, 
-                      identity = 0.97,
-                      outfile="", 
-                      sep=",", 
-                      quiet=T
+cluster_asv <- function(read_count, 
+                        group = TRUE,
+                        by_sample=FALSE,
+                        method = "swarm",
+                        path="", 
+                        num_threads=0, 
+                        swarm_d=1, 
+                        fastidious=T, 
+                        identity = 0.97,
+                        outfile="", 
+                        sep=",", 
+                        quiet=T
 ){
   
   if(num_threads == 0){
@@ -1094,17 +1094,17 @@ ClusterASV <- function(read_count,
       
       # get cluster_id for all ASV
       if(method == "swarm"){
-        cluster_df <- GetClusterIdSwarm(df_sample, 
-                                        swarm_d=swarm_d, 
-                                        swarm_path=path, 
-                                        num_threads=num_threads, 
-                                        quiet=quiet)
+        cluster_df <- cluster_swarm(df_sample, 
+                                    swarm_d=swarm_d, 
+                                    swarm_path=path, 
+                                    num_threads=num_threads, 
+                                    quiet=quiet)
       }else{
-        cluster_df <- GetClusterIdVsearch(df_sample, 
-                                          identity=identity, 
-                                          vsearch_path=path, 
-                                          num_threads=num_threads, 
-                                          quiet=quiet)
+        cluster_df <- cluster_vsearch(df_sample, 
+                                      identity=identity, 
+                                      vsearch_path=path, 
+                                      num_threads=num_threads, 
+                                      quiet=quiet)
       }
       
       # modify input df according to group
@@ -1120,17 +1120,17 @@ ClusterASV <- function(read_count,
   }else{ # run swarm for all samples together
     # get cluster_id for all ASV
     if(method == "swarm"){
-      cluster_df <- GetClusterIdSwarm(read_count_df, 
-                                      swarm_d=swarm_d, 
-                                      swarm_path=path, 
-                                      num_threads=num_threads, 
-                                      quiet=quiet)
+      cluster_df <- cluster_swarm(read_count_df, 
+                                  swarm_d=swarm_d, 
+                                  swarm_path=path, 
+                                  num_threads=num_threads, 
+                                  quiet=quiet)
     }else{
-      cluster_df <- GetClusterIdVsearch(read_count_df, 
-                                        identity=identity, 
-                                        vsearch_path=path, 
-                                        num_threads=num_threads, 
-                                        quiet=quiet)
+      cluster_df <- cluster_vsearch(read_count_df, 
+                                    identity=identity, 
+                                    vsearch_path=path, 
+                                    num_threads=num_threads, 
+                                    quiet=quiet)
     }
     
     if(group){# pool ASV by cluster
@@ -1200,17 +1200,17 @@ ClusterASV <- function(read_count,
 #' }
 #' @export
 denoise_by_swarm <- function(read_count, 
-                       by_sample=FALSE,
-                       split_clusters=FALSE,
-                       min_abundance_ratio = 0.2,
-                       min_read_count = 10,
-                       swarm_path="swarm", 
-                       num_threads=0, 
-                       swarm_d=1, 
-                       fastidious=TRUE, 
-                       outfile="", 
-                       sep=",", 
-                       quiet=TRUE
+                             by_sample=FALSE,
+                             split_clusters=FALSE,
+                             min_abundance_ratio = 0.2,
+                             min_read_count = 10,
+                             swarm_path="swarm", 
+                             num_threads=0, 
+                             swarm_d=1, 
+                             fastidious=TRUE, 
+                             outfile="", 
+                             sep=",", 
+                             quiet=TRUE
 ){
   
   if (split_clusters & (!by_sample | swarm_d != 1 | !fastidious)) {
@@ -1239,7 +1239,7 @@ denoise_by_swarm <- function(read_count,
     # can dela with df with out without replicates
     out_df <- read_count_df %>%
       filter(asv=="")
-
+    
     # get list of samples 
     sample_list <- unique(read_count_df$sample)
     
@@ -1254,33 +1254,33 @@ denoise_by_swarm <- function(read_count,
         filter(sample==s)
       
       # get cluster_id for all ASV
-      cluster_df <- GetClusterIdSwarm(df_sample, 
-                                      swarm_d=swarm_d, 
-                                      swarm_path=swarm_path, 
-                                      num_threads=num_threads, 
-                                      quiet=quiet)
+      cluster_df <- cluster_swarm(df_sample, 
+                                  swarm_d=swarm_d, 
+                                  swarm_path=swarm_path, 
+                                  num_threads=num_threads, 
+                                  quiet=quiet)
       
       # pool ASV by cluster
-        if(split_clusters){
-          df_sample <- split_swarm_clusters(df_sample,
-                                            cluster_df,
-                                            min_abundance_ratio = min_abundance_ratio,
-                                            min_read_count = min_read_count
-                                            )
-        } else{
-          df_sample <- pool_by_cluster(df_sample, cluster_df)
-        }
+      if(split_clusters){
+        df_sample <- split_swarm_clusters(df_sample,
+                                          cluster_df,
+                                          min_abundance_ratio = min_abundance_ratio,
+                                          min_read_count = min_read_count
+        )
+      } else{
+        df_sample <- pool_by_cluster(df_sample, cluster_df)
+      }
       # add output of the sample to the total data frame    
       out_df <- rbind(out_df, df_sample)
     }# end for each sample
   }else{ # run swarm for all samples together
     # get cluster_id for all ASV
-      cluster_df <- GetClusterIdSwarm(read_count_df, 
-                                      swarm_d=swarm_d, 
-                                      swarm_path=swarm_path, 
-                                      num_threads=num_threads, 
-                                      quiet=quiet)
-      out_df <- pool_by_cluster(read_count_df, cluster_df)
+    cluster_df <- cluster_swarm(read_count_df, 
+                                swarm_d=swarm_d, 
+                                swarm_path=swarm_path, 
+                                num_threads=num_threads, 
+                                quiet=quiet)
+    out_df <- pool_by_cluster(read_count_df, cluster_df)
   }
   
   if(outfile != ""){
@@ -1346,7 +1346,7 @@ split_swarm_clusters <-function(read_count,
                                 outfile = "",
                                 sep = ",",
                                 quiet = TRUE
-                                ){
+){
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -1413,15 +1413,15 @@ split_swarm_clusters <-function(read_count,
     # multiply all read count by the proportion of original and selected read_count of the cluster
     mutate(
       read_count_cis = round(
-      as.numeric(read_count) * cluster_rc_all / cluster_rc_selected,
-      digits = 0
+        as.numeric(read_count) * cluster_rc_all / cluster_rc_selected,
+        digits = 0
       )
     )
-#    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
-    # Check if the sum of the modified read count equals of the original total read of the cluster
-    #  group_by(cluster_id) %>%
-    #  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
-    #  ungroup() %>%
+  #    mutate(read_count_cis = round(read_count * cluster_rc_all / cluster_rc_selected, digits=0))
+  # Check if the sum of the modified read count equals of the original total read of the cluster
+  #  group_by(cluster_id) %>%
+  #  mutate(read_count_cis_sum = sum(read_count_cis)) %>%
+  #  ungroup() %>%
   
   if( "replicate" %in% colnames(read_count_df)){
     cluster_selected <- cluster_selected %>%
@@ -1465,7 +1465,7 @@ split_swarm_clusters <-function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(grouped_swarm, file = outfile,  row.names = F, sep=sep)
   }
-
+  
   return(grouped_swarm)
 }
 
@@ -1536,148 +1536,148 @@ pool_markers <- function(...,
   
   #### concatenate input df
   # take first, determine repl_bool
-#  df_list <- list(mfzr, zfzr)
-    df_list <- list(...)
-    df <-  df_list[[1]]
-    if("replicate" %in% colnames(df)){
-      repl_bool <- TRUE
-    }else{
-      repl_bool <- FALSE
-    }
+  #  df_list <- list(mfzr, zfzr)
+  df_list <- list(...)
+  df <-  df_list[[1]]
+  if("replicate" %in% colnames(df)){
+    repl_bool <- TRUE
+  }else{
+    repl_bool <- FALSE
+  }
   # read the other df
-    for(i in 2:length(df_list)){
-      
-      if(repl_bool){
-        tmp <- df_list[[i]] %>%
-          select(marker, asv_id, sample, replicate, read_count, asv)
-      }else{
-        tmp <- df_list[[i]] %>%
-          select(marker, asv_id, sample, read_count, asv)
-      }
-      df <- rbind(df, tmp)
-    }
+  for(i in 2:length(df_list)){
     
-
+    if(repl_bool){
+      tmp <- df_list[[i]] %>%
+        select(marker, asv_id, sample, replicate, read_count, asv)
+    }else{
+      tmp <- df_list[[i]] %>%
+        select(marker, asv_id, sample, read_count, asv)
+    }
+    df <- rbind(df, tmp)
+  }
+  
+  
   ###
   # Pool ASVs identical on their overlapping region
   ###
   # add marker to asv_id to avoid incompatibility among asv_id across markers 
+  df <- df %>%
+    mutate(asv_id = paste(marker, asv_id, sep="_"))
+  
+  asvs <- df %>%
+    group_by(asv_id, asv) %>%
+    summarize("rc" = sum(read_count), .groups="drop")
+  
+  # arrange ASVs by decreasing sequence length and then by read_count
+  asvs$length <- as.numeric(nchar(asvs$asv))
+  asvs <- asvs %>%
+    arrange(desc(length), desc(rc))
+  
+  # make a fasta file
+  fasta <- file.path(tmp_dir, "vsearch_input.fasta")
+  writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
+  
+  # cluster using cluster_smallmem and 1 as identity limit
+  centroids_file <- file.path(tmp_dir, "consout.txt")
+  #query sequences are shorter than subjects => centroids are in the subjects column
+  blastout_file <- file.path(tmp_dir, "blastout.tsv")  
+  ##### run cmd
+  args <- c(
+    "--cluster_smallmem", fasta,
+    "--consout", centroids_file,
+    "--blast6out", blastout_file,
+    "--id", 1 
+  )
+  if(num_threads > 0){
+    args <- append(args, c("-threads", num_threads))
+  }
+  if(quiet){
+    args <- append(args, c("--quiet"))
+  }
+  run_system2(vsearch_path, args, quiet=quiet)
+  
+  ###
+  # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
+  ###
+  # read the ids of centoids, and get the list of centroids
+  # >centroid=mfzr_2374;seqs=2
+  cent <- read.table(centroids_file)
+  colnames(cent) <- c("centroid_id")
+  cent <- cent %>%
+    filter(grepl(">centroid=", centroid_id)) # keep only fasta definition lines
+  cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
+  cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
+  cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
+  cent$nbseq <- as.numeric(cent$nbseq)
+  
+  # add to centroide the asv_id that are in the same cluster
+  blastout <- read.table(blastout_file) %>%
+    select(1,2)
+  colnames(blastout) <- c("asv_id", "centroid_id")
+  cent <- left_join(cent, blastout, by= c("centroid_id"))
+  # add centroid_id to asv_id column for singletons
+  cent <- cent %>%
+    mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
+  # add a line for each non-singleton centroid, 
+  # with centroid id in both the centroid and in query columns
+  added_lines <- cent %>%
+    filter(nbseq>1) %>%
+    mutate(asv_id=centroid_id) %>%
+    unique # add just one line per centroid, not several if many sequences in cluster
+  cent<- rbind(cent, added_lines) %>%
+    arrange(centroid_id)
+  
+  ###
+  # Pool ASVs of the same cluster
+  ###
+  # add the centroid_id to each asv if df
+  df <- left_join(df, cent, by=c("asv_id")) %>%
+    select(-nbseq)
+  # add the centroid sequence to each centroid_id in df
+  df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
+    select(-length, -rc) %>%
+    rename("asv"=asv.x, "centroid"=asv.y) %>%
+    arrange(centroid_id, marker)
+  # order the columns
+  if(repl_bool){
     df <- df %>%
-      mutate(asv_id = paste(marker, asv_id, sep="_"))
-    
-    asvs <- df %>%
-      group_by(asv_id, asv) %>%
-      summarize("rc" = sum(read_count), .groups="drop")
-    
-    # arrange ASVs by decreasing sequence length and then by read_count
-    asvs$length <- as.numeric(nchar(asvs$asv))
-    asvs <- asvs %>%
-      arrange(desc(length), desc(rc))
-    
-    # make a fasta file
-    fasta <- file.path(tmp_dir, "vsearch_input.fasta")
-    writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
-    
-    # cluster using cluster_smallmem and 1 as identity limit
-    centroids_file <- file.path(tmp_dir, "consout.txt")
-    #query sequences are shorter than subjects => centroids are in the subjects column
-    blastout_file <- file.path(tmp_dir, "blastout.tsv")  
-    ##### run cmd
-    args <- c(
-      "--cluster_smallmem", fasta,
-      "--consout", centroids_file,
-      "--blast6out", blastout_file,
-      "--id", 1 
-    )
-    if(num_threads > 0){
-      args <- append(args, c("-threads", num_threads))
-    }
-    if(quiet){
-      args <- append(args, c("--quiet"))
-    }
-    run_system2(vsearch_path, args, quiet=quiet)
-    
-    ###
-    # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
-    ###
-    # read the ids of centoids, and get the list of centroids
-    # >centroid=mfzr_2374;seqs=2
-    cent <- read.table(centroids_file)
-    colnames(cent) <- c("centroid_id")
-    cent <- cent %>%
-      filter(grepl(">centroid=", centroid_id)) # keep only fasta definition lines
-    cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
-    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
-    cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
-    cent$nbseq <- as.numeric(cent$nbseq)
-    
-    # add to centroide the asv_id that are in the same cluster
-    blastout <- read.table(blastout_file) %>%
-      select(1,2)
-    colnames(blastout) <- c("asv_id", "centroid_id")
-    cent <- left_join(cent, blastout, by= c("centroid_id"))
-    # add centroid_id to asv_id column for singletons
-    cent <- cent %>%
-      mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
-    # add a line for each non-singleton centroid, 
-    # with centroid id in both the centroid and in query columns
-    added_lines <- cent %>%
-      filter(nbseq>1) %>%
-      mutate(asv_id=centroid_id) %>%
-      unique # add just one line per centroid, not several if many sequences in cluster
-    cent<- rbind(cent, added_lines) %>%
-      arrange(centroid_id)
-    
-    ###
-    # Pool ASVs of the same cluster
-    ###
-    # add the centroid_id to each asv if df
-    df <- left_join(df, cent, by=c("asv_id")) %>%
-      select(-nbseq)
-    # add the centroid sequence to each centroid_id in df
-    df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
-      select(-length, -rc) %>%
-      rename("asv"=asv.x, "centroid"=asv.y) %>%
-      arrange(centroid_id, marker)
-    # order the columns
-    if(repl_bool){
-      df <- df %>%
-        select(centroid_id,asv_id,marker,sample,replicate,read_count,asv,centroid)
-    }else{
-      df <- df %>%
-        select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
-    }
-    
-    
-    if(repl_bool){
-      df_pool <- df %>%
-        group_by(centroid_id, sample, replicate) %>%
-        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
-    }else{
-      df_pool <- df %>%
-        group_by(centroid_id, sample) %>%
-        summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
-    }
-    
-    
-    # add asv column and select columns
-    # df_pool is a simple output with the format identical to the read_count_sample dfs,
-    # but no info on the asv that has been pooled together
-    df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id"))
-    if(repl_bool){
-      df_pool <- df_pool %>%
-        select("asv_id"=centroid_id, sample, replicate, read_count, asv) 
-    }else{
-      df_pool <- df_pool %>%
-        select("asv_id"=centroid_id, sample, read_count, asv) 
-    }
-    
-    
-    if(asv_with_centroids != ""){
-      check_dir(asv_with_centroids, is_file=TRUE)
-      write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
-    }
-
+      select(centroid_id,asv_id,marker,sample,replicate,read_count,asv,centroid)
+  }else{
+    df <- df %>%
+      select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
+  }
+  
+  
+  if(repl_bool){
+    df_pool <- df %>%
+      group_by(centroid_id, sample, replicate) %>%
+      summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+  }else{
+    df_pool <- df %>%
+      group_by(centroid_id, sample) %>%
+      summarize("read_count"=round(fun(read_count), digits=0), .groups =  "drop")
+  }
+  
+  
+  # add asv column and select columns
+  # df_pool is a simple output with the format identical to the read_count_sample dfs,
+  # but no info on the asv that has been pooled together
+  df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id"))
+  if(repl_bool){
+    df_pool <- df_pool %>%
+      select("asv_id"=centroid_id, sample, replicate, read_count, asv) 
+  }else{
+    df_pool <- df_pool %>%
+      select("asv_id"=centroid_id, sample, read_count, asv) 
+  }
+  
+  
+  if(asv_with_centroids != ""){
+    check_dir(asv_with_centroids, is_file=TRUE)
+    write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
+  }
+  
   
   unlink(tmp_dir, recursive = TRUE)
   
@@ -1688,5 +1688,3 @@ pool_markers <- function(...,
   
   return(df_pool)
 }
-
-

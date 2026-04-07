@@ -1,3 +1,9 @@
+# vtamR 1.0.0 (prerelease)
+
+- Function Names Harmonized: Correspondences between old and new function 
+names can be found in `vtamR/R_divers/vtam_functions_table.csv`.
+
+
 # vtamR 0.3.2 (prerelease)
 
 - PoolDatasets is split to pool_datasets and pool_markers

@@ -1,3 +1,5 @@
+
+
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
@@ -36,12 +38,12 @@ NULL
 #' @export
 #' 
 download_zenodo <- function(
-  filename,
-  url,
-  dest_dir = ".",
-  untar = TRUE,
-  quiet = FALSE
-  ) {
+    filename,
+    url,
+    dest_dir = ".",
+    untar = TRUE,
+    quiet = FALSE
+) {
   
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
   dest_dir <- normalizePath(dest_dir, mustWork = FALSE)
@@ -85,11 +87,11 @@ download_zenodo <- function(
 #' @export
 #' 
 download_osf <- function(
-  filename,
-  url,
-  dest_dir = ".",
-  untar = TRUE,
-  quiet = FALSE
+    filename,
+    url,
+    dest_dir = ".",
+    untar = TRUE,
+    quiet = FALSE
 ) {
   
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
