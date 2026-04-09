@@ -1,5 +1,7 @@
 ---
 title: "How to make a mock_composition file - v1.0.0"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true

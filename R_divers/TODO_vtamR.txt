@@ -1,9 +1,19 @@
 # Ideas for vtamR
 
+make full R script for fromfastq till filtered ASV
+ - mfzr_plate1 
+ - mfzr_plate2
+ - zfzr_plate1
+
+filter_occurrence_variant
+filter_occurrence_read_count
+
+# revise install in readme.
+
 Add info in I/O mock_ncbi_fasta
 Check links '(#'
 
-#makeknownoccurrences section do not extits chek and correct links
+#makeknownoccurrences section do not extits check and correct links
 Create `mock_composition` File section or make-mock-composition-file.html
 
 rename lfn_sample_replicate_cutoff in output of suggest, and tuto.

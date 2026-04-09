@@ -2,7 +2,7 @@
 title: "Install vtamR and Third Party Programs - v1.0.0"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
-output:
+output: 
   html_document:
     toc: true
     toc_float: true
