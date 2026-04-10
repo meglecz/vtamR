@@ -11,7 +11,7 @@
 #' @importFrom seqinr splitseq
 NULL
 
-#' Barplot_ReadCountBySample
+#' plot_read_count_by_sample
 #' 
 #' Create barplot with the number of reads in each sample or sample-replicate;
 #' If information is given on sample types, bars are colored in function of them
@@ -28,13 +28,13 @@ NULL
 #' @export
 #' 
 #' 
-Barplot_ReadCountBySample <- function(read_count_df, 
+plot_read_count_by_sample <- function(read_count_df, 
                                       sampleinfo="", 
                                       sample_replicate=T, 
                                       sep=",", 
                                       x_axis_label_size=6,
                                       plotfile=""
-                                      ){
+){
   
   if(sampleinfo != ""){
     sampleinfo_df <- read.csv(sampleinfo, sep=sep)
@@ -46,8 +46,8 @@ Barplot_ReadCountBySample <- function(read_count_df,
     sampleinfo_df <- data.frame(sample=unique(read_count_df$sample),
                                 sampleinfo=rep("sample_type", 
                                                length(unique(read_count_df$sample))
-                                               )
-                                 )
+                                )
+    )
   }
   
   if(sample_replicate){ # make a graph for each sample-replicate
@@ -71,7 +71,7 @@ Barplot_ReadCountBySample <- function(read_count_df,
       # Rotate x-axis labels by 45 degrees
       theme(axis.text.x = element_text(angle = 45, hjust = 1, size = x_axis_label_size),  
             plot.title = element_text(hjust = 0.5)) + # Center the title
-            scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
+      scale_y_continuous(expand=c(0,0)) # avoid space between labels and x axis
     
   }else{ # make a graph for each sample
     
@@ -104,7 +104,7 @@ Barplot_ReadCountBySample <- function(read_count_df,
   return(p)
 }
 
-#' Histogram_ReadCountByVariant
+#' plot_read_count_histogram
 #' 
 #' Create histogram with the number of reads in each sample or sample-replicate;
 #' If information is given on sample types, bars are colored in function of them
@@ -119,11 +119,11 @@ Barplot_ReadCountBySample <- function(read_count_df,
 #' @export
 #' 
 
-Histogram_ReadCountByVariant <- function(read_count_df, 
-                                         min_read_count=0, 
-                                         binwidth=100,
-                                         plotfile= ""
-                                         ){
+plot_read_count_histogram <- function(read_count_df, 
+                                      min_read_count=0, 
+                                      binwidth=100,
+                                      plotfile= ""
+){
   
   # get read_count for each asv
   df <- read_count_df %>%
@@ -131,16 +131,16 @@ Histogram_ReadCountByVariant <- function(read_count_df,
     summarize("Number_of_reads"= sum(read_count))
   # filter out low read_count
   df <- subset(df, Number_of_reads > min_read_count)
-
+  
   
   p <- ggplot(df, aes(x = Number_of_reads)) +
-      geom_histogram(binwidth = binwidth, fill = "blue", color = "blue", 
-                     aes(y = after_stat(count))) +
-      scale_y_log10() +
-      labs(title = "Distribution of Read Counts",
-           x = "Read Count",
-           y = "Frequency") +
-      theme_minimal()  
+    geom_histogram(binwidth = binwidth, fill = "blue", color = "blue", 
+                   aes(y = after_stat(count))) +
+    scale_y_log10() +
+    labs(title = "Distribution of Read Counts",
+         x = "Read Count",
+         y = "Frequency") +
+    theme_minimal()  
   
   if(plotfile != ""){
     check_dir(plotfile, is_file=TRUE)
@@ -151,7 +151,7 @@ Histogram_ReadCountByVariant <- function(read_count_df,
   return(p)
 }
 
-#' Barplot_RenkonenDistance
+#' plot_renkonen_distance_barplot
 #' 
 #' Create barplot with renkonen distances between pairs of sample-replicates
 #' If information is given on sample types, bars are colored in function of them
@@ -168,12 +168,12 @@ Histogram_ReadCountByVariant <- function(read_count_df,
 #' @return Barplot
 #' @export
 #' 
-Barplot_RenkonenDistance <- function(df, 
-                                     sampleinfo=NULL, 
-                                     sep=",", 
-                                     x_axis_label_size=6,
-                                     plotfile=""
-                                     ){
+plot_renkonen_distance_barplot <- function(df, 
+                                           sampleinfo=NULL, 
+                                           sep=",", 
+                                           x_axis_label_size=6,
+                                           plotfile=""
+){
   
   if(is.character(sampleinfo)){ # input file
     sampleinfo_df <- read.csv(sampleinfo, sep=sep)
@@ -188,10 +188,10 @@ Barplot_RenkonenDistance <- function(df,
   }
   else{
     sampleinfo_df <- data.frame(sample=unique(read_count_df$sample),
-                                  sample_type=rep("sample_type", 
-                                                  length(unique(read_count_df$sample))
-                                                  )
+                                sample_type=rep("sample_type", 
+                                                length(unique(read_count_df$sample))
                                 )
+    )
   }
   
   df <- left_join(df, sampleinfo_df, by=c("sample1"="sample")) %>%
@@ -221,19 +221,19 @@ Barplot_RenkonenDistance <- function(df,
   return(p)
 }
 
-#' DensityPlot_RenkonenDistance
+#' plot_renkonen_distance_density
 #' 
 #' Create density plot with Renkonen distances between pairs of sample-replicates
 #' 
 #' @param df data frame with the following columns: 
 #' sample1,sample2,replicate1,replicate2,renkonen_d 
-#' (can be produced by MakeRenkonenDistances)
+#' (can be produced by compute_renkonen_distances)
 #' @param plotfile Character string: png file name for the output plot; 
 #' If empty, no file is written.
 #' @return Density plot
 #' @export
 #' 
-DensityPlot_RenkonenDistance <- function(df, plotfile=""){
+plot_renkonen_distance_density <- function(df, plotfile=""){
   
   df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
   

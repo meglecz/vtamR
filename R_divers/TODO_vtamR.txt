@@ -1,5 +1,40 @@
 # Ideas for vtamR
 
+make full R script for fromfastq till filtered ASV
+ - mfzr_plate1 
+ - mfzr_plate2
+ - zfzr_plate1
+
+filter_occurrence_variant
+filter_occurrence_read_count
+
+# revise install in readme.
+
+Add info in I/O mock_ncbi_fasta
+Check links '(#'
+
+#makeknownoccurrences section do not extits check and correct links
+Create `mock_composition` File section or make-mock-composition-file.html
+
+rename lfn_sample_replicate_cutoff in output of suggest, and tuto.
+lfn_variant_cutoff
+lfn_read_count_cutoff
+lfn_sample_replicate_cutoff
+
+suggest_filter_parameters_pcr_error
+suggest_filter_parameters_readcount_variant
+suggest_filter_parameters_sample
+
+suggest_pcr_error_cutoff
+suggest_variant_readcount_cutoffs
+suggest_sample_cutoff
+
+variant_cutoff
+read_count_cutoff
+sample_cutoff
+pcr_error_cutoff
+
+
 ## stage
 - Install vtamR
 - faire tourner le demo

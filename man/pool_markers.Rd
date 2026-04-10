@@ -112,8 +112,8 @@ markers_pooled <- pool_markers(df_mfzr, df_zfzr, method="mean")
 }
 \dontrun{
 files <- c(
-  "~/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  
-  "~/vtamR_demo/filter/7_FilterChimera.csv"
+  "~/vtamR_demo_out_zfzr/filter/7_filter_chimera.csv",  
+  "~/vtamR_demo/filter/7_filter_chimera.csv"
 )
 marker_ids <- c(1, 2)
 pool_markers(files, marker_ids = marker_ids, method = "mean")

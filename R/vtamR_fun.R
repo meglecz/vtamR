@@ -210,7 +210,7 @@ smart_gzip <- function(file,
 }
 
 
-#' GetStat
+#' get_stat
 #' 
 #' Get read, variant, sample and replicate counts.
 #' Complete the stat_df with the above statistics.
@@ -228,21 +228,21 @@ smart_gzip <- function(file,
 #' @return Data frame (stat_df) completed with a new line.
 #' @examples
 #' \dontrun{
-#' GetStat(read_count_df, 
+#' get_stat(read_count_df, 
 #'    stat_df, 
-#'    stage="LFNvariant", 
+#'    stage="filter_occurrence_variant", 
 #'    params="0.002;by_replicate=TRUE"
 #'    )
-#' GetStat(read_count_df, 
+#' get_stat(read_count_df, 
 #'    stat_df, 
-#'    stage="FilterIndel", 
+#'    stage="filter_indel", 
 #'    params="0.002;by_replicate=TRUE", 
 #'    outfile="out/ReadCount_stat.csv"
 #'    )
 #' }
 #' @export
 #' 
-GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
+get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -332,14 +332,14 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' @return Data frame corresponding to the output fastainfo.csv file
 #' @examples
 #' \dontrun{
-#' Merge(fastqinfo_df, 
+#' merge_fastq_pairs(fastqinfo_df, 
 #'    fastq_dir="data/fastqdir", 
 #'    vsearch_path="C:/Users/Public", 
 #'    outdir="data/fastadir", 
 #'    compress=T, 
 #'    quiet=F
 #'    )
-#' Merge(fastqinfo_df, 
+#' merge_fastq_pairs(fastqinfo_df, 
 #'    fastq_dir="data/fastqdir", 
 #'    outdir="data/fastadir", 
 #'    fastq_maxdiffs=5, 
@@ -357,7 +357,7 @@ GetStat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' @export
 #'
 
-Merge <- function(fastqinfo, 
+merge_fastq_pairs <- function(fastqinfo, 
                   fastq_dir, 
                   vsearch_path="vsearch",
                   compress_method="R",
@@ -391,7 +391,7 @@ Merge <- function(fastqinfo,
   }else{
     fastqinfo_df <- fastqinfo
   }
-  CheckFileinfo(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
+  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
   
   # get unique list of fastq file pairs
   tmp <- fastqinfo_df %>%
@@ -619,7 +619,7 @@ count_seq <- function(file) {
 #' NULL; Produces an output fasta file.
 #' @examples
 #' \dontrun{
-#' TrimPrimer_OneFile(fasta="data/test.fasta", 
+#' trim_primers_file(fasta="data/test.fasta", 
 #'     outfile="out/test_trimmed.fasta", 
 #'     primer_fw="TCCACTAATCACAARGATATTGGTAC", 
 #'     primer_rv="WACTAATCAATTWCCAAATCCTCC", 
@@ -631,7 +631,7 @@ count_seq <- function(file) {
 #' }
 #' @export
 #' 
-TrimPrimer_OneFile <- function(fasta, 
+trim_primers_file <- function(fasta, 
                                outfile, 
                                primer_fw, 
                                primer_rv, 
@@ -789,7 +789,7 @@ TrimPrimer_OneFile <- function(fasta,
 #' @return fastainfo_df the input data frame, with updated files names and sequence counts.
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- TrimPrimer(fastainfo, 
+#' fastainfo_df <- trim_primers(fastainfo, 
 #'     fasta_dir="data/fasta", 
 #'     outdir="out", 
 #'     compress=T, 
@@ -803,7 +803,7 @@ TrimPrimer_OneFile <- function(fasta,
 #' }
 #' @export
 #' 
-TrimPrimer <- function(fastainfo, 
+trim_primers <- function(fastainfo, 
                        fasta_dir="", 
                        outdir="", 
                        compress=F, 
@@ -829,7 +829,7 @@ TrimPrimer <- function(fastainfo,
   }else{
     fastainfo_df <- fastainfo
   }
-  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
+  check_file_info(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
   
   # upper case for all primers and tags
   fastainfo_df$primer_fw <- toupper(fastainfo_df$primer_fw)
@@ -852,7 +852,7 @@ TrimPrimer <- function(fastainfo,
     fastainfo_df$filename[i] <- output
     input <- file.path(fasta_dir, input)
     output <- file.path(outdir, output)
-    TrimPrimer_OneFile(input, 
+    trim_primers_file(input, 
                        outfile=output, 
                        primer_fw=fastainfo_df$primer_fw[i], 
                        primer_rv=fastainfo_df$primer_rv[i], 
@@ -929,7 +929,7 @@ TrimPrimer <- function(fastainfo,
 #' containing trimmed reads.
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- SortReads(fastainfo=fastainfo_df, 
+#' fastainfo_df <- demultiplex_and_trim(fastainfo=fastainfo_df, 
 #'      fasta_dir="data/fasta", 
 #'      outdir="data/sorted", 
 #'      check_reverse=F, 
@@ -942,7 +942,7 @@ TrimPrimer <- function(fastainfo,
 #' }
 #' @export
 
-SortReads <- function(fastainfo, 
+demultiplex_and_trim <- function(fastainfo, 
                       fasta_dir, 
                       outdir="", 
                       cutadapt_path="cutadapt",
@@ -974,12 +974,12 @@ SortReads <- function(fastainfo,
     fastainfo_df <- fastainfo
   }
   
-  CheckFileinfo(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
+  check_file_info(file=fastainfo_df, dir=fasta_dir, file_type="fastainfo", sep=sep, quiet=TRUE)
   
   #########
-  # SortReads_no_reverse does the whole demultilexing, trimming and compress on the + strand
+  # demultiplex_and_trim_strand_plus does the whole demultilexing, trimming and compress on the + strand
   # If sequences are not oriented, the -strand should be checked => 
-  # run SortReads_no_reverse of plus strand and on - strand after 
+  # run demultiplex_and_trim_strand_plus of plus strand and on - strand after 
   # swapping fw and rev tags and primers,
   # take the reverse complement of the -strand results (vsearch)
   # pool the results of the 2 strands
@@ -988,7 +988,7 @@ SortReads <- function(fastainfo,
   # run on strand +
   if(check_reverse){
     #### use +strand, output to sorted_dir, uncompressed
-    sampleinfo_df <- SortReads_no_reverse(fastainfo_df, 
+    sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df, 
                                           fasta_dir=fasta_dir, 
                                           outdir=outdir, 
                                           cutadapt_path=cutadapt_path, 
@@ -1029,8 +1029,8 @@ SortReads <- function(fastainfo,
     rc_dir <- paste('rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- file.path(tempdir(), rc_dir)
     check_dir(rc_dir)
-    # run sortreads on for reverse strand
-    sampleinfo_df <- SortReads_no_reverse(fastainfo_df_tmp, 
+    # run demultiplex_and_trim on for reverse strand
+    sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df_tmp, 
                                           fasta_dir=fasta_dir, 
                                           outdir=rc_dir, 
                                           cutadapt_path=cutadapt_path, 
@@ -1095,7 +1095,7 @@ SortReads <- function(fastainfo,
   }
   else{
     # check only + strand
-    sampleinfo_df <- SortReads_no_reverse(fastainfo_df, 
+    sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df, 
                                           fasta_dir=fasta_dir,
                                           outdir=outdir, 
                                           cutadapt_path=cutadapt_path, 
@@ -1111,7 +1111,7 @@ SortReads <- function(fastainfo,
                                           )
   }
   
-  sampleinfo_df <- get_read_counts(sampleinfo_df, dir=outdir)
+  sampleinfo_df <- add_read_counts(sampleinfo_df, dir=outdir)
   write.table(sampleinfo_df, file = file.path(outdir, "sampleinfo.csv"),  row.names = F, sep=sep)
   
   return(sampleinfo_df)
@@ -1127,11 +1127,11 @@ SortReads <- function(fastainfo,
 #' @return  Data frame with the read_count column added to the input.
 #' @examples
 #' \dontrun{
-#' df <- get_read_counts(df, sorted_dir)
+#' df <- add_read_counts(df, sorted_dir)
 #' }
 #' @export
 #' 
-get_read_counts <- function(df, dir){
+add_read_counts <- function(df, dir){
   
   df$read_count <- NA
   
@@ -1147,7 +1147,7 @@ return(df)
 
 #' Demultiplex and trim off tags and primers without checking reverse strand
 #' 
-#' Same as SortReads, but do not check the reverse complement of the sequences.
+#' Same as demultiplex_and_trim, but do not check the reverse complement of the sequences.
 #' Demultiplex each input fasta file using the tag combinations 
 #' at the extremities of the merged reads.
 #' Trim primers from demultiplexed reads.
@@ -1183,7 +1183,7 @@ return(df)
 #' containing trimmed reads.
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- SortReads_no_reverse(fastainfo=fastainfo_df, 
+#' fastainfo_df <- demultiplex_and_trim_strand_plus(fastainfo=fastainfo_df, 
 #'     fasta_dir="data/fasta", 
 #'     outdir="data/sorted", 
 #'     tag_to_end=T, 
@@ -1195,7 +1195,7 @@ return(df)
 #' }
 #' @export
 #' 
-SortReads_no_reverse <- function(fastainfo, 
+demultiplex_and_trim_strand_plus <- function(fastainfo, 
                                  fasta_dir, 
                                  outdir="", 
                                  cutadapt_path="cutadapt", 
@@ -1254,7 +1254,7 @@ SortReads_no_reverse <- function(fastainfo,
     dir.create(tmp_dir_fasta)
 
     # make a tags.fasta file with all tag combinations of the fasta to be demultiplexed
-    tag_file <- make_adapter_fasta(fastainfo_df, 
+    tag_file <- write_cutadapt_adapter_fasta(fastainfo_df, 
                                    fasta_file=fasta_file, 
                                    tag_to_end=tag_to_end, 
                                    outdir=tmp_dir_fasta
@@ -1351,7 +1351,7 @@ SortReads_no_reverse <- function(fastainfo,
 #' Make a fasta file with adapters
 #' 
 #' Make a fasta file with tag combinations using cutadapt syntax. 
-#' This will be used in SortReads to demultiplex the input fasta file.
+#' This will be used in demultiplex_and_trim to demultiplex the input fasta file.
 #' 
 #' @param fastainfo_df Data frame with columns: tag_fw,tag_rv,fasta  
 #' @param fasta_file Character string: fasta file that needs 
@@ -1362,7 +1362,7 @@ SortReads_no_reverse <- function(fastainfo,
 #' NA if all tags are NA in fastainfo_df for fasta_file.
 #' @examples 
 #' \dontrun{
-#' make_adapter_fasta(fastainfo_df=fastainfo_df, 
+#' write_cutadapt_adapter_fasta(fastainfo_df=fastainfo_df, 
 #'     fasta_file="test.fasta", 
 #'     tag_to_end=F, 
 #'     outdir="data/out"
@@ -1370,7 +1370,7 @@ SortReads_no_reverse <- function(fastainfo,
 #' }
 #' @export
 #'
-make_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end=T, outdir=""){
+write_cutadapt_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end=T, outdir=""){
   
   # select tag combinations for the fasta file
   tags <- fastainfo_df %>%
@@ -1466,7 +1466,7 @@ reverse_complement <- function(sequence){
 #' Read all fasta files to a data frame and dereplicate
 #' 
 #' Read all fasta files in the fasta columns of sampleinfo data frame (or csv file).
-#' Dereplicate reads to ASVs. 
+#' dereplicate reads to ASVs. 
 #' Count the number of reads of each ASV in each input file.
 #' Add a unique asv_id to each asv. 
 #'  
@@ -1494,11 +1494,11 @@ reverse_complement <- function(sequence){
 #' asv_id,sample,replicate,read_count,asv
 #' @examples
 #' \dontrun{
-#' Dereplicate(sampleinfo=sampleinfo, dir="data/sorted")
+#' dereplicate(sampleinfo=sampleinfo, dir="data/sorted")
 #' }
 #' @export
 #' 
-Dereplicate <- function(sampleinfo, 
+dereplicate <- function(sampleinfo, 
                         dir="", 
                         outfile="", 
                         sep=",", 
@@ -1513,7 +1513,7 @@ Dereplicate <- function(sampleinfo,
   }else{
     sampleinfo_df <- sampleinfo
   }
-  CheckFileinfo(file=sampleinfo_df, 
+  check_file_info(file=sampleinfo_df, 
                 dir=dir, 
                 file_type="sampleinfo", 
                 sep=sep, 
@@ -1616,7 +1616,7 @@ add_ids <- function(read_count,
   }else{
     asv_df <- input_asv_list
   }
-  t <- check_one_to_one_relationship(asv_df) # stop execution, if FALSE
+  t <- check_one_to_one(asv_df) # stop execution, if FALSE
   
 
   # list of unique asvs
@@ -1717,11 +1717,11 @@ read_fasta_seq <- function(filename=filename, dereplicate=F){
 #' Otherwise stops the run with an error message.
 #' @examples
 #' \dontrun{
-#' check_one_to_one_relationship(df=read_count_df)
+#' check_one_to_one(df=read_count_df)
 #' }
 #' @export
 #' 
-check_one_to_one_relationship <- function(df){
+check_one_to_one <- function(df){
   
   # make unique asv-asv_id combinations
   df <- df %>%
@@ -1774,14 +1774,14 @@ check_one_to_one_relationship <- function(df){
 #' an error message.
 #' @examples
 #' \dontrun{
-#' UpdateASVlist(asv_list1=read_count_df, 
+#' update_asv_list(asv_list1=read_count_df, 
 #' asv_list2="data/asv_list.csv", 
 #' outfile="out/updated_asv_list.csv"
 #' )
 #' }
 #' @export
 #' 
-UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALSE){
+update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALSE){
   
   if(is.character(asv_list1)){
     df1 <- read.csv(asv_list1, header=T, sep=sep)
@@ -1792,7 +1792,7 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
   df1 <- df1 %>%
     select(asv_id, asv) %>%
     distinct()
-  t <- check_one_to_one_relationship(df1)
+  t <- check_one_to_one(df1)
   
   if(is.character(asv_list2)){
     df2 <- read.csv(asv_list2, header=T, sep=sep)
@@ -1803,13 +1803,13 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
   df2 <- df2 %>%
     select(asv_id, asv) %>%
     distinct()
-  t <- check_one_to_one_relationship(df2)
+  t <- check_one_to_one(df2)
   
   # pool 
   df1 <- rbind(df1, df2) %>%
     distinct() %>%
     arrange(asv_id)
-  t <- check_one_to_one_relationship(df1)
+  t <- check_one_to_one(df1)
   
   if(outfile != ""){
     check_dir(outfile, is_file=TRUE)
@@ -1820,7 +1820,7 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
   }
 }
 
-#' FilterExternalContaminant
+#' filter_contaminant
 #' 
 #' Eliminate ASVs that are likely to be contaminants, since 
 #' they have higher read count in at least one negative control, than in any of 
@@ -1839,11 +1839,11 @@ UpdateASVlist <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALS
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterExternalContaminant(read_count_df, sampleinfo=sampleinfo)
+#' filtered_read_count_df <- filter_contaminant(read_count_df, sampleinfo=sampleinfo)
 #' }
 #' @export
 #' 
-FilterExternalContaminant <- function (read_count, sampleinfo, outfile="", 
+filter_contaminant <- function (read_count, sampleinfo, outfile="", 
                                        conta_file="",sep=",") {
   
   # can accept df or file as an input
@@ -1897,7 +1897,7 @@ FilterExternalContaminant <- function (read_count, sampleinfo, outfile="",
   return(read_count_df)
 }
 
-#' LFNglobalReadCount
+#' filter_asv_global
 #' 
 #' Eliminate ASVs with less than cutoff reads in the data set.
 #' 
@@ -1911,11 +1911,11 @@ FilterExternalContaminant <- function (read_count, sampleinfo, outfile="",
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- LFNglobalReadCount(read_count_df, cutoff=2)
+#' filtered_read_count_df <- filter_asv_global(read_count_df, cutoff=2)
 #' }
 #' @export
 #' 
-LFNglobalReadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
+filter_asv_global <- function (read_count, cutoff=10, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1938,7 +1938,7 @@ LFNglobalReadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
   return(read_count_df)
 }
 
-#' LFNreadCount
+#' filter_occurrence_read_count
 #' 
 #' Eliminate occurrences (presence of the ASV in a sample-replicate)
 #' with less than cutoff reads.
@@ -1954,11 +1954,11 @@ LFNglobalReadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count <- LFNreadCount(read_count_df, cutoff=20)
+#' filtered_read_count <- filter_occurrence_read_count(read_count_df, cutoff=20)
 #' }
 #' @export
 #' 
-LFNreadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
+filter_occurrence_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -1975,7 +1975,7 @@ LFNreadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
   return(read_count_df)
 }
 
-#' LFNsampleReplicate
+#' filter_occurrence_sample
 #' 
 #' Eliminate occurrences (presence of the ASV in a sample-replicate)
 #' where the `read_count / sum(read_count of the sample-replicate)` is less than 
@@ -1992,10 +1992,10 @@ LFNreadCount <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- LFNsampleReplicate(read_count_df, cutoff=0.005)
+#' filtered_read_count_df <- filter_occurrence_sample(read_count_df, cutoff=0.005)
 #' }
 #' @export
-LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
+filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile="", sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2026,10 +2026,10 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' 
 #' In some datasets, certain ASVs may occur in many samples with high read counts.  
 #' As a result, reads originating from tag-jump or inter sample contamination 
-#' may remain after applying a fixed cutoff value in the *LFNvariant* function.  
-#' This function computes ASV-specific cutoff values for use in *LFNvariant*,  
+#' may remain after applying a fixed cutoff value in the *filter_occurrence_variant* function.  
+#' This function computes ASV-specific cutoff values for use in *filter_occurrence_variant*,  
 #' targeting ASVs known to have false-positive occurrences (as identified by  
-#' *MakeKnownOccurrences*).  
+#' *classify_control_occurrences*).  
 #'    
 #' For each ASV, the function:
 #' - Identifies all false-positive occurrences.
@@ -2056,16 +2056,16 @@ LFNsampleReplicate <- function (read_count, cutoff=0.001, outfile="", sep=",") {
 #' @return Data frame with the following columns: 
 #' asv_id, replicate (if by_replicate), cutoff
 #' Lines contain only ASVs that have know false positive occurrences.
-#' @seealso [LFNvariant()]
+#' @seealso [filter_occurrence_variant()]
 #' @examples
 #' \dontrun{
-#' cutoffs <- ASVspecificCutoff(read_count=read_count_df, 
+#' cutoffs <- compute_asv_specific_cutoff(read_count=read_count_df, 
 #'     mock_composition="data/mock_composition.csv"
 #'     )
 #' }
 #' @export
 #'
-ASVspecificCutoff <- function(read_count, 
+compute_asv_specific_cutoff <- function(read_count, 
                               max_cutoff=0.05,
                               mock_composition="",
                               habitat_proportion=0.5,
@@ -2081,8 +2081,8 @@ ASVspecificCutoff <- function(read_count,
     read_count_df <- read_count
   }
   
-  ### MakeKnownOccurrences to make known_occurrences_df
-  results <- MakeKnownOccurrences(read_count_df, 
+  ### classify_control_occurrences to make known_occurrences_df
+  results <- classify_control_occurrences(read_count_df, 
                                   sampleinfo=sampleinfo, 
                                   mock_composition=mock_composition,
                                   habitat_proportion=habitat_proportion,
@@ -2147,7 +2147,7 @@ ASVspecificCutoff <- function(read_count,
   return(asv_spec_cutoff_df)
 }
 
-#' LFNvariant
+#' filter_occurrence_variant
 #' 
 #' Filters out potential false positives arising from tag-jumps or low-level
 #' inter-sample contamination.
@@ -2191,7 +2191,7 @@ ASVspecificCutoff <- function(read_count,
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' read_count_df <- LFNvariant2(
+#' read_count_df <- filter_occurrence_variant(
 #'   read_count = "read_counts.csv",
 #'   cutoff = 0.001,
 #'   asv_specific_cutoffs = "asv_cutoffs.csv",
@@ -2200,7 +2200,7 @@ ASVspecificCutoff <- function(read_count,
 #' }
 #'
 #' @export
-LFNvariant <- function(read_count, 
+filter_occurrence_variant <- function(read_count, 
                        cutoff=NULL, 
                        asv_specific_cutoffs = NULL,
                        by_replicate=FALSE, 
@@ -2329,7 +2329,7 @@ LFNvariant <- function(read_count,
   if(nrow(asvs) > 0){
     cat("WARNING: The following ASVs have lost a high proportion of their 
           reads during this filtering step. 
-          The cutoff value of LFNvariant function might need to be reduced.")
+          The cutoff value of filter_occurrence_variant function might need to be reduced.")
     print(asvs)
   }
   
@@ -2347,7 +2347,7 @@ LFNvariant <- function(read_count,
   return(read_count_df)
 }
 
-#' PoolFilters
+#' pool_filters
 #' 
 #' Pool all count_read_df data frames, and keep only occurrences 
 #' present in all filters.
@@ -2360,11 +2360,11 @@ LFNvariant <- function(read_count,
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- PoolFilters(read_count_df1, read_count_df2)
+#' filtered_read_count_df <- pool_filters(read_count_df1, read_count_df2)
 #' }
 #' @export
 #' 
-PoolFilters <- function(... , outfile="", sep=","){
+pool_filters <- function(... , outfile="", sep=","){
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
@@ -2378,7 +2378,7 @@ PoolFilters <- function(... , outfile="", sep=","){
   return(merged)
 }
 
-#' FilterMinReplicate
+#' filter_min_replicate
 #' 
 #' Filter out all occurrences where the asv in not present in at least 
 #' `cutoff` number of replicates of the sample.
@@ -2392,11 +2392,11 @@ PoolFilters <- function(... , outfile="", sep=","){
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterMinReplicate(read_count_df, cutoff=3)
+#' filtered_read_count_df <- filter_min_replicate(read_count_df, cutoff=3)
 #' }
 #' @export
 #'
-FilterMinReplicate <- function(read_count, cutoff=2, outfile="", sep=","){
+filter_min_replicate <- function(read_count, cutoff=2, outfile="", sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2424,7 +2424,7 @@ FilterMinReplicate <- function(read_count, cutoff=2, outfile="", sep=","){
   return(read_count_df)
 }
 
-#' FilterIndel
+#' filter_indel
 #' 
 #' Filter out all ASVs, if the modulo 3 of their length is not the same as 
 #' that of the majority of the ASVs.
@@ -2437,11 +2437,11 @@ FilterMinReplicate <- function(read_count, cutoff=2, outfile="", sep=","){
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <-FilterIndel(read_count_df)
+#' filtered_read_count_df <-filter_indel(read_count_df)
 #' }
 #' @export
 #' 
-FilterIndel <- function(read_count, outfile="", sep=","){
+filter_indel <- function(read_count, outfile="", sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2485,11 +2485,11 @@ FilterIndel <- function(read_count, outfile="", sep=","){
 #' @return Vector of codon stops.
 #' @examples
 #' \dontrun{
-#' codon_stops_from_genetic_code(genetic_code=1)
+#' get_stop_codons(genetic_code=1)
 #' }
 #' @export
 #' 
-codon_stops_from_genetic_code <- function(genetic_code=5){
+get_stop_codons <- function(genetic_code=5){
   if(genetic_code == 1){
     return(c("TAA","TAG","TGA"))
   }
@@ -2527,7 +2527,7 @@ codon_stops_from_genetic_code <- function(genetic_code=5){
 }
 
 
-#' FilterCodonStop
+#' filter_stop_codon
 #' 
 #' Filter out all ASVs, if there is a codon stop in all three reading 
 #' frames of the direct strand.
@@ -2541,11 +2541,11 @@ codon_stops_from_genetic_code <- function(genetic_code=5){
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterCodonStop(read_count_df, genetic_code=5)
+#' filtered_read_count_df <- filter_stop_codon(read_count_df, genetic_code=5)
 #' }
 #' @export
 #' 
-FilterCodonStop <- function(read_count, outfile="", genetic_code=5, sep=","){
+filter_stop_codon <- function(read_count, outfile="", genetic_code=5, sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2553,11 +2553,11 @@ FilterCodonStop <- function(read_count, outfile="", genetic_code=5, sep=","){
   }else{
     read_count_df <- read_count
   }
-  codon_stops <- codon_stops_from_genetic_code(genetic_code=genetic_code)
+  codon_stops <- get_stop_codons(genetic_code=genetic_code)
   if(length(codon_stops) == 0){
     print("WARNING: The Genetic Code Number provided does not correspond to any code in 
           https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes\n
-          The FilterCodonStop step is skipped")
+          The filter_stop_codon step is skipped")
     return(read_count_df)
   }
   
@@ -2623,11 +2623,11 @@ FilterCodonStop <- function(read_count, outfile="", genetic_code=5, sep=","){
 #' @return NULL; writes fasta file
 #' @examples
 #' \dontrun{
-#' write_fasta(sequences=read_count_df$asv, filename="out/seq.fasta", seq_as_id=T)
+#' write_fasta_vector(sequences=read_count_df$asv, filename="out/seq.fasta", seq_as_id=T)
 #' }
 #' @export
 #' 
-write_fasta <- function(sequences, filename, seq_as_id=F) {
+write_fasta_vector <- function(sequences, filename, seq_as_id=F) {
   # Open the file for writing
   file <- file(filename, "w")
   # Iterate over the sequences and write them to the file
@@ -2668,7 +2668,7 @@ write_fasta <- function(sequences, filename, seq_as_id=F) {
 #' unique_asv_df <- read_count_df %>%
 #'   group_by(asv) %>%
 #'   summarize(read_count = sum(read_count))
-#' unique_asv_df_flagged <- flagPCRerror_vsearch(unique_asv_df, 
+#' unique_asv_df_flagged <- flag_pcr_error(unique_asv_df, 
 #'      vsearch_path=vsearch_path, 
 #'      pcr_error_var_prop=0,2, 
 #'      max_mismatch=2
@@ -2676,7 +2676,7 @@ write_fasta <- function(sequences, filename, seq_as_id=F) {
 #' }
 #' @export
 #' 
-flagPCRerror_vsearch <- function(unique_asv_df,
+flag_pcr_error <- function(unique_asv_df,
                                  vsearch_path="vsearch", 
                                  num_threads=0,
                                  pcr_error_var_prop=0.1, 
@@ -2700,7 +2700,7 @@ flagPCRerror_vsearch <- function(unique_asv_df,
   
   # make fasta file with unique reads; use sequences as ids
   fas <- file.path(outdir_tmp, 'unique.fas')
-  write_fasta(unique_asv_df$asv, fas, seq_as_id=T)
+  write_fasta_vector(unique_asv_df$asv, fas, seq_as_id=T)
   # vsearch --usearch_global to find highly similar sequence pairs
   vsearch_out <- file.path(outdir_tmp, 'unique_vsearch_out.out')
 
@@ -2802,14 +2802,14 @@ flagPCRerror_vsearch <- function(unique_asv_df,
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterPCRerror(read_count_df, 
+#' filtered_read_count_df <- filter_pcr_error(read_count_df, 
 #'      vsearch_path=vsearch_path, 
 #'      pcr_error_var_prop=0.2, 
 #'      max_mismatch=2, 
 #'      by_sample=T, 
 #'      sample_prop=0.8
 #'      )
-#' filtered_read_count_df <- FilterPCRerror(read_count_df, 
+#' filtered_read_count_df <- filter_pcr_error(read_count_df, 
 #'     vsearch_path=vsearch_path, 
 #'     pcr_error_var_prop=0.2,
 #'     max_mismatch=2, 
@@ -2818,7 +2818,7 @@ flagPCRerror_vsearch <- function(unique_asv_df,
 #' }
 #' @export
 #' 
-FilterPCRerror <- function(read_count,
+filter_pcr_error <- function(read_count,
                            outfile="", 
                            vsearch_path="vsearch", 
                            num_threads=0,
@@ -2870,7 +2870,7 @@ FilterPCRerror <- function(read_count,
       # flag PCR errors; 
       # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
       # 0 otherwise
-      unique_asv_df_sample <- flagPCRerror_vsearch(unique_asv_df_sample, 
+      unique_asv_df_sample <- flag_pcr_error(unique_asv_df_sample, 
                                                    vsearch_path=vsearch_path, 
                                                    num_threads=num_threads,
                                                    pcr_error_var_prop=pcr_error_var_prop, 
@@ -2887,7 +2887,7 @@ FilterPCRerror <- function(read_count,
   }
   else{ # whole dataset
     # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-    unique_asv_df <- flagPCRerror_vsearch(unique_asv_df, 
+    unique_asv_df <- flag_pcr_error(unique_asv_df, 
                                           vsearch_path=vsearch_path, 
                                           num_threads=num_threads,
                                           pcr_error_var_prop=pcr_error_var_prop, 
@@ -2938,11 +2938,11 @@ FilterPCRerror <- function(read_count,
 #' unique_asv_df <- read_count_df %>%
 #'   group_by(asv) %>%
 #'   summarize(read_count = sum(read_count))
-#' flagChimera(unique_asv_df, vsearch_path=vsearch_path, abskew=2)
+#' flag_chimera(unique_asv_df, vsearch_path=vsearch_path, abskew=2)
 #' }
 #' @export
 #'
-flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, 
+flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, 
                         quiet=TRUE, num_threads=0){
 
   if(num_threads == 0){
@@ -2955,7 +2955,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
   }
   
   # create a tmp directory for temporary files using time and a random number
-  outdir_tmp <- paste('tmp_FilterChimera_', 
+  outdir_tmp <- paste('tmp_filter_chimera_', 
                       trunc(as.numeric(Sys.time())), 
                       sample(1:100, 1), 
                       sep=''
@@ -3014,7 +3014,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
   return(unique_asv_df)
 }
 
-#' FilterChimera
+#' filter_chimera
 #' 
 #' Filter out Chimeras.
 #'  
@@ -3037,13 +3037,13 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterChimera(read_count_df, 
+#' filtered_read_count_df <- filter_chimera(read_count_df, 
 #'      vsearch_path=vsearch_path, 
 #'      by_sample=T, 
 #'      sample_prop=0.7, 
 #'      abskew=4
 #'      )
-#' filtered_read_count_df <- FilterChimera(read_count_df,
+#' filtered_read_count_df <- filter_chimera(read_count_df,
 #'      vsearch_path=vsearch_path, 
 #'      by_sample=F, 
 #'      abskew=4
@@ -3051,7 +3051,7 @@ flagChimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' }
 #' @export
 #' 
-FilterChimera <- function(read_count, 
+filter_chimera <- function(read_count, 
                           outfile="", 
                           vsearch_path="vsearch",
                           num_threads=0,
@@ -3094,7 +3094,7 @@ FilterChimera <- function(read_count,
       # flag chimeras; 
       # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
       # 0 otherwise
-      unique_asv_df_sample <- flagChimera(unique_asv_df_sample, 
+      unique_asv_df_sample <- flag_chimera(unique_asv_df_sample, 
                                           vsearch_path=vsearch_path,
                                           num_threads = num_threads,  
                                           abskew=abskew,
@@ -3109,7 +3109,7 @@ FilterChimera <- function(read_count,
     }
   }else{ # whole dataset
     # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-    unique_asv_df <- flagChimera(unique_asv_df, 
+    unique_asv_df <- flag_chimera(unique_asv_df, 
                                  vsearch_path=vsearch_path, 
                                  num_threads = num_threads,  
                                  abskew=abskew,
@@ -3153,11 +3153,11 @@ FilterChimera <- function(read_count,
 #'   filter(sample=="tnegtag") %>%
 #'   group_by(asv) %>%
 #'   summarize(read_count = sum(read_count))
-#' calculate_renkonen_dist(df1, df2)
+#' renkonen_dist(df1, df2)
 #' }
 #' @export
 #'
-calculate_renkonen_dist <- function(df1, df2){
+renkonen_dist <- function(df1, df2){
   df1 <- df1 %>%
     select(asv, "read_count1"=read_count)
   df2 <- df2 %>%
@@ -3191,11 +3191,11 @@ calculate_renkonen_dist <- function(df1, df2){
 #' (within, if sample1 and sample2 are identical, between otherwise).
 #' @examples
 #' \dontrun{
-#' MakeRenkonenDistances(read_count_df, compare_all=FALSE)
+#' compute_renkonen_distances(read_count_df, compare_all=FALSE)
 #' }
 #' @export
 #' 
-MakeRenkonenDistances <- function(read_count_df, 
+compute_renkonen_distances <- function(read_count_df, 
                                   compare_all=FALSE,
                                   outfile=""){
   
@@ -3229,7 +3229,7 @@ MakeRenkonenDistances <- function(read_count_df,
       if(sampi == sampj){ # same sample
         dfi <- filter(df, sr == sri)
         dfj <- filter(df, sr == srj)
-        rdist <- calculate_renkonen_dist(dfi, dfj)
+        rdist <- renkonen_dist(dfi, dfj)
         # add line to renkonen_df
         new_line <- data.frame(sample1 = sampi, 
                                sample2 = sampj, 
@@ -3242,7 +3242,7 @@ MakeRenkonenDistances <- function(read_count_df,
         if(compare_all){ # calculate only if within and between sample comparison is necessary
           dfi <- filter(df, sr == sri)
           dfj <- filter(df, sr == srj)
-          rdist <- calculate_renkonen_dist(dfi, dfj)
+          rdist <- renkonen_dist(dfi, dfj)
           # add line to renkonen_df
           new_line <- data.frame(sample1 = sampi, 
                                  sample2 = sampj, 
@@ -3262,7 +3262,7 @@ MakeRenkonenDistances <- function(read_count_df,
   return(renkonen_df)
 }
 
-#' FilterRenkonen
+#' filter_replicate
 #' 
 #' Filter out all replicates that have renkonen distances above `cutoff` 
 #' to most other replicates of the same sample.
@@ -3280,12 +3280,12 @@ MakeRenkonenDistances <- function(read_count_df,
 #' @return Filtered read_count_df data frame.
 #' @examples
 #' \dontrun{
-#' filtered_read_count_df <- FilterRenkonen(read_count_df, cutoff = 0.6)
-#' filtered_read_count_df <- FilterRenkonen(read_count_df, renkonen_distance_quantile=0.9)
+#' filtered_read_count_df <- filter_replicate(read_count_df, cutoff = 0.6)
+#' filtered_read_count_df <- filter_replicate(read_count_df, renkonen_distance_quantile=0.9)
 #' }
 #' @export
 #' 
-FilterRenkonen <- function(read_count, 
+filter_replicate <- function(read_count, 
                            outfile="",
                            cutoff = NA, 
                            renkonen_distance_quantile=0.9,
@@ -3301,7 +3301,7 @@ FilterRenkonen <- function(read_count,
   }
   
   # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE) %>%
+  renkonen_df <- compute_renkonen_distances(read_count_df, compare_all=FALSE) %>%
     select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
     arrange(renkonen_d)
   
@@ -3371,11 +3371,11 @@ FilterRenkonen <- function(read_count,
 #' asv, sample, read_count (over replicates), cluster_id (optional)
 #' @examples
 #' \dontrun{
-#' PoolReplicates(read_count_df)
+#' pool_replicates(read_count_df)
 #' }
 #' @export 
 #'
-PoolReplicates <- function(read_count, method="mean", digits=0, outfile="", sep=","){
+pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3384,7 +3384,7 @@ PoolReplicates <- function(read_count, method="mean", digits=0, outfile="", sep=
     read_count_df <- read_count
   }
   
-  t <- check_one_to_one_relationship(read_count_df)
+  t <- check_one_to_one(read_count_df)
   
   # method
     method <- match.arg(method, c("mean", "max", "sum", "min"))
@@ -3430,11 +3430,11 @@ PoolReplicates <- function(read_count, method="mean", digits=0, outfile="", sep=
 }
 
 
-#' TaxAssignLTG using BLAST based Lowest Common Ancestor Method
+#' assign_taxonomy_ltg using BLAST based Lowest Common Ancestor Method
 #' 
 #' Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
 #'  
-#' TaxAssignLTG uses the mkLTG algorithm described 
+#' assign_taxonomy_ltg uses the mkLTG algorithm described 
 #' in [Meglécz, 2024](https://rdcu.be/dxABF) and  
 #' [https://github.com/meglecz/mkLTG](https://github.com/meglecz/mkLTG).
 #' This is a BLAST based method using a series of identity percentage of cutoff
@@ -3476,12 +3476,12 @@ PoolReplicates <- function(read_count, method="mean", digits=0, outfile="", sep=
 #' pid,pcov,phit,taxn,seqn,refres,ltgres,asv
 #' @examples
 #' \dontrun{
-#' TaxAssignLTG(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
+#' assign_taxonomy_ltg(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
 #' }
 #' @export
 #'
 #'
-TaxAssignLTG <- function(asv, 
+assign_taxonomy_ltg <- function(asv, 
                       taxonomy, 
                       blast_db, 
                       blast_path="blastn", 
@@ -3511,7 +3511,7 @@ asv_df <- asv_df %>%
   select(asv_id, asv) %>%
   distinct() %>%
   arrange(asv_id)
-t <- check_one_to_one_relationship(asv_df)
+t <- check_one_to_one(asv_df)
 
 if (is.character(ltg_params)){ 
   if(ltg_params == ""){ # default value for ltg_params_df
@@ -3576,7 +3576,7 @@ blast_res <- left_join(blast_res, tax_df, by=c("staxids" = "tax_id")) %>%
   select(-parent_tax_id, -rank, -name_txt) # "qseqid"   "pident"   "qcovhsp"  "staxids"  "taxlevel"
 
 ### make a lineage for each taxid in blast_res
-lineages <- get_lineage_ids(unique(blast_res$staxids), tax_df)
+lineages <- get_taxonomic_lineage(unique(blast_res$staxids), tax_df)
 
 # new data frame with all asv, asv_id and NA for the other columns
 taxres_df <- asv_df %>%
@@ -3607,7 +3607,7 @@ for(i in 1:nrow(taxres_df)){ # go through all sequences
     tn <- length(unique(df_intern$staxids))
     if(tn >= taxnl & nrow(df_intern) >= seqnl ){
       # make ltg if all conditions are met
-      ltg <- make_ltg(df_intern$staxids, lineages, phit = phitl)
+      ltg <- find_ltg(df_intern$staxids, lineages, phit = phitl)
       # fill out line with the ltg and the parameters that were used to get it
       taxres_df[i, 3:(ncol(taxres_df))] <- 
         list(ltg, pidl, pcovl, phitl, taxnl, seqnl, refresl, ltgresl)
@@ -3629,7 +3629,7 @@ taxres_df <- left_join(taxres_df, ranked_lineages, by="ltg_taxid") %>%
          order_taxid,order,family_taxid,family,genus_taxid,genus,
          species_taxid,species,pid,pcov,phit,taxn,seqn,refres,ltgres,asv)
 # adjust resolution if it is higher than ltgres
-taxres_df <- adjust_ltgres(taxres_df, tax_df)
+taxres_df <- adjust_ltg_resolution(taxres_df, tax_df)
 # taxres_df data frame with the following columns: 
 # asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,domain_taxid,
 # domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
@@ -3692,8 +3692,8 @@ run_blast <- function(df,
   # make fasta file with unique reads; use numbers as ids  
 #  seqs <- unique(df$asv)
   fas <- file.path(outdir, 'unique.fas')
-  write_fasta_df(df, outfile=fas, read_count=FALSE)
-#  write_fasta(seqs, fas, seq_as_id=T)
+  write_fasta_with_counts(df, outfile=fas, read_count=FALSE)
+#  write_fasta_vector(seqs, fas, seq_as_id=T)
   # define the name of the output file
   blast_out <- file.path(outdir, 'blast.out')
   
@@ -3724,7 +3724,7 @@ run_blast <- function(df,
   # read BLAST results; 
   # take care of lines where there is several taxids in the staxids column 
   # This can happen in ncbi nt
-  blast_res <- read_blast_res(file=blast_out)
+  blast_res <- read_blast_results(file=blast_out)
   return(blast_res)
 }
 
@@ -3738,11 +3738,11 @@ run_blast <- function(df,
 #' @return Data frame with the following columns: qseqid,pident,qcovhsp,staxids
 #' @examples
 #' \dontrun{
-#' read_blast_res(file="blastout.txt")
+#' read_blast_results(file="blastout.txt")
 #' }
 #' @export
 #'
-read_blast_res <- function(file){
+read_blast_results <- function(file){
   
   blast_res <- read.delim(file, header=F, sep="\t", fill=T, quote="")
   colnames(blast_res) <- c("qseqid","pident","qcovhsp","staxids") 
@@ -3842,11 +3842,11 @@ update_taxids <- function(df, old_taxid){
 #' \dontrun{
 #' taxids <- c(9606, 9593)
 #' tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
-#' get_lineage_ids(taxids, tax_df=tax_df)
+#' get_taxonomic_lineage(taxids, tax_df=tax_df)
 #' }
 #' @export
 #'
-get_lineage_ids <- function(taxids, tax_df){
+get_taxonomic_lineage <- function(taxids, tax_df){
   
   # taxids is a vector of taxids; there can be duplicated values
   lineages <- as.data.frame(taxids)
@@ -3877,14 +3877,14 @@ get_lineage_ids <- function(taxids, tax_df){
   # Apply the function to each row of the lineages data frame: 
   # delete all 1, shift the remaining elements of each row to the beginning, 
   # and replace missing values at the end of the row by NA
-  lineages <- as.data.frame(t(apply(lineages, 1, delete_1_by_row)))
+  lineages <- as.data.frame(t(apply(lineages, 1, remove_leading_ones)))
   # add as a first column the taxid, so they can be easily accessed
   lineages <- cbind(taxids, lineages)
   
   return(lineages)
 }
 
-#' delete_1_by_row
+#' remove_leading_ones
 #' 
 #' Delete all 1 from the beginning of a raw, shift the other values and 
 #' replace de missing ones at the end by NA
@@ -3894,11 +3894,11 @@ get_lineage_ids <- function(taxids, tax_df){
 #' Vector of taxids.
 #' @examples
 #' \dontrun{
-#' delete_1_by_row(row)
+#' remove_leading_ones(row)
 #' }
 #' @export
 #'
-delete_1_by_row <- function(row) {
+remove_leading_ones <- function(row) {
   
   n <- length(row) 
   # Remove all occurrences of 1
@@ -3925,11 +3925,11 @@ delete_1_by_row <- function(row) {
 #' @examples
 #' \dontrun{
 #' taxids <- c(9593,9606,9606,9606,9606,9606,9606,9606,9606)
-#' make_ltg(taxids, lineages=lineages, phit=80)
+#' find_ltg(taxids, lineages=lineages, phit=80)
 #' }
 #' @export
 #'
-make_ltg <- function(taxids, lineages, phit=70){
+find_ltg <- function(taxids, lineages, phit=70){
   # taxids is a vector of taxids; there can be duplicated values
   # make a data frame from the vector
   lin <- as.data.frame(taxids)
@@ -4063,7 +4063,7 @@ get_ranked_lineages <- function(taxids, tax_df, fill_lineage=TRUE){
   # if NA in a high level taxon and non NA in lower level taxon, 
   # replace NA by taxlevel_lower_level_taxon
   if(fill_lineage){
-    ranked_lineages <- fill_NA_in_lineage(ranked_lineages)
+    ranked_lineages <- fill_missing_taxa(ranked_lineages)
   }
   
   return(ranked_lineages)
@@ -4092,11 +4092,11 @@ get_ranked_lineages <- function(taxids, tax_df, fill_lineage=TRUE){
 #' phylum = c("Pseudomonadota", "Oomycota", NA),
 #' class_taxid = c(1236, NA, 2825),
 #' class = c("Gammaproteobacteria", NA, "Chrysophyceae"))
-#' df1 <- fill_NA_in_lineage(df)
+#' df1 <- fill_missing_taxa(df)
 #' }
 #' @export
 #'
-fill_NA_in_lineage <- function(df) {
+fill_missing_taxa <- function(df) {
   
   taxonomic_levels <- colnames(df)
   # Loop through the taxonomic levels from highest to second-lowest
@@ -4134,11 +4134,11 @@ fill_NA_in_lineage <- function(df) {
 #' @examples
 #' \dontrun{
 #' tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
-#' adjust_ltgres(taxres_df, tax_df)
+#' adjust_ltg_resolution(taxres_df, tax_df)
 #' }
 #' @export
 #'
-adjust_ltgres <- function(taxres_df, tax_df){
+adjust_ltg_resolution <- function(taxres_df, tax_df){
   
   # link taxlevel index and tax rank
   taxlevel_index = data.frame(taxlevel_index=c(0,1,2,3,4,5,6,7,8),
@@ -4218,7 +4218,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' input parameters.
 #' @examples
 #' \dontrun{
-#' WriteASVtable(read_count_samples_df, 
+#' write_asv_table(read_count_samples_df, 
 #'     outfile="out/asv_table.csv", 
 #'     asv_tax=asv_tax, 
 #'     sampleinfo=sampleinfo_df,
@@ -4231,7 +4231,7 @@ adjust_ltgres <- function(taxres_df, tax_df){
 #' }
 #' @export
 #'
-WriteASVtable <- function(read_count, 
+write_asv_table <- function(read_count, 
                           outfile="", 
                           asv_tax=NULL, 
                           sampleinfo="", 
@@ -4253,7 +4253,7 @@ WriteASVtable <- function(read_count,
   }
   
   # check asv_id - asv
-  t <- check_one_to_one_relationship(read_count_samples_df)
+  t <- check_one_to_one(read_count_samples_df)
   
 
   #### Check if cluster info is available, and make df with unique asv_id an cluster_id, to add them to output
@@ -4292,7 +4292,7 @@ WriteASVtable <- function(read_count,
   total_rc <- "sum_rc"
   if("replicate" %in% colnames(read_count_samples_df)){
     if(pool_replicates){ # take the mean read count of the replicates of the same sample
-      read_count_samples_df <- PoolReplicates(read_count_samples_df, method=method)
+      read_count_samples_df <- pool_replicates(read_count_samples_df, method=method)
       total_rc <- paste("sum", method, "rc", sep="_")
     }else{ # make sample column and replace sample by sample.replicate 
       read_count_samples_df <- read_count_samples_df %>%
@@ -4395,7 +4395,7 @@ WriteASVtable <- function(read_count,
     
     if(is.character(mock_composition)){
       mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
-      CheckFileinfo(file=mock_composition, file_type="mock_composition", sep=sep, quiet=TRUE)
+      check_file_info(file=mock_composition, file_type="mock_composition", sep=sep, quiet=TRUE)
     }else{
       mock_asv <- mock_composition
     }
@@ -4443,7 +4443,7 @@ WriteASVtable <- function(read_count,
 }
 
 
-#' OptimizePCRerror
+#' suggest_pcr_error_cutoff
 #' 
 #' Prepare a data frame that lists pairs of expected and unexpected ASVs 
 #' in mock samples with maximum `max_mismatch` difference between them.
@@ -4471,7 +4471,7 @@ WriteASVtable <- function(read_count,
 #' expected_asv,unexpected_asv
 #' @examples
 #' \dontrun{
-#' OptimizePCRerror(read_count=read_count_df, 
+#' suggest_pcr_error_cutoff(read_count=read_count_df, 
 #'     mock_composition="data/mock_composition.csv", 
 #'     vsearch_path=vsearch_path, 
 #'     max_mismatch=2, 
@@ -4481,7 +4481,7 @@ WriteASVtable <- function(read_count,
 #' @export
 #'
 
-OptimizePCRerror <- function(read_count, 
+suggest_pcr_error_cutoff <- function(read_count, 
                              mock_composition="", 
                              vsearch_path= "vsearch", 
                              num_threads=0,
@@ -4510,7 +4510,7 @@ OptimizePCRerror <- function(read_count,
   }else{
     mock_composition_df <- mock_composition
   }
-  CheckFileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep, quiet=TRUE)
+  check_file_info(file=mock_composition_df, file_type="mock_composition", sep=sep, quiet=TRUE)
   
   # read the mock composition file and keep only lines with keep and tolerate
   mock_composition_df <- mock_composition_df %>%
@@ -4566,7 +4566,7 @@ OptimizePCRerror <- function(read_count,
   # loop over all mock samples
   ###
   for(mock in unique_mock_list){
-    outdir_tmp <- paste('tmp_OptimizePCRError_', 
+    outdir_tmp <- paste('tmp_suggest_pcr_error_cutoff_', 
                         trunc(as.numeric(Sys.time())), 
                         sample(1:100, 1), 
                         sep=''
@@ -4580,7 +4580,7 @@ OptimizePCRerror <- function(read_count,
     asv_list_keep <- unique(tmp_mock$asv)
     # make fasta file with unique mock variants; use sequences as ids
     fas_keep <- file.path(outdir_tmp, paste(mock, "keepASV.fas", sep="_"))
-    write_fasta(asv_list_keep, fas_keep, seq_as_id=T)
+    write_fasta_vector(asv_list_keep, fas_keep, seq_as_id=T)
     
     # get the list of tolerate ASV in the given mock sample from mock_composition
     tmp_mock <- mock_composition_df %>%
@@ -4599,7 +4599,7 @@ OptimizePCRerror <- function(read_count,
     # use sequences as ids
     fas_delete <- paste(mock, "deleteASV.fas", sep="_")
     fas_delete <- file.path(outdir_tmp, fas_delete)
-    write_fasta(asv_list_delete, fas_delete, seq_as_id=T)
+    write_fasta_vector(asv_list_delete, fas_delete, seq_as_id=T)
     
     if(length(asv_list_delete)>0 && length(asv_list_keep)>0){ # sequences in both files
       # vsearch --usearch_global to find highly similar sequence pairs
@@ -4709,12 +4709,12 @@ OptimizePCRerror <- function(read_count,
   return(asv_pairs)
 }
 
-#' OptimizeLFNsampleReplicate
+#' suggest_sample_cutoff
 #' 
 #' Prepare a data frame that lists all expected occurrences in all mock 
 #' sample-replicates their read_counts and the proportion of 
 #' their read_counts to the total number of reads in the sample-replicate. 
-#' The cutoff parameter in LFNsampleReplicate should be bellow the smallest 
+#' The cutoff parameter in filter_occurrence_sample should be bellow the smallest 
 #' proportion in order to keep all expected ASVs in the data set.
 #'  
 #' @param read_count Data frame or csv file with the following variables: 
@@ -4725,15 +4725,15 @@ OptimizePCRerror <- function(read_count,
 #' @param outfile Character string: csv file name to print the output data 
 #' frame if necessary. If empty, no file is written.
 #' @return Data frame with the following columns: sample, replicate, action, 
-#' asv_id, read_count, read_count_sample_replicate, lfn_sample_replicate_cutoff, 
+#' asv_id, read_count, read_count_sample_replicate, sample_cutoff, 
 #' asv
 #' @examples
 #' \dontrun{
-#' OptimizeLFNsampleReplicate(read_count_df, mock_composition="data/mock_composition.csv")
+#' suggest_sample_cutoff(read_count_df, mock_composition="data/mock_composition.csv")
 #' }
 #' @export
 #'
-OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",", outfile=""){
+suggest_sample_cutoff <- function(read_count, mock_composition="", sep=",", outfile=""){
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -4748,7 +4748,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
   }else{
     mock_composition_df <- mock_composition
   }
-  CheckFileinfo(file=mock_composition_df, file_type="mock_composition", sep=sep, quiet=TRUE)
+  check_file_info(file=mock_composition_df, file_type="mock_composition", sep=sep, quiet=TRUE)
   
   
   #### Test if all expected (keep) variants are present in read_count_df
@@ -4830,18 +4830,18 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
     left_join(asv_ids, by= "asv") %>%
     mutate(read_count = if_else(is.na(read_count), 0, read_count))
   
-  asv_keep_df$lfn_sample_replicate_cutoff <- 
+  asv_keep_df$sample_cutoff <- 
     asv_keep_df$read_count/asv_keep_df$read_count_sample_replicate
-  asv_keep_df$lfn_sample_replicate_cutoff <- 
-    round(asv_keep_df$lfn_sample_replicate_cutoff-0.00005, digits=4)
+  asv_keep_df$sample_cutoff <- 
+    round(asv_keep_df$sample_cutoff-0.00005, digits=4)
   
   asv_keep_df <- asv_keep_df %>%
-    arrange(lfn_sample_replicate_cutoff) %>%
+    arrange(sample_cutoff) %>%
     select(sample, 
            replicate, 
            action, 
            asv_id, 
-           lfn_sample_replicate_cutoff,
+           sample_cutoff,
            read_count,
            read_count_sample_replicate, 
            asv, 
@@ -4856,14 +4856,14 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 }
 
 
-#' MakeKnownOccurrences
+#' classify_control_occurrences
 #' 
 #' Prepare three data frames:
 #' * known_occurrences: Lists all occurrences that are expected in mock 
 #' (True Positives) or 
 #' False positives (unexpected variants in mocks, all variants in negative 
 #' control samples, variants present in a wrong habitat).
-#' * missing_occurrences: Lists all False Negatives (expected occurrences 
+#' * false_negatives: Lists all False Negatives (expected occurrences 
 #' in mock samples that are missing).
 #' * performance_metrics: Number of TP (expected in mock and present), 
 #' FP (unexpected but present), 
@@ -4879,7 +4879,7 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 #' @param known_occurrences Character string: csv file containing 
 #' known occurrences (expected occurrences in mock, and FP).
 #' If empty, no file is written.
-#' @param missing_occurrences Character string: csv file containing
+#' @param false_negatives Character string: csv file containing
 #' the missing occurrences (FN). If empty, no file is written.
 #' @param performance_metrics Character string: csv file containing performance 
 #' metrics. If empty, no file is written.
@@ -4890,28 +4890,28 @@ OptimizeLFNsampleReplicate <- function(read_count, mock_composition="", sep=",",
 #' show warnings or errors.
 #' @return List of data frames:
 #' * known_occurrences_df: sample, action, asv_id, asv
-#' * missing_occurrences_df: sample, action, asv, asv_id
+#' * false_negatives_df: sample, action, asv, asv_id
 #' * performance_metrics_df: TP, FP, FN, Precision, Sensitivity
 #' @examples
 #' \dontrun{
-#' results <- MakeKnownOccurrences(read_count_samples_df, 
+#' results <- classify_control_occurrences(read_count_samples_df, 
 #' sampleinfo=sampleinfo_df, 
 #' mock_composition="data/mock_composition.csv", 
 #' habitat_proportion=0.7
 #' )
 #' known_occurrences_df <- results[[1]]
-#' missing_occurrences_df <- results[[2]]
+#' false_negatives_df <- results[[2]]
 #' performance_metrics_df <- results[[3]]
 #' }
 #' @export
 #' 
 
-MakeKnownOccurrences <- function(read_count, 
+classify_control_occurrences <- function(read_count, 
                                  sampleinfo, 
                                  mock_composition, 
                                  sep=",", 
                                  known_occurrences="", 
-                                 missing_occurrences="", 
+                                 false_negatives="", 
                                  performance_metrics="", 
                                  habitat_proportion=0.5,
                                  quiet=TRUE){
@@ -4924,14 +4924,14 @@ MakeKnownOccurrences <- function(read_count,
     read_count_df <- read_count
   }
   
-  # PoolReplicates before counting occurrences in samples
+  # pool_replicates before counting occurrences in samples
   if("replicate" %in% colnames(read_count_df)){  
-    CheckFileinfo(file=read_count_df, 
+    check_file_info(file=read_count_df, 
                   file_type="read_count", 
                   quiet=TRUE)
-    read_count_samples_df <- PoolReplicates(read_count_df)
+    read_count_samples_df <- pool_replicates(read_count_df)
   }else{
-    CheckFileinfo(file=read_count_df, 
+    check_file_info(file=read_count_df, 
                   file_type="read_count_sample", 
                   quiet=TRUE)
     read_count_samples_df <- read_count_df
@@ -4949,7 +4949,7 @@ MakeKnownOccurrences <- function(read_count,
   }else{
     mock_composition_df <- mock_composition
   }
-  CheckFileinfo(file=mock_composition_df, 
+  check_file_info(file=mock_composition_df, 
                 file_type="mock_composition", 
                 quiet=TRUE)
   
@@ -4969,9 +4969,9 @@ MakeKnownOccurrences <- function(read_count,
   # flag occurrences in negative control samples as delete
   occurrence_df$action[which(occurrence_df$sample_type=="negative")] <- "delete"
   # flag all expected occurrences in mock samples as "keep", NA for tolerate, and delete for all others
-  occurrence_df <- flag_from_mock(occurrence_df, mock_composition_df, sep=sep)
+  occurrence_df <- flag_mock_asv(occurrence_df, mock_composition_df, sep=sep)
   # flag occurrences as delete with low read count in habitat, compared to the other habitats
-  occurrence_df <- flag_from_habitat(occurrence_df, 
+  occurrence_df <- flag_by_habitat(occurrence_df, 
                                      habitat_proportion=habitat_proportion
                                      ) 
   
@@ -4988,11 +4988,11 @@ MakeKnownOccurrences <- function(read_count,
   TP <- nrow(occurrence_df %>%
                filter(action=="keep"))
   
-  # count the number of FN and write missing_occurrences, if filename is defined
-  missing_occurrence_df <-make_missing_occurrences(read_count_samples=read_count_samples_df,
+  # count the number of FN and write false_negatives, if filename is defined
+  missing_occurrence_df <-detect_false_negatives(read_count_samples=read_count_samples_df,
                                                    mock_composition=mock_composition_df, 
                                                    sep=sep, 
-                                                   out=missing_occurrences,
+                                                   out=false_negatives,
                                                    quiet=quiet
                                                    )
   FN <- nrow(missing_occurrence_df %>%
@@ -5009,7 +5009,7 @@ MakeKnownOccurrences <- function(read_count,
   )
   
   
-  # write to outfiles (missing is written by function make_missing_occurrences)
+  # write to outfiles (missing is written by function detect_false_negatives)
   if(known_occurrences != ""){
     check_dir(known_occurrences, is_file=TRUE)
     write.table(occurrence_df, file=known_occurrences, row.names = F, sep=sep)
@@ -5039,11 +5039,11 @@ MakeKnownOccurrences <- function(read_count,
 #' asv_id, sample, read_count, asv, sample_type, habitat, action.
 #' @examples
 #' \dontrun{
-#' flag_from_mock(occurrence_df=occurrence_df, mock_composition="data/mock_composition.csv")
+#' flag_mock_asv(occurrence_df=occurrence_df, mock_composition="data/mock_composition.csv")
 #' }
 #' @export
 #' 
-flag_from_mock <- function(occurrence_df, mock_composition, sep=","){
+flag_mock_asv <- function(occurrence_df, mock_composition, sep=","){
   # can accept df or file as an input
   if(is.character(mock_composition)){
     # read known occurrences
@@ -5097,11 +5097,11 @@ flag_from_mock <- function(occurrence_df, mock_composition, sep=","){
 #' delete in the action column.
 #' @examples
 #' \dontrun{
-#' flag_from_habitat(occurrence_df, habitat_proportion=0.7)
+#' flag_by_habitat(occurrence_df, habitat_proportion=0.7)
 #' }
 #' @export
 #' 
-flag_from_habitat <- function(occurrence_df, habitat_proportion=0.5){
+flag_by_habitat <- function(occurrence_df, habitat_proportion=0.5){
   
   # group by asv and habitat and count the total number of reads for 
   # each habitat-asv combination
@@ -5160,13 +5160,13 @@ flag_from_habitat <- function(occurrence_df, habitat_proportion=0.5){
 #' sample, action, asv, asv_id
 #' @examples
 #' \dontrun{
-#' make_missing_occurrences(read_count_samples=read_count_samples_df, 
+#' detect_false_negatives(read_count_samples=read_count_samples_df, 
 #'     mock_composition="data/mock_composition.csv"
 #'     )
 #' }
 #' @export
 #'
-make_missing_occurrences <- function(read_count_samples, mock_composition, sep=",", out="", quiet=TRUE){
+detect_false_negatives <- function(read_count_samples, mock_composition, sep=",", out="", quiet=TRUE){
   
   # can accept df or file as an input
   if(is.character(mock_composition)){
@@ -5229,13 +5229,13 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
   return(df)
 }
 
-#' OptimizeLFNreadCountLFNvariant
+#' suggest_variant_readcount_cutoffs
 #' 
-#' Suggest optimal parameters for `lfn_read_count_cutoff` and `lnf_variant_cutoff` 
+#' Suggest optimal parameters for `read_count_cutoff` and `variant_cutoff` 
 #' functions.
 #'  
-#' The the `LFNreadCount` and `LFNvariant` is run for a series of parameter value 
-#' combinations followed by `FilterMinReplicate`. 
+#' The the `filter_occurrence_read_count` and `filter_occurrence_variant` is run for a series of parameter value 
+#' combinations followed by `filter_min_replicate`. 
 #' For each parameter combination, the number of FN, TP, and FP is reported. 
 #' Users should chose the parameter setting that minimizes, FN and FP.
 #' 
@@ -5247,7 +5247,7 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' asv_id, sample, replicate, read_count, asv.
 #' @param outdir Character string: name of the output directory.
 #' @param known_occurrences Data frame or file produced by 
-#' `MakeKnownOccurrences` function, with known False Positives and True Positives.
+#' `classify_control_occurrences` function, with known False Positives and True Positives.
 #' Optional; If no *known_occurrences* is provided by the user, it will be calculated 
 #' from mock_composition and sampleinfo and habitat_proportion.
 #' @param mock_composition Data frame or csv file with columns: 
@@ -5258,56 +5258,56 @@ make_missing_occurrences <- function(read_count_samples, mock_composition, sep="
 #' of reads in a habitat is below this cutoff, 
 #' it is considered as an artifact in all samples of the habitat.
 #' @param sep Field separator character in input and output csv files.
-#' @param min_lfn_read_count_cutoff Positive integer: the lowest cutoff value for 
-#' `LFNreadCount` function. 
-#' @param max_lfn_read_count_cutoff Positive integer: the highest cutoff value 
-#' for `LFNreadCount` function. 
-#' @param increment_lfn_read_count_cutoff Positive integer: values from 
-#' `min_lfn_read_count_cutoff` to `max_lfn_read_count_cutoff` 
+#' @param min_read_count_cutoff Positive integer: the lowest cutoff value for 
+#' `filter_occurrence_read_count` function. 
+#' @param max_read_count_cutoff Positive integer: the highest cutoff value 
+#' for `filter_occurrence_read_count` function. 
+#' @param increment_read_count_cutoff Positive integer: values from 
+#' `min_read_count_cutoff` to `max_read_count_cutoff` 
 #' are tested by `increment_lfn_read_count_cutof` of increment. 
-#' @param min_lnf_variant_cutoff Numeric. Value between 0 and 1: the lowest cutoff value for 
-#' `LFNvariant` function. 
-#' @param max_lnf_variant_cutoff  Numeric. Value between 0 and 1: the highest value for `LFNvariant`
+#' @param min_variant_cutoff Numeric. Value between 0 and 1: the lowest cutoff value for 
+#' `filter_occurrence_variant` function. 
+#' @param max_variant_cutoff  Numeric. Value between 0 and 1: the highest value for `filter_occurrence_variant`
 #'  function.
-#' @param increment_lnf_variant_cutoff  Numeric. Value between 0 and 1: values from 
-#' `min_lnf_variant_cutoff` to `max_lnf_variant_cutoff` are tested by 
-#' `increment_lnf_variant_cutoff` increment. 
+#' @param increment_variant_cutoff  Numeric. Value between 0 and 1: values from 
+#' `min_variant_cutoff` to `max_variant_cutoff` are tested by 
+#' `increment_variant_cutoff` increment. 
 #' @param by_replicate logical: compare read count of the occurrence to the 
-#' read counts of the ASV-replicate in `LFNvariant` function.
+#' read counts of the ASV-replicate in `filter_occurrence_variant` function.
 #' @param min_replicate_number Positive integer: minimum number of replicates 
-#' for `FilterMinReplicate`.
+#' for `filter_min_replicate`.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @return Data frame with the following columns: 
-#' lfn_read_count_cutoff, lnf_variant_cutoff, FN, TP, FP.
+#' read_count_cutoff, variant_cutoff, FN, TP, FP.
 #' @examples
 #' \dontrun{
-#' OptimizeLFNreadCountLFNvariant(read_count_df, 
+#' suggest_variant_readcount_cutoffs(read_count_df, 
 #'     known_occurrences="data/known_occurrences.csv", 
-#'     min_lfn_read_count_cutoff=10,
-#'      max_lfn_read_count_cutoff=50, 
-#'      increment_lfn_read_count_cutoff=10, 
-#'      min_lnf_variant_cutoff=0.001, 
-#'      max_lnf_variant_cutoff=0.005, 
-#'      increment_lnf_variant_cutoff=0.001
+#'     min_read_count_cutoff=10,
+#'      max_read_count_cutoff=50, 
+#'      increment_read_count_cutoff=10, 
+#'      min_variant_cutoff=0.001, 
+#'      max_variant_cutoff=0.005, 
+#'      increment_variant_cutoff=0.001
 #'      )
 #' }
 #' @export
 #'
 
-OptimizeLFNreadCountLFNvariant <- function(read_count, 
+suggest_variant_readcount_cutoffs <- function(read_count, 
                                            outdir, 
                                            known_occurrences = NULL, 
                                            mock_composition = "",
                                            sampleinfo = "",
                                            habitat_proportion = 0.5,
                                            sep=",",
-                                           min_lfn_read_count_cutoff=10, 
-                                           max_lfn_read_count_cutoff=100, 
-                                           increment_lfn_read_count_cutoff=5, 
-                                           min_lnf_variant_cutoff=0.001, 
-                                           max_lnf_variant_cutoff=0.01, 
-                                           increment_lnf_variant_cutoff=0.001, 
+                                           min_read_count_cutoff=10, 
+                                           max_read_count_cutoff=100, 
+                                           increment_read_count_cutoff=5, 
+                                           min_variant_cutoff=0.001, 
+                                           max_variant_cutoff=0.01, 
+                                           increment_variant_cutoff=0.001, 
                                            by_replicate=FALSE, 
                                            min_replicate_number=1, 
                                            quiet=T
@@ -5326,15 +5326,15 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   if(is.null(known_occurrences)){ # Calculate known_occurrences from data
     
     known_occurrences <- file.path(outdir, "known_occurrences.csv")
-    missing_occurrences <- file.path(outdir, "missing_occurrences.csv")
+    false_negatives <- file.path(outdir, "false_negatives.csv")
     performance_metrics <- file.path(outdir, "performance_metrics.csv")
     
-    results <- MakeKnownOccurrences(
+    results <- classify_control_occurrences(
       read_count_df,
       sampleinfo = sampleinfo,
       mock_composition = mock_composition,
       known_occurrences = known_occurrences,
-      missing_occurrences = missing_occurrences,
+      false_negatives = false_negatives,
       performance_metrics = performance_metrics,
       sep = ",",
       habitat_proportion = habitat_proportion,
@@ -5342,12 +5342,12 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
     )
     
     known_occurrences_df <- results[[1]]
-    missing_occurrences_df <- results[[2]]
-    if(nrow(missing_occurrences_df)>0){
+    false_negatives_df <- results[[2]]
+    if(nrow(false_negatives_df)>0){
       warning(
         paste0(
           "\n  Some expected ASVs are missing from the mock samples.\n",
-          "  Check the ", missing_occurrences, " file! \n"
+          "  Check the ", false_negatives, " file! \n"
         ),
         call. = FALSE
       )
@@ -5359,27 +5359,27 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
     }else{
       known_occurrences_df <- known_occurrences
     }
-    CheckFileinfo(file=known_occurrences_df, 
+    check_file_info(file=known_occurrences_df, 
                   file_type="known_occurrences", 
                   sep=sep, 
                   quiet=TRUE
     )
   }
   
-  # make a series of cutoff values for LFNreadCount
-  rc_cutoff_list <- seq(from=min_lfn_read_count_cutoff, 
-                        to=max_lfn_read_count_cutoff, 
-                        by=increment_lfn_read_count_cutoff
+  # make a series of cutoff values for filter_occurrence_read_count
+  rc_cutoff_list <- seq(from=min_read_count_cutoff, 
+                        to=max_read_count_cutoff, 
+                        by=increment_read_count_cutoff
   )
-  # make a series of cutoff values for LFNreadCount
-  var_cutoff_list <- seq(from=min_lnf_variant_cutoff, 
-                         to=max_lnf_variant_cutoff, 
-                         by=increment_lnf_variant_cutoff
+  # make a series of cutoff values for filter_occurrence_read_count
+  var_cutoff_list <- seq(from=min_variant_cutoff, 
+                         to=max_variant_cutoff, 
+                         by=increment_variant_cutoff
   )
   
   out_df <- data.frame(
-    lfn_read_count_cutoff=numeric(),
-    lnf_variant_cutoff=numeric(),
+    read_count_cutoff=numeric(),
+    variant_cutoff=numeric(),
     FN=numeric(),
     TP=numeric(),
     FP=numeric()
@@ -5388,15 +5388,15 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   
   for(rc_cutoff in rc_cutoff_list){
     df_tmp <- read_count_df
-    #LFNreadCount
-    df_tmp <- LFNreadCount(df_tmp, rc_cutoff)
+    #filter_occurrence_read_count
+    df_tmp <- filter_occurrence_read_count(df_tmp, rc_cutoff)
     for(var_cutoff in var_cutoff_list){
-      # LFNvariant
-      df_tmp <- LFNvariant(df_tmp, var_cutoff, by_replicate=by_replicate)
-      # FilterMinReplicate
-      df_tmp <- FilterMinReplicate(df_tmp, min_replicate_number)
-      # PoolReplicates
-      df_tmp_sample <- PoolReplicates(df_tmp, method="max",digits=0) # the method does really not matter here
+      # filter_occurrence_variant
+      df_tmp <- filter_occurrence_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      # filter_min_replicate
+      df_tmp <- filter_min_replicate(df_tmp, min_replicate_number)
+      # pool_replicates
+      df_tmp_sample <- pool_replicates(df_tmp, method="max",digits=0) # the method does really not matter here
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
@@ -5421,8 +5421,8 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
       if ("delete" %in% ko$action) {
         FP_count <- subset(ko, action == "delete")$TPFP
       }
-      new_line <- data.frame(lfn_read_count_cutoff=rc_cutoff, 
-                             lnf_variant_cutoff=var_cutoff ,
+      new_line <- data.frame(read_count_cutoff=rc_cutoff, 
+                             variant_cutoff=var_cutoff ,
                              FN=FN_count, 
                              TP=TP_count, 
                              FP=FP_count
@@ -5435,9 +5435,9 @@ OptimizeLFNreadCountLFNvariant <- function(read_count,
   }
   
   out_df <- out_df %>%
-    arrange(FN, FP, lnf_variant_cutoff, lfn_read_count_cutoff)
+    arrange(FN, FP, variant_cutoff, read_count_cutoff)
   
-  outfile <- file.path(outdir, "OptimizeLFNreadCountLFNvariant.csv")
+  outfile <- file.path(outdir, "suggest_variant_readcount_cutoffs.csv")
   check_dir(outfile, is_file=TRUE)
   write.table(out_df, file=outfile, sep=sep, row.names = F)
   
@@ -5518,7 +5518,7 @@ pool_datasets <- function(files,
       # concatenation 
       df_pool <- rbind(df_pool, df)
       # check if coherence among asv and asv_id
-      if(!check_one_to_one_relationship(df_pool)){
+      if(!check_one_to_one(df_pool)){
         stop("Incoherence between asv and asv_id among different datasets")
       }
     }
@@ -5597,8 +5597,8 @@ pool_datasets <- function(files,
 #' @examples
 #' \dontrun{
 #' files <- c(
-#'   "~/vtamR_demo_out_zfzr/filter/7_FilterChimera.csv",  
-#'   "~/vtamR_demo/filter/7_FilterChimera.csv"
+#'   "~/vtamR_demo_out_zfzr/filter/7_filter_chimera.csv",  
+#'   "~/vtamR_demo/filter/7_filter_chimera.csv"
 #' )
 #' marker_ids <- c(1, 2)
 #' pool_markers(files, marker_ids = marker_ids, method = "mean")
@@ -5658,13 +5658,13 @@ pool_markers <- function(files,
     # concatenation 
     df_pool <- rbind(df_pool, df)
     # check if coherence among asv and asv_id
-    if(!check_one_to_one_relationship(df_pool)){
+    if(!check_one_to_one(df_pool)){
       stop("Incoherence between asv and asv_id among different datasets")
     }
   }
   ############################
   # Make asv_with_centroids df: concatenated input + centroid_id + centroid
-  df_pool <- ClusterASV(read_count=df_pool,
+  df_pool <- cluster_asv(read_count=df_pool,
                      group = FALSE,
                      by_sample = FALSE,
                      method = "vsearch",
@@ -5714,270 +5714,6 @@ pool_markers <- function(files,
 }
 
 
-#' Pool Datasets
-#' 
-#' Deprecated: This function has been replaced bu pool_markers and pool_datasets.
-#' 
-#' Take several input files, each in long format containing 
-#' asv_id, sample, replicate (optional), read_count and asv columns.
-#' Pool the different data sets, if all have the same marker.
-#'  
-#' If more than one markers, ASVs identical on their overlapping 
-#' regions are pooled into groups, and different ASVs of the same group 
-#' are pooled under the centroid (longest ASV of the group). The asv_id are
-#' prefixed by the marker, to avoid confounding different ASVs of different 
-#' markers, with the same id.
-#' Pooling can take the mean of the read counts of the ASV (default) or their sum.
-#'  
-#' @param files Data frame with the following variables: file (name of input files), marker.
-#' Input files must have asv_id, sample, replicate (optional), read_count and asv columns.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
-#' @param asv_with_centroids Character string: csv file name of the output file 
-#' containing the same information as the concatenated input files, 
-#' completed by centroid_id and centroid columns.
-#' @param sep Field separator character in input and output csv files.
-#' @param mean_over_markers logical: If TRUE, the mean read count is calculated 
-#' over different ASVs of each cluster. Sum otherwise.
-#' @param vsearch_path Character string: path to vsearch executables. 
-#' @param num_threads Positive integer: Number of CPUs. If 0, use all available CPUs.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @return Data frame with asv_id, sample, replicate (optional), read_count, asv columns.
-#' @examples
-#' \dontrun{
-#' files <- data.frame(file=c("vtamR_test/out_mfzr/14_PoolReplicates.csv", 
-#'     "vtamR_test/out_zfzr/14_PoolReplicates.csv"),
-#'     marker=c("MFZR", "ZFZR"))
-#' PoolDatasets(files, vsearch_path=vsearch_path)
-#' }
-#' @export
-PoolDatasets <- function(files, 
-                         outfile="", 
-                         asv_with_centroids="", 
-                         sep=",", 
-                         mean_over_markers=T, 
-                         vsearch_path="vsearch", 
-                         num_threads=0,
-                         quiet=T
-){
-  
-  if(num_threads == 0){
-    num_threads <- parallel::detectCores()
-  }
-  
-  tmp_dir <-paste('tmp_pool_datasets_', 
-                  trunc(as.numeric(Sys.time())), 
-                  sample(1:100, 1), 
-                  sep='')
-  tmp_dir <- file.path(tempdir(), tmp_dir)
-  check_dir(tmp_dir)
-  
-  ###
-  # pool all data into one data frame (df), 
-  # check if the all marker.sample combinations are unique among different data sets
-  ###
-  
-  # Read first file set replicate_col, initialise df
-  marker <- files[1, "marker"]
-  df <- read.csv(files[1, "file"], sep=sep)
-  if("replicate" %in% colnames(df)){
-    replicate_col <- TRUE
-    df <- df %>%
-      select(asv_id, sample, replicate, read_count, asv)
-  }else{
-    replicate_col <- FALSE
-    df <- df %>%
-      select(asv_id, sample, read_count, asv)
-  }
-  df$marker <- rep(marker, nrow(df)) # add maker
-  samples <- unique(paste(df$marker, df$sample, sep="."))
-  
-  
-  for(i in 2:nrow(files)){
-    file <- files[i, "file"]
-    marker <- files[i, "marker"]
-    
-    tmp <- read.csv(file, sep=sep)
-    
-    if(replicate_col){
-      tmp <- tmp %>%
-        select(asv_id, sample, replicate, read_count, asv)
-    }else{
-      tmp <- tmp %>%
-        select(asv_id, sample, read_count, asv)
-    }
-    tmp$marker <- rep(marker, nrow(tmp)) # add maker
-    
-    # make a list of marker.sample of the data set that just have been read
-    local_samples <- unique(paste(tmp$marker, tmp$sample, sep="."))
-    # see if they match earlier read marker.sample combinations
-    shared_samples <- intersect(local_samples, samples) 
-    if(length(shared_samples) > 0){
-      print("The following samples are in at least 2 different data sets of the same marker. 
-            Their read_counts will be summed. Use unique names if you want to keep them separate:")
-      print(shared_samples)
-    }
-    samples <- c(samples, local_samples) 
-    
-    # add data set to df
-    df <- rbind(df, tmp)
-  }
-  
-  
-  
-  ###
-  # Pool ASVs identical on their overlapping region, if more than one marker
-  ###
-  marker_list <- unique(df$marker)
-  # more than one marker => pool sequences identical in their corresponding region
-  # complete the asv_id by 
-  if(length(marker_list) > 1){ 
-    # add marker to asv_id to avoid incompatibility among asv_id across markers
-    df <- df %>%
-      mutate(asv_id = paste(marker, asv_id, sep="_"))
-    # get full list of ASVs
-    
-    asvs <- df %>%
-      group_by(asv_id, asv) %>%
-      summarize("rc" = sum(read_count), .groups="drop")
-    
-    # arrange ASVs by decreasing sequence length and then by read_count
-    asvs$length <- as.numeric(nchar(asvs$asv))
-    asvs <- asvs %>%
-      arrange(desc(length), desc(rc))
-    
-    # make a fasta file
-    fasta <- file.path(tmp_dir, "vsearch_input.fasta")
-    writeLines(paste(">", asvs$asv_id, "\n", asvs$asv, sep="" ), fasta)
-    
-    # cluster using cluster_smallmem and 1 as identity limit
-    centroids_file <- file.path(tmp_dir, "consout.txt")
-    #query sequences are shorter than subjects => centroids are in the subjects column
-    blastout_file <- file.path(tmp_dir, "blastout.tsv")  
-    ##### run cmd
-    args <- c(
-      "--cluster_smallmem", fasta,
-      "--consout", centroids_file,
-      "--blast6out", blastout_file,
-      "--id", 1 
-    )
-    if(num_threads > 0){
-      args <- append(args, c("-threads", num_threads))
-    }
-    if(quiet){
-      args <- append(args, c("--quiet"))
-    }
-    run_system2(vsearch_path, args, quiet=quiet)
-    
-    ###
-    # Make cent data frame with a complete list of ASVs and the centroïd for each of them.
-    ###
-    # read the ids of centoids, and get the list of centroids
-    cent <- read.table(centroids_file)
-    colnames(cent) <- c("centroid_id")
-    cent <- cent %>%
-      filter(grepl(">centroid=", centroid_id)) # keep only fasta definition lines
-    cent$centroid_id <- gsub(">centroid=", "", cent$centroid_id)
-    cent$nbseq <-   gsub(".+;seqs=", "", cent$centroid_id)
-    cent$centroid_id <- gsub(";.+", "", cent$centroid_id)
-    #    cent$centroid_id <- as.numeric(cent$centroid_id)
-    cent$nbseq <- as.numeric(cent$nbseq)
-    
-    # add to centroide the asv_id that are in the same cluster
-    blastout <- read.table(blastout_file) %>%
-      select(1,2)
-    colnames(blastout) <- c("asv_id", "centroid_id")
-    cent <- left_join(cent, blastout, by= c("centroid_id"))
-    # add centroid_id to asv_id column for singletons
-    cent <- cent %>%
-      mutate(asv_id = ifelse(is.na(asv_id), centroid_id, asv_id))
-    # add a line for each non-singleton centroid, 
-    # with centroid id in both the centroid and in query columns
-    added_lines <- cent %>%
-      filter(nbseq>1) %>%
-      mutate(asv_id=centroid_id) %>%
-      unique # add just one line per centroid, not several if many sequences in cluster
-    cent<- rbind(cent, added_lines) %>%
-      arrange(centroid_id)
-    
-    ###
-    # Pool ASVs of the same cluster
-    ###
-    # add the centroid_id to each asv if df
-    df <- left_join(df, cent, by=c("asv_id")) %>%
-      select(-nbseq)
-    # add the centroid sequence to each centroid_id in df
-    df <- left_join(df, asvs, by=c("centroid_id"="asv_id")) %>%
-      select(-length, -rc) %>%
-      rename("asv"=asv.x, "centroid"=asv.y) %>%
-      arrange(centroid_id, marker)
-    # order the columns
-    if(replicate_col){
-      df <- df %>%
-        select(centroid_id,asv_id,marker,sample,replicate,read_count,asv,centroid)
-    }else{
-      df <- df %>%
-        select(centroid_id,asv_id,marker,sample,read_count,asv,centroid)
-    }
-    
-    
-    
-    if(mean_over_markers){
-      if(replicate_col){
-        df_pool <- df %>%
-          group_by(centroid_id, sample, replicate) %>%
-          summarize("read_count"=round(mean(read_count), digits=0), .groups =  "drop")
-      }else{
-        df_pool <- df %>%
-          group_by(centroid_id, sample) %>%
-          summarize("read_count"=round(mean(read_count), digits=0), .groups =  "drop")
-      }
-    }else{# sum over markers
-      if(replicate_col){
-        df_pool <- df %>%
-          group_by(centroid_id, sample, replicate) %>%
-          summarize("read_count"=sum(read_count), .groups =  "drop" ) 
-      }else{
-        df_pool <- df %>%
-          group_by(centroid_id, sample) %>%
-          summarize("read_count"=sum(read_count), .groups =  "drop" ) 
-      }
-    }
-    
-    # add asv column and select columns
-    # df_pool is a simple output with the format identical to the read_count_sample dfs,
-    # but no info on the asv that has been pooled together
-    df_pool <- left_join(df_pool, asvs, by=c("centroid_id" = "asv_id"))
-    if(replicate_col){
-      df_pool <- df_pool %>%
-        select("asv_id"=centroid_id, sample, replicate, read_count, asv) 
-    }else{
-      df_pool <- df_pool %>%
-        select("asv_id"=centroid_id, sample, read_count, asv) 
-    }
-    
-    
-    if(asv_with_centroids != ""){
-      check_dir(asv_with_centroids, is_file=TRUE)
-      write.table(df, file=asv_with_centroids, sep=sep, row.names = F)
-    }
-  }else{# one marker
-    df_pool <- df %>%
-      select(asv_id, sample, read_count, asv)
-  }
-  
-  unlink(tmp_dir, recursive = TRUE)
-  
-  if(outfile != ""){
-    check_dir(outfile, is_file=TRUE)
-    write.table(df_pool, file=outfile, sep=sep, row.names = F)
-  }
-  
-  return(df_pool)
-}
-
-
 #' History By
 #' 
 #' Filters a feature (asv_id/asv/sample/replicate), 
@@ -5986,7 +5722,7 @@ PoolDatasets <- function(files,
 #'  
 #' @param dir Character string: directory containing the output files 
 #' of intermediate filtering steps. File names should start with a number 
-#' followed by an underscore (e.g. 5_LFNsampleReplicate.csv).
+#' followed by an underscore (e.g. 5_filter_occurrence_sample.csv).
 #' @param feature Character string with the following possible values: 
 #' "asv_id", "asv", "sample", "replicate", "read_count".
 #' @param value Character string: values of feature that should selected. 
@@ -5996,12 +5732,12 @@ PoolDatasets <- function(files,
 #' @return An invisible data frame with the selected lines of the input files.
 #' @examples
 #' \dontrun{
-#' HistoryBy(dir="out", feature="asv_id", value=1)
-#' HistoryBy(dir="out", feature="sample", value="tpos1")
+#' history_by(dir="out", feature="asv_id", value=1)
+#' history_by(dir="out", feature="sample", value="tpos1")
 #' }
 #' @export
 #'
-HistoryBy <- function(dir, feature, value, sep=","){
+history_by <- function(dir, feature, value, sep=","){
 
   check_dir(dir)
   files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
@@ -6047,7 +5783,7 @@ HistoryBy <- function(dir, feature, value, sep=","){
   return(invisible(selected_lines))
 }
 
-#' SummarizeBy
+#' summarize_by
 #' 
 #' Summarizes the output of each intermediate filtering steps. 
 #' Takes all files in the directory, that start with a number.
@@ -6058,7 +5794,7 @@ HistoryBy <- function(dir, feature, value, sep=","){
 #'  
 #' @param dir Character string: directory containing the output files 
 #' of intermediate filtering steps. File names should start with a number 
-#' followed by an underscore (e.g. 5_LFNsampleReplicate.csv).
+#' followed by an underscore (e.g. 5_filter_occurrence_sample.csv).
 #' @param feature Character string with the following possible values: 
 #' "asv_id", "asv", "sample", "replicate", "read_count".
 #' @param grouped_by Character string with the following possible values: 
@@ -6070,12 +5806,12 @@ HistoryBy <- function(dir, feature, value, sep=","){
 #' lines, and the number of features or the read counts in the cells.
 #' @examples
 #' \dontrun{
-#' SummarizeBy(dir="vtamR_test/out_mfzr", feature="asv", grouped_by="sample")
-#' SummarizeBy(dir="vtamR_test/out_mfzr", feature="read_count", grouped_by="sample")
+#' summarize_by(dir="vtamR_test/out_mfzr", feature="asv", grouped_by="sample")
+#' summarize_by(dir="vtamR_test/out_mfzr", feature="read_count", grouped_by="sample")
 #' }
 #' @export
 #'
-SummarizeBy <- function(dir, feature, grouped_by, outfile="", sep=","){
+summarize_by <- function(dir, feature, grouped_by, outfile="", sep=","){
   
   # read file names in dir
   check_dir(dir)
@@ -6163,11 +5899,11 @@ SummarizeBy <- function(dir, feature, grouped_by, outfile="", sep=","){
 #' df <- data.frame(header=c("seq1", "seq2"),
 #'     sequence=c("AACTTGTTGTCACTGTAAACTGATGTA", "AACTTGTTGTCACTGTTTGACTGATGTA")
 #'     )
-#' write_df_to_fasta(df, out="out/test.fasta", compress=T)
+#' write_fasta_from_df(df, out="out/test.fasta", compress=T)
 #' }
 #' @export
 #'
-write_df_to_fasta <- function(df, out, compress=F){
+write_fasta_from_df <- function(df, out, compress=F){
   
   if(compress){
     if(!endsWith(out, ".gz")){
@@ -6265,13 +6001,13 @@ read_fasta_to_df <- function(file, dereplicate=F){
 #' number of lines for other files.
 #' @examples
 #' \dontrun{
-#' count_reads_file(file="data/test.fasta", file_type="fasta")
-#' count_reads_file(file="data/test.fasta", file_type="")
+#' count_reads(file="data/test.fasta", file_type="fasta")
+#' count_reads(file="data/test.fasta", file_type="")
 #' }
 #' @export
 #' 
 
-count_reads_file <- function(file, file_type=""){
+count_reads <- function(file, file_type=""){
   
   if (endsWith(file, ".zip")) {
     stop("File compression type is not supported.")
@@ -6363,12 +6099,12 @@ count_reads_file <- function(file, file_type=""){
 #' @return Data frame with 2 columns: filename, read_count.
 #' @examples
 #' \dontrun{
-#' CountReadsDir(dir="out", pattern=".fastq", file_type="fastq")
-#' CountReadsDir(dir="out", pattern="^mfzr", file_type="fasta")
+#' count_reads_in_dir(dir="out", pattern=".fastq", file_type="fastq")
+#' count_reads_in_dir(dir="out", pattern="^mfzr", file_type="fasta")
 #' }
 #' @export
 #' 
-CountReadsDir<- function(dir, 
+count_reads_in_dir<- function(dir, 
                          pattern=".", 
                          file_type="fasta", 
                          outfile="", 
@@ -6388,7 +6124,7 @@ CountReadsDir<- function(dir,
     if(!quiet){
       print(file_p)
     }
-    n <- count_reads_file(file_p, file_type=file_type)
+    n <- count_reads(file_p, file_type=file_type)
     df[i, "read_count"] <- n
   }
   
@@ -6428,12 +6164,12 @@ CountReadsDir<- function(dir,
 #' @return Error message if problem with the files and stop the script.
 #' @examples
 #' \dontrun{
-#' CheckFileinfo(file="input/sampleinfo.csv", dir="fasta", file_type="sampleinfo")
-#' CheckFileinfo(file=sampleinfo_df, dir="fasta", file_type="read_count_sample")
+#' check_file_info(file="input/sampleinfo.csv", dir="fasta", file_type="sampleinfo")
+#' check_file_info(file=sampleinfo_df, dir="fasta", file_type="read_count_sample")
 #' }
 #' @export
 #' 
-CheckFileinfo <- function(file, dir="", file_type="fastqinfo", sep=",", quiet=FALSE){
+check_file_info <- function(file, dir="", file_type="fastqinfo", sep=",", quiet=FALSE){
   
   if(is.character(file)){
     # read known occurrences
@@ -6831,7 +6567,7 @@ check_heading <- function(list1, list2, file="") {
 }
 
  
-#' read_blast6out
+#' read_vsearch_cluster_size_outmft6
 #' 
 #' read output of vsearch --cluster_size to df
 #'  
@@ -6839,7 +6575,7 @@ check_heading <- function(list1, list2, file="") {
 #' @return data frame with merged_id and centroid_id
 #' @export
 #' 
-read_blast6out <- function(filename) {
+read_vsearch_cluster_size_outmft6 <- function(filename) {
   
   df <- read.table(filename, header=FALSE, sep="\t")
   df <- df[,1:2]
@@ -6853,7 +6589,7 @@ read_blast6out <- function(filename) {
   return(df)
 }
 
-#' write_fasta_df
+#' write_fasta_with_counts
 #' 
 #' Write a fasta file with definition lines in >label;size=### format (read_count=T) 
 #' or in >label format (read_count=F)
@@ -6864,7 +6600,7 @@ read_blast6out <- function(filename) {
 #' @return NULL; Write fasta file with definition lines in >label;size=### format or >label format
 #' @export
 #' 
-write_fasta_df <- function(df, outfile, read_count=FALSE) {
+write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
   # Open the file for writing
   
   if(read_count){
@@ -6895,7 +6631,7 @@ write_fasta_df <- function(df, outfile, read_count=FALSE) {
   close(file)
 }
 
-#' MakeMockCompositionLTG
+#' match_variants_to_mock_species
 #'
 #' Identify potential expected variants in mock samples.
 #'
@@ -6946,13 +6682,13 @@ write_fasta_df <- function(df, outfile, read_count=FALSE) {
 #' @return  Data frame with the following columns: sample, action, asv, taxon, asv_id
 #' @examples
 #' \dontrun{
-#' MakeMockCompositionLTG(read_count=read_count_df, fas=xxxxx, taxonomy="xxxxxx", 
+#' match_variants_to_mock_species(read_count=read_count_df, fas=xxxxx, taxonomy="xxxxxx", 
 #' blast_path=blast_path, sampleinfo=sampleinfo)
 #' }
 #' @export
 #'
 #'
-MakeMockCompositionLTG <- function(read_count,
+match_variants_to_mock_species <- function(read_count,
                                    fas,
                                    taxonomy="",
                                    blast_path = "blastn",
@@ -6967,7 +6703,7 @@ MakeMockCompositionLTG <- function(read_count,
   
   ## make TSV with seqID and taxID
   taxids <- file.path(tempdir(), "taxid.tsv" )
-  make_taxid_file(file=fas, outfile=taxids)
+  write_taxid_mapping(file=fas, outfile=taxids)
   
   blastdb_path <- sub("blastn$", "makeblastdb", blast_path)
   write_output <- TRUE
@@ -7021,7 +6757,7 @@ MakeMockCompositionLTG <- function(read_count,
                                 refres=c(1,1,1,1,1),
                                 ltgres=c(8,8,8,8,8))
 
-  taxa <- TaxAssignLTG(asv= mock_df, 
+  taxa <- assign_taxonomy_ltg(asv= mock_df, 
                     taxonomy = taxonomy, 
                     blast_db = bdmock, 
                     blast_path=blast_path, 
@@ -7094,11 +6830,11 @@ MakeMockCompositionLTG <- function(read_count,
 #'
 #' @examples
 #' \dontrun{
-#' make_taxid_file("input_sequences.fasta", "taxid_mapping.tsv")
+#' write_taxid_mapping("input_sequences.fasta", "taxid_mapping.tsv")
 #' }
 #'
 #' @export
-make_taxid_file <- function(file, outfile){
+write_taxid_mapping <- function(file, outfile){
   
   df <- read_fasta_to_df(file)
   
@@ -7111,7 +6847,7 @@ make_taxid_file <- function(file, outfile){
   write.table(df, file=outfile, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
 }
 
-#' RandomSampleFastaR
+#' random_sample_r
 #' 
 #' Randomly select `n` sequences from an input FASTA file.
 #' 
@@ -7134,7 +6870,7 @@ make_taxid_file <- function(file, outfile){
 #' @return Invisibly the number of sequences in the output file.
 #' @examples
 #' \dontrun{
-#' RandomSampleFastaR(
+#' random_sample_r(
 #'   fasta = "all_sequences.fasta.gz",
 #'   outfile = "subset_100.fasta.gz",
 #'   n = 100,
@@ -7144,7 +6880,7 @@ make_taxid_file <- function(file, outfile){
 #' }
 #' @export
 #' 
-RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TRUE) {
+random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TRUE) {
   if (!is.null(randseed)) set.seed(randseed)
   
   # --- Count sequences
@@ -7228,13 +6964,13 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
   return(invisible(n))
 }
 
-#' RandomSampleFastaLinux
+#' random_sample_linux
 #' 
 #' Randomly select `n` sequences from an input FASTA file using `fastx_subsample` from
 #' VSEARCH.
 #'  
 #  This function is Linux-specific. For a cross-platform version,
-#  use `RandomSampleFastaR`.
+#  use `random_sample_r`.
 #' 
 #' The input FASTA can be uncompressed or gzipped. The output compression is
 #' determined automatically from the output file name (i.e., ends with `.gz` → gzip).
@@ -7263,7 +6999,7 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
 #' @return Invisibly the number of sequences in the output file.
 #' @examples
 #' \dontrun{
-#' RandomSampleFastaLinux(
+#' random_sample_linux(
 #'   fasta = "all_sequences.fasta.gz",
 #'   outfile = "subset_100.fasta.gz",
 #'   vsearch_path="vsearch",
@@ -7274,7 +7010,7 @@ RandomSampleFastaR <- function(fasta, outfile, n=1000000, randseed = NULL, quiet
 #' }
 #' @export
 #' 
-RandomSampleFastaLinux <- function(fasta, 
+random_sample_linux <- function(fasta, 
                                    outfile, 
                                    n=1000000, 
                                    vsearch_path="vsearch", 
@@ -7376,8 +7112,8 @@ RandomSampleFastaLinux <- function(fasta,
 #' listed in the `fastainfo` data frame.  
 #' Useful to standardize the number of reads across sequencing libraries.
 #'
-#' Can be used before or after demultiplexing (`SortReads`), but recommended 
-#' after `Merge` and before `SortReads`.
+#' Can be used before or after demultiplexing (`demultiplex_and_trim`), but recommended 
+#' after `merge_fastq_pairs` and before `demultiplex_and_trim`.
 #'
 #' Two algorithms are available:
 #'   - VSEARCH-based (`use_vsearch = TRUE`): Fast, but only on Linux-like systems.
@@ -7412,17 +7148,17 @@ RandomSampleFastaLinux <- function(fasta,
 #' @examples
 #' \dontrun{
 #' # Fast version (Linux)
-#' fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+#' fastainfo_df <- subsample_fasta(fastainfo_df, merged_dir, "random_seq",
 #'                           use_vsearch = TRUE, n = 10000, compress = TRUE)
 #'
 #' # Cross-platform version
-#' fastainfo_df <- RandomSeq(fastainfo_df, merged_dir, "random_seq",
+#' fastainfo_df <- subsample_fasta(fastainfo_df, merged_dir, "random_seq",
 #'                           use_vsearch = FALSE, n = 10000, compress = TRUE)
 #' }
 #' 
 #' @export
 #' 
-RandomSeq <- function(fastainfo, 
+subsample_fasta <- function(fastainfo, 
                        n,
                        fasta_dir="",
                        outdir="", 
@@ -7467,14 +7203,14 @@ RandomSeq <- function(fastainfo,
     ##### Change algo if windows and use_vsearch=FALSE to avoid stopping the run 
     if(!is_linux() && use_vsearch){
       warning("The fastx_subsample commande in VSEARCH is not available for Windows\n
-              A slower, but cross-platform function (RandomSampleFastaR)\n
-              will be used for random sampling sequences (RandomSampleFastaR).")
+              A slower, but cross-platform function (random_sample_r)\n
+              will be used for random sampling sequences (random_sample_r).")
       use_vsearch <- FALSE
     }
     
     if(use_vsearch){
 
-      seqn <- RandomSampleFastaLinux(fasta=input_fasta_p,
+      seqn <- random_sample_linux(fasta=input_fasta_p,
                                      outfile=outfile_p,
                                      n=n,
                                      vsearch_path=vsearch_path,
@@ -7484,7 +7220,7 @@ RandomSeq <- function(fastainfo,
                                      quiet=quiet,
                                      num_threads=num_threads)
     }else{
-      seqn <- RandomSampleFastaR(fasta=input_fasta_p, 
+      seqn <- random_sample_r(fasta=input_fasta_p, 
                                  outfile = outfile_p,
                                  n=n, 
                                  randseed = randseed,

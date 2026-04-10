@@ -1,11 +1,13 @@
 ---
-title: "Tutorial - vtamR pipeline - v0.3.2"
+title: "Tutorial - vtamR pipeline - v1.0.0"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v0.3.2}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.0.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -55,35 +57,47 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 # Summary
 
-**vtamR** is a revised, completed version of 
+**vtamR** is an advanced, R-based revision of 
 [VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
-(Validation and Taxonomic Assignation of Metabarcoding Data) 
-rewritten in R. It is a complete metabarcoding pipeline:
+(Validation and Taxonomic Assignment of Metabarcoding Data). 
+It provides a **comprehensive metabarcoding pipeline**, enabling:
 
-* Sequence analyses **from raw fastq files** of amplicon sequences till 
-Amplicon Sequence Variant 
-([ASV](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)) 
-table of **validated ASVs assigned to taxonomic groups**.
-* Handles technical or biological **replicates** of the same sample.
-* Uses positive and negative **control samples to fine tune the filtering** and 
-reduce [false positive](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-and [false negative](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-occurrences.
-* Can pool multiple data sets (results of earlier analyses)
-* Can pool results from overlapping markers
+- **End-to-End Sequence Analysis:** Processes raw FASTQ files of amplicon 
+sequences to generate a validated 
+[Amplicon Sequence Variant (ASV)](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) table, 
+with ASVs assigned to taxonomic groups.
+- **Replicate Handling:** Supports technical or biological replicates of the same sample.
+- **Control-Based Filtering:** Uses positive and negative control samples to refine 
+filtering, minimizing both [false positives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) and [false negatives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary).
+- **Data Pooling:** Allows integration of **multiple datasets** (from previous analyses) 
+and results from **overlapping markers**.
 
-**Novelties compared to VTAM:**
 
-* As it is a series of R functions, `vtamR` is highly adaptable to 
-include/exclude and order different steps of the analyses
-* Includes SWARM for denoising
-* Graphic options
-* Include functions to get statistics of each filtering steps 
-(read and variant count etc.)
-* ASV clustering to mOTU 
-* The notion of marker and run has been dropped to simplify the analyses
+**Novelties Compared to VTAM**
+
+- **Modular Design:** As a series of R functions, `vtamR` is 
+**highly adaptable**, allowing users to include, exclude, or 
+reorder analysis steps as needed.
+- **Denoising with SWARM:** Incorporates SWARM for robust 
+denoising of amplicon sequence variants (ASVs).
+- **Post-Processing of Swarms:** Splits swarms among abundant 
+ASVs to prevent pooling of highly similar yet distinct ASVs, 
+preserving **intra-specific variability**.
+- **Visualization Tools:** Offers **graphic options** to 
+aid in data interpretation and decision-making.
+- **Filtering Statistics:** Includes functions to generate 
+**statistics for each filtering step** (e.g., read and variant counts).
+- **ASV Clustering to mOTU:**
+  - Uses **VSEARCH or SWARM** to cluster ASVs into molecular operational 
+  taxonomic units (mOTUs).
+  - Provides visualization tools to help users 
+  **select optimal clustering parameters**.
+- **Simplified Workflow:** The concepts of "marker" and "run" have been removed 
+to streamline analyses.
+
 
 # Installation
 
@@ -93,12 +107,12 @@ Please, follow the [Installation](installation.html) instructions.
 
 ## Set up
 
-### Load library
+### Load Library
 ```{r setup}
 library(vtamR)
 ```
 
-### Set the path to third-party programs
+### Set Path to Third-Party Programs
 
 If the third-party programs are **not** in your `PATH` 
 (see [Installation](installation.html)),
@@ -113,7 +127,7 @@ swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
 pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional
 ```
 
-```{r set_path_linux, eval=TRUE}
+```{r set_path_linux, eval=FALSE}
 # Example for Linux
 cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
 vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
@@ -127,7 +141,7 @@ If the third-party programs **are** in your `PATH`, you have two options:
 1. *Define the `xxx_path` variables as shown below*, 
 and run the tutorial examples exactly as written.
 
-```{r set_path, eval=FALSE}
+```{r set_path, eval=TRUE}
 # All executables are in the PATH
 cutadapt_path <- "cutadapt"
 vsearch_path <- "vsearch"
@@ -142,60 +156,78 @@ and simply omit them when calling the `vtamR` functions.
 For example, run:
 
 ```{r example_wo_path, eval=FALSE}
-read_count_df <- FilterChimera(read_count_df)
+read_count_df <- filter_chimera(read_count_df)
 ```
 
 instead of:
 
 ```{r example_with_path, eval=FALSE}
-read_count_df <- FilterChimera(
+read_count_df <- filter_chimera(
   read_count_df,
-  vsearch_path = vsearch_path) # can be omitted if VSEARCH is in the PATH
+  vsearch_path = vsearch_path
+  )
 ```
 
 ### Input Data
 
-**Data Structure and Workflow**
+#### Data Structure and Workflow
 
-Our datasets typically consist of sequences obtained from 96 samples, 
-corresponding to a 96-well plate used for PCR amplification. These include 
-negative controls, mock samples, and biological samples. Each set of 96 PCR 
-reactions is processed into a single sequencing library, with one library 
-generated per replicate.
+**Dataset Composition:**
 
-While vtamR can analyze datasets without positive/negative controls or replicates, 
-its strength lies in the use of these features. Controls enable robust 
-data filtering based on control sample content, while replicates ensure 
-reproducibility to reduce variations due to technial replicates.
+Sequences are typically derived from **96 samples**, corresponding to a 96-well 
+plate used for PCR amplification.
 
-For projects with more than 96 samples, analyses are typically 
-performed plate by plate. Using consistent control samples ensures 
-comparability between sequences from different libraries or time points 
-(e.g., in longitudinal studies monitoring the same sites over time). 
-Filtered datasets can then be pooled using the `pool_dataset()` function.
+Each plate includes **negative controls, mock samples, and biological samples**.
+A single sequencing library is generated per replicate, with each library 
+representing a set of 96 PCR reactions.
+
+While `vtamR` can analyze datasets **without controls or replicates**, 
+its full potential is realized when these features are utilized:
+
+- **Controls** enable rigorous data filtering based on control sample content, 
+  reducing false positives and negatives.
+- **Replicates** ensure reproducibility and minimize technical variability.
+
+
+For projects exceeding 96 samples, analyses are conducted **plate by plate**.
+
+- Consistent use of control samples ensures **comparability** across different 
+libraries or time points (e.g., longitudinal studies tracking the same sites over time).
+- Filtered datasets can be **pooled** using the `pool_dataset()` 
+function for integrated analysis.
+
 
 **Multi-Marker Analysis**
 
-It is also possible to analyze the same samples using different 
-but strongly overlapping markers. Our example dataset comes from a project 
-(XXXX ref) using two markers: **MFZR** and **ZFZR**.
+`vtamR` supports the analysis of the same samples using 
+**multiple, strongly overlapping markers**. For example, our dataset 
+originates from a project 
+[Corse et al., 2017](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12703) 
+utilizing two markers: **MFZR** and **ZFZR**.
 
-Both markers amplify overlapping regions of the COI gene, with MFZR 
-starting 18 nucleotides upstream of ZFZR.
+Both markers target overlapping regions of the **COI gene**, where
+**MFZR** starts **18 nucleotides upstream** of **ZFZR**.
 
-**Demo Dataset**
 
-The demo files included in the vtamR package contain only 2 real samples, 
-a mock, and a negative control for each marker-plate combination. 
-As a result, numerical values and graphs may not be very informative.
-In the example below, results from different marker-plate combinations are 
-stored in separate directories, each with the same structure and 
-filenames, as they are processed independently using the same pipeline.
+#### Demo Dataset
 
-We will go through the analyses using the first "plate" of the MFZR marker, than
-see how to pool the results of different plates and markers.
+The demo files provided in the `vtamR` package include:
 
-Let's set the output directory for plate 1 of MFZR
+- **2 real samples**
+- **1 mock sample**
+- **1 negative control**
+
+for each **marker-plate combination**. Due to the limited sample size, 
+numerical values and graphs may not be highly informative.
+
+Results from different **marker-plate combinations** are stored in 
+**separate directories**, each maintaining the same structure and filenames. 
+These data sets are processed independently using the same pipeline.
+
+We will first analyze the **first "plate" of the MFZR marker**, 
+then demonstrate how to **pool results** from different plates and markers.
+
+Let’s begin by setting the **output directory** for **plate 1 of MFZR**.
 
 ```{r general-parameters}
 outdir <- "vtamR_demo_out/mfzr_plate1"
@@ -204,9 +236,8 @@ outdir <- "vtamR_demo_out/mfzr_plate1"
 
 **Loading Data**
 
-To load the demo files (included with vtamR), we use the `system.file()` function.
-
-For your own data, simply provide the file and directory names (e.g., `~/vtamR/fastq`).
+To load the **demo files included in `vtamR`**, we will use the `system.file()` function.
+For your own datasets, specify the file and directory paths (e.g., `~/vtamR/fastq`).
 
 ```{r set-demo-file}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
@@ -215,25 +246,32 @@ mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR"
 asv_list <-  system.file("extdata/demo/asv_list.csv", package = "vtamR")
 ```
 
-* `fastq_dir`: Directory containing the input fastq files.
-* [fastqinfo](#fastqinfo): CSV file with information on input files, primers, 
-tags, samples.
-* `mock_ncbi_fasta`: A FASTA file containing COI sequences of the species in the mock samples. 
-These sequences may not be trimmed to the marker region and can differ slightly 
-from the ASVs in the mock samples. They are used to identify which ASVs correspond 
-to the expected species in the mock, helping create a [mock_composition](#mock_composition)
-file that defines the expected content of the mock samples.
-* [asv_list](#asv_list): CSV file with ASVs and `asv_id`s from earlier data sets. Optional.
 
-**Database for taxonomic assignment**
+- **`fastq_dir`:** Directory containing the input FASTQ files.
+- **[`fastqinfo`](#fastqinfo):** CSV file with metadata for input files, 
+including primers, tags, and sample information.
+- **`mock_ncbi_fasta`:** FASTA file containing COI sequences of species 
+present in the mock samples.
+  - *Note:* These sequences may not be trimmed to the marker region and can 
+  slightly differ from the ASVs in the mock samples.
+  - *Purpose:* Used to identify which ASVs correspond to expected species 
+  in the mock, facilitating the creation of a [`mock_composition`](#mock_composition) 
+  file that defines the expected content of mock samples.
+- **[`asv_list`](#asv_list):** *(Optional)* CSV file containing ASVs and 
+`asv_id`s from previous data sets.
 
-Set the path to the database for taxonomic assignment 
-and to the accompanying taxonomy file.
-For this example, we use a **very small database** included in the `vtamR` package.
-To see how to get a real database visit [TaxAssign reference data base](installation.html#taxassign-reference-data-base).
+#### Database for Taxonomic Assignment
 
-When using your own data just enter the file names, without using the 
-`system.file` function.
+To perform taxonomic assignment, set the path to:
+
+- The **database** for taxonomic assignment (`blast_db`).
+- The **accompanying taxonomy file** (`taxonomy`).
+
+For this example, we use a **small demo database** included in the `vtamR` package.
+
+To obtain a **full reference database** (for real data), visit the [TaxAssign Reference Database](installation.html#taxassign-reference-data-base) section.
+
+When using your own data, provide the file names directly, **without** using the `system.file()` function.
 
 ```{r set_db}
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
@@ -241,66 +279,77 @@ blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 ```
 
-* `taxonomy`: CSV file with taxonomic information
-* `blast_db`: BLAST database
 
-Details are in [Reference database for taxonomic assignments section](installation.html#reference-database-for-taxonomic-assignments)
+### Check the Format of Input Files
 
-### Check the format of input files
+The `check_file_info()` function:
 
-The `CheckFileinfo` function tests if all obligatory columns are present, 
-and makes some sanity checks. This can be helpful, since these files are produced 
-by the users, and may contain errors difficult to spot by eye.
+- Verifies that all **required columns** are present in your input files.
+- Performs **sanity checks** to detect potential errors.
+
+It is optional, but useful, as user-generated files may contain subtle 
+errors that are difficult to identify manually.
 
 ```{r check-fileinfo}
-CheckFileinfo(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
-CheckFileinfo(file=asv_list, file_type="asv_list")
+check_file_info(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
+check_file_info(file=asv_list, file_type="asv_list")
 ```
 
-> **Before starting the analyses, check the [Tips – Good to Know](#tips---good-to-know) section.
-> It summarizes several general features and options of `vtamR` and will 
-> help you better understand how to run the functions effectively.**
+> **Before beginning your analysis, review the [Tips – Good to Know](#tips---good-to-know) section.**
+> This section highlights key features and options of `vtamR`, 
+helping you run the functions more effectively.
 
+## Pre-process reads
 
-## Merge - Demultiplex
+Your FASTQ files can vary depending on your lab and sequencing setup. 
+They might include:
 
-According to your wetlab and sequencing protocol each fastq file can 
-contain one or more [sample-replicates](#glossary), and sequences may or may 
-not contain [tags](#glossary) (for [demultiplexing](#glossary)) and primer sequences. 
+- **Multiple [sample replicates](#glossary)**
+- **[Tags](#glossary)** (for [demultiplexing](#glossary))
+- **Primer sequences**
 
-In this tutorial, the fastq files contain reads from several samples, so read pairs 
-must be 
+In this tutorial, our FASTQ files contain reads from several samples. 
+So, we’ll need to:
 
-- merged and quality filtered (`Merge`)
-- demultiplexed and tags and primers trimmed off (`SortReads`)
+- **Merge and quality-check** the read pairs using `merge_fastq_pairs`.
+- **Subsample** each library to ensure all replicates have 
+similar coverage with `subsample_fasta`.
+- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim`.
 
 See the [From fastq to data frame](from-fastq-to-df.html) on
 how to deal with other experimental designs.
 
-**Merge and quality filter**
 
-`Merge` will make a single sequence from each read-pair. It can also be used for 
-quality filtering.
+### Merge Fastq Pairs and Quality Filter
 
-`compress = FALSE` In the tutorial we will use uncompressed files, but see the
-[To compress or not to compress](#to-compress-or-not-to-compress) section to find
-the best strategy for you. 
+The `merge_fastq_pairs` function combines each read-pair into a single
+sequence in fasta format and can also handle **quality filtering**.
 
-See also [Files to keep](#files-to-keep) on how to handle the 
-large intermediate files that should be compressed or deleted once the analyses are complete.
+- **`compress = FALSE`:** In this tutorial, we’ll work with uncompressed files. 
+For guidance on whether to compress your files, check out the 
+[To Compress or Not to Compress](#to-compress-or-not-to-compress) section.
 
-See `?Merge` for more options on quality filtering.
+- **Managing Large Files:** Once your analysis is complete, you might want 
+to compress or delete large intermediate files. For tips on this, see 
+[Files to Keep](#files-to-keep).
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): is either a csv file, or a data frame. 
-* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `Merge`. It is the updated 
-version of fastqinfo, where fastq file names have been replaced by fasta file 
-names and the read counts are included for each file. 
+- **More Options:** For additional quality filtering options, 
+take a look at `?merge_fastq_pairs`.
+
+**Key Files**
+
+- **[fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo):** 
+This can be either a CSV file or a data frame.
+- **[fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo):** 
+This is the output of `merge_fastq_pairs`. It’s an updated version of 
+`fastqinfo`, where FASTQ filenames are replaced with FASTA filenames, and 
+read counts are included for each file.
 
 
 ```{r merge}
 merged_dir <- file.path(outdir, "1_merged")
 
-fastainfo_df <- Merge(
+fastainfo_df <- merge_fastq_pairs(
   fastqinfo=fastqinfo, 
   fastq_dir=fastq_dir, # directory of input fasta files
   vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
@@ -311,35 +360,30 @@ fastainfo_df <- Merge(
   )
 ```
 
+### Randomly Select Sequences (Subsampling)
 
-**Randomly select sequences**
+The `subsample_fasta` function lets you randomly pick `n` sequences 
+(without replacement) from each FASTA file listed in your `fastainfo` data frame.
 
-The `RandomSeq` function randomly selects `n` sequences (without replacement) 
-from each input FASTA file listed in the `fastainfo` data frame.
+This step is great for **balancing read counts across your sequencing libraries**. 
+It’s optional, but can be really helpful if you want to make sure all your replicates 
+have a similar number of reads.
 
-This step can be useful to **normalize the number of reads across sequencing libraries**,
-but it is entirely up to you whether to include it in your workflow.
+**Two ways to do random sampling**
 
-In this tutorial, I use `RandomSeq` to ensure that all replicate series
-(i.e., each FASTA file contains different replicates of the same samples)
-contain the same (or similar) number of reads.
+- Using VSEARCH (`use_vsearch = TRUE`):
+   - **Fast**, but only works on **Linux-like** systems.
+- Using R Only (`use_vsearch = FALSE`):
+   - **Slower**, but works on **all operating systems**.
 
-There are two different methods to perform random sampling:
+I’m using the **slower but cross-platform** R-only version. 
+For more details, check out the [`subsample_fasta` documentation](#subsample_fasta).
 
-1. Using fastx_subsample command of VSEARCH (`use_vsearch = TRUE`). 
-This method is very **fast but only available on Linux-like** operating systems.
-
-2. Using R Only (`use_vsearch = FALSE`). This version is slower but 
-works on all operating systems.
-
-The following example uses a **slower but cross-platform** version.
-See [RandomSeq](#randomseq) for more information.
-
-```{r RandomSeq}
+```{r subsample_fasta}
 randomseq_dir <- file.path(outdir, "2_random_seq")
 
-fastainfo_df <- RandomSeq(
-  fastainfo = fastainfo_df, # input df (output of Merge)
+fastainfo_df <- subsample_fasta(
+  fastainfo = fastainfo_df, # input df (output of merge_fastq_pairs)
   fasta_dir = merged_dir, # directory of input fasta files.
   outdir = randomseq_dir,  # directory of output fasta files.
   use_vsearch  = FALSE, # use cross-platform version
@@ -348,29 +392,33 @@ fastainfo_df <- RandomSeq(
   ) 
 
 ```
-A **warning** indicates that the file `mfzr_1_fw.fasta` contains fewer than 40,000 sequences.
-Since sampling is performed without replacement, this file is simply copied to 
-the output directory and will contain slightly fewer reads than the other two files.
+You may encounter a **warning** indicating that the file `mfzr_1_fw.fasta` contains 
+fewer than 40,000 sequences.
+Since subsampling is performed **without replacement**, this file will be copied 
+directly to the output directory. As a result, it will contain slightly fewer 
+reads than the other files — this is expected and not a cause for concern.
 
-**Demultiplex and Trim**
+### Demultiplex And Trim
 
-The `SortReads` function will [demultiplex](#glossary) the fasta 
-files according to the [tag](#glossary) combinations and [trim](#glossary) 
-the primers from the reads. 
+The `demultiplex_and_trim` function is used to both **[demultiplex](#glossary)** your 
+FASTA files (i.e. separate reads based on their tag combinations) 
+and **[trim](#glossary)** [tag](#glossary) and primer sequences from those reads.
 
-See the help (`?SortReads`) for setting the 
-correct parameters for demultiplexing and primer trimming:
+You can check the help page (`?demultiplex_and_trim`) to choose the 
+right settings for your data.
 
-* If `check_reverse` is TRUE, `SortReads` checks the reverse complementary stand as well.
-* `sampleinfo_df` is  updated version of `fastainfo_df`. 
-This data frame and the files listed in it are the input of the `Dereplicate`.
+* If `check_reverse = TRUE`, the function will also look for matches 
+on the reverse complement strand.
+* `sampleinfo_df` is an updated version of `fastainfo_df`.
+* This data frame, along with the files it references, is 
+used as input for the `dereplicate` step.
 
 ```{r demultiplex}
 demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
 
-sampleinfo_df <- SortReads(
-  fastainfo=fastainfo_df,  # input df (output of RandomSeq)
-  fasta_dir=randomseq_dir, # input directory
+sampleinfo_df <- demultiplex_and_trim(
+  fastainfo=fastainfo_df,  # input df (output of subsample_fasta)
+  fasta_dir=randomseq_dir, # input directory with fasta files
   outdir=demultiplexed_dir,  # output directory
   check_reverse=TRUE, 
   cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
@@ -380,35 +428,42 @@ sampleinfo_df <- SortReads(
   )
 ```
 
-## Dereplicate
+### Dereplicate
 
-At this stage, you should have **one FASTA file per [sample-replicate](#glossary)**,
-containing merged reads with tags and primers removed.
+At this stage, you should have **one FASTA file per [sample-replicate](#glossary)**, 
+containing merged reads with tags and primers already removed.
 
-These FASTA files should now be **dereplicated**, 
-and each unique sequence ([ASV](#glossary)) will be assigned a numerical ID 
-([asv_id](#glossary)). The result is a data frame ([read_count_df](#read_count_df)) 
-that can also be written to a **CSV file** if `outfile` is specified. 
-Saving this file is recommended, as it serves as the starting point for filtering. 
-You can test different filtering strategies starting from this file without 
-needing to re-run the time-consuming [merging](#glossary), [demultiplexing](#glossary),
-and [trimming](#glossary) steps.
+The next step is to **dereplicate** these files. 
+This means grouping identical sequences together so that each unique sequence 
+(an [ASV](#glossary)) is assigned a unique numerical ID (an [asv_id](#glossary)).
 
-If you wish to retain ASV IDs from a previous analysis, you can provide a 
-reference file ([asv_list](#asv_list)) containing earlier ASVs and their IDs. 
-The complete, updated list of ASVs will then be written to `output_asv_list`.
+**Output**
 
-If only `output_asv_list` is provided (and `input_asv_list` is omitted), 
-the function will write the full list of current ASVs with assigned IDs. 
-This will be useful when analyzing further data sets to ensure consistent 
-ASV IDs across studies.
+The output is a data frame called [read_count_df](#read_count_df), 
+which can also be saved as a **CSV file** if you provide the `outfile` argument. 
+Saving this file is strongly recommended—it becomes your starting point for filtering. 
+This way, you can try different filtering strategies without having to re-run 
+the more time-consuming pre-processing steps.
+
+**ASV Identifiers**
+
+If you want to keep **ASV IDs consistent with a previous analysis**, 
+you can provide a reference file ([asv_list](#asv_list)) containing existing 
+ASVs and their IDs. The updated and complete list of ASVs will then be written to 
+`output_asv_list`.
+
+If you only provide `output_asv_list` (without an `input_asv_list`), 
+the function will simply write out the full list of current ASVs with their assigned IDs. 
+This is useful if you plan to analyze additional datasets later and want to 
+keep ASV IDs consistent across studies.
+
 
 ```{r derelicate}
 outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
-read_count_df <- Dereplicate(
-  sampleinfo_df, # input df (output of SortReads)
+read_count_df <- dereplicate(
+  sampleinfo_df, # input df (output of demultiplex_and_trim)
   dir=demultiplexed_dir, # directory with input fasta files
   outfile=outfile, # write the output data frame to this file
   input_asv_list=asv_list, 
@@ -417,118 +472,131 @@ read_count_df <- Dereplicate(
 ```
 
 
-## Filter
+## Filtering
 
-`vtamR` has a large number of functions to **filter out ASVs** or **occurrences of ASVs**
-in a given sample-replicate, which are the results of 
-**technical or biological problems associated with metabarcoding**. 
+`vtamR` provides many functions to **filter out ASVs** or **ASV occurrences** 
+within a sample-replicate that may result from **technical or biological issues in metabarcoding**.
 
-The different filters 
+There are two main ways to apply these filters:
 
-- can be **applied to the original data set** and then the results pooled together 
-by using the `PoolFilters` function (accepting only occurrences that pass all filters) 
-- or can be **applied sequentially** in the order defined according to your needs.
+* You can **apply them independently to the original dataset** and then 
+combine the results using the `pool_filters` function. 
+In this case, only occurrences that pass *all* filters are kept.
+* Or you can **apply them sequentially**, one after the other, 
+in any order that fits your analysis.
 
-In this section, I give an example using most filtering options. 
-It is up to you to construct your own pipeline.
+In this section, I’ll show an example that uses several 
+filtering options. However, you are encouraged 
+to **build your own pipeline** based on your specific needs.
 
-Each function returns a **data frame with the filtered output**. 
-You can also write the results to a **csv file** (using the `outfile` argument). 
-This can be useful for tracking 
-the presence/absence of some of the ASVs/samples throughout the analyses 
-using the [HistoryBy](#historyby) and [SummarizeBy](#summarizeby) functions. 
+**Output data frame and CSV**
 
-I will **start the names of the output files by a number** to keep the order 
-of the different steps and allow the [SummarizeBy](#summarizeby) function 
-to make final statistics at each step of the analyses.
+Each filtering function returns a **data frame with the filtered results**. 
+You can also save the output as a **CSV file** using the `outfile` argument. 
+This is especially useful if you want to track how ASVs or samples are retained 
+or removed throughout the analysis, using the [history_by](#history-by) and 
+[summarize_by](#summarize-by) functions.
 
-We can also **follow the evolution of the number of reads and ASVs** remaining 
-in the data set after each filtering steps. 
-Let's define a data frame (`stat_df`), that will contain this information, 
-and we will complete it after each step. 
+To keep things organized, I recommend 
+**starting output file names with a number** to reflect the order of the steps. 
+This also allows the [summarize_by](#summarize-by) function to easily generate 
+summary statistics at each stage of the analysis.
+
+**Following the evolution of the number of reads and ASVs (`stat_df`)**
+
+You can also **track how the number of reads and ASVs changes** after 
+each filtering step. For this, we will create a data frame (`stat_df`) 
+that stores this information and update it along the way.
+
+### Initialize Statistics Tracking
+
+First, we create a data frame to **store summary statistics** at each step of the analysis:
 
 ```{r set-stat}
 stat_df <- data.frame(
-  parameters=character(),
-  asv_count=integer(),
-  read_count=integer(),
-  sample_count=integer(),
-  sample_replicate_count=integer()
-  )
+  parameters = character(),
+  asv_count = integer(),
+  read_count = integer(),
+  sample_count = integer(),
+  sample_replicate_count = integer()
+)
 ```
 
-Then we add a line with information on the unfiltered data set.
+Next, we add a first row with information from the **unfiltered data set**:
 
 ```{r get-initial-stat}
-stat_df <- GetStat(read_count_df, stat_df, stage="input", params=NA)
+stat_df <- get_stat(read_count_df, stat_df, stage = "input", params = NA)
 ```
 
-* `params`: String containing the major parameters of each filtering steps.
-* `stage`: String referring to the filtering step.
+Here’s what the main arguments mean:
 
+* `params`: a string describing the key parameters used at each filtering step
+* `stage`: a string indicating which step of the analysis the statistics correspond to
 
 ### Denoising with SWARM
 
-In metabarcoding datasets, sequencing errors often generate many low-frequency 
-ASVs that do not correspond to real biological sequences. A common way to clean 
-this noise is to use **SWARM** ([Mahé et al., 2015](https://peerj.com/articles/1420/)), 
-a fast and widely used algorithm that groups highly similar ASVs together.
+In metabarcoding datasets, sequencing errors often produce many low-frequency 
+ASVs that do not reflect real biological sequences. A common way to reduce 
+this noise is to use **SWARM** (Mahé et al., 2015), a fast and widely 
+used algorithm that groups highly similar ASVs together.
 
 **Running SWARM in `vtamR`**
 
-You can run SWARM directly using the `denoise_by_swarm()` function.
+You can run SWARM directly with the `denoise_by_swarm()` function.
 
-Since our goal is **denoising** (not clustering into mOTUs), the recommended settings are:
+Since the goal here is **denoising** (and not clustering into mOTUs), 
+the recommended settings are:
 
-* `swarm_d = 1` (only 1 difference allowed between ASVs)
-* `fastidious = TRUE` (a second pass to reduce small clusters)
+* `swarm_d = 1`: allows only one difference between ASVs
+* `fastidious = TRUE`: adds a second pass to refine clusters and reduce small ones
 
-These settings are specifically designed to remove sequencing errors while keeping real biological variation.
+These settings are designed to remove sequencing errors while preserving 
+real biological variation.
 
-**Whole dataset vs. per-sample clustering**
+#### Whole Dataset vs. Sample-by-Sample Clustering
 
-There are two options:
+There are two ways to apply SWARM:
 
 * `by_sample = FALSE` (default):
-  SWARM is applied to the whole dataset. This is more aggressive and reduces 
-  ASV numbers efficiently.
+  SWARM is applied to the entire data set. This approach is more aggressive and 
+  efficiently reduces the total number of ASVs.
 
 * `by_sample = TRUE`:
-  SWARM is applied independently to each sample. This is more conservative and 
+  SWARM is applied separately to each sample. This is more conservative and 
   helps preserve biological variation.
 
-If you are interested in **intra-specific variability**, it is generally
-better to use `by_sample = TRUE`, because very similar real ASVs can otherwise be merged.
+If you are interested in **intra-specific variation**, it is generally better 
+to use `by_sample = TRUE`, as very similar but real ASVs in different samples 
+might otherwise be merged.
 
-**Refining clusters with `split_clusters`**
+#### Refining Clusters With `split_clusters`
 
-Even with `d = 1` and `fastidious = TRUE`, SWARM can still group together ASVs that
-differ by only one nucleotide but have **similar read abundances**.
-In such cases, real biological variants (e.g., intra-specific variants) may 
-be merged into a single cluster.
+Even with `d = 1` and `fastidious = TRUE`, SWARM may still group ASVs that 
+differ by only one nucleotide but have **similar read abundances**. 
+This can lead to real biological variants being merged into a single cluster.
 
-To avoid this issue, `denoise_by_swarm()` provides an optional
-post-processing step usig the `split_clusters = TRUE` option.
-This step attempts to recover abundant variants that may have been incorrectly merged.
+To address this, `denoise_by_swarm()` includes an optional post-processing 
+step with `split_clusters = TRUE`. This step attempts to recover meaningful 
+variants that may have been incorrectly merged.
 
 For each cluster:
 
-- ASVs are evaluated based on two criteria:
+* ASVs are evaluated based on two criteria:
 
-   * Their read count relative to the cluster centroid (`min_abundance_ratio`)
-   * A minimum absolute read count (`min_read_count`)
+  * their read count relative to the cluster centroid (`min_abundance_ratio`)
+  * a minimum absolute read count (`min_read_count`)
 
-- ASVs that pass both thresholds are considered biologically meaningful and **each defines a new cluster**.
+* ASVs that meet both criteria are considered biologically meaningful, and **each forms a new cluster**
 
-- The total reads of the original cluster are then redistributed among these ASVs,
-while preserving their original proportions
+* The total reads from the original cluster are then redistributed among these ASVs, 
+while keeping their original proportions.
 
-- If no ASV meets the criteria, the cluster is kept as a single unit (reads are pooled)
+* If no ASV meets the criteria, the cluster remains unchanged 
+(all reads are pooled together).
 
+The `split_clusters` option should be used with the following settings:
 
-The `split_clusters` option must be run using the following parameters:
-
-* `by_sample = TRUE` 
+* `by_sample = TRUE`
 * `swarm_d = 1` (default)
 * `fastidious = TRUE` (default)
 
@@ -547,7 +615,7 @@ read_count_df <- denoise_by_swarm(
   )
 
 param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="swarm_denoise", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="swarm_denoise", params=param)
 ```
 
 Let's check the reduction of the number of variants after running `swarm`.
@@ -555,136 +623,137 @@ Let's check the reduction of the number of variants after running `swarm`.
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### LFNglobalReadCount
+The small variation in the total number of reads comes 
+from rounding when redistributing reads among clusters that have been split.
 
-Although, SWARM has reduced considerably the number of ASVs, there are still 
-many ASVs with low read count. 
-The `LFNglobalReadCount` function filter out all ASVs with total read count 
-bellow a threshold.
+### Filter out ASVs with Low Total Read Count (`filter_asv_global`)
 
-Let's eliminate [singletons](#glossary) and see how the number of ASV and reads are have changed.
+Although SWARM has already reduced the number of ASVs considerably, 
+many ASVs with low read counts may still remain.
+
+The `filter_asv_global` function removes all ASVs whose **total read count** 
+is below a chosen threshold.
+
+Here, we will eliminate [singletons](#glossary) and observe how the 
+**number of ASVs and total reads** changes after this step.
 
 ```{r lfn-global-readcount}
 global_read_count_cutoff = 2
-outfile <- file.path(outdir, "4_filter", "3_LFNglobalReadCount.csv")
+outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
 
-read_count_df <- LFNglobalReadCount(
+read_count_df <- filter_asv_global(
   read_count_df, 
   outfile=outfile,
   cutoff=global_read_count_cutoff
   )
 
 param <- paste("global_read_count_cutoff:", global_read_count_cutoff, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNglobalReadCount", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_asv_global", params=param)
 
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### FilterIndel
+### Filter ASVs Based on Read Length (`filter_indel`)
 
-This filter is **applicable only for coding sequences**. 
-The idea is that if the length of the ASV differs from the most frequent ASV 
-length by a number that is not a multiple of 3, it is likely to be an erroneous 
-sequence or a pseudo-gene.
+This filter is **only applicable to coding sequences**.
+
+The idea is simple: if the length of an ASV differs from the most common ASV 
+length by a value that is **not a multiple of 3**, it is likely to be an 
+erroneous sequence or a pseudogene.
 
 ```{r filter-indel}
-outfile <- file.path(outdir, "4_filter", "4_FilterIndel.csv")
+outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
 
-read_count_df <- FilterIndel(
+read_count_df <- filter_indel(
   read_count_df,
   outfile=outfile
   )
 
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterIndel", params=NA)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### FilterCodonStop
 
-This filter is **applicable only for coding sequences**. 
-It checks the number of codon STOPs in all 3 reading frames, 
-and eliminates ASVs with STOP in all of them.
+### Filter ASVs with Stop Codons (`filter_stop_codon`)
 
-The numerical id of the genetic code can be chosen from 
-[NCBI](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes). 
-By default, it is the invertebrate mitochondrial genetic code (5), 
-since the STOP codons of this genetic codes are also STOP codons in almost all genetic codes.
+This filter is **only applicable to coding sequences**.
+
+It checks for the presence of **STOP codons** in all three 
+possible reading frames and removes ASVs that contain STOP codons in each of them.
+
+You can specify the genetic code using its numerical ID from [NCBI](https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes).
+By default, the function uses the **invertebrate mitochondrial genetic code (code 5)**, 
+as its STOP codons are also valid STOP codons in most other genetic codes.
 
 
-```{r filter-codon-stop}
-outfile <- file.path(outdir, "4_filter", "5_FilterCodonStop.csv")
+```{r filter-stop-codon}
+outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
 
 genetic_code = 5
-read_count_df <- FilterCodonStop(
+read_count_df <- filter_stop_codon(
   read_count_df, 
   genetic_code=genetic_code,
   outfile=outfile
   )
 
 param <- paste("genetic_code:", genetic_code, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterCodonStop", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_stop_codon", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
+### Filter Potential Contaminant ASVs (`filter_contaminant`)
 
-### FilterExternalContaminant
+This filter detects ASVs whose **read counts are higher in at least one negative control** 
+than in any real sample. These ASVs are considered potential contaminants 
+and are removed from the dataset.
 
-We start from the hypothesis that, in cases of slight external contamination, 
-contaminant DNA may be amplified in negative control samples, since there 
-is no competition with abundant target DNA. 
-Conversely, in real or mock samples, the amplification of contaminant DNA 
-is usually less efficient due to this competition.
+The `conta_file` records the data for the ASVs that were removed. 
+It’s a good idea to **check this file** to make sure nothing unusual is happening.
 
-This filter identifies ASVs whose read counts are higher in at least one 
-negative control than in any other sample. 
-These ASVs are considered potential contaminants and are removed from the data set.
+In our case, 8 ASVs were removed. However, each of them had only 
+a few reads, suggesting this was likely just **random low-frequency noise** 
+rather than true contamination.
 
-The `conta_file` will contain the data corresponding to the removed ASVs.
-It is a good idea to check its contents to ensure that nothing looks abnormal.
-For example, in our case, 8 ASVs were removed. However, they all contain only 
-a few reads, so this likely reflects random low-frequency noise rather than 
-genuine contamination.
+```{r filter-contaminant}
+outfile <- file.path(outdir, "4_filter", "6_filter_contaminant.csv")
+conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
 
-```{r filter-external-contaminant}
-outfile <- file.path(outdir, "4_filter", "6_FilterExternalContaminant.csv")
-conta_file <- file.path(outdir, "4_filter", "potential_contamination.csv")
-
-read_count_df <- FilterExternalContaminant(
+read_count_df <- filter_contaminant(
   read_count_df, 
   sampleinfo=sampleinfo_df,
   conta_file=conta_file,
   outfile=outfile
   )
 
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterExternalContaminant", params=NA)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
 
+### Filter Chimeric ASVs (`filter_chimera`)
 
-### FilterChimera
+This function uses the `uchime3_denovo` algorithm implemented in **VSEARCH** 
+to detect chimeras.
 
-This function will run the `uchime3_denovo` function implemented in VSEARCH. 
+* If `by_sample = FALSE` (default), ASVs identified as chimeras across 
+the **whole dataset** are removed.
+* If `by_sample = TRUE`, an ASV is removed only if it is detected as a chimera 
+in at least a proportion of samples defined by `sample_prop`.
 
-FilterChimera will eliminate ASVs detected as chimeras when running on the 
-whole data set at once (`by_sample=FALSE`). 
-If `by_sample=TRUE`, ASVs are eliminated if they have been identified as chimeras 
-in at least `sample_prop` proportion of the samples where they are present.
-
-`abskew`: A chimera must be at least `abskew` times less frequent that the parental ASVs.
-
+The `abskew` parameter sets the **minimum frequency difference**: a chimera 
+must be at least `abskew` times less abundant than its parental ASVs to be flagged.
 
 ```{r filter-chimera}
-outfile <- file.path(outdir, "4_filter", "7_FilterChimera.csv")
+outfile <- file.path(outdir, "4_filter", "7_filter_chimera.csv")
 abskew=2
 by_sample = T
 sample_prop = 0.8
 
-read_count_df <- FilterChimera(
+read_count_df <- filter_chimera(
   read_count_df, 
   vsearch_path=vsearch_path, 
   outfile=outfile,
@@ -694,385 +763,424 @@ read_count_df <- FilterChimera(
   )
 
 param <- paste("by_sample:", by_sample, "sample_prop:", sample_prop, "abskew:", abskew, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterChimera", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_chimera", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### FilterRenkonen
 
-Let's eliminate aberrant replicates that are not similar to other replicates of the same sample. 
+### Filter Aberrant Replicates (`filter_replicate`)
 
-We will calculate the renkonen distances among all pairs of replicates within sample.
+This filter removes **replicates that are very different** from other 
+replicates of the same sample.
+
+To do this, we calculate the **Renkonen distances** between all pairs of 
+replicates within each sample and identify those that deviate significantly from the others.
 
 ```{r renkonen-dist}
-renkonen_within_df <- MakeRenkonenDistances(read_count_df, compare_all=FALSE)
+renkonen_within_df <- compute_renkonen_distances(read_count_df, compare_all=FALSE)
 ```
 
-Let's make a density plot of the renkonen distances.
+#### Visualize Renkonen Distances
 
-**Note:** This is a very small test data set, so the graph you generate with your 
-own data will likely look quite different.
+We can create a **density plot** of the Renkonen distances to see how 
+similar replicates are within each sample.
+
+**Note:** This example uses a very small test dataset, 
+so your own data will likely produce a **different-looking graph**.
 
 ```{r renkonen-dist-density-plot}
-DensityPlot_RenkonenDistance(renkonen_within_df)
+plot_renkonen_distance_density(renkonen_within_df)
 ```
+We can also create a **barplot of the Renkonen distances**, using different 
+colors to represent **sample types** (real, mock, or negative).
 
-We can also make a barplot of the renkonen distances, and use different colors for different sample types (real/mock/negative).
+**Notes:**
 
-**Note**:
-
-- `sampleinfo_df` contains a `sample` and `sample_type` columns, but any data frame with these columns would do.
-- If you have restarted the analyses after the `SortReads` function, and  
-`sampleinfo_df` is not in your environment, just use the sampleinfo 
-file (in the `vtamR_demo_out/demultiplexed/` directory).
-- This is a very small test data set, so the graph you generate with your 
-own data will likely look quite different.
+* `sampleinfo_df` must have `sample` and `sample_type` columns, 
+but any data frame with these columns will work.
+* If you restarted the analysis after running `demultiplex_and_trim` and `sampleinfo_df` 
+is not in your environment, you can simply use the **sample info file** from **vtamR_demo_out/mfzr_plate1/3_demultiplexed/sampleinfo.csv**.
+* This is a **very small test data set**, so your own data will likely produce 
+a **different-looking graph**.
 
 ```{r renkonen-dist-barplot}
-Barplot_RenkonenDistance(renkonen_within_df, sampleinfo=sampleinfo_df, x_axis_label_size=6)
+plot_renkonen_distance_barplot(
+  renkonen_within_df, 
+  sampleinfo=sampleinfo_df, 
+  x_axis_label_size=6
+  )
 ```
-In this example, there are only a few distance values, so the density plot is 
-not very informative. The bar plot shows that replicate 1 of the `tnegtag` 
-sample (a negative control) differs substantially from the other 
-two replicates, and setting `cutoff = 0.4` appears reasonable as a `cutoff`
-for the `FilterRenkonen` function.
 
-This command filters out replicates whose Renkonen distances exceed the 
-cutoff relative to most other replicates of the same sample. 
-In this case, replicate 1 of the `tnegtag` sample will be removed.
+#### Determine Cutoff for Replicate Filtering
 
-An alternative way to determine the cutoff value is to set the 
-`renkonen_distance_quantile` parameter instead of specifying a fixed `cutoff`. 
-This parameter automatically sets the cutoff at the limit defined by the 
-chosen quantile of the within-sample distance distribution. 
-For example, setting `renkonen_distance_quantile = 0.9` will set the `cutoff`
-between the 9th and 10th decile (i.e., the 90th percentile) of the distance distribution.
+In this example, there are only a few Renkonen distance values, 
+so the **density plot** isn’t very informative. 
+The **barplot**, however, shows that **replicate 1 of the `tnegtag` sample** 
+(a negative control) is substantially different from the other two replicates.
+Setting `cutoff = 0.4` would be a reasonable choice 
+for the `filter_replicate` function.
 
-Let's choose this option.
+The `filter_replicate` function removes replicates whose 
+**Renkonen distances exceed the cutoff** relative to most other 
+replicates of the same sample.
+Here, this means that **replicate 1 of `tnegtag` will be removed**.
+
+An alternative way to define the cutoff is to use the 
+`renkonen_distance_quantile` parameter instead of a fixed `cutoff`.
+This automatically sets the cutoff based on a chosen **quantile of the within-sample distance distribution**. For example:
+
+* `renkonen_distance_quantile = 0.9` sets the cutoff at the 
+**90th percentile** of distances, i.e., between the 9th and 10th decile.
+
+In this tutorial, we will **use the quantile-based option** to determine the cutoff.
 
 ```{r filer-renkonen}
-outfile <- file.path(outdir, "4_filter", "8_FilterRenkonen.csv")
+outfile <- file.path(outdir, "4_filter", "8_filter_replicate.csv")
 renkonen_distance_quantile <- 0.9
 
-read_count_df <- FilterRenkonen(
+read_count_df <- filter_replicate(
   read_count_df, 
   renkonen_distance_quantile = renkonen_distance_quantile,
   outfile = outfile
   )
 
 param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterRenkonen", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### Make mock_composition
+### Create `mock_composition` File
 
-The [mock_composition](#mock_composition) file will be necessary to suggest 
-parameter values for some of the filtering steps. This file should contain the
-expected ASVs in each mock sample.
+The [mock_composition](#mock_composition) file is needed to 
+**suggest parameter values** for some filtering steps. 
+It should list the **expected ASVs** in each mock sample.
 
-If you do not know the exact sequences of the species present in your 
-mock samples, read the [How to make a mock_composition file](make-mock-composition-file.html).
+If you don’t know the exact sequences of the species in your mock samples, 
+see [How to make a mock_composition file](make-mock-composition-file.html) for guidance.
 
-Here is a quick version on how to do it. You should check the output 
-**mock_composition_template_to_check.csv**, to see if all ASV have been identified.
-
+Here’s a quick example of how to create it. After generating the file, check **`mock_composition_template_to_check.csv`** to make sure 
+**all ASVs have been correctly identified**.
 
 ```{r mock-composition}
 outdir_mock <- file.path(outdir, "mock_composition")
 
-mock_template <- MakeMockCompositionLTG(
+mock_template <- match_variants_to_mock_species(
   read_count=read_count_df,
-  fas=mock_ncbi_fasta,
+  fas=mock_ncbi_fasta, # fasta with reference sequences on the mock or closely related species
   taxonomy=taxonomy,
   sampleinfo = sampleinfo_df,
   outdir= outdir_mock,
   blast_path=blast_path
   )
 mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
+mock_composition_df <- read.csv(mock_composition)
+knitr::kable(mock_composition_df, format = "markdown")
 ```
 
-### LFNsampleReplicate
 
-`LFNsampleReplicate` will eliminate occurrences with very low read counts 
-compared to the total number of reads in the sample-replicate. 
-The default cutoff proportion is 0.001. 
-We can have an idea of the maximum value of this cutoff, 
-by examining the proportions of expected ASVs in the mock samples using the 
-`OptimizeLFNsampleReplicate` function.
+### Filter Low-Abundance Occurrences within Samples (`filter_occurrence_sample`)
 
-**OptimizeLFNsampleReplicate**
+The `filter_occurrence_sample` function removes 
+**ASV occurrences with very low read counts** relative to the total reads 
+in a sample-replicate.
+The default cutoff proportion is **0.001**.
 
-**Note**: If you do not know the exact sequences of the species present in your 
-mock samples, and thus, you do not have the [mock_composition](#mock_composition)
-file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
+To choose a suitable `cutoff`, you can examine the 
+**proportions of expected ASVs in your mock samples** 
+using the `suggest_sample_cutoff` function.
+This ensures that **real, low-abundance ASVs** are not accidentally 
+removed by setting the cutoff **below the lowest observed proportion**.
 
-```{r optimize-lfn-sample-replicate}
-outfile = file.path(outdir, "4_filter", "optimize", "OptimizeLFNsampleReplicate.csv")
+#### Suggest Filter Parameters Based on Mock Sample (`suggest_sample_cutoff`)
 
-OptimizeLFNsampleReplicate_df <- OptimizeLFNsampleReplicate(
+**Note:** If you don’t yet know the exact sequences in your mock samples 
+and therefore **don’t have a [mock_composition](#mock_composition) file**, 
+see [How to make a mock_composition file](make-mock-composition-file.html) for guidance.
+
+```{r suggest_sample_cutoff}
+outfile = file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
+
+suggest_sample_cutoff_df <- suggest_sample_cutoff(
   read_count=read_count_df,
   mock_composition=mock_composition,
   outfile=outfile
   )
 
-knitr::kable(head(OptimizeLFNsampleReplicate_df), format = "markdown")
+knitr::kable(head(suggest_sample_cutoff_df), format = "markdown")
 ```
 
-The lines of `OptimizeLFNsampleReplicate_df` are sorted in 
-increasing order of the `lfn_sample_replicate_cutoff` column.
-The lowest proportion of read count of an expected ASV to the total read count
-of its sample-relicate is 0.0047 
-(Sequence of *Caenis pusilla* in the replicate 3 of tpos1 mock sample). 
-A cutoff values for `LFNsampleReplicate` higher than this will eliminate some 
-of the expected occurrences and create false negatives. 
-Therefore, we choose 0.004 as a cutoff.
+#### Choose a Cutoff for `filter_occurrence_sample`
 
-**Note:** 
+The rows in `suggest_sample_cutoff_df` are sorted by the 
+`sample_cutoff` column in **increasing order**.
 
-If the different species in the mock community are amplified 
-equally well, the minimum value of `lfn_sample_replicate_cutoff` 
-may be relatively high. In such cases, it is often better to use an 
-arbitrarily low value (e.g., 0.001–0.005). 
-The optimal threshold depends strongly on the complexity of your 
-environmental samples: the more taxa you expect, the lower this cutoff should be.
+* The **lowest proportion** of reads for an expected ASV 
+in a sample-replicate is **0.0047** 
+(for *Caenis pusilla*, replicate 3 of the `tpos1` mock sample).
+* Setting the `filter_occurrence_sample` cutoff **higher than this** would remove some expected ASVs, creating **false negatives**.
+* Therefore, we choose a cutoff of **0.004**.
 
-In practice, strong PCR amplification bias is very common, so situations 
-where all mock species amplify equally well are rare.
+**Note:**
 
-When designing mock communities for a metabarcoding experiment, it is 
-advisable to include some species known to amplify poorly. 
-This requires an optimization and testing beforehand, but it ensures that 
-your mock sample reflects realistic amplification biases before you process
-your actual environmental samples.
+* If all species in the mock community amplify equally well, the minimum 
+`sample_cutoff` may be relatively high. 
+In such cases, it’s often safer to choose a 
+**low arbitrary value** (e.g., 0.001–0.005).
+* The optimal threshold depends on your **environmental sample complexity**: 
+the more taxa you expect, the **lower the cutoff** should be.
 
-**LFNsampleReplicate**
+In practice, **strong PCR amplification bias is common**, so scenarios where all mock species amplify equally well are rare.
+
+When designing mock communities for a metabarcoding experiment, 
+it’s recommended to include **some species known to amplify poorly**. 
+This requires **pre-testing and optimization**, but ensures that your mock sample 
+realistically reflects amplification biases before analyzing your actual environmental samples.
+
+#### Filter Low-Abundance Occurrences within Samples 
 
 ```{r lfn-sample-replicate}
-lfn_sample_replicate_cutoff <- 0.004
-outfile <- file.path(outdir, "4_filter", "9_LFNsampleReplicate.csv")
+sample_cutoff <- 0.004
+outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
   
-read_count_df <- LFNsampleReplicate(
+read_count_df <- filter_occurrence_sample(
   read_count_df, 
-  cutoff=lfn_sample_replicate_cutoff, 
+  cutoff=sample_cutoff, 
   outfile=outfile
   )
 
-param <- paste("cutoff:", lfn_sample_replicate_cutoff, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="LFNsampleReplicate", params=param)
+param <- paste("cutoff:", sample_cutoff, sep=" ")
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_sample", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### FilterMinReplicate 1
+### Filter Occurrences by Replicate Consistency (filter_min_replicate-1)
 
-To ensure repeatability, occurrences are retained only if they appear in at 
-least `min_replicate_number` replicates of the sample (2 by default).
+To improve repeatability, occurrences are kept only if they are present in at 
+least `min_replicate_number` replicates of the same sample (2 by default).
 
 ```{r filter-min-replicate}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "4_filter", "10_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
   
-read_count_df <- FilterMinReplicate(
+read_count_df <- filter_min_replicate(
   read_count_df, 
   cutoff=min_replicate_number, 
   outfile=outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### LFNvariant and LFNreadCount
+### Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`)
 
-The `LFNvariant` filter removes occurrences with very low read counts 
-relative to the total number of reads of their ASV.
-By default, the cutoff proportion is 0.001.
+The `filter_occurrence_variant` function removes occurrences with 
+**low read counts relative to the total reads of their ASV**.
+By default, the cutoff proportion is **0.001**.
+This filter is mainly designed to remove spurious detections caused by 
+**tag-jumps** or minor **cross-sample contamination**.
 
-This filter is designed to remove spurious detections caused 
-by **tag-jumps** or light **cross-sample contamination**.
+The `filter_occurrence_read_count` function, in contrast, removes occurrences 
+based on an **absolute read count threshold**, set to **10 by default**.
 
-The `LFNreadCount` filter, on the other hand, removes occurrences 
-with absolute read counts below a fixed threshold, which is set to 10 by default.
+#### Choose a Cutoff for (`filter_occurrence_variant` and `filter_occurrence_read_count`)
 
-**Choosing the best cutoff values**
+The `suggest_variant_readcount_cutoffs` function helps you find suitable 
+cutoff values for both filters.
+It tests different combinations and evaluates the number of:
 
-The function `OptimizeLFNreadCountLFNvariant` helps to determine the most 
-appropriate cutoff values for both filters.
-It evaluates a range of cutoff combinations and counts the resulting number of
-[false positives](#glossary), [false negatives](#glossary), and 
-[true positives](#glossary).
+* [false positives](#glossary)
+* [false negatives](#glossary)
+* [true positives](#glossary)
 
 To run this optimization, you need a [`known_occurrences_df`](#known_occurrences) 
-data frame that identifies occurrences known to be **TPs (true positives)** 
-or **FPs (false positives)**.
+data frame that lists **true positive (TP)** and 
+**false positive (FP)** occurrences in control samples and in some cases in real 
+samples (identified due to incompatible habitat).
 
-There are two ways to obtain the `known_occurrences_df`  data frame:
+**How to Obtain `known_occurrences_df`**
 
-*1. Full control*
+There are two options:
 
-You can generate it manually by running the [`MakeKnownOccurrences`](#makeknownoccurrences) 
-function. You may then review or edit the resulting `known_occurrences_df` 
-as needed before passing it as an input to `OptimizeLFNreadCountLFNvariant`.
+**1. Full control**
 
-*2. Automatic generation*
+You can create it manually using the 
+[`classify_control_occurrences`](#classify_control_occurrences) function.
+You can then review or edit the resulting `known_occurrences_df` 
+before using it as input for `suggest_variant_readcount_cutoffs`.
 
-Alternatively, you can run `OptimizeLFNreadCountLFNvariant` and 
-set `known_occurrences = NULL` (the default), but provide values for 
-the `mock_composition`, `sampleinfo`, and `habitat_proportion` arguments.
-In this case, `OptimizeLFNreadCountLFNvariant` will automatically call 
-`MakeKnownOccurrences` and use its output to estimate the optimal cutoff values.
+**2. Automatic generation**
 
-All data frames generated by `OptimizeLFNreadCountLFNvariant` and 
-`MakeKnownOccurrences` run from it are written as CSV files 
-to the specified `outdir`.
+Alternatively, you can run `suggest_variant_readcount_cutoffs` 
+with `known_occurrences = NULL` (default), and provide:
 
-The main output is `OptimizeLFNreadCountLFNvariant_df`, 
-which summarizes the performance of the different cutoff combinations. 
-This table is also saved in `outdir`.
+* `mock_composition`
+* `sampleinfo`
+* `habitat_proportion`
 
-The rows are ordered by:
+In this case, the function will automatically call 
+`classify_control_occurrences` and use its output to estimate optimal cutoff values.
 
-1. Increasing number of false negatives (FN),
-2. Then increasing number of false positives (FP),
-3. Then increasing `lfn_variant_cutoff`,
-4. Then increasing `lfn_read_count_cutoff`.
+All generated data frames are saved as **CSV files** in the specified `outdir`.
 
-This way, the first line corresponds to the parameter combination that yields 
-the lowest number of false negatives and false positives, while also using 
-the least stringent values for `lfn_variant_cutoff` and `lfn_read_count_cutoff`.
+**Understanding The Output**
 
-Let’s use the second approach, where the `known_occurrences_df` is generated 
-**automatically** by `OptimizeLFNreadCountLFNvariant`.
-If you prefer to create it manually, see the 
-[MakeKnownOccurrences](#makeknownoccurrences) section.
+The main result is a data frame that 
+summarizes the performance of each cutoff combination.
 
-Here we will use the default range of cutoffs to test, 
-but you can set the minimum, the maximum and the increment for the cutoff 
-values for both filters. (see `?OptimizeLFNreadCountLFNvariant`). 
-We set `min_replicate_number` to 2, to eliminate non-repeatable 
-occurrences among the three replicates of each sample. This is the equivalent of
-`FilterMinReplicate` filter.
+Rows are sorted by:
 
-```{r optimize-lfn-readcount-lfn-variant}
-outdir_optimize = file.path(outdir, "4_filter", "optimize")
+1. Increasing number of false negatives (FN)
+2. Then increasing number of false positives (FP)
+3. Then increasing `variant_cutoff`
+4. Then increasing `read_count_cutoff`
 
-OptimizeLFNreadCountLFNvariant_df <- OptimizeLFNreadCountLFNvariant(
+This means the **first row** corresponds to the best compromise:
+minimal FN and FP, with the least stringent cutoff values.
+
+In This Tutorial, we use the **automatic approach**, where `known_occurrences_df` 
+is generated by `suggest_variant_readcount_cutoffs`.
+(If you prefer to build it manually, see the 
+[classify_control_occurrences](#classify_control_occurrences) section.)
+
+We will use the **default range of cutoff values**, but you can adjust 
+the minimum, maximum, and step size for both filters 
+(see `?suggest_variant_readcount_cutoffs`).
+
+Finally, we set `min_replicate_number = 2` to remove non-repeatable 
+occurrences across the three replicates of each sample.
+This is equivalent to applying the `filter_min_replicate` filter.
+
+
+```{r suggest_variant_readcount_cutoffs}
+outdir_suggest = file.path(outdir, "4_filter", "suggest_parameters")
+
+suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
   read_count_df,
   mock_composition = mock_composition,
   sampleinfo = sampleinfo_df,
   habitat_proportion = 0.5,
   known_occurrences=NULL,
-  outdir= outdir_optimize, 
+  outdir= outdir_suggest, 
   min_replicate_number=2
   )
 
-knitr::kable(head(OptimizeLFNreadCountLFNvariant_df), format = "markdown")
+knitr::kable(head(suggest_variant_readcount_cutoffs_df), format = "markdown")
 ```
 
-**LFNvariant, LFNreadCount**
+#### Apply `filter_occurrence_variant` and `filter_occurrence_read_count`
 
-From the output, we choose 0.001 for the cutoff of `LFNvariant` 
-and 10 for `LFNreadCount`, since this is the less stringent combination 
-that keeps all expected occurrences (6 TP, 0 FN), and has less FP (4 FP).
+Based on the results, we choose:
 
-We will run the two filters on the same input data frame 
-(for which the parameters has been optimized), 
-and pool the results by accepting only occurrences that pass both 
-filters by the `PoolFilters` function.
+* `0.001` as the cutoff for `filter_occurrence_variant`
+* `10` as the cutoff for `filter_occurrence_read_count`
 
-See `?LFNvariant, ?LFNreadCount` and `?PoolFilters` for details.
+This is the **least stringent combination** that still keeps 
+all expected occurrences (**6 TP, 0 FN**) while minimizing false positives (**4 FP**).
 
-LFNvariant
+We then apply both filters to the **same input data frame** 
+(the one used to find the cutoff values) and combine the results using 
+the `pool_filters` function.
+Only occurrences that pass **both filters** are retained.
+
+For more details, see `?filter_occurrence_variant`, 
+`?filter_occurrence_read_count`, and `?pool_filters`.
+
+**`filter_occurrence_variant`**
+
 ```{r lfn-variant}
-outfile <- file.path(outdir, "4_filter", "11_LFNvariant.csv")
-lnf_variant_cutoff = 0.001
+outfile <- file.path(outdir, "4_filter", "11_filter_occurrence_variant.csv")
+variant_cutoff = 0.001
               
-read_count_df_lnf_variant <- LFNvariant(
+read_count_df_variant <- filter_occurrence_variant(
   read_count_df, 
-  cutoff=lnf_variant_cutoff, 
+  cutoff=variant_cutoff, 
   outfile=outfile
   )
 
-param <- paste("cutoff:", lnf_variant_cutoff, sep=" ")         
-stat_df <- GetStat(read_count_df_lnf_variant, stat_df, stage="LFNvariant", params=param)
+param <- paste("cutoff:", variant_cutoff, sep=" ")         
+stat_df <- get_stat(read_count_df_variant, stat_df, stage="filter_occurrence_variant", params=param)
 ```
 
-LFNreadCount
+**`filter_occurrence_read_count`**
 ```{r lfn-readcount}
-lfn_read_count_cutoff <- 10
-outfile <- file.path(outdir, "4_filter", "12_LFNreadCount.csv")
+read_count_cutoff <- 10
+outfile <- file.path(outdir, "4_filter", "12_filter_occurrence_read_count.csv")
               
-read_count_df_lfn_read_count <- LFNreadCount(
+read_count_df_rc <- filter_occurrence_read_count(
   read_count_df, 
-  cutoff=lfn_read_count_cutoff, 
+  cutoff=read_count_cutoff, 
   outfile=outfile
   )
 
-param <- paste("cutoff:", lfn_read_count_cutoff, sep=" ")        
-stat_df <- GetStat(read_count_df_lfn_read_count, stat_df, stage="LFNreadCount", params=param)
+param <- paste("cutoff:", read_count_cutoff, sep=" ")        
+stat_df <- get_stat(read_count_df_rc, stat_df, stage="filter_occurrence_read_count", params=param)
 
 ```
 
-Combine results of LFNvariant and LFNreadCount
+Combine results of filter_occurrence_variant and filter_occurrence_read_count
 ```{r combine-results}
-outfile <- file.path(outdir, "4_filter", "13_poolLFN.csv")
+outfile <- file.path(outdir, "4_filter", "13_pool_filters.csv")
 
-read_count_df <- PoolFilters(
-  read_count_df_lfn_read_count, read_count_df_lnf_variant,    
+read_count_df <- pool_filters(
+  read_count_df_rc, read_count_df_variant,    
   outfile=outfile
   )
 
-stat_df <- GetStat(read_count_df, stat_df, stage="PoolFilters", params=NA)
+stat_df <- get_stat(read_count_df, stat_df, stage="pool_filters", params=NA)
               
 # delete temporary data frames
-rm(read_count_df_lfn_read_count)
-rm(read_count_df_lnf_variant)
+rm(read_count_df_rc)
+rm(read_count_df_variant)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
-### FilterMinReplicate 2
+### Filter Occurrences by Replicate Consistency (filter_min_replicate-2)
 
-Let's run again `FilterMinReplicate` to ensure repeatability among replicates 
-of the sample (2 by default).
+We now run `filter_min_replicate` again to ensure consistency across
+replicates of each sample (2 by default).
 
 ```{r filter-min-replicate2}
 min_replicate_number <- 2
-outfile <- file.path(outdir, "4_filter", "14_FilterMinReplicate.csv")
+outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
 
-read_count_df <- FilterMinReplicate(
+read_count_df <- filter_min_replicate(
   read_count_df, 
   cutoff=min_replicate_number, 
   outfile=outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")  
-stat_df <- GetStat(read_count_df, stat_df, stage="FilterMinReplicate", params=param)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate_2", params=param)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
 
-### Pool replicates
+### Pool Replicates
 
-For each sample, replicates can be pooled. The read count for a given sample 
-and ASV can be computed as the mean of non-zero read counts across replicates, 
-or alternatively as the sum, maximum, or minimum.
+Replicates can now be combined for each sample.
 
-For compatibility with other functions where read_count data frame is used as an input, 
-the read_count heading is retained on the output, even when it represents a mean 
-or another aggregate across replicates.
+For a given sample and ASV, the read count can be calculated in different ways:
+
+* **Mean of non-zero read counts** across replicates (default)
+* Or alternatively: **sum**, **maximum**, or **minimum**
+
+For compatibility with other functions that use a `read_count` data 
+frame as input, the column name `read_count` is kept, even if it actually 
+represents a mean or another type of aggregated value across replicates.
 
 
 ```{r pool-replicates}
 outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
 
-read_count_sample_df <- PoolReplicates(
+read_count_sample_df <- pool_replicates(
   read_count_df,
   method = "mean",   # Aggregate replicates using the mean read count
   digits = 0,        # Round aggregated read counts to integers
@@ -1080,95 +1188,126 @@ read_count_sample_df <- PoolReplicates(
 )
 ```
 
-### Get performance metrics
+### Get Performance Metrics
 
-Run `MakeKnownOccurrences` again to get performance metrics (FP, FN, FP). 
-We will write the output data frames to files as well. 
-The `performance_metrics` file will give you the count of FP, FN, TP, 
-[Precision](#glossary) and [Sensitivity](#glossary). 
-You can find false negatives in `missing_occurrences`, 
-and true and false positives in `known_occurrences`.
+We now run `classify_control_occurrences` again to evaluate the performance 
+of the filtering.
+The output data frames are also written to files for further inspection.
+
+The `performance_metrics` file provides:
+
+* the number of **false positives (FP)**
+* **false negatives (FN)**
+* **true positives (TP)**
+* [Precision](#glossary) 
+* [Sensitivity](#glossary)
+
+You can find:
+
+* **false negatives** in the `false_negatives` file
+* **true positives and false positives** in the `known_occurrences` file
 
 ```{r performance-metrics}
-missing_occurrences <- file.path(outdir, "4_filter", "Missing_occurrences.csv")
-performance_metrics <- file.path(outdir, "4_filter", "Performance_metrics.csv")
-known_occurrences <- file.path(outdir, "4_filter", "Known_occurrences.csv")
+false_negatives <- file.path(outdir, "4_filter", "false_negatives.csv")
+performance_metrics <- file.path(outdir, "4_filter", "performance_metrics.csv")
+known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
 
-results <- MakeKnownOccurrences(read_count_sample_df, 
+results <- classify_control_occurrences(read_count_sample_df, 
                                 sampleinfo=sampleinfo_df, 
                                 mock_composition=mock_composition, 
                                 known_occurrences=known_occurrences, 
-                                missing_occurrences=missing_occurrences,
+                                false_negatives=false_negatives,
                                 performance_metrics=performance_metrics)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
-missing_occurrences_df <- results[[2]]
+false_negatives_df <- results[[2]]
 performance_metrics_df <- results[[3]]
 
 knitr::kable(performance_metrics_df, format = "markdown")
 ```
 
+## Print Summary Statistics
+
+This step prints the number of reads, ASVs, samples, and replicates remaining 
+after each processing step, and saves the information to a CSV file for tracking 
+your workflow.
+
+```{r}
+write.csv(stat_df, file = file.path(outdir, "summary.csv"))
+```
+
+
 ## Taxonomic Assignment
 
-If you have already assigned ASV to taxa, 
-([before making the mock_composition file](make-mock-composition-file.html))
-you can use the same output (`asv_tax` data frame) and skip this step.
+The `assign_taxonomy_ltg` function uses a **BLAST-based Last Common Ancestor (LCA) approach**.
+For a short description of how the algorithm works, see `?assign_taxonomy_ltg`.
 
-The `TaxAssignLTG` function is a BLAST base Last Common Ancestor method.
-See the brief description of the algorithm with `?TaxAssignLTG`.
+For details on the required formats of the `taxonomy` and `blast_db` inputs, refer to the
+[Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg) section.
 
-For the format of `taxonomy` and `blast_db` check the 
-[Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments-with-taxAssignltg) 
-section. You can also download a ready to use COI database 
-(See [Installation](installation.html#taxassignltg)).
+You can also download a **ready-to-use COI reference database** (see [Installation](installation.html#assign_taxonomy_ltg)).
 
 
 ```{r taxassign}
-outfile <- file.path(outdir, "4_filter", "TaxAssignLTG.csv")
+outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
 
-asv_tax <- TaxAssignLTG(asv=read_count_sample_df, 
+asv_tax <- assign_taxonomy_ltg(asv=read_count_sample_df, 
                      taxonomy=taxonomy, 
                      blast_db=blast_db, 
                      blast_path=blast_path, # can be omitted if BLAST is in the PATH
                      outfile=outfile)
 ```
 
-
 ## Make mOTUs
 
-If you are not interested in intra-specific variation, the ASV can be clustered to mOTUs.
+If you are not interested in **intra-specific variation**, ASVs can be grouped into **mOTUs**.
 
-### Algorithm and Clustering parameters
+### Algorithm and Clustering Parameters
 
-The `ClusterASV` function supports two algorithms for clustering ASVs:
+The `cluster_asv` function supports two clustering methods:
 
-* `method = "vsearch"`: This approach uses VSEARCH’s `cluster_size` command, 
-a greedy, centroid-based algorithm that ranks ASVs by decreasing read count. 
-As a result, cluster centroids correspond to the most abundant ASVs.
-The cluster radius is controlled by the `identity` parameter.
+* `method = "vsearch"`:
+  This method uses VSEARCH’s `cluster_size` command, a 
+  greedy, centroid-based algorithm that processes ASVs in order 
+  of decreasing read count.
+  As a result, cluster centroids correspond to the **most abundant ASVs**.
+  The clustering threshold is controlled by the `identity` parameter.
 
-* `method = "swarm"`: SWARM is a fast, iterative clustering method that groups 
-ASVs differing by `d` or fewer nucleotides. Clusters form around local 
-abundance peaks and are largely unaffected by the order of input sequences.
+* `method = "swarm"`:
+  SWARM is a fast, iterative clustering algorithm that groups ASVs differing 
+  by `d` or fewer nucleotides.
+  Clusters form around local abundance peaks and are largely independent of the 
+  input order.
 
-The main parameters are `identity` for VSEARCH and `swarm_d` for SWARM.
-In this tutorial, we’ll focus on determining an appropriate `identity` 
-threshold for clustering with VSEARCH, but a similar approach applies to SWARM.
+The main parameters are:
 
-To choose a suitable threshold, you can visualize the distribution of pairwise 
-identities between ASVs—comparing pairs within the same cluster versus those 
-from different clusters—using the function 
-`PairwiseIdentityPlotPerClusterIdentityThreshold` (for VSEARCH).
-If you’re clustering with SWARM, see `?PairwiseIdentityPlotPerSwarmD` for the equivalent plot.
+* `identity` for VSEARCH
+* `swarm_d` for SWARM
 
-For more detailed information, see the [Clustering or denosing](#clustering-or-denoising) section.
+For more details, see the [Clustering or denoising](#clustering-or-denoising) section.
 
-```{r PairwiseIdentityPlotPerClusterIdentityThreshold}
+In this tutorial, we focus on choosing an appropriate `identity` threshold
+for VSEARCH, but the same general approach can also be applied to SWARM.
+
+
+### Plot Pairwise Identity Distribution
+
+To help choose a suitable clustering threshold, you can visualize the
+**distribution of pairwise identities between ASVs**, comparing:
+
+* pairs within the same cluster
+* pairs from different clusters
+
+This plot is generated using the `plot_pairwise_identity_vsearch` function.
+
+If you are using SWARM, see `?plot_pairwise_identity_swarm` for the equivalent tool.
+
+```{r plot_pairwise_identity_vsearch}
 outfile <- file.path(outdir, "5_cluster", "pairwise_identities_vsearch.csv")
-plotfile <- file.path(outdir, "5_cluster", "PairwiseIdentityPlotPerClusterIdentityThreshold.png")
+plotfile <- file.path(outdir, "5_cluster", "plot_pairwise_identity_vsearch.png")
 
-plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(
+plot_vsearch <- plot_pairwise_identity_vsearch(
                 read_count_sample_df,
                 identity_min=0.9,
                 identity_max=0.99,
@@ -1181,33 +1320,41 @@ plot_vsearch <- PairwiseIdentityPlotPerClusterIdentityThreshold(
 print(plot_vsearch)
                                           
 ```
-**Note:** This graph is based on a **very small** test data set and is therefore not informative. 
-Below is the graph obtained using the complete (though still relatively small) original data set.
 
-![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/PairwiseIdentityPlotPerClusterIdentityThreshold.png)
+**Note:** This graph is based on a very small test dataset and is therefore not very informative.
 
-Clusters can also be classified based on the taxonomic assignments of the ASVs they contain:
+Below is the same plot generated using the full (though still relatively small) original dataset,
+which provides a clearer view of the patterns:
 
-* `closed`: All ASVs in the cluster are assigned to the same taxon, 
-and every ASV belonging to that taxon is found exclusively within this cluster.
-* `open`: All ASVs in the cluster share the same taxonomic assignment, 
-but additional ASVs of that taxon appear in other clusters.
-* `hybrid`: The cluster includes ASVs assigned to multiple taxa.
+![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/plot_pairwise_identity_vsearch.png)
 
-This classification can be performed after clustering ASVs across a range 
-of parameter values for `identity` (VSEARCH) or `swarm_d` (SWARM).
-The number of clusters in each category can then be plotted for each parameter setting.
-A clustering parameter that maximizes the number of `closed` clusters 
-while minimizing the number of `open` and `hybrid` ones is often a good candidate 
-for defining mOTUs.
 
-(See `?PlotClusterClassification` for details on setting parameters when using SWARM.)
+### Classify Clusters Based On Taxonomy
 
-```{r PlotClusterClasstification}
+Clusters can also be evaluated using the taxonomic assignments of the ASVs they contain:
+
+* `closed`: All ASVs in the cluster are assigned to the same taxon,
+  and all ASVs from that taxon are found **only in this cluster**.
+
+* `open`: All ASVs share the same taxonomic assignment,
+  but other ASVs from that taxon are also found in **other clusters**.
+
+* `hybrid`: The cluster contains ASVs assigned to **multiple taxa**.
+
+You can perform this classification after clustering ASVs across a range of 
+parameter values (`identity` for VSEARCH or `swarm_d` for SWARM), 
+and then plot the number of clusters in each category for each setting.
+
+A good clustering parameter typically maximizes the number of `closed` clusters
+while minimizing the number of `open` and `hybrid` clusters.
+
+(See `?plot_cluster_classification` for more details.)
+
+```{r plot_cluster_classification}
 outfile <- file.path(outdir, "5_cluster", "classification_vsearch.csv")
-plotfile <- file.path(outdir, "5_cluster", "PlotClusterClasstification_vsearch.png")
+plotfile <- file.path(outdir, "5_cluster", "plot_cluster_classification_vsearch.png")
 
-scatterplot_vsearch <- PlotClusterClasstification(
+scatterplot_vsearch <- plot_cluster_classification(
                         read_count=read_count_sample_df,
                         taxa=asv_tax,
                         clustering_method="vsearch",
@@ -1218,55 +1365,66 @@ scatterplot_vsearch <- PlotClusterClasstification(
                         plotfile=plotfile)
 
 print(scatterplot_vsearch)
-                                          
 ```
-**Note:** again, this graph is based on a **very small** test data set and is therefore not informative. 
-Below is the graph obtained using the complete (though still relatively small) original data set.
 
-![Plot ClusterClasstification for the original data](figures/PlotClusterClasstification_vsearch.png)
+**Note:** This graph is based on a very small test dataset and is therefore not very informative.
 
-Even the original data set is relatively small, and the graphs do not show strong differences 
-between parameter values. Nevertheless, several conclusions can be drawn:
+Below is the same plot generated using the full (though still relatively small) original dataset,
+which provides a clearer view of the patterns:
 
-* At clustering thresholds below 0.94, the pairwise identity distribution among 
-ASVs within the same cluster becomes bimodal. This likely indicates that 
-ASVs from different taxa (species) are being grouped together, 
-suggesting the clustering identity threshold should be **at least 0.94**.
-* The number of `closed` clusters at the species level is highest between 
-**0.94 and 0.97**, while the numbers of `open` and `hybrid` clusters remain 
-relatively low in this range.
-* Taken together, these results suggest that a clustering threshold 
-between **0.94 and 0.97** is appropriate for defining mOTUs as proxies for species.
+![Plot ClusterClasstification for the original data](figures/plot_cluster_classification_vsearch.png)
+#### Interpretation of the plots
 
-### Cluster ASVs to mOTUs
+Even though the original dataset is relatively small and the differences between 
+parameter values are not very pronounced, a few useful conclusions can still be drawn:
 
-The `ClusterASV` function can perform clustering using either VSEARCH 
-(`method = "vsearch"`) or SWARM (`method = "swarm"`).
+* For clustering thresholds below **0.94**, the distribution of pairwise 
+identities among ASVs within the same cluster becomes **bimodal**.
+  This likely indicates that ASVs from different taxa (e.g. species) 
+  are being grouped together, suggesting that the clustering threshold should be **at least 0.94**.
 
-The output format is controlled by the `group` argument:
+* The number of `closed` clusters at the species level is highest 
+between **0.94 and 0.97**, while the number of `open` and `hybrid` clusters 
+remains relatively low in this range.
 
-* `group = TRUE`: ASVs belonging to the same cluster are aggregated into a 
-single row. In this case, the `asv_id` and `asv` columns contain the
-identifier and sequence of the cluster’s centroid. Read counts are summed 
-across ASVs, while sample and replicate structure remain unchanged.
-* `group = FALSE`: The function returns the original ASV table with an 
-additional `cluster_id` column, so each row still represents a single ASV.
+* Overall, these results suggest that a clustering threshold between **0.94 and 0.97** 
+is a good choice for defining mOTUs as proxies for species.
 
-Clustering can be performed on the entire data set or separately for each sample.
-When the goal is to define mOTUs, it is recommended to cluster 
-all ASVs together (`by_sample = FALSE`).
+### Cluster ASVs into mOTUs
 
-Attention! If clustering is done by_sample (`by_sample = TRUE`) and 
-`group==FALSE`, the same `asv_id`, can have different `cluster_id` in different samples,
-therefore this combination is not recommended.
+The `cluster_asv` function can cluster ASVs using either:
 
-Below, we’ll cluster the data using VSEARCH with an identity threshold of `0.97`.
-(See `?ClusterASV` for guidance on adjusting parameters when using SWARM.)
+* VSEARCH (`method = "vsearch"`)
+* SWARM (`method = "swarm"`)
+
+The **output format** is controlled by the `group` argument:
+
+* `group = TRUE`:
+  ASVs in the same cluster are combined into a single row.
+
+  * The `asv_id` and `asv` columns correspond to the **cluster centroid**
+  * Read counts are summed across ASVs
+
+* `group = FALSE`:
+  The original ASV table is returned, with an additional `cluster_id` column.
+  Each row still represents a single ASV
+
+Clustering can be performed on the entire dataset (`by_sample = FALSE`) or 
+separately for each sample (`by_sample = TRUE`).
+When defining mOTUs, it is recommended to cluster all ASVs together (`by_sample = FALSE`).
+
+**Important:**
+If you cluster by sample (`by_sample = TRUE`) and use `group = FALSE`, 
+the same `asv_id` may be assigned different `cluster_id` values in different samples, 
+which can be confusing. This combination is therefore not recommended.
+
+In this tutorial, we cluster the data using VSEARCH with an identity threshold of 0.97.
+(See `?cluster_asv` for guidance on parameter settings when using SWARM.)
 
 ```{r motu-clustersize}
 outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
 identity <- 0.97 
-read_count_samples_df_ClusterSize <- ClusterASV(
+read_count_samples_df_ClusterSize <- cluster_asv(
       read_count_sample_df,
       method = "vsearch",
       identity = 0.97,
@@ -1275,41 +1433,42 @@ read_count_samples_df_ClusterSize <- ClusterASV(
       path=vsearch_path, # can be omitted if VSEARCH is in the PATH
       outfile=outfile)
 
-stat_df <- GetStat(read_count_samples_df_ClusterSize, 
+stat_df <- get_stat(read_count_samples_df_ClusterSize, 
                    stat_df, 
-                   stage="ClusterASV_vsearch",
+                   stage="cluster_asv_vsearch",
                    param=identity)
 
 knitr::kable(stat_df, format = "markdown")
 ```
 
+## Print Output
 
-## Print output
+The `write_asv_table` function restructures your `read_count_df` so that:
 
-The `WriteASVtable` function restructures the `read_count_df` data frame 
-so that **samples are represented in columns** and **ASVs (or mOTU centroids)** 
-appear in rows—converting the table from [long format](#glossary) to [wide format](#glossary).
+* Samples appear in columns
+* ASVs (or mOTU centroids) appear in rows
 
-Additional information can be included in the output:
+In other words, it converts the table from [long format](#glossary) to [wide format](#glossary).
 
-* Taxonomic assignment: (`asv_tax`)
-* Totals by ASV: The total number of reads and samples for each ASV (`add_sums_by_asv`)
-* Totals by sample: The total number of reads and ASVs for each sample (`add_sums_by_sample`)
-* Expected ASVs in mock samples: Adds a column for each mock sample with 
-its expected occurrences (`add_expected_asv`)
-* Filtered samples: Adds a column for each sample that have been filtered out (`add_empty_samples`)
-* Cluster IDs: Retained automatically if present in the input data frame
+You can also include additional information in the output:
 
-If `pool_replicates = TRUE`, replicates within each sample are pooled, 
-and the read count for each sample is calculated as the mean of non-zero read
-counts across replicates.
+* Taxonomic assignments (`asv_tax`)
+* Totals by ASV: total reads and number of samples for each ASV (`add_sums_by_asv`)
+* Totals by sample: total reads and ASVs for each sample (`add_sums_by_sample`)
+* Expected ASVs in mock samples: adds a column for each mock sample with its expected occurrences (`add_expected_asv`)
+* Filtered samples: adds a column for samples that were filtered out (`add_empty_samples`)
+* Cluster IDs: automatically retained if present in the input
 
-For further details, see `?WriteASVtable`.
+If `pool_replicates = TRUE`, replicates within each sample are pooled, and the 
+read count for each sample can be calculated as the **sum, mean, maximum, or minimum** 
+of the read counts across replicates.
+
+For more details, see `?write_asv_table`.
 
 ```{r write-asv-table}
 outfile=file.path(outdir, "motu_table_taxa.csv")
 
-asv_table_df <- WriteASVtable(read_count_sample_df, 
+asv_table_df <- write_asv_table(read_count_sample_df, 
                               outfile=outfile, 
                               asv_tax=asv_tax, 
                               sampleinfo=sampleinfo_df, 
@@ -1320,42 +1479,51 @@ asv_table_df <- WriteASVtable(read_count_sample_df,
                               mock_composition=mock_composition)
 ```
 
-Print the number of reads, ASVs, samples and replicates after each step to a CSV file.
+## Multiple Datasets
 
-```{r}
-write.csv(stat_df, file = file.path(outdir, "summary.csv"))
-```
+### One Marker
 
-## Multiple datasets
+The second plate of the MFZR marker can be processed 
+in the same way as the first one.
 
-### One marker
+Just make sure to:
 
-The second plate of the MFZR marker can be processed in the same way as the first plate.
-
-Do not forget to
-
-- specify a different output directory to avoid overwriting the results from the first plate.
-- use **mfzr_plate1/ASV_list_with_IDs.csv** as the `input_asv_list` in the `Dereplicate` step. 
-This ensures that the `asv_id`s remain consistent across both plates.
+* Use a **different output directory** to avoid overwriting results from the first plate
+* Provide **`mfzr_plate1/ASV_list_with_IDs.csv`** as the `input_asv_list` 
+in the `dereplicate` step. This ensures that ASV IDs remain consistent across both plates.
 
 An R script for analyzing the second MFZR plate is available here: xxxxxxxxxxxxx
 
-The filtered datasets can be easily pooled using results in long format 
+**Pool Filtered Datasets**
+
+Filtered datasets can be easily combined using the long format
 (columns: `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`).
-For pooling results from different plates, I recommend using the filtered 
-ASV tables (e.g., **15_pool_replicates_xxx.csv**) before clustering ASVs into mOTUs. 
-This approach avoids discrepancies in cluster centroids between data sets. Here, we will:
 
-- Pool the filtered ASVs from both MFZR plates.
-- Cluster the pooled ASVs into mOTUs.
-- Run TaxAssign on the centroids
+For pooling data from multiple plates, it is recommended to use the **filtered ASV tables** (e.g. `15_pool_replicates_xxx.csv`) before clustering into mOTUs.
+This helps avoid differences in cluster centroids between datasets.
 
-#### Pool datasets
+In this example, we will:
+
+* Pool filtered ASVs from the two MFZR plates
+* Cluster the pooled ASVs into mOTUs
+* Run taxonomic assignment on the centroids
+
+#### Pool Datasets
+
 ```{r, eval=FALSE}
-pooled_replicates_mfzr1 <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate1.csv", package = "vtamR")
-pooled_replicates_mfzr2 <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate2.csv", package = "vtamR")
+pooled_replicates_mfzr1 <-  system.file(
+  "extdata/demo/15_pool_replicates_mfzr_plate1.csv", 
+  package = "vtamR"
+  )
+pooled_replicates_mfzr2 <-  system.file(
+  "extdata/demo/15_pool_replicates_mfzr_plate2.csv", 
+  package = "vtamR"
+  )
 
-filtered_files <- c(pooled_replicates_mfzr1, pooled_replicates_mfzr2)
+filtered_files <- c(
+  pooled_replicates_mfzr1, 
+  pooled_replicates_mfzr2
+  )
 
 outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "filtered_asv.csv") 
 pooled_read_count_df <- pool_datasets(
@@ -1365,12 +1533,13 @@ pooled_read_count_df <- pool_datasets(
 )
 ```
 
-#### Make mOTUs from pooled data
+#### Make mOTUs from Pooled Data
 
 ```{r, eval=FALSE}
 outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "motu.csv")
 identity <- 0.97 
-read_count_motu <- ClusterASV(
+
+read_count_motu <- cluster_asv(
   pooled_read_count_df,
   method = "vsearch",
   identity = 0.97,
@@ -1380,16 +1549,15 @@ read_count_motu <- ClusterASV(
   )
 ```
 
-#### Taxassign pooled data
+#### Assign Taxa to Pooled Data
 
-While taxonomic assignments can be retrieved from the different
-`TaxAssignLTG.csv` files, it is more straightforward to rerun the taxonomic
-assignment on the pooled dataset.
+While you could reuse taxonomic assignments from previous runs, 
+it is usually simpler to rerun the assignment on the pooled dataset.
 
 ```{r, eval=FALSE}
 outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "tax_assign_ltg.csv")
 
-asv_tax_pooled <- TaxAssignLTG(
+asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
@@ -1403,7 +1571,7 @@ asv_tax_pooled <- TaxAssignLTG(
 ```{r, eval=FALSE}
 outfile=file.path("vtamR_demo_out", "pooled_mfzr_plates", "motu_table_taxa.csv")
 
-asv_table_df <- WriteASVtable(
+asv_table_df <- write_asv_table(
   read_count_motu, 
   outfile=outfile, 
   asv_tax=asv_tax_pooled, 
@@ -1412,48 +1580,58 @@ asv_table_df <- WriteASVtable(
   )
 ```
 
-### More than one overlappig markers
+### More than One Overlapping Markers
 
-Using two or more overlapping markers on the same samples can improve the 
-taxonomic coverage of PCR amplification.
+Using two or more **overlapping markers** on the same samples can 
+improve the taxonomic coverage of PCR amplification.
 
-The data should first be analyzed separately for each marker. The results can 
-then be combined by aggregating ASVs that are identical over their overlapping 
-region.
+Each marker should first be analyzed separately. 
+The results can then be combined by aggregating ASVs that are 
+identical in their overlapping region.
 
-As for the second plate of the MFZR marker, the first plate of ZFZR can be 
-processed in the same way as for the MFZR.
+As with the second plate of the MFZR marker, 
+the first plate of ZFZR can be processed in the same way.
 
-Do not forget to
+Make sure to:
 
-- specify a different output directory to avoid overwriting earlier results from the first plate.
-- use **mfzr_plate2/ASV_list_with_IDs.csv** as the `input_asv_list` in the `Dereplicate` step. 
-This ensures that the `asv_id`s remain consistent across both plates and markers.
+* Use a different output directory to avoid overwriting previous results
+* Provide `mfzr_plate2/ASV_list_with_IDs.csv` as the `input_asv_list` 
+in the `dereplicate` step. This ensures that 
+**ASV IDs remain consistent** across both plates and markers.
 
-The results are included in the package:
+The corresponding results are included in the package:
+
 ```{r, eval=FALSE}
-mfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_mfzr_plate1.csv", package = "vtamR")
-zfzr_filtered <-  system.file("extdata/demo/15_pool_replicates_zfzr_plate1.csv", package = "vtamR")
+mfzr_filtered <-  system.file(
+  "extdata/demo/15_pool_replicates_mfzr_plate1.csv", 
+  package = "vtamR"
+  )
+zfzr_filtered <-  system.file(
+  "extdata/demo/15_pool_replicates_zfzr_plate1.csv", 
+  package = "vtamR"
+  )
 ```
 
-If you have consistently used the **ASV_list_with_IDs.csv** file generated from earlier 
-runs for processing the ZFZR plate, the asv_ids will already be compatible
-and can be used directly.
-However, if the `asv_ids` are not compatible 
-(e.g., the same `asv_id` refers to different sequences across markers), 
-you can resolve this by assigning a numerical identifier to each marker: 
-1 for MFZR and 2 for ZFZR in this example.
+If you have consistently used the `ASV_list_with_IDs.csv` from previous runs 
+for processing the ZFZR plate, the ASV IDs are already compatible and can be used directly.
 
-These identifiers are appended to the ASV IDs, ensuring clarity and 
-preventing confusion between markers.
+If the ASV IDs are **not compatible** (for example, the same `asv_id` 
+refers to different sequences across markers), you can fix this by 
+assigning a numerical identifier to each marker, 
+for instance, `1` for MFZR and `2` for ZFZR in this example.
 
+These identifiers are appended to the ASV IDs, keeping them unique and preventing confusion between markers.
 
 ```{r, eval=FALSE}
 input_files <- c(mfzr_filtered, zfzr_filtered)
 marker_ids <- c(1, 2)
 
 outfile <- file.path("vtamR_demo_out", "pooled_markers", "filtered_asv.csv") 
-asv_with_centroids <- file.path("vtamR_demo_out", "pooled_markers", "filtered_asv_with_centroids.csv")
+asv_with_centroids <- file.path(
+  "vtamR_demo_out", 
+  "pooled_markers", 
+  "filtered_asv_with_centroids.csv"
+  )
 
 pooled_markers <- pool_markers(
   files = input_files,
@@ -1466,16 +1644,17 @@ pooled_markers <- pool_markers(
 )
 ```
 
-#### Make mOTU  - Taxassign - ASV table
+#### Make mOTU  - Taxassign - mOTU table
 
-As noted above, when working with multiple data sets for the same marker, 
-clustering should be performed on the pooled data before taxonomic assignment.
+As with multiple datasets for a single marker, we will cluster the ASVs 
+from the pooled dataset into mOTUs, then assign the sequences to taxa, 
+and finally create an mOTU table.
 
 ```{r, eval=FALSE}
 #### Cluster
 outfile <- file.path("vtamR_demo_out", "pooled_markers", "motu.csv") 
 identity <- 0.97 
-read_count_motu <- ClusterASV(
+read_count_motu <- cluster_asv(
   pooled_markers,
   method = "vsearch",
   identity = 0.97,
@@ -1484,9 +1663,9 @@ read_count_motu <- ClusterASV(
   outfile=outfile)
 
 #### TaxAssign
-outfile <- file.path("vtamR_demo_out", "pooled_markers", "TaxAssignLTG.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "assign_taxonomy_ltg.csv") 
 
-asv_tax_pooled <- TaxAssignLTG(
+asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
@@ -1494,10 +1673,10 @@ asv_tax_pooled <- TaxAssignLTG(
   outfile=outfile
   )
 
-#### Print ASV table
+#### Print mOTU table
 outfile <- file.path("vtamR_demo_out", "pooled_markers", "motu_table_taxa.csv") 
 
-asv_table_df <- WriteASVtable(
+asv_table_df <- write_asv_table(
   read_count_motu, 
   outfile=outfile, 
   asv_tax=asv_tax_pooled, 
@@ -1507,17 +1686,19 @@ asv_table_df <- WriteASVtable(
 ```
 
 
-# Tips - Good to know
+# Tips - Good to Know
 
 ## Data Frame or CSV File
 
-Most `vtamR` functions can accept either a **data frame** or a **CSV file** as input.
-This is a convenient feature that allows you to resume your analysis without 
-rerunning previous steps — for example, if you have closed your R session but 
-saved the data frame to a file.
+Most `vtamR` functions can take either a data frame or a CSV file as input.
 
-Below is a non-exhaustive list of arguments that can take either a data frame or a CSV file,
-as long as they contain the required columns:
+This is useful if you want to resume your analysis without rerunning earlier steps.
+For example, if you’ve closed your R session but saved your data frame to a file.
+
+### Arguments Accepting Data Frame or CSV
+
+Many function arguments can accept either format, as long as the file or data 
+frame contains the required columns. Common examples include:
 
 * `read_count`
 * `fastqinfo`
@@ -1529,55 +1710,57 @@ as long as they contain the required columns:
 * `ltg_params`
 * `asv_tax`
 
-See the help of the functions to check for the required columns: `?function_name`
+Check the **help page** of each function for the exact required columns: `?function_name`.
 
-Similarly, many functions return a **data frame**, and if **outfile** is specified at the same time,
-the function will also write the data frame to a CSV file.
+### Function Outputs
 
-Saving outputs as CSV files is a good practice for **long workflows**,
-as it allows you to inspect the data set after each filtering step and resume 
-processing later if needed.
+Many functions return a data frame. If you also specify `outfile`, the function 
+will write the data frame to a CSV file at the same time.
 
+Saving outputs as CSV is a good practice for long workflows. It allows you to:
+
+* Inspect the dataset after each filtering step
+* Resume processing later without rerunning earlier steps
 
 ## To Compress or Not to Compress
 
-During the first steps of the workflow (`Merge`, `RandomSeq`, `TrimPrimers`, `SortReads`),
-many intermediate files are produced. Some of these can be **very large**, especially 
-before dereplication (`Dereplicate`).
+During the first steps of the workflow 
+(`merge_fastq_pairs`, `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`), 
+many intermediate files are generated. Some of these files can be very large, 
+especially before dereplication (`dereplicate`).
 
-**File Size vs. Processing Time**
+### File Size vs. Processing Time
 
-Compressing and decompressing files between steps can take significant time.
-For this reason, **`vtamR` outputs uncompressed files by default** to improve speed.
-However, this can quickly consume disk space, so remember to 
-**delete intermediate files** once your analysis is complete.
-See [Files to keep](#files-to-keep) 
-for guidance on which files to retain.
+Compressing and decompressing files between steps can take significant time. 
+For this reason, `vtamR` outputs uncompressed files by default to speed up processing.
 
-If storage space is limited, you can enable file compression by setting
-`compress = TRUE` in the relevant functions (e.g., `RandomSeq`, `TrimPrimers`, `SortReads`).
-This will produce **gzip-compressed output files**.
+However, uncompressed files can quickly consume disk space. 
+Remember to delete intermediate files once your analysis is complete. 
+See [Files to Keep](#files-to-keep) for guidance on which files to retain.
 
-**Compression Methods**
+If storage is limited, you can enable file compression by setting `compress = TRUE` 
+in relevant functions (e.g., `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`). 
+This produces **gzip-compressed output files**.
 
-The compression and decompression method is defined by the argument `compress_method`.
+### Compression Methods
+
+The method used is controlled by the `compress_method` argument. 
 Three options are available:
 
-* **`"pigz"`** – Uses the `PIGZ` program (parallel gzip).
-  Requires installation and, if not in the system `PATH`, its location must be provided via `pigz_path`.
-  Available on Linux-like systems and Windows.
-  Uses **multithreading**, making it the **fastest option**.
+* `"pigz"` – Uses the `PIGZ` program (parallel gzip).
+  Requires installation, and if not in the system `PATH`, its location must be provided via `pigz_path`.
+  Works on Linux-like systems and Windows.
+  Uses multithreading, making it the fastest option.
 
-* **`"gzip"`** – Uses the standard `gzip` command available on Linux-like systems.
-  **Slower** than `pigz` and **not available on Windows**.
+* `"gzip"` – Uses the standard `gzip` command available on Linux-like systems.
+  Slower than `pigz` and not available on Windows.
 
-* **`"R"`** – Fully implemented in R via the **`R.utils`** package.
-  **Cross-platform**, works everywhere, but is the **slowest** method.
+* `"R"` – Implemented in R via the `R.utils` package.
+  Cross-platform, works everywhere, but is the slowest method.
 
-**Example: Compression Speed Comparison**
+### Example: Compression Speed Comparison
 
-The table below shows an example of compression and decompression times
-for a 19 GB FASTA file (compressed size: 3 GB) on a Linux system.
+For a 19 GB FASTA file (compressed size: 3 GB) on Linux:
 
 | Method  | Compression (min) | Decompression (min) |
 | ------- | ----------------: | ------------------: |
@@ -1585,250 +1768,256 @@ for a 19 GB FASTA file (compressed size: 3 GB) on a Linux system.
 | gzip    |                13 |                   3 |
 | pigz    |                 3 |                   2 |
 
-**Summary:**
+### Summary
 
-- The fastest workflow is to **avoid compression during processing** and **clean up intermediate files** afterward.
-- If you prefer to work with compressed files, **`PIGZ` is clearly the best option**.
-- (See [Installation](installation.html) for setup instructions.)
+* The fastest workflow is to avoid compression during processing and clean up 
+intermediate files afterward.
+* If you want compressed files, `PIGZ` is clearly the best option.
+* See [Installation](installation.html) for setup instructions.
 
-**Notes on Compatibility**
+### Notes on Compatibility
 
 The effect of compression may vary depending on which external programs are used:
 
-* **CUTADAPT** and **VSEARCH** can directly process gzip-compressed files in most cases.
-* On Windows, some **VSEARCH** commands may not accept compressed files.
-* **CUTADAPT** can produce gzip-compressed outputs directly on all systems.
-* **VSEARCH** typically produces **uncompressed output files**, even when reading compressed inputs.
+* CUTADAPT and VSEARCH can often process gzip-compressed files directly.
+* On Windows, some VSEARCH commands may not accept compressed files.
+* CUTADAPT can produce gzip-compressed outputs on all systems.
+* VSEARCH usually outputs uncompressed files, even when reading compressed inputs.
 
 ## Clustering or Denoising
 
-The `ClusterASV` function supports two algorithms for grouping ASVs:
+The `cluster_asv` function supports two algorithms for grouping ASVs:
 
 ### Available Methods
 
 **`method = "vsearch"`**
-
-Uses VSEARCH’s `cluster_size` command, a greedy centroid-based algorithm.
+Uses VSEARCH’s `cluster_size` command, a **greedy, centroid-based algorithm**.
 ASVs are sorted by decreasing read count, so the most abundant ASVs become cluster centroids.
 The cluster radius is controlled by the `identity` parameter.
 
 **`method = "swarm"`**
+Uses SWARM, a **fast, iterative algorithm** that clusters ASVs differing by `d` or fewer nucleotides.
+Clusters form naturally around local abundance peaks and are mostly insensitive to the input order.
 
-Uses SWARM, a fast, iterative algorithm that clusters ASVs differing by `d` or fewer nucleotides.
-Clusters naturally form around local abundance peaks and are mostly insensitive to input order.
+> Although both approaches perform *clustering*, they are often used for **different goals**.
 
-Although both approaches perform *clustering*, they are typically used to 
-achieve **two different goals**.
+### Denoising vs. Clustering
 
-### Denoising or clustering
+#### 1. Denoising
 
-**1. Denoising**
+SWARM was originally designed as a **denoising** method for metabarcoding data.
+The principle is simple:
 
-SWARM was originally developed as a **denoising** method for metabarcoding data sets.
-The underlying assumption is:
+> True biological ASVs tend to have high read counts, while very similar ASVs with lower read counts are likely sequencing errors.
 
-> True biological ASVs tend to have high read counts, while very similar 
-ASVs with lower read counts are likely sequencing errors.
+Denoising groups likely erroneous sequences into the cluster of their true ASV, preserving ASV-level diversity.
 
-With this in mind, denoising attempts to group *erroneous sequences* into the 
-cluster of their *true* ASV.
+Running SWARM with `d = 1` and the *fastidious* option activated corresponds to this denoising goal.
 
-Using SWARM with `d = 1` and with the *fastidious* option activated 
-corresponds to this denoising aim.
-The output still represents **ASV-level diversity**, not mOTUs.
+**Limitation:**
+If two real biological variants differ by only one mutation, they may be merged, causing some loss of true variability.
 
-*Limitation:*
-If two real biological variants differ by only one mutation, they may be merged 
-into the same cluster, causing a loss of true variability. 
-However, SWARM denoising is extremely powerful for removing spurious 
-sequences and is recommended early in the bioinformatic pipeline — unless very 
-fine-scale intrataxon variation is the focus (e.g., biogeographic studies).
+**Tip:**
+While `cluster_asv` can run SWARM with `d = 1` for denoising, the **`denoise_by_swarm`**
+function is specifically designed for this purpose.
+It runs SWARM with the same settings but adds a **`split_clusters`** option to 
+retain intra-specific variability.
+After running SWARM sample by sample, clusters that contain ASVs with 
+high relative abundance compared to the centroid can be split, preserving biologically meaningful diversity.
 
-To overcome this problem, the `denoise_by_swarm` can be used with the `split_clusters`
-option. In this case after running SWARM sample by sample, clusters can be split 
-if they have ASV with high relative abundance compared to the read count of the centroid.
-this is strongly recommended, if retaing intra-specific variability is important.
+#### 2. Clustering
 
+**Clustering** aims to group ASVs (both true and erroneous) into units 
+approximating biological taxa (species, genera, etc.).
 
-**2. Clustering**
+* VSEARCH (`cluster_size`) uses a fixed identity threshold for this.
+* SWARM with larger `d` values can also produce taxon-like clusters.
 
-In contrast, **clustering** traditionally aims to group both correct and 
-erroneous ASVs into larger units approximating biological taxa (often species or genera).
-
-The simplest clustering approaches rely on a **fixed identity threshold**.
-This is the case for the VSEARCH `cluster_size` method.
-
-Although clustering is not SWARM’s original purpose, larger `d` values 
-can also produce clusters that approximate taxonomic units.
-
-Choosing an appropriate threshold is difficult, since it depends on both the
-genetic marker and the taxonomic group.
-To guide this choice, `vtamR` provides tools to examine clustering 
-results across multiple thresholds.
+Choosing the right threshold depends on the genetic marker and taxonomic group.
+`vtamR` provides tools to explore clustering outcomes across multiple thresholds.
 
 ### Tools for Choosing a Clustering Threshold
 
-**1. Pairwise Identity Plots**
+#### 1. Pairwise Identity Plots
 
-For a series of thresholds, `vtamR` can produce density plots of pairwise identities:
+For a range of thresholds, `vtamR` can generate density plots of pairwise identities:
 
-* `PairwiseIdentityPlotPerClusterIdentityThreshold()`
-  (for the thresholds of VSEARCH's `cluster_size`)
+* `plot_pairwise_identity_vsearch()` – for VSEARCH thresholds
+* `plot_pairwise_identity_swarm()` – for SWARM `d` values
 
-* `PairwiseIdentityPlotPerSwarmD()`
-  (for SWARM's `d` values)
-  
+These plots show how ASV similarities vary **within** and **between** clusters.
 
-These plots show how ASV similarities vary *within* and *between* clusters.
+![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/plot_pairwise_identity_vsearch.png)
 
-  ![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/PairwiseIdentityPlotPerClusterIdentityThreshold.png)
 
-**2. Cluster Classification**
+#### 2. Cluster Classification
 
-Clusters can also be classified based on their taxonomic assignments:
+Clusters can also be classified based on the **taxonomic assignments** of the ASVs they contain:
 
-* *closed*:
-  All ASVs in the cluster share the same taxon, and that taxon is absent from all other clusters.
-* *open*:
-  All ASVs share the same taxon, but the same taxon also appears in other clusters.
-* *hybrid*:
-  The cluster contains ASVs with different taxa.
+* **closed**: All ASVs share the same taxon, and that taxon appears only in this cluster.
+* **open**: All ASVs share the same taxon, but the same taxon also appears in other clusters.
+* **hybrid**: The cluster contains ASVs assigned to different taxa.
 
-The function `PlotClusterClassification()` displays the number of clusters in each 
-class for a range of thresholds.
+The function `PlotClusterClassification()` shows the number of clusters in each class across thresholds.
 
-![Plot ClusterClasstification for the original data](figures/PlotClusterClasstification_vsearch.png)
+![Plot Cluster Classification for the original data](figures/plot_cluster_classification_vsearch.png)
 
-**Interpreting the Plots**
+### Interpreting the Plots
 
-Together, these visualisations help identify an appropriate clustering threshold 
-for *your specific dataset*.
-They allow you to evaluate:
+These visualizations help you choose an appropriate clustering threshold:
 
-* whether clusters are taxonomically coherent,
-* how identity or `d` values influence cluster structure,
-* and where a balance exists between over-splitting and over-merging biological units.
+* Check if clusters are taxonomically coherent.
+* See how identity (`VSEARCH`) or `d` (`SWARM`) affects cluster structure.
+* Find a balance between over-splitting and over-merging biological units.
 
-For more information see the [Make mOTUs](#make-motus) section.
+For more guidance, see the [Make mOTUs](#make-motus) section.
 
 ## num_threads
 
-By default, **vtamR** automatically uses **all available CPU cores** for multithreaded processes.
-If you want to take full advantage of your computer’s resources, there is **no need to specify** the `num_threads` argument.
+By default, vtamR automatically uses all available CPU cores for multithreaded processes.
+If you want to maximize performance, there is no need to specify the `num_threads` argument.
 
-However, if you wish to **limit the number of cores** used (for example, to leave resources available for other tasks or users),
-you can specify this parameter in the functions.
+However, you may want to limit the number of cores used—for example, to leave resources for other tasks or users.
+In that case, simply set the `num_threads` argument in the relevant function.
 
 **Example:**
-This will restrict vtamR to using 8 CPU threads during running Merge.
+This limits `merge_fastq_pairs` to use **8 CPU threads**:
+
 ```{r, eval=FALSE}
-fastainfo_df <- Merge(fastqinfo, 
-                      fastq_dir =fastq_dir, 
-                      vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                      outdir =merged_dir,
-                      num_threads =8)
+fastainfo_df <- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir =fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir =merged_dir,
+  num_threads =8
+  )
 ```
 
 
-## PATH
+## PATH Variables
 
-Some **vtamR** functions rely on **third-party programs** (e.g., VSEARCH, CUTADAPT, BLAST, SWARM, PIGZ).
-To run these tools, vtamR needs to know where to find their executables.
+Some vtamR functions rely on external programs such as VSEARCH, CUTADAPT, BLAST, SWARM, or PIGZ.
+To use these tools, vtamR needs to know where their executables are located.
 
-If these programs are already available in your **system PATH**,
-you don’t need to specify their locations when calling vtamR functions.
+* If these programs are already in your **system PATH**, vtamR will 
+find them automatically.  You don’t need to specify their locations when calling functions.
 
-However, if they are **not** in your PATH, you must provide their paths explicitly using the corresponding arguments:
-`vsearch_path`, `cutadapt_path`, `pigz_path`, `blast_path`, or `swarm_path`.
+* If the programs are **not in your PATH**, you must provide their paths
+explicitly using the relevant arguments:
 
-To check which external programs a function uses, refer to its help page (`?function_name`).
+```{r, eval=FALSE}
+vsearch_path  # Path to VSEARCH
+cutadapt_path # Path to CUTADAPT
+blast_path    # Path to BLAST
+swarm_path    # Path to SWARM
+pigz_path     # Path to PIGZ
+```
 
-## quiet
+To see which external tools a function requires, check its help page:
+`?function_name`
 
-Some external programs produce a large amount of output on the screen, even when run in their own “quiet” mode.
-This can make it difficult to see important **warnings** or **error messages**.
+## `quiet` Argument
 
-The `quiet` argument controls whether this output is displayed.
-By default, `quiet = TRUE`, which suppresses most messages for cleaner logs.
+Some external programs used by vtamR can produce a lot of console output, 
+even when they are run in their own “quiet” mode.
+This can make it hard to spot important warnings or errors.
 
-If something goes wrong, re-run the function with `quiet = FALSE` to view the full output and help identify the problem.
+The `quiet` argument controls whether this output is displayed:
 
+* `quiet = TRUE` (default): suppresses most messages, keeping logs clean.
+* `quiet = FALSE`: shows all output, which can be useful for troubleshooting.
 
-## sep
+**Tip:** If a function fails or behaves unexpectedly, rerun it with 
+`quiet = FALSE` to inspect the full messages and identify the problem.
 
-Separator used in csv files. Comma by default.
-Use the same separator in all CSV files 
-except for the [taxonomy](#reference-database-for-taxonomic-assignments) 
-file of the reference database, which is tab separated.
+## `sep` Argument
 
-## Files to keep
+The `sep` argument defines the separator used in CSV files.
 
-At the first steps (`Merge`, `RandomSeq`, `Sortreads`, `TrimPrimer`), many files are produced,
-and some of them can be very large, especially before the dereplication 
-(`Dereplicate`).
+* Default: `","` (comma)
+* Recommendation: Use the same separator in all CSV files to ensure consistency.
 
-Compressing and decompressing between the different steps can take a while. Therefore, 
-`vtamR` uses by default uncompressed files. This behavior can be changed by the 
-[compress](#options) option.
+**Exception:** The 
+[taxonomy](#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg)
+file of the reference database must be tab-separated (`\t`).
 
-Here is a list of files I would tend to keep, delete or compress.
+## Files to Keep
 
-* `Merge`: Delete the output fasta files, but keep `fastainfo.csv` for 
-information on read counts after `Merge`.
-* `RandomSeq`: Compress fasta files, but keep them to ensure reproducibility 
-in case of re-analyse.
-* `SortReads`: Delete the output fasta files, but keep `sampleinfo.csv` for 
-information on read counts after `SortReads`. 
-* `Dereplicate`: Write the dereplicated info to a file 
-(`1_before_filter.csv` in the tutorial) and compress it after the analyses. 
-This is an important file, since you can restart the analyses from here,
-without re-doing the longest merging, and demultiplexing steps. 
-Compress and keep the updated ASV list (`ASV_list_with_IDs.csv` in the tutorial), 
-since this can be used when analyzing subsequent data sets to synchronyse the `asv_ids`.
-* Output of different filtering steps: Compress them if they are too large. 
-They are useful for tracing the history of a sample or an ASV 
-(see [HistoryBy](#historyby)) or making summary files (see [SummarizeBy](#summarizeby)).
+During the first steps of the workflow (`merge_fastq_pairs`, `subsample_fasta`, `Sortreads`, `trim_primers`), many intermediate files are generated, and some can be very large,
+especially before dereplication (`dereplicate`).
 
+Compressing and decompressing files between steps can take time, so 
+vtamR produces uncompressed files by default. You can change this behavior using the [compress](#to-compress-or-not-to-compress) option.
 
-# Supplementary functions
+Here’s a practical guide on what to keep, delete, or compress:
 
-## FilterPCRerror
+* `merge_fastq_pairs`:
 
-If you have done the denoising step by **SWARM** (`denoise_by_swarm`), this function is 
-probably redundant.
+  * Delete the output FASTA files.
+  * Keep `fastainfo.csv` for read count information after merging.
 
-`FilterPCRerror` filters out an ASV if it is very similar to another, more frequent ASV.
-`max_mismatch` argument tells how many mismatches are allowed between a pair of ASV
-to be evaluated for PCR error. If the proportion of the read_counts of two similar 
-ASVs is less or equal to `pcr_error_var_prop`, the less abundant ASV is flagged 
-as a PCR error.
+* `subsample_fasta`:
 
-**OptimizePCRerror**
+  * Compress the FASTA files.
+  * Keep them to ensure reproducibility in case of re-analysis.
 
-The default value of `pcr_error_var_prop` (0.1) is arbitrary. 
-To choose a value adapted to your data set, you can use the
-`OptimizePCRerror` function.
+* `demultiplex_and_trim`:
 
-`OptimizePCRerror`, will find all highly similar ASV pairs (`max_mismatch=1` by default)
-within a mock sample, where one ASV is expected, and the other is not. 
-Their `read_count` ratio is printed in the output file. 
+  * Delete the output FASTA files.
+  * Keep `sampleinfo.csv` for read count information after trimming.
 
-The function considers only ASVs with more than `min_read_count` (5 by default) 
-reads in the sample to avoid a ratio based on low read counts that are more 
-influenced by stochastic events and will be probably filtered out anyway.
+* `dereplicate`:
 
-See details using the help: `?OptimizePCRerror`. 
+  * Save the dereplicated information to a file (e.g., `1_before_filter.csv` in the tutorial).
+  * Compress after analysis.
+  * This file is important, as you can restart analyses from here without redoing the long merging and demultiplexing steps.
+  * Compress and keep the updated ASV list (`ASV_list_with_IDs.csv`), which can be reused for later datasets to synchronize `asv_id`s.
 
-**Notes:** 
+* Output of filtering steps:
 
-* If you do not know the exact sequences of the species present in your 
-mock samples, and thus, you **do not have the [mock_composition](#mock_composition)
-file yet**, read the [How to make a mock_composition file](make-mock-composition-file.html).
+  * Compress if files are large.
+  * Useful for tracing the history of a sample or ASV (see [history_by](#history_by)) or for making summary files (see [summarize_by](#summarize_by)).
 
-```{r optimize-pcr-error, eval=FALSE}
-outfile <- file.path(outdir, "optimize", "OptimizePCRerror.csv")
+This strategy balances disk space and reproducibility, keeping only the essential 
+information to resume or audit your analyses.
 
-OptimizePCRerror_df <- OptimizePCRerror(
+# Supplementary Functions
+
+## filter_pcr_error
+
+If you have already performed **denoising** using **SWARM** (`denoise_by_swarm`), 
+this function may be redundant, as denoising already removes many likely 
+PCR/sequencing errors.
+
+`filter_pcr_error` works by flagging an ASV as a PCR error if it is very 
+similar to a more abundant ASV.
+
+* `max_mismatch`: maximum number of mismatches allowed between two ASVs 
+to evaluate for PCR error.
+* `pcr_error_var_prop`: if the less abundant ASV has a read count proportion ≤ 
+this value relative to the more abundant ASV, it is flagged as a PCR error. 
+Default = 0.1 (arbitrary).
+
+### Suggesting a PCR Error Cutoff
+
+The default `pcr_error_var_prop` may not be ideal for your dataset. Use `suggest_pcr_error_cutoff` to guide the choice.
+
+This function:
+
+* Finds highly similar ASV pairs (default `max_mismatch = 1`) in mock samples
+where one ASV is expected and the other is not.
+* Computes the read count ratio of the less abundant ASV to the more abundant ASV.
+* Considers only ASVs with more than `min_read_count` reads (default = 5) 
+to avoid stochastic noise from very low counts.
+
+The output CSV lists all pairs, sorted by decreasing `pcr_error_var_prop`. 
+The highest read count ratio observed among unexpected ASVs can be used as a 
+**lower bound** for `pcr_error_var_prop`.
+
+```{r suggest_pcr_error_cutoff, eval=FALSE}
+outfile <- file.path(outdir, "suggest_parameters", "suggest_pcr_error_cutoff.csv")
+
+suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
   read_count_df, 
   mock_composition=mock_composition,
   vsearch_path=vsearch_path, 
@@ -1836,20 +2025,16 @@ OptimizePCRerror_df <- OptimizePCRerror(
   )
 ```
 
+> **Tip:** If you do not yet have the exact sequences for your mock samples, see [How to make a mock_composition file](make-mock-composition-file.html) before running this function.
 
-The lines are sorted in decreasing order of the `pcr_error_var_prop` column, 
-so the first few entries are sufficient to inspect.
-The highest read count ratio (`pcr_error_var_prop`) should be taken as a lower 
-limit to `pcr_error_var_prop`. 
+### Applying filter_pcr_error
 
-**FilterPCRerror**
-
-See the help for more detail `?FilterPCRerror`.
+Once you have determined an appropriate `pcr_error_var_prop`, run:
 
 ```{r filter-pcr-error, eval=FALSE}
-outfile <- file.path(outdir, "FilterPCRerror.csv")
+outfile <- file.path(outdir, "filter_pcr_error.csv")
 
-read_count_df <- FilterPCRerror(
+read_count_df <- filter_pcr_error(
   read_count_df, 
   outfile=outfile, 
   vsearch_path=vsearch_path,
@@ -1857,83 +2042,73 @@ read_count_df <- FilterPCRerror(
   )
 ```
 
-## RandomSeq
+This will remove ASVs likely caused by PCR errors, cleaning your dataset for downstream analyses.
 
-The `RandomSeq` function randomly selects `n` sequences (without replacement) 
+For more details and advanced options, see `?filter_pcr_error`.
+
+## subsample_fasta
+
+The `subsample_fasta` function randomly selects `n` sequences (without replacement) 
 from each input FASTA file listed in the `fastainfo` data frame.
 
-This step can be useful to normalize the number of reads across sequencing libraries.
-`RandomSeq` can be applied before or after demultiplexing (`SortReads`).
+This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (`demultiplex_and_trim`).
 
-However, if your workflow includes `LFNvariant` or `LFNreadCount`, 
-which partially rely on the total number of reads in negative controls, 
-standardizing read numbers across samples is not recommended.
-For this reason, it is generally best to use `RandomSeq` after `Merge` 
-and before `SortReads`, in order to ensure that all replicate series 
-(i.e., the same samples with different replicates in separate FASTA files) 
-contain the same number of reads.
+> **Note:** If your workflow includes `filter_occurrence_variant` or `filter_occurrence_read_count`, which rely on total reads in negative controls, standardizing read numbers across samples is **not recommended**.
+> Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim` to ensure all replicate series have the same number of reads.
 
 ### Available Algorithms
 
-There are two different methods to perform random sampling:
-
 **1. Using VSEARCH (`use_vsearch = TRUE`)**
 
-Random sampling can be done with the [`fastx_subsample`](https://github.com/torognes/vsearch) 
-command from VSEARCH.
-This method is very fast but only available on Linux-like operating systems.
+* Uses the [`fastx_subsample`](https://github.com/torognes/vsearch) command from VSEARCH.
+* Very fast, but only available on Linux-like systems.
+* Supports compression of input/output files using:
 
-If compression of input/output files is required, three compression methods are supported:
+  * `pigz`: fastest, multithreaded, requires `pigz_path` if not in `PATH`.
+  * `gzip`: slower, Linux only.
+  * `R`: cross-platform but slowest (via `R.utils`).
 
-* **`pigz`** – *Fastest method.* Requires the `PIGZ` program 
-(if not in your `PATH`, specify its location via `pigz_path`).
-* **`gzip`** – *Slower method.* Works only on Linux-like systems.
-* **`R`** – *Slowest but cross-platform method.* Uses the `R.utils` 
-package, no external dependencies.
+**2. Using R only (`use_vsearch = FALSE`)**
 
-**2. Using R Only (`use_vsearch = FALSE`)**
-
-Random sampling can also be performed entirely in R.
-This version is slower but works on all operating systems and does not depend 
-on any third-party software for file compression or decompression.
+* Performs sampling entirely in R.
+* Works on all operating systems.
+* No external dependencies or compression tools required.
+* Slower than VSEARCH, especially for large FASTA files.
 
 ### Input Parameters
 
-* **`fastainfo`**: A CSV file or data frame containing metadata with the following columns:
+* `fastainfo` – CSV file or data frame with columns:
   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, `sample`, `sample_type`, `habitat`, `replicate`, `fasta`.
-* **`fasta_dir`**: Directory containing the input FASTA files.
-* **`n`**: Number of sequences to sample (without replacement).
-* **`outdir`**: Directory where the output FASTA files will be written.
+* `fasta_dir` – Directory containing input FASTA files.
+* `n` – Number of sequences to sample (without replacement).
+* `outdir` – Directory for output FASTA files.
+* `use_vsearch` – Whether to use VSEARCH for fast sampling.
+* `compress` – Whether to compress output files (`TRUE` or `FALSE`).
+* `compress_method` – `"pigz"`, `"gzip"`, or `"R"`.
 
-### Example Commands
-
-**Fast version (Linux-like systems)**
-
-The following example uses VSEARCH and PIGZ for fast compression:
+### Example: Fast Version (Linux-like systems)
 
 ```{r, eval=FALSE}
 randomseq_dir <- file.path(outdir, "random_seq")
 
-fastainfo_df <- RandomSeq(
+fastainfo_df <- subsample_fasta(
                 fastainfo    = fastainfo_df,
                 fasta_dir    = merged_dir,
                 outdir       = randomseq_dir,
                 use_vsearch  = TRUE,
                 vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
                 compress_method = "pigz",
-                pigz_path    = pigz_path,
+                pigz_path    = pigz_path, # can be omitted if PIGZ is in the PATH
                 n            = 10000,
                 compress     = TRUE)
 ```
 
-#### Cross-platform version (no external dependencies)
-
-This example runs entirely in R and works on any operating system:
+### Example: Cross-Platform Version
 
 ```{r, eval=FALSE}
 randomseq_dir <- file.path(outdir, "random_seq")
 
-fastainfo_df <- RandomSeq(
+fastainfo_df <- subsample_fasta(
                 fastainfo    = fastainfo_df,
                 fasta_dir    = merged_dir,
                 outdir       = randomseq_dir,
@@ -1942,128 +2117,142 @@ fastainfo_df <- RandomSeq(
                 compress     = TRUE)
 ```
 
+> **Tip:** Choose `use_vsearch = TRUE` when possible for speed. 
+Use `FALSE` for **Windows or macOS**, or when VSEARCH is not installed.
 
-## MakeKnownOccurrences
+## classify_control_occurrences
 
-The `MakeKnownOccurrences` function will identify [false positive](#glossary), 
-[false negative](#glossary) and [true positive](#glossary) 
-occurrences in controls samples (mock and negative). 
-Some false positives can also be identified in real samples if 
-samples of different habitats are included in the data sets. 
+The `classify_control_occurrences` function identifies **false positive**, **false negative**, and **true positive** occurrences in **control samples** (mock and negative).
 
-The false positive and the true positive occurrences are written to the 
-`known_occurrences` data frame (or file), false negatives to the 
-`missing_occurrences` data frame (or file), and a `performance_metrics`
-data frame is also produced with the count of these occurrences. 
-For details see `?MakeKnownOccurrences`.
+> Some false positives can be also detected in real samples, if the dataset contains samples from different habitats.
 
-This function takes a `read_count_df` data frame as an input.
+### Outputs
 
-**Note**: 
+* `known_occurrences`: Data frame (or CSV file) containing:
 
-- If you do not know the exact sequences of the species present in your 
-mock samples, and thus, you do not have the [mock_composition](#mock_composition)
-file yet, read the [How to make a mock_composition file](make-mock-composition-file.html).
-- sampleinfo_df contains a `sample` and `sample_type` `replicate` and `habitat`
-columns, but any data frame with these columns would do.
-- If you have restarted the analyses after the `SortReads` function, and  
-`sampleinfo_df` is not in your environment, just use the sampleinfo 
-file (in the `vtamR_demo_out/demultiplexed` directory).
+  * True positive occurrences
+  * False positive occurrences
+* `false_negatives`: Data frame (or CSV file) of ASVs that were expected 
+in mock samples but not detected.
+* `performance_metrics`: Data frame summarizing counts of true positives, 
+false positives, and false negatives.
+
+> For details on parameters and options, see `?classify_control_occurrences`.
+
+### Input Requirements
+
+* `read_count_df`: Data frame containing ASV read counts for each sample.
+* `sampleinfo_df`: Must include columns:
+  `sample`, `sample_type`, `replicate`, and `habitat`.
+  Any data frame with these columns is acceptable. The easiest is the output of `demultiplex_and_trim`
+
+> **Tip:**
+> If you restarted the analysis after `demultiplex_and_trim` and `sampleinfo_df` 
+is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplexed`.
+
+### Notes
+
+* If you do **not** know the exact sequences in your mock samples, you will need the **[mock_composition](#mock_composition) file** before running this function. See [How to make a mock_composition file](make-mock-composition-file.html) for guidance.
+* This function is particularly useful to assess the performance of filtering steps.
  
 ```{r make-known-occurrences, eval=FALSE}
 # Detect known occurrences
-results <- MakeKnownOccurrences(read_count = read_count_df, 
+results <- classify_control_occurrences(read_count = read_count_df, 
                                 sampleinfo=sampleinfo_df, 
                                 mock_composition=mock_composition)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
-missing_occurrences_df <- results[[2]]
+false_negatives_df <- results[[2]]
 performance_metrics_df <- results[[3]]
 ```
 
-## ASVspecificCutoff
+## compute_asv_specific_cutoff
 
-In some data sets, certain ASVs may occur in many samples with high read counts.  
-As a result, reads originating from tag-jump or inter sample contamination 
-may remain after applying a fixed cutoff value in the `LFNvariant` function.  
+Some ASVs may appear in many samples with high read counts, 
+which can make them resistant to a fixed cutoff in `filter_occurrence_variant`.
+This can occur due to tag-jump or inter-sample contamination.
 
-The `ASVspecificCutoff` function computes ASV-specific cutoff values for use in `LFNvariant`,  
-targeting only ASVs known to have false-positive occurrences (as identified by  
-`MakeKnownOccurrences`).  
+The `compute_asv_specific_cutoff` function computes ASV-specific cutoff values 
+for variants with known false-positive occurrences (identified by `classify_control_occurrences`), so filtering can be more targeted.
 
-For each ASV, the function:
+### How It Works
 
-* Identifies all false-positive occurrences.
-* Takes the maximum read count among these false positives.
-* Divides this value by the total read count of the ASV across the data set, 
-or within each replicate if `by_replicate = TRUE`.  
-   
-Because some false positives may not result from tag-jump contamination, the resulting  
-cutoff values can sometimes be excessively high. Therefore:
+For each ASV:
 
-* Filter the data set as thoroughly as possible **before** computing ASV-specific cutoffs.
-* Set a reasonable upper limit for these cutoffs using the `max_cutoff` parameter.
+1. Identify all **false-positive occurrences**.
+2. Take the **maximum read count** among these false positives.
+3. Divide this value by the **total read count** of the ASV across all samples, or within each replicate if `by_replicate = TRUE`.
 
-```{r, eval=FALSE}
-asv_spec <- ASVspecificCutoff(read_count_df, 
-                                   max_cutoff=0.05,
-                                   mock_composition=mock_composition_df) 
-```
+> Some false positives may not be due to tag-jump, so raw cutoff values can be excessively high.
+>
+> * Filter the dataset thoroughly before computing ASV-specific cutoffs.
+> * Use the `max_cutoff` parameter to set a reasonable upper limit.
 
-The command above produces a data frame (`asv_spec`) containing  
-`asv_id` and `cutoff_asv_spec` columns.
-Since `max_cutoff = 0.05`, any `cutoff_asv_spec` values greater than 0.05 have been adjusted to 0.05.
-
-The `asv_spec` data frame contains cutoff values only for ASVs with known false-positive occurrences.
-
-These ASV-specific cutoff values can then be used with the `LFNvariant` function 
-to filter occurrences. 
-If `LFNvariant` has already been applied with a fixed `cutoff`, it is sufficient 
-to provide the `asv_spec` data frame. The filtering will be applied only to 
-the variants listed in `asv_spec`.
+### Example
 
 ```{r, eval=FALSE}
-read_count_df <- LFNvariant(read_count_df, 
-                            asv_specific_cutoffs = asv_spec,
-                            min_read_count_prop=0.7)
+asv_spec <- compute_asv_specific_cutoff(
+  read_count_df, 
+  max_cutoff=0.05,
+  mock_composition=mock_composition_df
+  ) 
 ```
 
-A warning is issued by the above command, if for some variants, less than 
-`min_read_count_prop` of the reads are retained after filtering. 
-This indicates that the cutoff value for those variants was likely too high and 
-should be lowered.
+*Output:* A data frame `asv_spec` with columns:
 
+* `asv_id`: Identifier of the ASV
+* `cutoff_asv_spec`: ASV-specific cutoff, capped at `max_cutoff = 0.05`
 
-It is also possible to use both the `asv_specific_cutoff` and `cutoff` arguments
-in `LFNvariant`. 
-In this case, the global `cutoff` is applied to all ASVs that do not have an 
-ASV-specific cutoff defined in `asv_spec`, as well as to ASVs whose ASV-specific 
-cutoff is lower than the global `cutoff`.
+> Only ASVs with **known false-positive occurrences** are included.
 
+### Using ASV-Specific Cutoffs in Filtering
+
+Pass `asv_spec` to `filter_occurrence_variant`:
 
 ```{r, eval=FALSE}
-read_count_df <- LFNvariant(read_count_df, 
-                            cutoff=0.002,
-                            asv_specific_cutoffs = asv_spec,
-                            min_read_count_prop=0.7)
+read_count_df <- filter_occurrence_variant(
+  read_count_df, 
+  asv_specific_cutoffs = asv_spec,
+  min_read_count_prop=0.7
+  )
 ```
 
+* A warning is issued if less than `min_read_count_prop` of reads remain for some ASVs after filtering. This suggests the cutoff may be too high and should be reduced.
 
-## TaxAsssignRDP
+### Combining Global and ASV-Specific Cutoffs
+
+You can also use a global cutoff together with ASV-specific cutoffs.
+
+* The global `cutoff` is applied to:
+
+  * ASVs **without** an ASV-specific cutoff
+  * ASVs whose ASV-specific cutoff is **lower** than the global cutoff
+
+```{r, eval=FALSE}
+read_count_df <- filter_occurrence_variant(
+  read_count_df, 
+  cutoff=0.002,
+  asv_specific_cutoffs = asv_spec,
+  min_read_count_prop=0.7
+  )
+```
+
+This approach allows flexible, per-ASV filtering while maintaining a minimum global
+threshold for all other variants.
+
+## TaxAssignRDP
+
 **Taxonomic assignment using the RDP classifier**
 
-For **16S rRNA** data, the **RDP (Ribosomal Database Project)** provides a 
-curated and well-maintained taxonomic reference database.
-The **pre-trained set** for **Bacteria** and **Archaea** 16S sequences 
-is included in the `rRDPData` package, while the `rRDP` package 
-performs rapid taxonomic assignment of these markers.
+For **16S rRNA** data, the **RDP (Ribosomal Database Project)** provides a curated reference database for Bacteria and Archaea.
+The **pre-trained sets** are included in the **`rRDPData`** package, 
+and the **`rRDP`** package performs the taxonomic classification.
 
-**Installing `rRDP` and `rRDPData`**
+### Installing `rRDP` and `rRDPData`
 
-These packages are available through **Bioconductor**, but 
-are not installed automatically when installing `vtamR`.
-You can install them as follows:
+These packages are available through **Bioconductor** and are 
+**not installed automatically** with `vtamR`:
 
 ```{r install_rdp, eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -2073,36 +2262,38 @@ BiocManager::install("rRDP")
 BiocManager::install("rRDPData")
 ```
 
-**Running the RDP classifier via `vtamR`**
+### Running the RDP classifier via `vtamR`
 
-The `TaxAssignRDP()` function in vtamR is a wrapper around 
-the RDP classifier, making it easy to apply on your ASV data set.
+The `assign_taxonomy_rdp()` function is a wrapper around the RDP classifier, 
+allowing direct application to your ASV dataset.
 
-```{r TaxAssignRDP, eval=FALSE}
-taxa <- TaxAssignRDP(
+```{r assign_taxonomy_rdp, eval=FALSE}
+taxa <- assign_taxonomy_rdp(
   asv=read_count_df,
   max_memory = 8,
   confidence = 0.8,
-  rm_chloroplast = TRUE)
+  rm_chloroplast = TRUE
+  )
 ```
 
-**Arguments**
+**Arguments:**
 
-* `asv`: Either a CSV file path or a data frame containing at least two columns:
-  `asv_id`(unique numeric identifier) and `asv` (nucleotide sequence).
-* `max_memory`: Amount of RAM available for RDP (in GB).
-* `confidence`: Minimum confidence threshold for taxonomic assignment.
-* `rm_chloroplast`: If `TRUE`, lineages of the sequences assigned to *Chloroplast* 
-are replaced with `NA` in the taxonomy table.
+* `asv`: CSV file path or data frame containing at least:
 
-### Alternative: use your own RDP training set
+  * `asv_id`: unique numeric identifier
+  * `asv`: nucleotide sequence
+* `max_memory`: RAM available for RDP (GB)
+* `confidence`: minimum confidence threshold for assignment
+* `rm_chloroplast`: if `TRUE`, sequences classified as 
+*Chloroplast* are replaced with `NA`
 
-Instead of the default training set from `rRDPData`, you can specify a 
-directory containing a **custom RDP-trained data set** created with the 
-`trainRDP()` function.
+### Using a Custom RDP Training Set
 
-```{r TaxAssignRDP_custom, eval=FALSE}
-taxa <- TaxAssignRDP(
+You can provide your own RDP-trained dataset instead of the default from `rRDPData`.
+This requires a folder containing the trained classifier created with `trainRDP()`:
+
+```{r assign_taxonomy_rdp_custom, eval=FALSE}
+taxa <- assign_taxonomy_rdp(
   asv=read_count_df,
   dir="path/to/custom_RDP_trained_DB"
   max_memory = 8,
@@ -2110,21 +2301,32 @@ taxa <- TaxAssignRDP(
   rm_chloroplast = TRUE)
 ```
 
-See `?rRDP::rdp` for more details on training and using custom classifiers.
+For more details, see `?rRDP::rdp` for training and using custom classifiers.
 
-##  HistoryBy
+## history_by
 
-This function scans all files in the `dir` that starts by a number. 
-(See file names of the output files of the different [filtering steps](#filter)). 
-It will select all lines were the `feature` (`asv_id`/`asv`/`sample`/`replicate`) 
-has a `value` we are looking for.
+The `history_by` function allows you to **track the filtering history** of 
+specific features (ASVs, samples, or replicates) across multiple filtering steps.
 
-**Examples**
+### How It Works
+
+* Scans all files in a directory (`dir`) whose names start with a number.
+  These are typically the outputs from different [filtering steps](#filtering).
+* Selects all rows where the specified **feature** has a given **value**.
+
+### Key Arguments
+
+* `dir`: Path to the directory containing the filtering output files.
+* `feature`: Column to track (`asv_id`, `asv`, `sample`, or `replicate`).
+* `value`: The specific value of the feature you want to follow.
+
+
+### Examples
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
 filter_dir <- file.path(outdir, "4_filter")
-tmp_ASV_27 <- HistoryBy(dir=filter_dir, 
+tmp_ASV_27 <- history_by(dir=filter_dir, 
                         feature="asv_id", 
                         value="27")
 
@@ -2133,7 +2335,7 @@ knitr::kable(head(tmp_ASV_27), format = "markdown")
 
 *Get the history of a sequence of the ASV  (`feature`).*
 ```{r}
-tmp_replicate_1 <- HistoryBy(
+tmp_replicate_1 <- history_by(
   dir=filter_dir, 
   feature="asv",
   value="ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC")
@@ -2143,501 +2345,429 @@ knitr::kable(tmp_replicate_1, format = "markdown")
 
 *Get the history of the sample (`feature`) tpos1 (`value`).*
 ```{r}
-tmp_sample_tpos1 <- HistoryBy(dir=filter_dir, 
+tmp_sample_tpos1 <- history_by(dir=filter_dir, 
                               feature="sample", 
                               value="tpos1")
 
 knitr::kable(head(tmp_sample_tpos1), format = "markdown")
 ```
 
+## summarize_by
 
-## SummarizeBy
+The `summarize_by` function is used to summarize how your data changes 
+across filtering steps.
 
-This function scans all files in the `dir` that starts by a number. 
-(See file names of the output files of the different [filtering steps](#filter)). 
 
-It will group each file by a variable (`asv`/`asv_id`/`sample`/`replicate`) 
-and summarize a `feature` (`asv`/`asv_id`/`sample`/`replicate`/`read_count`). 
-If the `feature` is `read_count`, it will give the sum of the read counts 
-for each value of the variable in each file. 
-Otherwise, it returns the number of distinct values of the `feature` 
-for each value of the variable in each file.
+### How It Works
 
-**Examples**
+* Scans all files in a directory (`dir`) whose names start with a number
+  (i.e. outputs from the different [filtering steps](#filtering)).
 
-*Get the number of reads of each sample after each filtering steps.*
+* For each file, it:
 
-From this data frame, we can see that the negative control sample become 
-"clean" after the LFN filters, and there is a considerable variation 
-among the number of reads of different real samples.
+  * Groups the data by a chosen **variable**
+    (`asv`, `asv_id`, `sample`, or `replicate`)
+  * Summarizes a selected **feature**
+    (`asv`, `asv_id`, `sample`, `replicate`, or `read_count`)
+
+
+* If `feature = "read_count"`, it returns the **sum of reads** for each group.
+* Otherwise, it returns the number of distinct values of the feature within each group.
+
+### Examples
+
+**Get the number of reads per sample after each filtering step:**
 
 ```{r}
-read_count_by_sample <- SummarizeBy(dir=filter_dir, 
-                                    feature="read_count", 
-                                    grouped_by="sample")
+read_count_by_sample <- summarize_by(
+  dir=filter_dir, 
+  feature="read_count", 
+  grouped_by="sample"
+  )
 
 knitr::kable(read_count_by_sample, format = "markdown")
 ```
 
+**Get the number of ASVs for each sample after each filtering steps.**
 
-*Get the number asv for each sample after each filtering steps.*
-
-From this data frame, we can see that the negative control sample become "clean" 
-after the LFN filters, and the mock samples has 10 ASVs at the end.
 ```{r}
-asv_by_sample <- SummarizeBy(dir=filter_dir, 
-                             feature="asv", 
-                             grouped_by="sample")
+asv_by_sample <- summarize_by(
+  dir=filter_dir, 
+  feature="asv", 
+  grouped_by="sample"
+  )
 
 knitr::kable(asv_by_sample, format = "markdown")
 ```
 
 
-*Get the number asv_id for each replicate after each filtering steps.*
+**Get the number asv_id for each replicate after each filtering steps.**
 
-We can see that number of ASVs are comparable in different replicates.
 ```{r}
-asvid_by_replicate <- SummarizeBy(dir=filter_dir, 
-                                  feature="asv_id", 
-                                  grouped_by="replicate")
+asvid_by_replicate <- summarize_by(
+  dir=filter_dir, 
+  feature="asv_id", 
+  grouped_by="replicate"
+  )
 
 knitr::kable(asvid_by_replicate, format = "markdown")
 ```
 
-## UpdateASVlist
+## update_asv_list
 
-The `UpdateASVlist` function combines unique `asv`–`asv_id` pairs from two 
-input data frames or CSV files.
+The `update_asv_list` function merges **unique `asv`–`asv_id` pairs** 
+from two input data frames or CSV files.
 
-If any inconsistencies are detected within or between the input data sets, 
-the function stops and returns an error message.
-Otherwise, it writes the merged list of `asv`–`asv_id` pairs to the 
-specified output file.
+### How It Works
 
-This function ensures consistency between `asv_id`s used in previous and 
-current data sets.
+* Combines ASV lists from two sources
+* Checks for **inconsistencies** within or between the datasets
 
-The safest approach is to provide both the `input_asv_list` and 
-`output_asv_list` arguments directly to the `Dereplicate` function,
-as in the [tutorial](#dereplicate).
-This approach automatically synchronizes `asv_id`s between the current 
-and earliers data sets (`input_asv_list`) and generates an updated ASV list 
-that includes all ASVs from both earlier and current data sets (`output_asv_list`).
-In this case, you do **not** need to call `UpdateASVlist`
-manually — it is automatically invoked within `Dereplicate`.
+  * If any are found, the function **stops with an error**
+  * If everything is consistent, writes a **merged ASV list** to the output file
 
-However, when processing a large number of extensive data sets, the complete ASV 
-list can become very large and may cause memory issues.
-Because most ASVs in this list are singletons that are later filtered out,
-you can choose a lighter workflow:
+This ensures that **`asv_id`s remain consistent** across different analyses.
 
-* Use `input_asv_list` in the `Dereplicate` function to align `asv_id`s with 
-previous runs **without** writing an `output_asv_list`.
-* After preliminary filtering steps (e.g. `LFNglobalReadCount`), 
-update the ASV list to include only frequent ASVs that are more likely to 
-reappear in future data sets.
+### Recommended Usage
 
-This strategy remains safe and substantially reduces the number of ASVs stored 
-in the list file.
+The safest and simplest approach is to let `dereplicate` handle this automatically:
 
-#### Example
+* Provide both:
+
+  * `input_asv_list` (from previous analyses)
+  * `output_asv_list` (to store the updated list)
+
+In this case:
+
+* `asv_id`s are automatically synchronized with previous datasets
+* A new combined ASV list is generated
+* You do not need to call `update_asv_list` manually
+
+### Working with Large Datasets
+
+When processing many large datasets, the ASV list can become very large
+(often filled with singletons that will be filtered out later).
+This can lead to memory issues.
+
+A lighter workflow is often more practical:
+
+* Use `input_asv_list` in `dereplicate` to keep `asv_id`s consistent
+* Skip writing the full `output_asv_list` at this stage
+* After initial filtering (e.g. `filter_asv_global`), run 
+`update_asv_list` on the filtered data only.
+
+This way:
+
+* You do not keep very rare ASVs, that will be eliminated later anyways.
+* The ASV list stays smaller and easier to manage
+
+### Example
 
 ```{r update-asv-list, eval=FALSE}
 asv_list <- "PATH/TO/CSV/WITH/Earlier_asv-asv_id_pairs.csv"
 updated_asv_list <- file.path(outdir, "updated_ASV_list.csv")
 
-UpdateASVlist(
+update_asv_list(
   asv_list1 = read_count_df,
   asv_list2 = asv_list,
   outfile = updated_asv_list)
 ```
 
-## PoolReplicates
+## pool_replicates
 
-Replicates are used to make sure the repetability and reduce experimental
-fluctuations, but after the analyse they can be pooled by sample.
-It is called automatically from `WriteASVtable`, if `pool_replicates=TRUE`. 
+Replicates are used to ensure **repeatability** and reduce experimental variation.
+After the analysis, they can be pooled at the sample level.
 
-`PoolReplicates` function will take the mean non-zero read counts of each ASV 
-over replicates of the same sample.
+The `pool_replicates` function performs this step and is automatically 
+called by `write_asv_table` when `pool_replicates = TRUE`.
+
+### How It Works
+
+For each sample and ASV, the function computes the read count across 
+replicates using the method specified by the `method` argument. 
+The default is `mean`, which calculates the average of non-zero read counts. 
+Alternatively, you can use `sum` to obtain the total read count across replicates, 
+`min` to retain the lowest value, or `max` to keep the highest value.
 
 ```{r pool-replicates2}
 outfile <- file.path(outdir, "PooledReplicates.csv")
-read_count_samples_df <- PoolReplicates(read_count_df, 
-                                        outfile=outfile)
+read_count_samples_df <- pool_replicates(
+  read_count_df, 
+  outfile=outfile
+  )
 ```
 
-## PoolDatasets
+## count_reads_in_dir
 
-**More than one overlapping marker**
+The `count_reads_in_dir` function counts the number of reads 
+in all **FASTA** or **FASTQ** files found in a given directory.
+It works with both **compressed (`.gz`)** and **uncompressed** files, 
+but `.zip` files are not supported.
 
-This function pools different data sets and it is particularly useful, 
-if the results should be pooled from more than one overlapping markers. 
-In that case, ASVs identical on their overlapping regions are pooled into groups, 
-and different ASVs of the same group are represented by their centroid 
-(longest ASV of the group). Pooling can take the mean read counts of the ASVs 
-(`mean_over_markers=T`; default) or their sum (`mean_over_markers=F`).
+In most cases, you do not need to use this function during a standard workflow.
+The [fastainfo](#fastainfo) and [sampleinfo](#sampleinfo) files already 
+include read counts after `merge_fastq_pairs` and `demultiplex_and_trim`.
 
-The function takes several input CSV files, each in [long format](#glossary) 
-containing `asv_id`, `sample`, `read_count` and `asv` columns. 
-The file names should be organized in data frame, with the marker names for each file.
+However, this function can be useful if you want to check the number of 
+reads in your raw input FASTQ files before starting the analysis.
 
-* `outfile`: Name of the output CSV file with the pooled data set 
-(`asv_id`, `sample`, `read_count`, `asv`).
-ASVs are grouped to the same line if identical in their overlapping region, 
-and only the centroids appear in the `asv` column.
-* `asv_with_centroids`: Name of the output CSV file containing each of the the 
-original ASVs (with samples, markers, and read_count) as well as their centroids.
-* The data frame returned by the function corresponds to the `outfile`.
+* `dir`: Input directory containing the fasta or fastq files
+* `file_type`: fasta or fastq
+* `pattern`: Regular expression; only file names matching this pattern in their name are processed
 
 ```{r, eval=FALSE}
-files <- data.frame(file=c("vtamR_test/out_mfzr/15_PoolReplicates.csv",
-                           "vtamR_test/test/15_PoolReplicates_ZFZR.csv"),
-                    marker=c("MFZR", 
-                             "ZFZR"))
-
-outfile <- file.path(outdir, "Pooled_datasets.csv") 
-asv_with_centroids <- file.path(outdir, 
-                                "Pooled_datasets_asv_with_centroids.csv") 
-
-read_count_pool <- PoolDatasets(files, 
-                                outfile=outfile, 
-                                asv_with_centroids=asv_with_centroids, 
-                                mean_over_markers=T,
-                                vsearch_path=vsearch_path) # can be omitted if VSEARCH is in the PATH
-```
-
-**Only one marker**
-
-Pooling the results of different data sets of the same marker is very simple. 
-Basically, the input files (in [long format](#glossary) with 
-`asv`, `asv_id`, `sample`, `read_count` columns) are concatenated. 
-The `PoolDatasets` function also  checks if sample names are unique. 
-If not, it sums the read count of the same sample and same ASV, but returns a warning.
-
-The output file or data frame can be rearranged to [wide format](#glossary) by the [WriteASVtable](#print-output) function.
-
-## CountReadsDir
-
-Count the number of reads in `fasta` or `fastq` files found in the input directory.
-Input files can be gz compressed or uncompressed, but zip files are not supported.
-
-The [fastainfo](#fastainfo) and the [sampleinfo](#sampleinfo) 
-files contain the number of reads after `Merge` or `SortReads`, 
-so no need to run `CountReadsDir` separately. 
-This function can be useful for counting the number of reads in the input `fastq` files.
-
-* `dir`: Input directory containing the fasta of fastq files
-* `file_type`: [fasta/fastq]
-* `pattern`: Regular expression; Check only files for `pattern` in the file name
-
-```{r, eval=FALSE}
-df <- CountReadsDir(dir=fastq_dir, 
-                    pattern="_fw.fastq.gz", 
-                    file_type="fastq")
+df <- count_reads_in_dir(
+  dir=fastq_dir, 
+  pattern="_fw.fastq.gz", 
+  file_type="fastq"
+  )
 ```
  
-## Barplot_ReadCountBySample
-
-Make a bar plot of read counts by [sample](#glossary) (`sample_replicate=F`) 
-or [sample-replicate](#glossary) (`sample_replicate=T`).
-Can use different colors for different sample types ([real/mock/negative](#glossary))
-
-* [read_count_df](#read_count_df): Input data frame
-* `sampleinfo`: data frame or CSV file containing info on sample types for each sample
-
-```{r}
-sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
-
-Barplot_ReadCountBySample(read_count_df=read_count_df, 
-                          sample_replicate=F, 
-                          sampleinfo=sampleinfo)
-```
-
-## Renkonen distances
-
-Calculate the Renkonen distances among all replicates (compare_all=TRUE) 
-or among replicates of the same sample (compare_all=FALSE) and plot them.
-
-* [read_count_df](#read_count_df): Input data frame.
-* `sampleinfo`: Data frame or CSV file containing info on sample types for each sample.
-
-```{r}
-sampleinfo <- file.path(demultiplexed_dir, "sampleinfo.csv")
-
-renkonen_within_df <- MakeRenkonenDistances(read_count_df, 
-                                            compare_all=FALSE)
-
-Barplot_RenkonenDistance(renkonen_within_df, 
-                         sampleinfo=sampleinfo)
-
-DensityPlot_RenkonenDistance(renkonen_within_df)
-
-renkonen_all_df <- MakeRenkonenDistances(read_count_df, 
-                                         compare_all=TRUE)
-DensityPlot_RenkonenDistance(renkonen_all_df)
-```
-
- 
-
-# I/O files and data frames
+# I/O Files and Data Frames
 
 ## fastqinfo
 
-CSV file with information on input fastq files, primers, tags, 
-samples with the following columns. 
-Each line corresponds to a sample-replicate combination.
+CSV file with information on input fastq files, primers, tags,
+samples with the following columns.
+Each line corresponds to a sample–replicate combination.
 
- * tag_fw: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
- * primer_fw: Forward primer (NA if primer has been trimmed)
- * tag_rv: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
- * primer_rv: Reverse primer (NA if primer has been trimmed)
- * sample: Name of the sample (alpha-numerical)
- * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats that cannot 
- contain the same type of organisms (e.g. terrestrial vs. marine), 
- this information is used for detecting false positives.
- Use NA otherwise. Use NA for negative controls.
- * replicate: Numerical id of a replicate within sample 
- (e.g. Sample1 can have replicate 1, 2 or 3)
- * fastq_fw: Forward fastq file
- * fastq_rv: Reverse fastq file
-
+* `tag_fw`: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
+* `primer_fw`: Forward primer (NA if primer has been trimmed)
+* `tag_rv`: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
+* `primer_rv`: Reverse primer (NA if primer has been trimmed)
+* `sample`: Name of the sample (alpha-numerical)
+* `sample_type`: [real/mock/negative](#glossary)
+* `habitat`: If real or mock samples are from different habitats that cannot
+  contain the same type of organisms (e.g. terrestrial vs. marine),
+  this information is used for detecting false positives.
+  Use NA otherwise. Use NA for negative controls.
+* `replicate`: Numerical id of a replicate within sample
+  (e.g. Sample1 can have replicate 1, 2 or 3)
+* `fastq_fw`: Forward fastq file
+* `fastq_rv`: Reverse fastq file
 
 ## fastainfo
 
 CSV file with information on input fasta files, primers, tags,
-samples with the following columns. 
-Each line corresponds to a sample-replicate combination.
+samples with the following columns.
+Each line corresponds to a sample–replicate combination.
 
- * tag_fw: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
- * primer_fw: Forward primer (NA if primer has been trimmed)
- * tag_rv: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
- * primer_rv: Reverse primer (NA if primer has been trimmed)
- * sample: Name of the sample (alpha-numerical)
- * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats that 
- cannot contain the same type of organisms (e.g. terrestrial vs. marine), 
- this information is used for detecting false positives. Use NA otherwise. 
- Use NA for negative controls.
- * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
- * fasta: Fasta file
- * Read_count: Number of reads in the fasta file. Optional.
+* `tag_fw`: Sequence tag on the 5' of the fw read (NA if file is already demultiplexed)
+* `primer_fw`: Forward primer (NA if primer has been trimmed)
+* `tag_rv`: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
+* `primer_rv`: Reverse primer (NA if primer has been trimmed)
+* `sample`: Name of the sample (alpha-numerical)
+* `sample_type`: [real/mock/negative](#glossary)
+* `habitat`: If real or mock samples are from different habitats that
+  cannot contain the same type of organisms (e.g. terrestrial vs. marine),
+  this information is used for detecting false positives. Use NA otherwise.
+  Use NA for negative controls.
+* `replicate`: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
+* `fasta`: Fasta file
+* `Read_count`: Number of reads in the fasta file. Optional.
 
 ## sampleinfo
 
-CSV file with information on demultiplexed and primer trimmed fasta files 
-and samples with the following columns. Each line corresponds to a 
-sample-replicate combination.
+CSV file with information on demultiplexed and primer trimmed fasta files
+and samples with the following columns. Each line corresponds to a
+sample–replicate combination.
 
- * sample: Name of the sample (alpha-numerical)
- * sample_type: [real/mock/negative](#glossary)
- * habitat: If real or mock samples are from different habitats that 
- cannot contain the same type of organisms (e.g. terrestrial vs. marine), 
- this information is used for detecting false positives. Use NA otherwise. 
- Use NA for negative controls.
- * replicate: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
- * fasta: Fasta file
- * Read_count: Number of reads in the fasta file. Optional.
+* `sample`: Name of the sample (alpha-numerical)
+* `sample_type`: [real/mock/negative](#glossary)
+* `habitat`: If real or mock samples are from different habitats that
+  cannot contain the same type of organisms (e.g. terrestrial vs. marine),
+  this information is used for detecting false positives. Use NA otherwise.
+  Use NA for negative controls.
+* `replicate`: Numerical id of a replicate (e.g. Sample1 can have replicate 1, 2 or 3)
+* `fasta`: Fasta file
+* `Read_count`: Number of reads in the fasta file. Optional.
 
 ## mock_composition
 
 CSV file with the following columns.
 
- * sample: Name of the [mock](#glossary) sample
- * action: 
-      * keep: Expected ASV in the mock, that should be kept in the data set
-      * tolerate: ASV that can be present in a mock, but it is not essential 
-      to keep it in the data set (e.g. badly amplified organism)
- * [asv](#glossary): sequence of the ASV
- * taxon: Optional; Name of the organism
- * [asv_id](#glossary): Optional; If there is a conflict between
- asv and asv_id, the asv_id is ignored
+* `sample`: Name of the [mock](#glossary) sample
+* `action`:
+
+  * keep: Expected ASV in the mock, that should be kept in the data set
+  * tolerate: ASV that can be present in a mock, but it is not essential
+    to keep it in the data set (e.g. badly amplified organism)
+* [asv](#glossary): sequence of the ASV
+* `taxon`: Optional; Name of the organism
+* [asv_id](#glossary): Optional; If there is a conflict between
+  asv and asv_id, the asv_id is ignored
 
 ## known_occurrences
+
 CSV file or data frame with the following columns.
 
- * [sample](#glossary): Name of the sample
- * action:
-      * keep: Expected ASVs in a mock sample (corresponds to True Positives)
-      * delete: False Positive occurrences: unexpected ASV in a mock sample; 
-      all occurrences in negative controls; occurrences in real samples 
-      corresponding to an incompatible habitats (e.g. an ASV mostly present 
-      in marine samples is unexpected in a freshwater sample)
- * [asv_id](#glossary): optional
- * [asv](#glossary): sequence of the ASV
- 
+* [sample](#glossary): Name of the sample
+* `action`:
+
+  * keep: Expected ASVs in a mock sample (corresponds to True Positives)
+  * delete: False Positive occurrences: unexpected ASV in a mock sample;
+    all occurrences in negative controls; occurrences in real samples
+    corresponding to an incompatible habitats (e.g. an ASV mostly present
+    in marine samples is unexpected in a freshwater sample)
+* [asv_id](#glossary): optional
+* [asv](#glossary): sequence of the ASV
+
 ## asv_list
 
-This file lists ASVs and their IDs from earlier data sets. When provided 
-(optional), identical ASVs in the present and earlier data sets have the 
-same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list. 
+This file lists ASVs and their IDs from earlier data sets. When provided
+(optional), identical ASVs in the present and earlier data sets have the
+same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list.
 It is a CSV file with the following columns:
 
- * [asv_id](#glossary): Unique numerical ID of the ASV
- * [asv](#glossary): ASV sequence
- 
+* [asv_id](#glossary): Unique numerical ID of the ASV
+* [asv](#glossary): ASV sequence
 
 ## read_count_df
 
 Data frame with the following columns:
 
- * [asv](#glossary): Sequence of the ASV
- * [asv_id](#glossary): Numerical ID of the ASV
- * [sample](#glossary): Sample name
- * [replicate](#glossary): Replicate within sample (Numerical)
- * read_count: Number of reads of the ASV in the Sample-Replicate
+* [asv](#glossary): Sequence of the ASV
+* [asv_id](#glossary): Numerical ID of the ASV
+* [sample](#glossary): Sample name
+* [replicate](#glossary): Replicate within sample (Numerical; optional)
+* `read_count`: Number of reads of the ASV in the Sample–Replicate
 
-## Reference database for taxonomic assignments with TaxAssignLTG
+## Reference database for taxonomic assignments with `assign_taxonomy_ltg`
 
-A data base is composed of two elements. A BLAST database (`blast_db`) 
+A data base is composed of two elements: a BLAST database (`blast_db`)
 and a `taxonomy` file.
 
 `blast_db` can be produced using the `makeblastdb` command of BLAST:
 
-```{bash, eval=FALSE}
+```bash
 makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] -out [DB_NAME]
 ```
 
- * FASTA_FILE is a fasta file containing reference sequences.
- * TAXID_FILE is a tab separated file with sequence IDs and the 
- corresponding numerical [taxIDs](#glossary).
- * DB_NAME is the name of the newly created BLAST database.
+* FASTA_FILE is a fasta file containing reference sequences.
+* TAXID_FILE is a tab separated file with sequence IDs and the
+  corresponding numerical [taxIDs](#glossary).
+* DB_NAME is the name of the newly created BLAST database.
 
 `taxonomy` is a **tab separated** csv file with the following columns:
 
- * tax_id: Numerical Taxonomic ID. It can be a valid 
- [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), 
- or arbitrary negative numbers for taxa not in NCBI.
- * parent_tax_id: taxID of the closest parent of tax_id.
- * rank: taxonomic rank (e.g. species, genus, subgenus, no_rank).
- * name_txt: Scientifc name of the taxon.
- * old_tax_id: taxIDs that have been merged to the tax_id by NCBI; 
- if there is more than one for a given tax_id, make one line for each old_tax_id.
- * taxlevel: Integer associated to each major taxonomic rank. 
- (0 => root, 1=> domain, 2=> kingdom, 3=> phylum, 4=> class, 5=> order, 
- 6=> family, 7=> genus, 8=> species). 
- Levels in between have 0.5 added to the next highest level 
- (e.g. 5.5 for infraorder and for superfamily).
+* `tax_id`: Numerical Taxonomic ID. It can be a valid
+  [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy),
+  or arbitrary negative numbers for taxa not in NCBI.
+* `parent_tax_id`: taxID of the closest parent of tax_id.
+* `rank`: taxonomic rank (e.g. species, genus, subgenus, no_rank).
+* `name_txt`: Scientific name of the taxon.
+* `old_tax_id`: taxIDs that have been merged to the tax_id by NCBI;
+  if there is more than one for a given tax_id, make one line for each old_tax_id.
+* `taxlevel`: Integer associated to each major taxonomic rank.
+  (0 => root, 1=> domain, 2=> kingdom, 3=> phylum, 4=> class, 5=> order,
+  6=> family, 7=> genus, 8=> species).
+  Levels in between have 0.5 added to the next highest level
+  (e.g. 5.5 for infraorder and for superfamily).
 
-
-**A ready to use COI database** in BLAST format and the associated taxonomy 
-file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/). 
-It was created using [mkCOInr](https://github.com/meglecz/mkCOInr). 
-It is also possible to make a [customized database](https://mkcoinr.readthedocs.io/en/latest/content/tutorial.html#customize-database) 
-using mkCOInr. It can be dowloaded and extracted manually of using the 
-`download_osf` function of vtamR. See [Installation](installation.html)
-
-
+A ready-to-use COI database in BLAST format and the associated taxonomy
+file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/).
+It was created using [mkCOInr](https://github.com/meglecz/mkCOInr).
+It is also possible to make a [customized database](https://mkcoinr.readthedocs.io/en/latest/content/tutorial.html#customize-database)
+using mkCOInr. It can be downloaded and extracted manually or by using the
+`download_osf` function of vtamR. See [Installation](installation.html).
 
 # Glossary
 
-
-* **ASV**: Amplicon Sequence Variant. Unique sequence, characterized by 
-the number of reads in each sample-replicate.
+* **ASV**: Amplicon Sequence Variant. A unique sequence, characterized by the number of reads in each sample–replicate.
 * **asv_id**: Unique numerical ID of an ASV.
-* **demultiplexing**: Sorting reads in a fasta (or fastq) file to different 
-sample-replicates according to the tags present at their extremities.
+* **demultiplexing**: Sorting reads in a fasta (or fastq) file into different 
+sample–replicates according to the tags present at their extremities.
 * **dereplication**: The merged reads contain many identical sequences. 
-The dereplication reduces the data set to unique sequences (ASV), and count 
-the number of reads for each ASV in each sample-replicate.
+Dereplication reduces the data set to unique sequences (ASVs) and counts 
+the number of reads for each ASV in each sample–replicate.
 * **data frame (or csv) in long format**: The `read_count_df` contains one line 
 for each occurrence with `asv_id`, `asv`, `sample`, `replicate`, `read_count` columns. 
-This is the standard format of keeping occurrences throughout the analyses, 
-and it is smaller than the wide format, 
-if there are many ASVs present in only one or few samples.
+This is the standard format used throughout the analyses and is generally more 
+compact than wide format when many ASVs occur in only a few samples.
 * **data frame (or csv) in wide format**: The `read_count_df` can be rearranged 
-in wide format, where lines are ASVs, columns are sample(-replicates) and cells
-contain read counts. It is a more human friendly format and it is the base of 
-writing an ASV table, where this information can be completed by taxonomic 
-assignments and other information.
-* **false negative occurrence**: An expected ASV in a mock sample that is not 
-found in the data.
-* **false positive occurrence**: An unexpected presence an ASV in a Sample.
-    * all occurrences in all negative contols, 
-    * unexpected occurrences in mock samples
-    * presence of an ASV in an incompatible habitat (e.g. ASV with high read 
-    count in samples of habitat 1 and low read count in habitat 
-    2 is considered as FP in habitat 2).
-* **habitat**: Habitat type of the organisms in real or mock samples. 
-Use this only if organisms of the different habitats cannot appear in 
-another habitat of the data set. Use NA otherwise.
-* **long format**: Each row is a single measurement. Typically, 
-there are columns like `asv`, `sample`, and `read_count`. This format is tidy 
-and works well with many tidyverse functions.
-* **Low Frequency Noise (LFN)**: ASVs present in low frequencies, 
-likely to be due to errors.
-* **merge**: Assemble a forward and reverse read pair to one single sequence.
-* **mock sample**: An artificial mix of DNA of know organisms.
-* **negative sample**: Negative control.
-* **precision**: The proportion of detected positives that are actually true positives (TP/(TP+FP)).
+so that rows are ASVs, columns are sample(-replicates), and cells contain read counts. 
+This format is more human-readable and is typically used for final ASV or mOTU tables, 
+often combined with taxonomic assignments and other metadata.
+* **false negative occurrence**: An expected ASV in a mock sample that is not detected in the data.
+* **false positive occurrence**: An unexpected presence of an ASV in a sample:
+
+  * all occurrences in negative controls,
+  * unexpected occurrences in mock samples,
+  * presence of an ASV in an incompatible habitat 
+  (e.g. an ASV abundant in habitat 1 but present at low frequency in habitat 2 
+  is considered a false positive in habitat 2).
+* **habitat**: Habitat type of organisms in real or mock samples. 
+Use this only if organisms from different habitats cannot occur in each other. 
+Use NA otherwise.
+* **long format**: Each row represents a single measurement, typically with 
+columns such as `asv`, `sample`, and `read_count`. This tidy format is well 
+suited for many data manipulation tools.
+* **Low Frequency Noise (LFN)**: ASVs present at low frequencies, 
+likely resulting from sequencing or amplification errors.
+* **merge**: Assemble a forward and reverse read pair into a single sequence.
+* **mock sample**: An artificial mixture of DNA from known organisms.
+* **negative sample**: Negative control sample.
+* **precision**: The proportion of detected positives that are true positives 
+(TP / (TP + FP)).
 * **real sample**: An environmental sample.
-* **replicate**: Technical or biological replicate of a sample. 
-Replicates must have numerical identifiers. (e.g. sample tops1 have replicate 1, 2 and 3).
-* **sample**: Name of the environmental or control sample. Must be alphanumerical, without space.
-* **sample-replicate**: Each sample can have technical of biological replicates. 
-sample-replicate refers to one replicate of a given sample.
+* **replicate**: Technical or biological replicate of a sample. Replicates must 
+have numerical identifiers (e.g. sample `tops1` can have replicates 1, 2, and 3).
+* **sample**: Name of the environmental or control sample. 
+Must be alphanumeric and contain no spaces.
+* **sample–replicate**: A specific replicate of a given sample.
 * **sample_type**: [real/mock/negative](#glossary)
-* **sensitivity**: The proportion of real (true) positives that a method successfully detects. (TP/(TP+FN))
-* **singleton**: ASV with a single read in the whole data set.
-* **tag**: Short sequence at the extremity of the amplicon. 
-It is used at the demultiplexing step to identify the sample-replicate, where the read comes from.
-* **taxIDs**: Numerical taxonomic identifier. It can be a valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy), 
-or arbitrary negative numbers for taxa not in NCBI.
-* **trimming**: Cut the extremities of the sequences. It can be based on 
-sequence quality, or on the detection of a tag or primer.
+* **sensitivity**: The proportion of true positives correctly detected (TP / (TP + FN)).
+* **singleton**: ASV with a single read in the entire data set.
+* **tag**: Short sequence at the extremity of the amplicon, used during demultiplexing 
+to identify the sample–replicate origin of each read.
+* **taxIDs**: Numerical taxonomic identifiers. These can be valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy) values or arbitrary negative numbers 
+for taxa not present in NCBI.
+* **trimming**: Cutting sequence extremities, either based on sequence quality 
+or by detecting tags or primers.
 * **true positive occurrence**: An expected occurrence in a mock sample.
-* **Wide format**: In `vtamR` wide format data frames, each row is an ASV, 
-and each column represents a sample. Read counts are in the cells.
+* **wide format**: In `vtamR`, wide-format data frames have one row per ASV 
+and one column per sample, with read counts in the cells.
 
 
 # Troubleshooting
 
 ## Pool different runs of the same samples before filtering
 
-Pooling different sequencing runs may be necessary when the **same samples** 
-were sequenced in **multiple runs** 
-(e.g., if one sequencing run was of poor quality or if technical replication was done).
+Pooling different sequencing runs is useful when the same samples were sequenced 
+in multiple runs, for example if one sequencing run was of lower quality or if 
+technical replication was performed. Pooling can be done before filtering
+to create a unified dataset.
 
-It is possible to pool the datasets **before filtering**.
+### 1. Process each run separately up to dereplication
 
-I suggest the following protocol:
+For each sequencing run, perform the following steps:
 
-### 1. Process each run separately up to the dereplication step
+* Merge fastq read pairs to assemble paired-end reads
+* Demultiplex the reads
+* Trim primers and adapters
 
-For each sequencing run:
+Follow the steps in [from-fastq-to-df](from-fastq-to-df.html), adapting to 
+your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed 
+FASTA files in a separate directory for each run.
 
-* Merge paired-end reads
-* Demultiplex
-* Trim primers/adapters
+### 2. Dereplicate each run independently, while keeping a shared ASV list
 
-Follow the steps as described in [from-fastq-to-df](from-fastq-to-df.html), 
-appropriate for your wet lab and sequencing protocol.
+Dereplicate each run separately, but ensure that ASV identifiers (`asv_id`) 
+remain consistent across runs by:
 
-The trimmed, merged, and demultiplexed FASTA files should be stored in a **separate directory for each run**.
+* Using the `output_asv_list` from the first `dereplicate()` call
+* Providing it as `input_asv_list` to the next run
+* Passing the updated list to subsequent runs
 
-
-### 2. Dereplicate each run separately, while keeping a shared ASV list
-
-Each run should be dereplicated independently. However, to ensure that 
-ASV identifiers (`asv_id`) are consistent across runs, you must:
-
-* Use the `output_asv_list` from the first `Dereplicate()` call
-* Provide it as `input_asv_list` to the second call
-* Then pass the updated list to the third call, and so on
-
-This ensures that:
-
-* ASVs already detected in previous runs retain the same `asv_id`
-* Newly detected ASVs receive new identifiers
-
-This step is essential to homogenize ASV identifiers across datasets.
+This approach guarantees that previously detected ASVs retain the same `asv_id` 
+and newly detected ASVs receive new identifiers. 
+Harmonizing ASV IDs across datasets is essential.
 
 ```{r, eval=FALSE}
 # Run 1
 updated_asv_list1 <- file.path(outdir, "ASV_list_with_IDs_1.csv")
 
-read_count_df1 <- Dereplicate(
+read_count_df1 <- dereplicate(
   sampleinfo_df1,
   dir = demultiplexed_dir1,
   input_asv_list = "",  # or an existing ASV list
@@ -2647,7 +2777,7 @@ read_count_df1 <- Dereplicate(
 # Run 2
 updated_asv_list2 <- file.path(outdir, "ASV_list_with_IDs_2.csv")
 
-read_count_df2 <- Dereplicate(
+read_count_df2 <- dereplicate(
   sampleinfo_df2,
   dir = demultiplexed_dir2,
   input_asv_list = updated_asv_list1,
@@ -2657,7 +2787,7 @@ read_count_df2 <- Dereplicate(
 # Run 3
 updated_asv_list3 <- file.path(outdir, "ASV_list_with_IDs_3.csv")
 
-read_count_df3 <- Dereplicate(
+read_count_df3 <- dereplicate(
   sampleinfo_df3,
   dir = demultiplexed_dir3,
   input_asv_list = updated_asv_list2,
@@ -2665,11 +2795,10 @@ read_count_df3 <- Dereplicate(
 )
 ```
 
-
 ### 3. Pool the dereplicated datasets
 
-Once dereplication is complete and ASV identifiers are harmonized across runs, 
-the resulting `read_count_df` objects can be pooled.
+After dereplication and harmonization of ASV identifiers, the resulting 
+`read_count_df` objects can be combined.
 
 ```{r, eval=FALSE}
 read_count_df <- rbind(read_count_df1, read_count_df2, read_count_df3) %>%
@@ -2677,43 +2806,71 @@ read_count_df <- rbind(read_count_df1, read_count_df2, read_count_df3) %>%
   summarize(read_count = sum(read_count), .groups = "drop")
 ```
 
-This step:
+This pooling step:
 
-* Combines the runs
+* Combines multiple runs
 * Sums read counts for identical ASV–sample–replicate combinations
 * Produces a unified dataset ready for downstream filtering
 
+## `filter_occurrence_variant` can eliminate most occurrences of a frequent ASV
 
-## LFNvariant eliminate most occurrences of a frequent ASV
+The `filter_occurrence_variant` function removes all occurrences where 
+the proportion of reads of an ASV in a sample-replicate relative to its total 
+read count is below the specified cutoff:
 
-`LFNvariant` will filter out all occurrences where
+`(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff`
 
-`(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff` 
+When 
 
-As a consequence, if an ASV is present in most samples, there are many samples 
-in the data set and the cutoff is relatively high, most occurrences can fall 
-bellow the cutoff and the total read count of the ASV will decrease strongly at this step.
+- an ASV occurs in many samples and 
+- the dataset contains numerous samples and 
+- the cutoff is relatively high
 
-If the proportion of the read count of an ASV in the output compared to 
-the input is less than `min_read_count_prop`, vtamR prints out a Warning. 
-Take a close look at the variant. It can be the result of a general contamination, 
-and in this case, the whole ASV could/should be eliminated from the data set. 
-Otherwise, you might want to reduce the cutoff value for `LFNvariant`.
+most occurrences of that ASV may fall below the cutoff, causing its total read 
+count to drop sharply during this filtering step.
 
-## Memory issues for running swarm on the whole data set
+If the proportion of reads retained for an ASV after filtering is less than 
+`min_read_count_prop`, vtamR issues a warning. This should be carefully inspected:
+
+* The ASV might represent a general contaminant, in which case it may be 
+appropriate to remove it entirely from the dataset.
+* Otherwise, consider lowering the cutoff value in `filter_occurrence_variant`
+to retain more occurrences of the ASV.
+
+## Memory issues for running SWARM on the whole data set
+
+When working with very large datasets, running SWARM on the entire dataset at 
+once can cause memory issues. 
 
 Possible workarounds:
 
-* Try to run SWARM sample by sample (`by_sample=T`). 
-* Run `global_read_count` first to eliminate singletons then swarm. 
+* Run SWARM sample by sample (`by_sample = TRUE`).
+* Run `global_read_count` to remove singletons before SWARM.
 
-Both solutions make swarm a bit less efficient, but at least your analyses can get through.
+Both may slightly reduce clustering efficiency but allow the analysis to complete.
 
-## Memory issues in Merge on Windows
+## Memory issues in `merge_fastq_pairs` on Windows
 
-If input fastq files are very large and do not go through `Merge`, 
-Try working with uncompressed input files.
+If very large input fastq files fail to merge, try using **uncompressed input files**.
 
-## No or few sequences passing merge
+## No or few sequences passing `merge_fastq_pairs`
 
-If the amplicon is shorter than the reads, use `fastq_allowmergestagger=T`.
+If your amplicon is shorter than the reads, enable staggered merging by setting 
+`fastq_allowmergestagger = TRUE`.
+
+Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:
+
+
+## No or Few Sequences Passing `demultiplex_and_trim`
+
+By default, the `demultiplex_and_trim` function searches for tags and primers 
+only at the very ends of the reads (`tag_to_end = TRUE`, `primer_to_end = TRUE`). 
+This setting is both efficient and appropriate for most use cases.
+
+However, if you used sequencing spacers, the primers or tags might be located 
+a few nucleotides away from the ends of your sequences. In such cases, 
+you need to adjust these settings to ensure the function searches for 
+tags and primers in the correct positions.
+
+For more details, refer to the function documentation: `?demultiplex_and_trim`.
+

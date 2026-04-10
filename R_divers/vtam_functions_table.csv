@@ -1,0 +1,101 @@
+Original_name,Deleted,Scope,Process,Subprocess,PascalCase,snake_case,Description
+CountReadsDir,,user,Auxiliary,,CountReadsInDir,count_reads_in_dir," Counts sequences in FASTA or FASTQ files, or lines in other files, for all files in a directory matching a pattern. "
+GetStat,,user,Auxiliary,,GetStat,get_stat," Computes counts of reads, variants, samples, and replicates; updates a summary data frame. "
+Barplot_ReadCountBySample,,user,Auxiliary,,PlotReadCountBySample,plot_read_count_by_sample," Creates barplot of read counts per sample or replicate, optionally colored by sample type. "
+Histogram_ReadCountByVariant,,user,Auxiliary,,PlotReadCountHistogram,plot_read_count_histogram," Creates histogram of read counts per variant, optionally colored by sample type. "
+PoolReplicates,,user,Auxiliary,,PoolReplicates,pool_replicates," Pools replicates for each sample; read count per ASV can be mean, sum, max, or min across replicates. "
+pool_datasets,,user,Auxiliary,,,pool_datasets,Pool results of different data sets of the same marker
+pool_markers,,user,Auxiliary,,,pool_markers,Pool results of same data sets of different marker
+HistoryBy,,user,Auxiliary,,TraceFeatureAcrossFilters,history_by," Filters a feature (ASV, sample, replicate) across intermediate filter outputs, retaining only matching lines. "
+SummarizeBy,,user,Auxiliary,,SummarizeFilterSteps,summarize_by," Summarizes each intermediate filtering step; groups by a variable, counting distinct values or total reads. "
+UpdateASVlist,,user,Auxiliary,,UpdateASVList,update_asv_list, Pools unique ASV-ASV_ID pairs from input tables or CSVs; checks for conflicts; returns complete unique list. 
+WriteASVtable,,user,Auxiliary,,WriteASVTable,write_asv_table," Writes CSV with samples in columns, ASVs in rows, read counts in cells. "
+ClusterASV,,user,Clustering,,ClusterASVs,cluster_asv, Clusters ASVs using Swarm or VSEARCH. 
+PlotClusterClasstification,,user,Clustering,,PlotClusterClassfication,plot_cluster_classification," Plots cluster classifications (closed, open, hybrid) across clustering parameters; shows number of clusters per class. "
+PairwiseIdentityPlotPerSwarmD,,user,Clustering,,PlotPairwiseIdentitySwarm,plot_pairwise_identity_swarm, Plots density of pairwise identities for ASVs clustered by swarm at multiple d values. 
+PairwiseIdentityPlotPerClusterIdentityThreshold,,user,Clustering,,PlotPairwiseIdentityThreshold,plot_pairwise_identity_vsearch, Plots density of pairwise identities for ASVs at multiple clustering identity thresholds. 
+denoise_by_swarm,,user,Filter,denoise,,denoise_by_swarm,Denoise by SWARM. Can split clusters if ASV with high abundance.
+LFNglobalReadCount,,user,Filter,filter ASV,FilterASVGlobal,filter_asv_global, Eliminates ASVs with fewer reads than a cutoff in the dataset. 
+FilterChimera,,user,Filter,filter ASV,FilterChimera,filter_chimera, Filters out chimeric sequences. 
+FilterCodonStop,,user,Filter,filter ASV,FilterCodonStop,filter_stop_codon, Removes ASVs with stop codons in all three frames on the direct strand. 
+FilterExternalContaminant,,user,Filter,filter ASV,FilterContaminant,filter_contaminant, Removes ASVs with higher read counts in negative controls than in samples. 
+FilterIndel,,user,Filter,filter ASV,FilterIndel,filter_indel, Removes ASVs with length modulo 3 differing from majority. 
+FilterPCRerror,,user,Filter,filter ASV,FilterPCRerror,filter_pcr_error," Removes ASVs very similar to more abundant ASVs, based on max_mismatch and pcr_error_var_prop. "
+FilterMinReplicate,,user,Filter,filter occurrence,FilterMinReplicate,filter_min_replicate, Removes occurrences not present in at least cutoff number of replicates per sample. 
+LFNreadCount,,user,Filter,filter occurrence,FilterOccurrenceReadCount,filter_occurrence_read_count, Removes occurrences with read counts below a cutoff. 
+LFNsampleReplicate,,user,Filter,filter occurrence,FilterOccurrenceSample,filter_occurrence_sample, Removes occurrences where read proportion within the sample-replicate is below cutoff. 
+LFNvariant,,user,Filter,filter occurrence,FilterOccurrenceVariant,filter_occurrence_variant, Removes occurrences where read proportion within the ASV is below cutoff. 
+PoolFilters,,user,Filter,filter occurrence,PoolFilters,pool_filters," Pools filtered occurrence tables, keeping only occurrences passing all filters. "
+FilterRenkonen,,user,Filter,filter replicate,FilterReplicate,filter_replicate, Removes replicates with Renkonen distances above cutoff to other replicates of the same sample. 
+MakeRenkonenDistances,,user,Filter,suggest parameters,ComputeRenkonenDistances,compute_renkonen_distances, Computes Renkonen distances between sample-replicate pairs. 
+MakeKnownOccurrences,,user,Filter,suggest parameters,ClassifyControlOccurrences,classify_control_occurrences," Generates known_occurrences, missing_occurrences, and performance_metrics for mock and control samples. "
+ASVspecificCutoff,,user,Filter,suggest parameters,ComputeASVSpecificCutoff,compute_asv_specific_cutoff, Generates ASV-specific read count cutoff values. 
+Barplot_RenkonenDistance,,user,Filter,suggest parameters,PlotRenkonenDistanceBarplot,plot_renkonen_distance_barplot, Barplot of Renkonen distances between sample-replicates; optionally colored by sample type. 
+DensityPlot_RenkonenDistance,,user,Filter,suggest parameters,PlotRenkonenDistanceDensity,plot_renkonen_distance_density, Density plot of Renkonen distances between sample-replicates. 
+OptimizePCRerror,,user,Filter,suggest parameters,SuggestFilterParametersPCRError,suggest_pcr_error_cutoff, Suggests PCR-error filter parameter (pcr_error_var_prop) based on mock ASV comparisons. 
+OptimizeLFNreadCountLFNvariant,,user,Filter,suggest parameters,SuggestFilterParametersReadCountVariant,suggest_variant_readcount_cutoffs, Suggests optimal parameters for read count and variant filters. 
+OptimizeLFNsampleReplicate,,user,Filter,suggest parameters,SuggestFilterParametersSample,suggest_sample_cutoff, Suggests occurrence proportion cutoff to retain all expected ASVs in mock replicates. 
+CheckFileinfo,,user,Input,,CheckFileInfo,check_file_info, Checks input file formats and basic info. 
+download_osf,,user,Input,,DownloadOSF,download_osf, Downloads and extracts files from OSF. 
+download_zenodo,,user,Input,,DownloadZenodo,download_zenodo, Downloads and extracts files from Zenodo. 
+MakeMockCompositionLTG,,user,Input,,MatchVariantsToMockSpecies,match_variants_to_mock_species, Identifies expected ASVs in mock samples. 
+SortReads,,user,Preprocess,,DemultiplexAndTrimFasta,demultiplex_and_trim, Demultiplexes FASTA reads using tag combinations and trims primers. 
+Dereplicate,,user,Preprocess,,Dereplicate,dereplicate, Reads FASTA files and dereplicates sequences. 
+Merge,,user,Preprocess,,MergeFastqPairs,merge_fastq_pairs, Merges forward/reverse FASTQ reads into FASTA; can compress output; generates `fastainfo.csv`. 
+RandomSeq,,user,Preprocess,,SubsampleFasta,subsample_fasta, Randomly subsamples sequences from FASTA files to standardize read counts across libraries. 
+TrimPrimer,,user,Preprocess,,TrimPrimers,trim_primers, Trims primers from FASTA files 
+TaxAssignLTG,,user,Taxonomic assignment,,AssignTaxonomyLTG,assign_taxonomy_ltg, Assigns taxonomy to ASVs using BLAST-based Lowest Taxonomic Group (LTG) method. 
+TaxAssignRDP,,user,Taxonomic assignment,,AssignTaxonomyRDP,assign_taxonomy_rdp, Assigns taxonomy to 16S sequences using the RDP classifier. 
+add_ids,,intern,,,AddIds,add_ids,Add ids to ASVs
+get_read_counts,,intern,,,AddReasCount,add_read_counts,Count the number of reads in all fasta files in the fasta column of a df. Add read_count column to df.
+adjust_ltgres,,intern,,,AdjustLTGResolution,adjust_ltg_resolution,Adjust the resolution of LTG
+check_dir,,intern,,,CheckDir,check_dir,"Check if directory exists, and create it if not. If it is a file path, get its directory path and create dir in necessary."
+check_file_exists,,intern,,,CheckFileExists,check_file_exists,Check if all files in the input vector exist.
+check_heading,,intern,,,CheckHeading,check_heading,Compare the heading of files to an input vector.
+check_one_to_one_relationship,,intern,,,CheckOneToOne,check_one_to_one,Check one to one relationship
+ClassifyClusters,,intern,,,ClassifyClusters,classify_clusters,Classify clusters based on taxonomic agreement among their ASVs
+GetClusterIdSwarm,,intern,,,ClusterSwarm,cluster_swarm,"Cluster all input ASV by swarm and return a data frame with asv_id, cluster_id columns"
+GetClusterIdVsearch,,intern,,,ClusterVsearch,cluster_vsearch,"Cluster all input ASV and return a data frame with asv_id, cluster_id columns"
+count_reads_file,,intern,,,CountReads,count_reads,Count the number of sequences in a fasta or fastq file or the number of lines in other files
+count_seq,,intern,,,CountSeq,count_seq,Count the number of sequences in the input fasta file. 
+SortReads_no_reverse,,intern,,,DemultiplexAndTrimFastaStrandPlus,demultiplex_and_trim_strand_plus,Demultiplex each input fasta file using the tag combinations at the extremities of the merged reads. Trim primers from demultiplexed reads.
+make_missing_occurrences,,intern,,,DetectFalseNegatives,detect_false_negatives,Prepare a data fram that list all expected occurrences that are missing (False negatives).
+expand_rows,,intern,,,ExpandRows,expand_rows,Split the taxid column to different taxids in the input data frame. Make one line for each taxid.
+fill_NA_in_lineage,,intern,,,FillMissingTaxa,fill_missing_taxa,"Fill in missing higher-level taxa in the lineage using the name of the next known lower-level taxon, prefixed by the current taxonomic level
+
+"
+make_ltg,,intern,,,FindLTG,find_ltg,Determine the Lowest Taxonomic Group (LTG) that contains phit percentage of the input taxids.
+flag_from_habitat,,intern,,,FlagByHabitat,flag_by_habitat,Flag False Positive occurrences based on the habitat of the samples. 
+flagChimera,,intern,,,FlagChimera,flag_chimera,Select chimeras in a data frame of unique ASVs. Add a column to the input data frame with 1 if the ASV is a probable chimera and 0 otherwise.
+flag_from_mock,,intern,,,FlagMockASV,flag_mock_asv,"Flag all occurrences in mock samples. Expected variants as 'keep', unexpected ASVs as 'delete', tolerate ASVs as NA."
+flagPCRerror_vsearch,,intern,,,FlagPCRError,flag_pcr_error,Identify potential PCRerrors: ASVs very similar (max_mismatch) to another more frequent ASV (pcr_error_var_prop) in the input data frame.
+get_ranked_lineages,,intern,,,GetRankedLineage,get_ranked_lineages,"For each input taxid, get the major taxonomic ranks of their lineage."
+codon_stops_from_genetic_code,,intern,,,GetStopCodons,get_stop_codons,Returns a vector of codon stops corresponding the genetic code number in NCBI.
+get_lineage_ids,,intern,,,GetTaxonomicLineage,get_taxonomic_lineage,Get the complete taxonomic lineage using taxIDS
+is_linux,,intern,,,IsLinux,is_linux,Test if OS is Linux-like
+PairwiseIdentity,,intern,,,PairwiseIdentity,pairwise_identity,Align all pairs of asv with at least min_id similarity and make a data frame with pairs of asv and their percentage of identity. asv pairs with identity bellow min_id are not listed.
+pool_by_cluster,,intern,,,PoolByCluster,pool_by_cluster,Pools variants of the same cluster and sums read counts of the underlying ASVs.
+RandomSampleFastaLinux,,intern,,,RandomSampleLinux,random_sample_linux,Randomly select n sequences from an input FASTA file using fastx_subsample from VSEARCH.
+RandomSampleFastaR,,intern,,,RandomSampleR,random_sample_r,Randomly select n sequences from an input FASTA file.
+read_blast_res,,intern,,,ReadBlastResults,read_blast_results,Read BLAST results to data frame
+read_fasta_seq,,intern,,,ReadFastaSeq,read_fasta_seq,Read sequences from fasta to a df
+read_fasta_to_df,,intern,,,ReadFastaToDf,read_fasta_to_df,Read fasta file to data frame
+read_blast6out,,intern,,,ReadVsearchClusterSizeOutmft6,read_vsearch_cluster_size_outmft6,
+delete_1_by_row,,intern,,,RemoveLeadingOnes,remove_leading_ones,"Delete all 1 from the beginning of a raw, shift the other values and replace de missing ones at the end by NA
+
+"
+calculate_renkonen_dist,,intern,,,RenkonenDist,renkonen_dist,Calculate Renkonen Distance
+reverse_complement,,intern,,,ReverseComplement,reverse_complement,Reverse complement a DNA sequence. IUPAC codes are accepted
+run_blast,,intern,,,RunBlast,run_blast,Run BLAST using ASVs of the input data fram as queries.
+run_system2,,intern,,,RunSystem2,run_system2,Run a command using system2
+smart_gzip,,intern,,,SmartGzip,smart_gzip,"Compress or uncompress a file using pigz (if available, faster) or fallback to R.utils."
+TrimPrimer_OneFile,,intern,,,TrimPrimersFile,trim_primers_file,Trim primers from fasta files
+update_taxids,,intern,,,Update_Taxids,update_taxids,Replaces old taxids (merged to other taxIDs in NCBI taxonomy) by valid ones.
+make_adapter_fasta,,intern,,,WriteCutadaptAdapterFasta,write_cutadapt_adapter_fasta,"Make a fasta file with tag combinations using cutadapt syntax. This will be used in SortReads to demultiplex the input fasta file.
+
+"
+write_df_to_fasta,,intern,,,WriteFastaFromDf,write_fasta_from_df,Writes input data frame to a fasta file. Can produce gz compressed file or uncompressed files. The output file name's extension is corrected according to the compression if necessary. Uses headers from df.
+write_fasta,,intern,,,WriteFastaVector,write_fasta_vector,"Write a vector of sequeces to a fasta file using either the sequences as ID (seq_as_id==TRUE), or arbitrary sequence IDs (seq_as_id==FALSE)"
+write_fasta_df,,intern,,,WriteFastaWithCounts,write_fasta_with_counts,Write a fasta file with definition lines in >label;size=### format (read_count=T) or in >label format (read_count=F)
+make_taxid_file,,intern,,,WriteTaxidMapping,write_taxid_mapping,Create a TaxID Mapping File from a FASTA File
+split_swarm_clusters,,intern,,,,split_swarm_clusters,"Spit a SWARM cluster, among abundant ASVs"

@@ -53,7 +53,7 @@ library("dplyr")
 library("tidyr")
 library("ggplot2") 
 ### before release
-setwd("/home/meglecz/vtamR/")
+setwd("/home/meglecz/vtamR")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
@@ -171,6 +171,7 @@ devtools::install(build_vignettes = TRUE)
 ### It creates Rmd and html in doc
 ```{r}
 setwd("/home/meglecz/vtamR")
+setwd("C:\\Users\\emese\\vtamR")
 library("devtools")
 devtools::build_vignettes()
 ```
@@ -186,4 +187,11 @@ devtools::build_vignettes()
 # make index to link the different pages
 ```
 
-## Making doc in html
+## 
+```{r}
+remotes::install_github(
+  repo = "meglecz/vtamR",       # Replace with the repository name
+  ref = "develop",       # Replace with the branch name
+  upgrade = TRUE             # Optional: to upgrade if already installed
+)
+```
