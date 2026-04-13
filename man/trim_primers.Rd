@@ -18,6 +18,7 @@ trim_primers(
   cutadapt_error_rate = 0.1,
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
+  sep = ",",
   quiet = T
 )
 }
@@ -57,6 +58,8 @@ trimmed sequence.}
 
 \item{cutadapt_maximum_length}{Positive integer: maximum length of the
 trimmed sequence.}
+
+\item{sep}{Field separator character in input and output csv files.}
 
 \item{quiet}{logical: If TRUE, suppress informational messages and only
 show warnings or errors.}

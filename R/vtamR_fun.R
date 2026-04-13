@@ -613,6 +613,7 @@ count_seq <- function(file) {
 #' trimmed sequence.
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
+#' @param sep Field separator character in input and output csv files.
 #' @param quiet logical: If TRUE, suppress informational messages and only 
 #' show warnings or errors.
 #' @return
@@ -645,6 +646,7 @@ trim_primers_file <- function(fasta,
                                cutadapt_error_rate=0.1,
                                cutadapt_minimum_length=50,
                                cutadapt_maximum_length=500, 
+                               sep = ",",
                                quiet=T
                                ){
   
@@ -777,6 +779,7 @@ trim_primers_file <- function(fasta,
 #' @param cutadapt_maximum_length Positive integer: maximum length of the 
 #' trimmed sequence.
 #' @param compress logical: Compress output files to gzip format.
+#' @param sep Field separator character in input and output csv files.
 #' @param compress_method Character or logical. Compression method: `"pigz"`, `"gzip"`, or `"R"`.  
 #'   `"pigz"` requires `pigz` to be installed and in the system path (or `pigz_path` specified).  
 #'   `"gzip"` is Linux-only.  
@@ -816,6 +819,7 @@ trim_primers <- function(fastainfo,
                        cutadapt_error_rate=0.1, 
                        cutadapt_minimum_length=50, 
                        cutadapt_maximum_length=500, 
+                       sep = ",",
                        quiet=T
                        ){
   

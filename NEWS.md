@@ -1,3 +1,7 @@
+# vtamR 1.0.1 (prerelease) 2026/04/13
+
+Tutorial updated
+
 # vtamR 1.0.0 (prerelease)
 
 - Function Names Harmonized: Correspondences between old and new function 

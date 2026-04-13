@@ -1,5 +1,9 @@
 # Ideas for vtamR
 
+Dezip fichier (clique droit, extraire ici)
+Completer l'ajout de chemin dans cmd
+Install => expliquer 
+
 make full R script for fromfastq till filtered ASV
  - mfzr_plate1 
  - mfzr_plate2
@@ -10,7 +14,6 @@ filter_occurrence_read_count
 
 # revise install in readme.
 
-Add info in I/O mock_ncbi_fasta
 Check links '(#'
 
 #makeknownoccurrences section do not extits check and correct links
@@ -650,7 +653,9 @@ Doc and example file for pool_datasets and pool_markers
 
 Add test demo file for plate2 MFZR
 
+## 2026/04/13 v1.0.1
 
+Function names and tutorial updated
 
 
 
