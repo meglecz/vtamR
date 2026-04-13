@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-09" />
+<meta name="date" content="2026-04-13" />
 
-<title>From fastq to data frame - v1.0.0</title>
+<title>From fastq to data frame - v1.0.1</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1478,8 +1478,8 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">From fastq to data frame - v1.0.0</h1>
-<h4 class="date">2026-04-09</h4>
+<h1 class="title toc-ignore">From fastq to data frame - v1.0.1</h1>
+<h4 class="date">2026-04-13</h4>
 
 </div>
 
@@ -1512,12 +1512,13 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p>According to your wetlab and sequencing protocol each fastq files can
-contain one or more <a href="tutorial-vtamr-pipeline.html#glossary">sample-replicates</a>, and
-sequences may or may not contain <a href="tutorial-vtamr-pipeline.html#glossary">tags</a> (for <a href="tutorial-vtamr-pipeline.html#glossary">demultiplexing</a>) and
-primer sequences. In the following sections I show <strong>3 different
-scenarios</strong> to obtain the <a href="tutorial-vtamr-pipeline.html#read_count_df">read_count_df</a> data
-frame, which the input to the filtering steps.</p>
+<p>According to your wet lab and sequencing protocol, each FASTQ file
+may contain one or more <a href="tutorial-vtamr-pipeline.html#glossary">sample-replicates</a>. In
+addition, sequences may include <a href="tutorial-vtamr-pipeline.html#glossary">tags</a> (used for <a href="tutorial-vtamr-pipeline.html#glossary">demultiplexing</a>) as well
+as primer sequences.</p>
+<p>In the following sections, we present <strong>three common
+scenarios</strong> for generating the <a href="tutorial-vtamr-pipeline.html#read_count_df">read_count_df</a> data
+frame, which serves as the input for the filtering steps.</p>
 <div id="set-up" class="section level1">
 <h1>Set up</h1>
 <p><em>Load library</em></p>
@@ -1533,7 +1534,7 @@ vsearch_path &lt;- &quot;~/miniconda3/envs/vtam/bin/vsearch&quot; # v2.15.1
 pigz_path &lt;- &quot;~/miniconda3/envs/vtam/bin/pigz&quot; # optional to speed file compression</code></pre>
 <p><strong>Adapt the path</strong> to third party programs according to
 your installation (See <a href="installation.html">Installation</a>).</p>
-<p>If third party programs are in your <code>PATH</code> (See <a href="intsallation.html#install-third-party-programs">Installation</a>),
+<p>If third party programs are in your <code>PATH</code> (See <a href="installation.html#install-third-party-programs">Installation</a>),
 simply omit the <code>cutadapt_path</code>, <code>pigz_path</code>,
 <code>vsearch_path</code> argument when calling the <code>vtamR</code>
 functions.</p>
@@ -1549,14 +1550,15 @@ or deleted once the analyses are complete.</p>
 <p>In this scenario, each pair of fasta files correspond to a sample (or
 a replicate of a sample if you have replicates), so no demultiplexing is
 necessary.</p>
-<p>The reads has been trimmed from all artificial add-ons, such as
+<p>The reads have been trimmed from all artificial add-ons, such as
 adapters, tags, indices and also from primers.</p>
 <p>Read pairs should be <strong>quality filtered</strong>,
 <strong>merged</strong> and written to <strong>fasta format</strong>.
 This can be done by the <code>merge_fastq_pairs</code> function.</p>
 <p>See the help (<code>?merge_fastq_pairs</code>) for setting the
 correct parameters for quality filtering.</p>
-<p><strong>Set input</strong></p>
+<div id="set-input" class="section level2">
+<h2>Set Input</h2>
 <ul>
 <li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: is
 either a csv file, or a data frame. The key information for
@@ -1582,27 +1584,35 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo1.csv&quot;, package = 
 
 outdir &lt;- &quot;vtamR_demo_case1&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
-<p><strong>merge_fastq_pairs fastq file pairs and quality filter
-reads</strong></p>
-<pre class="r"><code>sampleinfo_df &lt;- merge_fastq_pairs(fastqinfo, 
-                       fastq_dir=fastq_dir, 
-                       vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                       outdir=merged_dir,
-                       compress=FALSE)</code></pre>
-<p><strong>Dereplicate</strong></p>
+</div>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>sampleinfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate-reads" class="section level2">
+<h2>Dereplicate reads</h2>
 <p>The fasta files produced by <code>merge_fastq_pairs</code> can be
 read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
-<code>Dereplicate</code> function. See the help
-(<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
+<code>dereplicate</code> function. See the help
+(<code>?dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
 information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
 
-read_count_df &lt;- dereplicate(sampleinfo_df, 
-                             dir=merged_dir, 
-                             outfile=outfile)</code></pre>
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=merged_dir, 
+  outfile=outfile
+  )</code></pre>
 </div>
-<div id="case-2---one-sample-per-fastq---primer---no-tag" class="section level1">
-<h1>Case 2 - One sample per fastq - primer - no tag</h1>
+</div>
+<div id="case-2---one-aample-per-fastq---primer---no-tag" class="section level1">
+<h1>Case 2 - One Aample per Fastq - Primer - No Tag</h1>
 <p>This is one of the most frequent case. Each pair of fasta files
 correspond to a sample (or a replicate of a sample if you have
 replicates), so no demultiplexing is necessary.</p>
@@ -1611,10 +1621,12 @@ adapters, tags, BUT they still have the primers.</p>
 <p>Read pairs should be <strong>quality filtered</strong>,
 <strong>merged</strong> and written to <strong>fasta format</strong> by
 <code>merge_fastq_pairs</code> function as in the previous section.</p>
-<p>Then the <code>TrimPrimer</code> function will <strong>trim the
-primers</strong> from the reads. See the help (<code>?TrimPrimer</code>)
-for setting the correct parameters for primer trimming.</p>
-<p><strong>Set input</strong></p>
+<p>Then the <code>trim_primer</code> function will <strong>trim the
+primers</strong> from the reads. See the help
+(<code>?trim_primer</code>) for setting the correct parameters for
+primer trimming.</p>
+<div id="set-input-1" class="section level2">
+<h2>Set Input</h2>
 <ul>
 <li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>:
 Either a csv file, or a data frame.<br />
@@ -1627,15 +1639,15 @@ files.</li>
 <li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>:
 is the output of <code>merge_fastq_pairs</code>. It is the updated
 version of <code>fastqinfo</code>, where fastq file names have been
-replaced by fasta file names.</li>
+replaced by fasta file names containing the merged sequences.</li>
 <li><code>fasta_dir</code>: Directory containing the input fasta files
-for <code>TrimPrimer</code>. This directory is created by
+for <code>trim_primer</code>. This directory is created by
 <code>merge_fastq_pairs</code>.</li>
-<li>If <code>check_reverse</code> is TRUE, <code>TrimPrimer</code>
+<li>If <code>check_reverse</code> is TRUE, <code>trim_primer</code>
 checks the reverse complementary strand as well.</li>
 <li><code>sampleinfo_df</code>: is updated version of fastainfo. This
 data frame and the files listed in it are the input for
-<code>Dereplicate</code>.</li>
+<code>dereplicate</code>.</li>
 <li><code>outdir</code>: Name of the output directory.</li>
 </ul>
 <p>The demo files below are included with the <code>vtamR</code>
@@ -1648,25 +1660,34 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo2.csv&quot;, package = 
 
 outdir &lt;- &quot;vtamR_demo_case2&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
-<p><strong>merge_fastq_pairs fastq file pairs and quality filter
-reads</strong></p>
-<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                      outdir=merged_dir,
-                      compress=FALSE)</code></pre>
-<p><strong>Trim primers</strong></p>
+</div>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads-1" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="trim-primers" class="section level2">
+<h2>Trim Primers</h2>
 <pre class="r"><code>
 demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)
-sampleinfo_df &lt;- TrimPrimer(fastainfo_df, 
-                            fasta_dir=merged_dir, 
-                            outdir=demultiplexed_dir, 
-                            cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
-                            vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                            check_reverse=T,
-                            primer_to_end=F,
-                            compress=FALSE)</code></pre>
-<p><strong>Dereplicate</strong></p>
+sampleinfo_df &lt;- trim_primers(
+  fastainfo_df, 
+  fasta_dir=merged_dir, 
+  outdir=demultiplexed_dir, 
+  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  check_reverse=T,
+  primer_to_end=F,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate" class="section level2">
+<h2>Dereplicate</h2>
 <p>The fasta files produced by <code>TrimPrimer</code> can be read to a
 data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
 <code>Dereplicate</code> function. See the help
@@ -1674,12 +1695,15 @@ data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</
 information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
 
-read_count_df &lt;- Dereplicate(sampleinfo_df, 
-                             dir=demultiplexed_dir, 
-                             outfile=outfile)</code></pre>
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=demultiplexed_dir, 
+  outfile=outfile
+  )</code></pre>
+</div>
 </div>
 <div id="case-3---several-samples-per-fastq---tags---primers" class="section level1">
-<h1>Case 3 - Several samples per fastq - tags - primers</h1>
+<h1>Case 3 - Several Samples per Fastq - Tags - Primers</h1>
 <p>In this case, one pair of fastq files contains reads from multiples
 samples or sample-replicates, so it is necessary to demultiplex them,
 and trim from tags and primers.</p>
@@ -1687,12 +1711,13 @@ and trim from tags and primers.</p>
 <strong>merged</strong> and written to <strong>fasta format</strong> as
 in the previous sections.</p>
 <p>Then the <code>demultiplex_and_trim</code> function will <strong><a href="tutorial-vtamr-pipeline.html#glossary">demultiplex</a></strong>
-the fasta files according to the <a href="tutorial-vtamr-pipeline.html#glossary">tag</a> combinations and
-<strong><a href="tutorial-vtamr-pipeline.html#glossary">trim</a></strong> the
+the fasta files according to the <strong><a href="tutorial-vtamr-pipeline.html#glossary">tag</a></strong>
+combinations and <strong><a href="tutorial-vtamr-pipeline.html#glossary">trim</a></strong> the
 primers from the reads.</p>
 <p>See the help (<code>?demultiplex_and_trim</code>) for setting the
 correct parameters for demultiplexing and primer trimming:</p>
-<p><strong>Set input</strong></p>
+<div id="set-input-2" class="section level2">
+<h2>Set Input</h2>
 <ul>
 <li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>:
 Either a csv file, or a data frame. The key information for
@@ -1702,17 +1727,17 @@ should be merged.</li>
 files.</li>
 <li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>:
 Output of <code>merge_fastq_pairs</code>. It is the updated version of
-fastqinfo, where fastq file names have been replaced by fasta file
-names.</li>
+<code>fastqinfo</code>, where fastq file names have been replaced by
+fasta file names.</li>
 <li><code>fasta_dir</code>: Directory containing the input fasta files
 for <code>demultiplex_and_trim</code>. This directory is created by
 <code>merge_fastq_pairs</code>.</li>
 <li>If <code>check_reverse</code> is TRUE,
 <code>demultiplex_and_trim</code> checks the reverse complementary stand
 as well.</li>
-<li><code>sampleinfo_df</code>: Updated version of fastainfo. This data
-frame and the files listed in it are the input of the
-<code>Dereplicate</code>.</li>
+<li><code>sampleinfo_df</code>: Updated version of
+<code>fastainfo</code>. This data frame and the files listed in it are
+the input of the <code>dereplicate</code>.</li>
 <li><code>outdir</code>: Name of the output directory.</li>
 </ul>
 <p>The demo files below are included with the <code>vtamR</code>
@@ -1726,31 +1751,43 @@ fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo_mfzr_plate1.csv&quot;,
 outdir &lt;- &quot;vtamR_demo_case3&quot;
 merged_dir &lt;- file.path(outdir, &quot;merged&quot;)
 demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)</code></pre>
-<p><strong>merge_fastq_pairs fastq file pairs and quality filter
-reads</strong></p>
-<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(fastqinfo, 
-                      fastq_dir=fastq_dir, 
-                      vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                      outdir=merged_dir,
-                      compress=FALSE)</code></pre>
-<p><strong>Demultiplex, trim off tags and pimers</strong></p>
-<pre class="r"><code>sampleinfo_df &lt;- demultiplex_and_trim(fastainfo_df, 
-                           fasta_dir=merged_dir, 
-                           outdir=demultiplexed_dir, 
-                           check_reverse=TRUE, 
-                           cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
-                           vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-                           compress=FALSE)</code></pre>
-<p><strong>Dereplicate</strong></p>
+</div>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads-2" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="demultiplex-trim-off-tags-and-primers" class="section level2">
+<h2>Demultiplex, Trim off Tags and Primers**</h2>
+<pre class="r"><code>sampleinfo_df &lt;- demultiplex_and_trim(
+  fastainfo_df, 
+  fasta_dir=merged_dir, 
+  outdir=demultiplexed_dir, 
+  check_reverse=TRUE, 
+  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate-1" class="section level2">
+<h2>Dereplicate</h2>
 <p>The fasta files produced by <code>demultiplex_and_trim</code> can be
 read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
 <code>Dereplicate</code> function. See the help
 (<code>?dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
 information.</p>
 <pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
-read_count_df &lt;- dereplicate(sampleinfo_df, 
-                             dir=demultiplexed_dir, 
-                             outfile=outfile)</code></pre>
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=demultiplexed_dir, 
+  outfile=outfile
+  )</code></pre>
+</div>
 </div>
 
 

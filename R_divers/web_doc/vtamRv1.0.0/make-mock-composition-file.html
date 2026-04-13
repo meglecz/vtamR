@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-13" />
+<meta name="date" content="2026-04-09" />
 
-<title>How to make a mock_composition file - v1.0.1</title>
+<title>How to make a mock_composition file - v1.0.0</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1479,8 +1479,8 @@ border-radius: 0px;
 
 
 <h1 class="title toc-ignore">How to make a mock_composition file -
-v1.0.1</h1>
-<h4 class="date">2026-04-13</h4>
+v1.0.0</h1>
+<h4 class="date">2026-04-09</h4>
 
 </div>
 
@@ -1513,238 +1513,158 @@ table {
   box-sizing: border-box;
 }
 </style>
-<div id="what-it-is-and-when-to-use-it" class="section level1">
-<h1>What it is and when to use it</h1>
+<div id="what-is-it-and-when-to-use-it" class="section level2">
+<h2>What is it and when to use it</h2>
 <p>The <a href="tutorial-vtamr-pipeline.html#mock_composition">mock_composition</a>
-file defines which ASVs are expected in each mock sample and is a key
-input for the analysis.</p>
-<p>It is provided as a CSV file with the following columns:</p>
+file is essential to describe which ASVs are expected in each mock
+sample.</p>
+<p>It is a CSV file with the following columns:</p>
 <ul>
-<li><p>sample: name of the <a href="tutorial-vtamr-pipeline.html#glossary">mock</a> sample</p></li>
-<li><p>action:</p>
+<li>sample: Name of the <a href="tutorial-vtamr-pipeline.html#glossary">mock</a> sample</li>
+<li>action:
 <ul>
-<li><code>keep</code>: ASV expected in the mock that should be retained
-in the dataset</li>
-<li><code>tolerate</code>: ASV that may be present in the mock but is
-not critical to retain (e.g. poorly amplified organism)</li>
+<li><code>keep</code>: Expected ASV in the mock, that should be kept in
+the data set</li>
+<li><code>tolerate</code>: ASV that can be present in a mock, but it is
+not essential to keep it in the data set (e.g. badly amplified
+organism)</li>
 </ul></li>
-<li><p><a href="tutorial-vtamr-pipeline.html#glossary">asv</a>: ASV
-sequence</p></li>
-<li><p>taxon: optional; organism name</p></li>
-<li><p><a href="tutorial-vtamr-pipeline.html#glossary">asv_id</a>:
-optional; if both <code>asv</code> and <code>asv_id</code> are provided
-and conflict, <code>asv_id</code> is ignored</p></li>
+<li><a href="tutorial-vtamr-pipeline.html#glossary">asv</a>: sequence of
+the ASV</li>
+<li>taxon: Optional; Name of the organism</li>
+<li><a href="tutorial-vtamr-pipeline.html#glossary">asv_id</a>:
+Optional; If there is a conflict between asv and asv_id, the asv_id is
+ignored</li>
 </ul>
 <p>The <a href="tutorial-vtamr-pipeline.html#known_occurrences">known_occurrences</a>
-file is required to run the following functions:</p>
+file is essential for running the following functions, either to
+determine the optimal parameter values for the LFN filters or to
+evaluate the filtering procedure in terms of precision (TP / (TP + FP))
+and sensitivity (TP / (TP + FN)).</p>
 <ul>
-<li><code>suggest_pcr_error_cutoff</code></li>
-<li><code>suggest_sample_cutoff</code></li>
-<li><code>suggest_variant_readcount_cutoffs</code></li>
-<li><code>compute_asv_specific_cutoff</code></li>
-<li><code>classify_control_occurrences</code></li>
-</ul>
-<p>These functions are used to:</p>
-<ul>
-<li>assess filtering performance in terms of precision (TP / (TP + FP))
-and sensitivity (TP / (TP + FN)) — via
-<code>classify_control_occurrences</code></li>
-<li>identify optimal parameter values for several filters
-(<code>suggest_pcr_error_cutoff</code>,
-<code>suggest_sample_cutoff</code>,
-<code>suggest_variant_readcount_cutoffs</code>,
-<code>compute_asv_specific_cutoff</code>)</li>
+<li><code>OptimizePCRerror</code></li>
+<li><code>OptimizeLFNsampleReplicate</code></li>
+<li><code>OptimizeLFNreadCountLFNvariant</code></li>
+<li><code>MakeKnownOccurrences</code></li>
+<li><code>ASVspecificCutoff</code></li>
 </ul>
 <p>The <a href="tutorial-vtamr-pipeline.html#mock_composition">mock_composition</a>
-file is also useful—though not required—for the
-<code>write_asv_table</code> function, if you want to include an output
-column that highlights expected occurrences in each mock sample.</p>
+is also useful, although not essential for the
+<code>write_asv_table</code> function if you wish to add a column in the
+output to easily find expected occurrences in each mock sample.</p>
 </div>
-<div id="constructing-the-mock_composition-file" class="section level1">
-<h1>Constructing the <code>mock_composition</code> File</h1>
+<div id="constructing-the-mock_composition-file" class="section level2">
+<h2>Constructing the <code>mock_composition</code> File</h2>
 <p>I suggest two different methods to construct the
 <code>mock_composition</code> file:</p>
 <ol style="list-style-type: decimal">
-<li>Using the <code>match_variants_to_mock_species</code> function</li>
+<li>Using the <code>MakeMockCompositionLTG</code> function</li>
 <li>Prefiltering the dataset and manually selecting the expected
 ASVs</li>
 </ol>
-<div id="using-match_variants_to_mock_species" class="section level2">
-<h2>1. Using <code>match_variants_to_mock_species</code></h2>
-<p>This function offers a quick and convenient way to generate a
-<code>mock_composition</code> file. However, it may occasionally miss
-some expected occurrences. In such cases, you can manually retrieve the
-expected ASVs from a prefiltered dataset (see below).</p>
-<div id="prerequisites" class="section level3">
-<h3>Prerequisites</h3>
+<div id="using-makemockcompositionltg" class="section level3">
+<h3>1. Using <code>MakeMockCompositionLTG</code></h3>
+<p>This function provides a convenient and fast way to build the
+<code>mock_composition</code> file. However, some expected occurrences
+may occasionally be missed. If that happens, you can manually select the
+expected ASVs from a prefiltered dataset (as descirbed later).</p>
+<div id="prerequisites" class="section level4">
+<h4>Prerequisites</h4>
 <ul>
 <li><p><strong>Reference sequences</strong></p>
-<p>Prepare one reference sequence for each species expected in the mock
-samples. Each sequence should span at least 70% of the region targeted
-by the primers. It can be longer or slightly shorter than the ASV and
-may include minor mismatches relative to the true sequence.</p>
-<p>Reference sequences must be provided in FASTA format, with headers
-including a valid NCBI taxonomic identifier:</p>
+<p>Collect a reference sequence for each species expected in the mock
+samples. Each reference should cover at least 70% of the region
+amplified by the primers. It may be longer or slightly shorter than the
+ASV and may differ slightly from the exact expected sequence.</p>
+<p>The reference sequences must be in FASTA format, and the FASTA
+headers should include a valid NCBI taxonomic identifier in the
+following format:</p>
 <pre><code>&gt;SequenceName taxID=12345</code></pre>
-<p>The <code>taxID</code> must correspond to an entry in the <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI Taxonomy
+<p>The <code>taxID</code> must correspond to a valid entry in the <a href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI Taxonomy
 database</a>.</p></li>
 <li><p><strong>Taxonomy file</strong></p>
-<p>A taxonomy file is required. The file distributed with the
-<strong>COInr</strong> database is appropriate, even for non-COI markers
-(see <a href="installation.html#taxassign-reference-data-base">TaxAssign
+<p>The function requires a taxonomy file. The file distributed with the
+<strong>COInr</strong> database is suitable for Eukaryotes, even if it
+is not a COI marker. (see <a href="installation.html#taxassign-reference-data-base">TaxAssign
 reference data base</a>).</p></li>
 <li><p><strong>Read count data</strong></p>
 <p>Provide a <code>read_count_df</code> data frame containing read
-counts for each mock sample. For better performance, it is recommended
-to use data that has already undergone initial filtering to remove
-artefactual ASVs and substantially reduce dataset size (e.g. after
-Denoising with SWARM, <code>LFNglobalReadCount</code>,
-<code>FilterIndel</code>, <code>FilterCodonStop</code>,
-<code>FilterExternalContaminant</code>, and
-<code>FilterChimera</code>).</p>
-<p>Although this improves speed, the function can also be run on
-unfiltered data.</p></li>
+counts for each mock sample. It is recommended to use a dataset that has
+already undergone initial filtering steps to remove artefactual ASVs and
+reduce drastically the number of ASV (e.g., after Denoising with SWARM,
+<code>LFNglobalReadCount</code>, <code>FilterIndel</code>,
+<code>FilterCodonStop</code>, <code>FilterExternalContaminant</code>,
+and <code>FilterChimera</code>).</p></li>
 </ul>
 </div>
-<div id="function-overview" class="section level3">
-<h3>Function Overview</h3>
-<p>The <code>match_variants_to_mock_species</code> function performs the
+<div id="function-overview" class="section level4">
+<h4>Function Overview</h4>
+<p>The <code>MakeMockCompositionLTG</code> function performs the
 following steps:</p>
 <ol style="list-style-type: decimal">
-<li><strong>Builds a small BLAST database</strong> from reference
-sequences representing expected species or closely related taxa.</li>
-<li><strong>Assigns taxonomy</strong> to all ASVs detected in mock
-samples using this custom database. Because the database is small, this
-step is fast.</li>
+<li><strong>Creates a small BLAST database</strong> from the reference
+sequences corresponding to the expected species or closely related
+taxa.</li>
+<li><strong>Assigns taxonomy</strong> to all ASVs detected in the mock
+samples using this custom database. Since the database is small, the
+assignment is fast.</li>
 <li><strong>Selects the most abundant ASV</strong> for each taxon.</li>
 <li><strong>Generates a <code>mock_composition</code> template
-file</strong>, which should be reviewed and edited if necessary.</li>
+file</strong>, which should be reviewed and, if necessary, edited by the
+user.</li>
 </ol>
 </div>
-<div id="run-match_variants_to_mock_species" class="section level3">
-<h3>Run <code>match_variants_to_mock_species</code></h3>
-<p>We will use files generated in the first part of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a> (up to <a href="tutorial-vtamr-pipeline.html#filter-replicate">filter_replicate</a>).</p>
+<div id="output" class="section level4">
+<h4>Output</h4>
+<p>The main output file is
+<strong><code>mock_composition_template_to_check.csv</code></strong>.
+This file serves as a template for the final
+<code>mock_composition</code> file.</p>
+<p>It contains the most abundant sequence for each <code>ltg_name</code>
+identified in the taxonomic assignment output, repeated for each mock
+sample. If different mock samples have distinct compositions, you should
+remove the lines corresponding to taxa that are not expected in a
+particular sample.</p>
+<p><strong>Note:</strong> The file does <strong>not</strong> include
+sequences for species in the custom database that did not show
+significant similarity to any ASV. This may occur if:</p>
 <ul>
-<li>Demo files are included in the <code>vtamR</code> package (hence the
-use of <code>system.file()</code>). When using your own data, simply
-replace these with your file paths.</li>
-<li><code>read_count_file</code> corresponds to the output of
-<code>filter_replicate</code> from the <a href="tutorial-vtamr-pipeline.html">Tutorial</a>.</li>
-<li><code>blast_db</code> and <code>taxonomy</code> are configured as
-described in the <a href="tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment">Tutorial</a>.</li>
+<li>the species was not amplified in the mock samples, or</li>
+<li>the reference sequence in the custom database is incorrect.</li>
+</ul>
+<p>We will use some of the files created by the first part of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a> (Till the <a href="tutorial-vtamr-pipeline.html#filterrenkonen">FilterRenkonen</a>)</p>
+<ul>
+<li>The demo files are included in the <code>vtamR</code> package, hence
+the use of <code>system.file()</code>. When using your own data just
+enter your file names.</li>
+<li><code>read_count_file</code> is the output of
+<code>FilterRenkonen</code> of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a>.</li>
+<li>The <code>blast_db</code> and <code>taxonomy</code> are set up as in
+the <a href="tutorial-vtamr-pipeline.html#set-up">Tutorial</a></li>
 </ul>
 <pre class="r"><code>library(vtamR)
 
-read_count_file &lt;- system.file(&quot;extdata/demo/8_filter_replicate.csv&quot;, package = &quot;vtamR&quot;)
+read_count_file &lt;- system.file(&quot;extdata/demo/7_FilterChimera.csv&quot;, package = &quot;vtamR&quot;)
 reference_mock_fasta &lt;- system.file(&quot;extdata/demo/mock_ncbi.fasta&quot;, package = &quot;vtamR&quot;)
-sampleinfo &lt;- system.file(&quot;extdata/demo/sampleinfo_mfzr_plate1.csv&quot;, package = &quot;vtamR&quot;)
+sampleinfo &lt;- system.file(&quot;extdata/demo/sampleinfo.csv&quot;, package = &quot;vtamR&quot;)
 taxonomy &lt;- system.file(&quot;extdata/db_test/taxonomy_reduced.tsv&quot;, package = &quot;vtamR&quot;)
 blast_path &lt;- &quot;blastn&quot; # Adapt this if BLAST is not in your PATH
 
 outdir_mock &lt;- &quot;mock_composition&quot;
 
-mock_template &lt;- match_variants_to_mock_species(
-  read_count=read_count_file,
-  fas=reference_mock_fasta,
-  taxonomy=taxonomy,
-  sampleinfo = sampleinfo,
-  outdir= outdir_mock,
-  blast_path=blast_path
-  )</code></pre>
-<p><strong>Note</strong>: If BLAST is available in your PATH (see <a href="installation.html">Installation</a>), you can omit the
+mock_template &lt;- MakeMockCompositionLTG(read_count=read_count_file,
+                                        fas=reference_mock_fasta,
+                                        taxonomy=taxonomy,
+                                        sampleinfo = sampleinfo,
+                                        outdir= outdir_mock;
+                                        blast_path=blast_path)</code></pre>
+<p><strong>Note</strong>: If BLAST is in your PATH (see <a href="installation.html">Installation</a>), you you can omit the
 <code>blast_path</code> argument.</p>
 </div>
-<div id="output" class="section level3">
-<h3>Output</h3>
-<p>The main output file is
-<strong><code>mock_composition_template_to_check.csv</code></strong>,
-which serves as a template for the final <code>mock_composition</code>
-file.</p>
-<pre class="r"><code>mock_composition &lt;- file.path(outdir_mock, &quot;mock_composition_template_to_check.csv&quot;)
-mock_composition_df &lt;- read.csv(mock_composition)
-
-knitr::kable(mock_composition_df, format = &quot;markdown&quot;)</code></pre>
-<table>
-<colgroup>
-<col width="3%" />
-<col width="3%" />
-<col width="78%" />
-<col width="12%" />
-<col width="3%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left">sample</th>
-<th align="left">action</th>
-<th align="left">asv</th>
-<th align="left">taxon</th>
-<th align="right">asv_id</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">TCTATATTTCATTTTTGGTGCTTGGGCAGGTATGGTAGGTACCTCATTAAGACTTTTAATTCGAGCCGAGTTGGGTAACCCGGGTTCATTAATTGGGGACGATCAAATTTATAACGTAATCGTAACTGCTCATGCCTTTATTATGATTTTTTTTATAGTGATACCTATTATAATT</td>
-<td align="left">Baetis rhodani</td>
-<td align="right">5</td>
-</tr>
-<tr class="even">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC</td>
-<td align="left">Caenis pusilla</td>
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">CCTTTATTTTATTTTCGGTATCTGATCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT</td>
-<td align="left">Hydropsyche pellucidula</td>
-<td align="right">3</td>
-</tr>
-<tr class="even">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">CCTTTATCTTGTATTTGGTGCCTGGGCCGGAATGGTAGGGACCGCCCTAAGCCTTCTTATTCGGGCCGAACTAAGCCAGCCTGGCTCGCTATTAGGTGATAGCCAAATTTATAATGTTATTGTTACCGCCCACGCCTTCGTAATAATTTTCTTTATAGTCATGCCAATTCTCATT</td>
-<td align="left">Phoxinus phoxinus</td>
-<td align="right">6</td>
-</tr>
-<tr class="odd">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">ACTTTATTTTATTTTTGGTGCTTGATCAGGAATAGTAGGAACTTCTTTAAGAATTCTAATTCGAGCTGAATTAGGTCATGCCGGTTCATTAATTGGAGATGATCAAATTTATAATGTAATTGTAACTGCTCATGCTTTTGTAATAATTTTCTTTATAGTTATACCTATTTTAATT</td>
-<td align="left">Rheocricotopus chalybeatus</td>
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="left">tpos1</td>
-<td align="left">keep</td>
-<td align="left">CTTATATTTTATTTTTGGTGCTTGATCAGGGATAGTGGGAACTTCTTTAAGAATTCTTATTCGAGCTGAACTTGGTCATGCGGGATCTTTAATCGGAGACGATCAAATTTACAATGTAATTGTTACTGCACACGCCTTTGTAATAATTTTTTTTATAGTTATACCTATTTTAATT</td>
-<td align="left">Synorthocladius semivirens</td>
-<td align="right">4</td>
-</tr>
-</tbody>
-</table>
-<p>It contains the most abundant sequence for each <code>ltg_name</code>
-identified during taxonomic assignment, replicated across all mock
-samples. If mock samples differ in composition, you should remove
-entries corresponding to taxa not expected in a given sample.</p>
-<p><strong>Note:</strong> The file does <strong>not</strong> include
-species that did not show significant similarity to any ASV. This can
-happen if:</p>
-<ul>
-<li>the species was not amplified in the mock samples, or</li>
-<li>the reference sequence in the custom database is incorrect.</li>
-</ul>
-<p>Here is your text with <strong>correct R Markdown internal link
-syntax preserved and consistent</strong> (anchors cleaned + safer IDs
-where needed).</p>
 </div>
-</div>
-<div id="prefiltering-the-dataset-and-manually-picking-the-expected-asvs" class="section level2">
-<h2>2. Prefiltering the dataset and manually picking the expected
-ASVs</h2>
+<div id="prefiltering-the-dataset-and-manually-picking-the-expected-asvs" class="section level3">
+<h3>2. Prefiltering the dataset and manually picking the expected
+ASVs</h3>
 <p>The idea is to</p>
 <ul>
 <li>Prefilter your data set</li>
@@ -1757,29 +1677,30 @@ using at least some of the following functions as in the <a href="tutorial-vtamr
 most of the erroneous ASV, so it will be easier to identify the expected
 ASV from your mock samples.</p>
 <ul>
-<li><a href="tutorial-vtamr-pipeline.html#denoising-with-swarm">Denoising with
-SWARM</a></li>
-<li><a href="tutorial-vtamr-pipeline.html#filter_asv_global">filter_asv_global</a></li>
-<li><a href="tutorial-vtamr-pipeline.html#filter_indel">filter_indel</a></li>
-<li><a href="tutorial-vtamr-pipeline.html#filter_stop_codon">filter_stop_codon</a></li>
-<li><a href="tutorial-vtamr-pipeline.html#filter_chimera">filter_chimera</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#denoising-by-swarm">Denoising
+by SWARM</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#lfnglobalreadcount">LFNglobalReadCount</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#filterindel">FilterIndel</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#filtercodonstop">FilterCodonStop</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#filterchimera">FilterChimera</a></li>
 </ul>
-<div id="set-parameters-and-access-the-demo-files" class="section level3">
-<h3>Set parameters and access the demo files</h3>
-<p>We will use some of the files created by the first part of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a> (till the <a href="tutorial-vtamr-pipeline.html#filter-replicate">filter_replicate</a>)</p>
+</div>
+<div id="set-parametres-and-access-the-demo-files" class="section level3">
+<h3>Set parametres and access the demo files</h3>
+<p>We will use some of the files created by the first part of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a> (Till the <a href="tutorial-vtamr-pipeline.html#filterchimera">FilterChimera</a>)</p>
 <ul>
 <li>The demo files are included in the <code>vtamR</code> package, hence
 the use of <code>system.file()</code>. When using your own data just
 enter your file names.</li>
 <li><code>read_count_file</code> is the output of
-<code>filter_replicate</code> of the <a href="tutorial-vtamr-pipeline.html#filter-replicate">Tutorial</a>.</li>
+<code>FilterRenkonen</code> of the <a href="tutorial-vtamr-pipeline.html">Tutorial</a>.</li>
 <li>The <code>blast_db</code> and <code>taxonomy</code> are set up as in
-the <a href="tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment">Tutorial</a></li>
+the <a href="tutorial-vtamr-pipeline.html#set-up">Tutorial</a></li>
 </ul>
 <pre class="r"><code>library(vtamR)
 library(dplyr)
 
-read_count_file &lt;- system.file(&quot;extdata/demo/8_filter_replicate.csv&quot;, package = &quot;vtamR&quot;)
+read_count_file &lt;- system.file(&quot;extdata/demo/8_FilterRenkonen.csv&quot;, package = &quot;vtamR&quot;)
 taxonomy &lt;- system.file(&quot;extdata/db_test/taxonomy_reduced.tsv&quot;, package = &quot;vtamR&quot;)
 sampleinfo &lt;- system.file(&quot;extdata/demo/sampleinfo_mfzr_plate1.csv&quot;, package = &quot;vtamR&quot;)
 blast_db &lt;- system.file(&quot;extdata/db_test&quot;, package = &quot;vtamR&quot;)
@@ -1792,39 +1713,36 @@ sampleinfo_df &lt;- read.csv(sampleinfo)
 # select mock samples in sampleinfo
 mock_samples &lt;- sampleinfo_df %&gt;%
   filter(sample_type == &quot;mock&quot;)
-
 # select mock samples from read_count_df
 read_count_mock &lt;- read_count_df %&gt;%
-  filter(sample %in% mock_samples$sample)</code></pre>
+  filter(sample %in% mock_samples$sample)
+</code></pre>
 </div>
-<div id="taxassign" class="section level3">
+<div id="assign-taxa-to-asvs" class="section level3">
 <h3>Assign taxa to ASVs</h3>
 <p><code>assign_taxonomy_ltg</code> will assign all ASV in the input csv
 file or data frame (<code>read_count_file</code>).</p>
-<p>See more details of taxonomic assignment <a href="tutorial-vtamr-pipeline.html#taxonomic-assignment">here</a>.</p>
-<p><strong>Note</strong>: If BLAST is in your PATH, you can omit the
+<p>See more details of taxonomic assignment <a href="tutorial-vtamr-pipeline.html#taxassign">here</a>.</p>
+<p><strong>Note</strong>: If BLAST is in your PATH (see <a href="installation.html">Installation</a>), you you can omit the
 <code>blast_path</code> argument.</p>
-<pre class="r"><code>asv_tax &lt;- assign_taxonomy_ltg(
-  asv = read_count_mock, 
-  taxonomy = taxonomy, 
-  blast_db = blast_db,
-  quiet = TRUE,
-  blast_path = blast_path
-)</code></pre>
+<pre class="r"><code>asv_tax &lt;- assign_taxonomy_ltg(asv=read_count_mock, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db,
+                     quiet=TRUE,
+                     blast_path = blast_path 
+                     )</code></pre>
 </div>
-<div id="print-output" class="section level3">
+<div id="make-an-asv-table-with-taxonomic-assignments" class="section level3">
 <h3>Make an ASV table with taxonomic assignments</h3>
 <p>Make a data frame with ASVs and read counts in the <a href="tutorial-vtamr-pipeline.html#glossary">wide format</a> and add
-their taxonomic assignment.</p>
-<p>This format is easier to read for humans than
-<code>read_count_df</code>.</p>
+their taxonomic assignment. This format is easier to read for humans,
+than the <code>read_count_df</code>.</p>
 <p>See details of <code>write_asv_table</code> <a href="tutorial-vtamr-pipeline.html#print-output">here</a>.</p>
-<pre class="r"><code>asv_table_mock &lt;- write_asv_table(
-  read_count_mock, 
-  sampleinfo = sampleinfo, 
-  asv_tax = asv_tax,
-  pool_replicates = TRUE
-)</code></pre>
+<pre class="r"><code>
+asv_table_mock &lt;- write_asv_table(read_count_mock, 
+                               sampleinfo=sampleinfo, 
+                               asv_tax=asv_tax,
+                               pool_replicates=TRUE)</code></pre>
 <p>Sort the output by the taxon name and then by decreasing read
 count.</p>
 <pre class="r"><code>asv_table_mock &lt;- asv_table_mock %&gt;%
@@ -3735,18 +3653,15 @@ count.</p>
 <li><em>Baetis rhodani</em></li>
 </ul>
 <p>We can see that in spite of all the filtering we have done so far,
-there are still a lot of unexpected occurrences in this sample.</p>
-<p>Most of them have low read counts and could be filtered out by <a href="tutorial-vtamr-pipeline.html#glossary">Low Frequency Noise
-Filters</a> such as <code>filter_occurrence_read_count</code>,
-<code>filter_occurrence_sample</code>,
-<code>filter_occurrence_variant</code>.</p>
+there are still a lot of unexpected occurrences in this sample. Most of
+them have low read counts and could be filtered out by <a href="tutorial-vtamr-pipeline.html#glossary">Low Frequency Noise
+Filters</a></p>
 </div>
-<div id="mock-composition" class="section level3">
+<div id="select-the-expected-asv-and-make-mock_composition" class="section level3">
 <h3>Select the expected ASV and make mock_composition</h3>
 <p>You can now pick the correct sequences of the expected ASVs in each
 mock and make the <a href="tutorial-vtamr-pipeline.html#mock_composition">mock_composition</a>
 file.</p>
-</div>
 </div>
 </div>
 
