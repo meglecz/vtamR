@@ -112,7 +112,7 @@ Please, follow the [Installation](installation.html) instructions.
 library(vtamR)
 ```
 
-### Set Path to Third-Party Programs
+### Set Path to Third-Party Programs {#set-path}
 
 If the third-party programs are **not** in your `PATH` 
 (see [Installation](installation.html)),

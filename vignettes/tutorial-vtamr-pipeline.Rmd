@@ -98,12 +98,19 @@ aid in data interpretation and decision-making.
 - **Simplified Workflow:** The concepts of "marker" and "run" have been removed 
 to streamline analyses.
 
+```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="vtamR Workflow"}
+knitr::include_graphics("figures/vtamR_workflow.png")
+```
+
 
 # Installation
 
 Please, follow the [Installation](installation.html) instructions.
 
 # Tutorial
+
+This a detailed, tutorial. 
+For impatient users, see the [Short tutorial](short-tutorial.html).
 
 ## Set up
 
@@ -112,7 +119,7 @@ Please, follow the [Installation](installation.html) instructions.
 library(vtamR)
 ```
 
-### Set Path to Third-Party Programs
+### Set Path to Third-Party Programs {#set-path}
 
 If the third-party programs are **not** in your `PATH` 
 (see [Installation](installation.html)),
@@ -320,7 +327,7 @@ See the [From fastq to data frame](from-fastq-to-df.html) on
 how to deal with other experimental designs.
 
 
-### Merge Fastq Pairs and Quality Filter
+### Merge Fastq Pairs and Quality Filter {#merge}
 
 The `merge_fastq_pairs` function combines each read-pair into a single
 sequence in fasta format and can also handle **quality filtering**.
@@ -360,7 +367,7 @@ fastainfo_df <- merge_fastq_pairs(
   )
 ```
 
-### Randomly Select Sequences (Subsampling)
+### Randomly Select Sequences (Subsampling) {#subsample}
 
 The `subsample_fasta` function lets you randomly pick `n` sequences 
 (without replacement) from each FASTA file listed in your `fastainfo` data frame.
@@ -398,7 +405,7 @@ Since subsampling is performed **without replacement**, this file will be copied
 directly to the output directory. As a result, it will contain slightly fewer 
 reads than the other files — this is expected and not a cause for concern.
 
-### Demultiplex And Trim
+### Demultiplex and Trim {#demultiplex}
 
 The `demultiplex_and_trim` function is used to both **[demultiplex](#glossary)** your 
 FASTA files (i.e. separate reads based on their tag combinations) 
@@ -508,7 +515,7 @@ You can also **track how the number of reads and ASVs changes** after
 each filtering step. For this, we will create a data frame (`stat_df`) 
 that stores this information and update it along the way.
 
-### Initialize Statistics Tracking
+### Initialize Statistics{#init-stat}
 
 First, we create a data frame to **store summary statistics** at each step of the analysis:
 
@@ -533,7 +540,7 @@ Here’s what the main arguments mean:
 * `params`: a string describing the key parameters used at each filtering step
 * `stage`: a string indicating which step of the analysis the statistics correspond to
 
-### Denoising with SWARM
+### Denoising with SWARM {#denoise}
 
 In metabarcoding datasets, sequencing errors often produce many low-frequency 
 ASVs that do not reflect real biological sequences. A common way to reduce 
@@ -553,7 +560,7 @@ the recommended settings are:
 These settings are designed to remove sequencing errors while preserving 
 real biological variation.
 
-#### Whole Dataset vs. Sample-by-Sample Clustering
+#### Whole Dataset vs. Sample-by-Sample Clustering**
 
 There are two ways to apply SWARM:
 
@@ -769,7 +776,7 @@ knitr::kable(stat_df, format = "markdown")
 ```
 
 
-### Filter Aberrant Replicates (`filter_replicate`) {#filter-replicate}
+### Filter Aberrant Replicates (`filter_replicate`) {#filter_replicate}
 
 This filter removes **replicates that are very different** from other 
 replicates of the same sample.
@@ -1163,7 +1170,7 @@ knitr::kable(stat_df, format = "markdown")
 ```
 
 
-### Pool Replicates
+### Pool Replicates {#pool_replicates}
 
 Replicates can now be combined for each sample.
 
@@ -1188,7 +1195,7 @@ read_count_sample_df <- pool_replicates(
 )
 ```
 
-### Get Performance Metrics
+### Performance Metrics {#classify_control_occurrences}
 
 We now run `classify_control_occurrences` again to evaluate the performance 
 of the filtering.
@@ -1227,7 +1234,7 @@ performance_metrics_df <- results[[3]]
 knitr::kable(performance_metrics_df, format = "markdown")
 ```
 
-## Print Summary Statistics
+## Print Summary Statistics {#print_stats}
 
 This step prints the number of reads, ASVs, samples, and replicates remaining 
 after each processing step, and saves the information to a CSV file for tracking 
@@ -1259,7 +1266,7 @@ asv_tax <- assign_taxonomy_ltg(asv=read_count_sample_df,
                      outfile=outfile)
 ```
 
-## Make mOTUs
+## Clustering (mOTUs) {#cluster_asv}
 
 If you are not interested in **intra-specific variation**, ASVs can be grouped into **mOTUs**.
 
@@ -1326,7 +1333,10 @@ print(plot_vsearch)
 Below is the same plot generated using the full (though still relatively small) original dataset,
 which provides a clearer view of the patterns:
 
-![Pairwise Identity Plot per Cluster Identity Threshold for the original data](figures/plot_pairwise_identity_vsearch.png)
+
+```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="Pairwise Identity Plot per Cluster Identity Threshold for the original data"}
+knitr::include_graphics("figures/plot_pairwise_identity_vsearch.png")
+```
 
 
 ### Classify Clusters Based On Taxonomy
@@ -1367,12 +1377,15 @@ scatterplot_vsearch <- plot_cluster_classification(
 print(scatterplot_vsearch)
 ```
 
-**Note:** This graph is based on a very small test dataset and is therefore not very informative.
+**Note:** This graph is based on a very small test data set and is therefore not very informative.
 
-Below is the same plot generated using the full (though still relatively small) original dataset,
+Below is the same plot generated using the full (though still relatively small) original data set,
 which provides a clearer view of the patterns:
 
-![Plot ClusterClasstification for the original data](figures/plot_cluster_classification_vsearch.png)
+```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="Plot ClusterClasstification for the original data"}
+knitr::include_graphics("figures/plot_cluster_classification_vsearch.png")
+```
+
 #### Interpretation of the plots
 
 Even though the original dataset is relatively small and the differences between 
@@ -1441,7 +1454,7 @@ stat_df <- get_stat(read_count_samples_df_ClusterSize,
 knitr::kable(stat_df, format = "markdown")
 ```
 
-## Print Output
+## Print Output {#write_asv_table}
 
 The `write_asv_table` function restructures your `read_count_df` so that:
 

@@ -5268,7 +5268,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
 #' for `filter_occurrence_read_count` function. 
 #' @param increment_read_count_cutoff Positive integer: values from 
 #' `min_read_count_cutoff` to `max_read_count_cutoff` 
-#' are tested by `increment_lfn_read_count_cutof` of increment. 
+#' are tested by `increment_read_count_cutoff` of increment. 
 #' @param min_variant_cutoff Numeric. Value between 0 and 1: the lowest cutoff value for 
 #' `filter_occurrence_variant` function. 
 #' @param max_variant_cutoff  Numeric. Value between 0 and 1: the highest value for `filter_occurrence_variant`

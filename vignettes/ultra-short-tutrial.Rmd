@@ -1,0 +1,269 @@
+---
+title: "Ultra Short Tutorial vtamR - v1.0.1"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=TRUE,
+  cache=TRUE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+
+# vtamR Pipeline — Cheat Sheet
+
+## 1. Setup
+
+```{r}
+library(vtamR)
+```
+
+```{r}
+outdir <- "vtamR_demo_out/mfzr_plate1"
+
+fastq_dir <- system.file("extdata/demo/fastq", package="vtamR")
+fastqinfo <- system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package="vtamR")
+mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package="vtamR")
+asv_list <- system.file("extdata/demo/asv_list.csv", package="vtamR")
+
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package="vtamR")
+blast_db <- file.path(system.file("extdata/db_test", package="vtamR"), "COInr_reduced")
+```
+
+---
+
+## 2. Pre-processing
+
+```{r}
+fastainfo_df <- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir, 
+  outdir=file.path(outdir,"1_merged")
+  )
+
+fastainfo_df <- subsample_fasta(
+  fastainfo_df, 
+  fasta_dir=file.path(outdir,"1_merged"),
+  outdir=file.path(outdir,"2_random_seq"),
+  n=40000
+  )
+
+sampleinfo_df <- demultiplex_and_trim(
+  fastainfo_df,
+  fasta_dir=file.path(outdir,"2_random_seq"),
+  outdir=file.path(outdir,"3_demultiplexed"),
+  check_reverse=TRUE,
+  cutadapt_minimum_length=170,
+  cutadapt_maximum_length=185
+  )
+
+read_count_df <- dereplicate(
+  sampleinfo_df,
+  dir=file.path(outdir,"3_demultiplexed"),
+  outfile=file.path(outdir,"4_filter","1_before_filter.csv"),
+  input_asv_list=asv_list,
+  output_asv_list=file.path(outdir,"ASV_list_with_IDs.csv")
+  )
+```
+
+
+## 3. Filtering ASVs
+
+```{r}
+read_count_df <- denoise_by_swarm(
+  read_count_df,
+  outfile=file.path(outdir,"4_filter","2_swarm.csv"),
+  by_sample=TRUE, 
+  split_clusters=TRUE
+  )
+
+read_count_df <- filter_asv_global(
+  read_count_df, 
+  cutoff=2,
+  outfile=file.path(outdir,"4_filter","3_global.csv")
+  )
+
+read_count_df <- filter_indel(
+  read_count_df,
+  outfile=file.path(outdir,"4_filter","4_indel.csv")
+  )
+
+read_count_df <- filter_stop_codon(
+  read_count_df, 
+  outfile=file.path(outdir,"4_filter","5_stop.csv")
+  )
+
+read_count_df <- filter_contaminant(
+  read_count_df, 
+  sampleinfo_df,
+  conta_file=file.path(outdir,"4_filter","conta.csv"),
+  outfile=file.path(outdir,"4_filter","6_conta.csv"))
+
+read_count_df <- filter_chimera(
+  read_count_df,
+  vsearch_path=vsearch_path,
+  outfile=file.path(outdir,"4_filter","7_chimera.csv")
+  )
+```
+
+
+## 4. Filter Replicates
+
+```{r}
+read_count_df <- filter_replicate(
+  read_count_df,
+  renkonen_distance_quantile=0.9,
+  outfile=file.path(outdir,"4_filter","8_replicate.csv")
+  )
+```
+
+
+## 5. Filtering Occurrences
+
+### Make mock composition
+```{r}
+mock_template <- match_variants_to_mock_species(
+  read_count_df,
+  fas=mock_ncbi_fasta,
+  taxonomy=taxonomy,
+  sampleinfo=sampleinfo_df,
+  outdir=file.path(outdir,"mock")
+  )
+
+mock_composition <- file.path(outdir,"mock","mock_composition_template_to_check.csv")
+```
+
+### Suggest Parametres and Filter Occurrences
+
+#### Filter by Sample
+
+```{r}
+
+sample_cutoff_df <- suggest_sample_cutoff(
+  read_count=read_count_df,
+  mock_composition=mock_composition,
+  outfile=file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
+)
+head(sample_cutoff_df)
+
+read_count_df <- filter_occurrence_sample(
+  read_count_df, 
+  cutoff=0.004,
+  outfile=file.path(outdir,"4_filter","9_sample.csv")
+  )
+
+read_count_df <- filter_min_replicate(
+  read_count_df, 
+  outfile=file.path(outdir,"4_filter","10_minrep.csv")
+  )
+```
+
+#### Filter by Variant and Read Count
+
+```{r}
+variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
+  read_count_df,
+  mock_composition = mock_composition,
+  sampleinfo = sampleinfo_df,
+  outdir= file.path(outdir, "4_filter", "suggest_parameters"),
+  min_replicate_number = 2
+)
+
+head(variant_readcount_cutoffs_df)
+
+
+read_count_df_variant <- filter_occurrence_variant(
+  read_count_df, 
+  cutoff=0.001,
+  outfile=file.path(outdir,"4_filter","11_variant.csv")
+  )                                
+
+read_count_df_rc <- filter_occurrence_read_count(
+  read_count_df, 
+  cutoff=10,
+  outfile=file.path(outdir,"4_filter","12_readcount.csv")
+  )
+                                                 
+read_count_df <- pool_filters(
+  read_count_df_rc, 
+  read_count_df_variant,
+  outfile=file.path(outdir,"4_filter","13_pool.csv")
+  )                    
+
+rm(read_count_df_rc, read_count_df_variant)
+```
+
+## 6. Final cleaning
+
+```{r}
+read_count_df <- filter_min_replicate(
+  read_count_df, 
+  outfile=file.path(outdir,"4_filter","14_minrep2.csv")
+  )
+
+read_count_sample_df <- pool_replicates(
+  read_count_df,
+  outfile=file.path(outdir,"4_filter","15_poolrep.csv")
+  )
+```
+
+
+## 7. Taxonomy
+
+```{r}
+asv_tax <- assign_taxonomy_ltg(
+  read_count_sample_df,
+  taxonomy=taxonomy,
+  blast_db=blast_db,
+  outfile=file.path(outdir,"4_filter","taxonomy.csv")
+  )
+```
+
+
+## 8. Clustering (mOTUs)
+
+```{r}
+motu_df <- cluster_asv(
+  read_count_sample_df,
+  method="vsearch", 
+  identity=0.97,
+  outfile=file.path(outdir,"5_cluster","motu.csv")
+  )
+```
+
+
+## 9. Final table
+
+```{r}
+asv_table_df <- write_asv_table(
+  read_count_sample_df,
+  outfile=file.path(outdir,"motu_table_taxa.csv"),
+  asv_tax=asv_tax,
+  sampleinfo=sampleinfo_df
+  )
+```
+
+
+## Pipeline summary
+
+**FASTQ → merge → subsample → demultiplex → dereplicate → filters → pool → taxonomy → mOTUs → table**
+
+
