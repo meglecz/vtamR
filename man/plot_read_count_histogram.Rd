@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_graph.R
 \name{plot_read_count_histogram}
 \alias{plot_read_count_histogram}
-\title{plot_read_count_histogram}
+\title{Plot Read Count Histogram}
 \usage{
 plot_read_count_histogram(
   read_count_df,
@@ -12,20 +12,23 @@ plot_read_count_histogram(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with asv and read_count columns}
+\item{read_count_df}{Data frame with \code{asv} and \code{read_count} columns.}
 
-\item{min_read_count}{filter out ASVs with less than min_read_count reads,
-before making the graph}
+\item{min_read_count}{Numeric; minimum read count threshold. ASVs with fewer
+reads are filtered out before plotting.}
 
-\item{binwidth}{width of the read count intervals}
+\item{binwidth}{Numeric; width of histogram bins for read count intervals.}
 
-\item{plotfile}{Character string: png file name for the output plot;
-If empty, no file is written.}
+\item{plotfile}{Character string: name of the output PNG file. If empty,
+no file is written.}
 }
 \value{
-Histogram
+A histogram plot object.
 }
 \description{
-Create histogram with the number of reads in each sample or sample-replicate;
-If information is given on sample types, bars are colored in function of them
+Creates a histogram of read counts per ASV.
+}
+\details{
+This function filters low-abundance ASVs (if requested) and then plots the
+distribution of read counts across ASVs.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{compute_asv_specific_cutoff}
 \alias{compute_asv_specific_cutoff}
-\title{Generate ASV-Specific Cutoff Values}
+\title{Generate ASV-specific cutoff values}
 \usage{
 compute_asv_specific_cutoff(
   read_count,
@@ -15,59 +15,61 @@ compute_asv_specific_cutoff(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate, read_count.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv}, \code{sample}, \code{replicate}, \code{read_count}.}
 
-\item{max_cutoff}{Numeric; the maximum allowed cutoff value.}
+\item{max_cutoff}{Numeric value specifying the maximum allowed cutoff value.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or path to a CSV file with columns:
+\code{sample}, \code{action} (keep/tolerate), \code{asv}.}
 
-\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
-of reads in a habitat is below this cutoff,
-it is considered as a false positive in all samples of the habitat.}
+\item{habitat_proportion}{Numeric value between 0 and 1. For each ASV, if the
+proportion of reads in a habitat is below this threshold, it is considered
+a false positive in all samples of that habitat.}
 
-\item{by_replicate}{Logical; if TRUE, compute cutoffs separately by replicates.}
+\item{by_replicate}{Logical. If \code{TRUE}, compute cutoffs separately for each replicate.}
 
-\item{outfile}{Character string: output file. If empty, no file is written.}
+\item{outfile}{Character string specifying the output file. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Data frame with the following columns:
-asv_id, replicate (if by_replicate), cutoff
-Lines contain only ASVs that have know false positive occurrences.
+Data frame with columns: \code{asv_id}, \code{replicate} (if \code{by_replicate = TRUE}), \code{cutoff}.
+Only ASVs with known false-positive occurrences are included.
 }
 \description{
-In some datasets, certain ASVs may occur in many samples with high read counts.
-As a result, reads originating from tag-jump or inter sample contamination
-may remain after applying a fixed cutoff value in the \emph{filter_occurrence_variant} function.
-This function computes ASV-specific cutoff values for use in \emph{filter_occurrence_variant},
-targeting ASVs known to have false-positive occurrences (as identified by
-\emph{classify_control_occurrences}).
+In some datasets, certain ASVs occur frequently across many samples with
+high read counts. In such cases, tag-jump or inter-sample contamination
+may persist even after applying a fixed threshold in
+\code{filter_occurrence_variant}. This function computes ASV-specific cutoff
+values to address such cases, focusing on ASVs with known false-positive
+occurrences (as identified by \code{classify_control_occurrences}).
 
 For each ASV, the function:
 \itemize{
-\item Identifies all false-positive occurrences.
-\item Takes the maximum read count among these false positives.
-\item Divides this value by the total read count of the ASV across the dataset,
+\item identifies all false-positive occurrences,
+\item takes the maximum read count among these false positives,
+\item divides this value by the total read count of the ASV across the dataset,
 or within each replicate if \code{by_replicate = TRUE}.
 }
 
-Because some false positives may not result from tag-jump contamination, the resulting
-cutoff values can sometimes be excessively high. Therefore:
+Because some false positives may not be due to tag-jump contamination, the
+resulting cutoff values can be overly stringent. Therefore:
 \itemize{
-\item Filter the dataset as thoroughly as possible \emph{before} computing ASV-specific cutoffs.
-\item Set a reasonable upper limit for these cutoffs using the \emph{max_cutoff} parameter.
+\item filter the dataset as thoroughly as possible before computing cutoffs,
+\item set a reasonable upper limit using the \code{max_cutoff} parameter.
 }
 }
 \examples{
 \dontrun{
-cutoffs <- compute_asv_specific_cutoff(read_count=read_count_df, 
-    mock_composition="data/mock_composition.csv"
-    )
+cutoffs <- compute_asv_specific_cutoff(
+  read_count = read_count_df, 
+  mock_composition = "data/mock_composition.csv"
+)
 }
+
 }
 \seealso{
-\code{\link[=filter_occurrence_variant]{filter_occurrence_variant()}}
+\code{filter_occurrence_variant()}
 }

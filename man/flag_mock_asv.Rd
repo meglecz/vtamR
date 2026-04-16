@@ -7,27 +7,34 @@
 flag_mock_asv(occurrence_df, mock_composition, sep = ",")
 }
 \arguments{
-\item{occurrence_df}{Data frame with the following variables:
-asv_id, sample, read_count, asv, sample_type, habitat, action.}
+\item{occurrence_df}{Data frame with columns \code{asv_id}, \code{sample}, \code{read_count},
+\code{asv}, \code{sample_type}, \code{habitat}, \code{action}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns \code{sample},
+\code{action} (keep/tolerate), and \code{asv}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 }
 \value{
-Data frame with the following columns:
-asv_id, sample, read_count, asv, sample_type, habitat, action.
+Data frame with columns \code{asv_id}, \code{sample}, \code{read_count}, \code{asv},
+\code{sample_type}, \code{habitat}, \code{action}.
 }
 \description{
-Flag all occurrences in mock samples.
-Expected variants as 'keep', unexpected ASVs as 'delete', tolerate ASVs as NA.
-Tolerate ASVs are ASVs that can be in the mock, but the filtering
-should not be optimized to keep them
-(e.g. badly amplified species present in the mock).
+Classify all occurrences observed in mock samples as expected or unexpected
+based on a reference mock composition table.
+Expected variants are flagged as \code{"keep"}, unexpected ASVs as \code{"delete"},
+and \code{"tolerate"} ASVs are left as \code{NA}.
+}
+\details{
+Tolerate ASVs correspond to taxa that may be present in mock samples but
+should not influence optimization of filtering thresholds
+(e.g. poorly amplified taxa included in the mock design).
 }
 \examples{
 \dontrun{
-flag_mock_asv(occurrence_df=occurrence_df, mock_composition="data/mock_composition.csv")
+flag_mock_asv(
+  occurrence_df = occurrence_df,
+  mock_composition = "data/mock_composition.csv"
+)
 }
 }

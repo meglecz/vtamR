@@ -7,31 +7,32 @@
 download_zenodo(filename, url, dest_dir = ".", untar = TRUE, quiet = FALSE)
 }
 \arguments{
-\item{filename}{character string specifying the name of the file to download.}
+\item{filename}{Character string specifying the name of the file to download.}
 
-\item{url}{URL of the Zenodo record (copy from the browser address bar).}
+\item{url}{Character string; URL of the Zenodo record (copy from browser address bar).}
 
-\item{dest_dir}{path to the directory where the file should be downloaded.}
+\item{dest_dir}{Character string; path to the directory where the file should be downloaded.}
 
-\item{untar}{logical: If TRUE, the archive will be extracted after download.}
+\item{untar}{Logical; if \code{TRUE}, the archive is extracted after download.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings or errors.}
 }
 \value{
-Invisible full path to the directory where the file was downloaded to.
-show warnings or errors.
+Invisible full path to the directory where the file was downloaded.
 }
 \description{
-Downloads file from Zenodo.
-Extracts the .tar.gz archive, if necessary
+Downloads a file from Zenodo and optionally extracts it if it is a
+\code{.tar.gz} archive.
 }
 \examples{
 \dontrun{
-download_zenodo(filename = "COInr_2025_05_23.tar.gz",
-   url = "https://zenodo.org/records/15515860",
-   dest_dir = "~/vtamR",
-   untar = TRUE,
-   quiet = FALSE
-   )
+download_zenodo(
+  filename = "COInr_2025_05_23.tar.gz",
+  url = "https://zenodo.org/records/15515860",
+  dest_dir = "~/vtamR",
+  untar = TRUE,
+  quiet = FALSE
+)
 }
+
 }

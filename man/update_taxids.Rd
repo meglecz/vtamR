@@ -2,24 +2,27 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{update_taxids}
 \alias{update_taxids}
-\title{Update taxids}
+\title{Update obsolete taxids}
 \usage{
 update_taxids(df, old_taxid)
 }
 \arguments{
-\item{df}{Data frame with the following columns: qseqid,pident,qcovhsp,staxids}
+\item{df}{Data frame with the following columns: \code{qseqid}, \code{pident}, \code{qcovhsp}, \code{staxids}.}
 
-\item{old_taxid}{Data frame with the following columns:  tax_id,old_tax_id}
+\item{old_taxid}{Data frame with columns \code{tax_id} and \code{old_tax_id} used to map
+deprecated taxids to valid ones.}
 }
 \value{
-Data frame with the following columns: qseqid,pident,qcovhsp,staxids,
-where the merged taxids has been replaced by the up to date ones.
+Data frame with updated \code{staxids}, where obsolete taxids have been replaced
+by current valid taxids.
 }
 \description{
-Replaces old taxids (merged to other taxIDs in NCBI taxonomy) by valid ones.
+Replace outdated NCBI taxonomy IDs with their current valid equivalents.
+This step ensures that merged or deprecated taxids are mapped to updated identifiers.
 }
 \examples{
 \dontrun{
-update_taxids(df=blastout_df, old_taxid=old_taxid_df)
+update_taxids(df = blastout_df, old_taxid = old_taxid_df)
 }
+
 }

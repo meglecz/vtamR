@@ -2,23 +2,24 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{read_blast_results}
 \alias{read_blast_results}
-\title{Read BLAST results to data frame}
+\title{Read BLAST results into a data frame}
 \usage{
 read_blast_results(file)
 }
 \arguments{
-\item{file}{Character string naming the output of BLAST.
-Tab separated colums: qseqid,pident,qcovhsp,staxids}
+\item{file}{Character string specifying the BLAST output file. The file must
+be tab-separated and contain the columns: \code{qseqid}, \code{pident}, \code{qcovhsp}, \code{staxids}.}
 }
 \value{
-Data frame with the following columns: qseqid,pident,qcovhsp,staxids
+Data frame with columns: \code{qseqid}, \code{pident}, \code{qcovhsp}, \code{staxids}.
 }
 \description{
-Read BLAST result to a data frame.
-If more than one taxid for a hit, make a separate line for each taxid.
+Import BLAST output into a structured data frame. If a hit contains multiple
+taxonomy IDs (\code{staxids}), each taxid is split into a separate row.
 }
 \examples{
 \dontrun{
-read_blast_results(file="blastout.txt")
+read_blast_results(file = "blastout.txt")
 }
+
 }

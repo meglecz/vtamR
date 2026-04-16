@@ -7,19 +7,20 @@
 add_read_counts(df, dir)
 }
 \arguments{
-\item{df}{Data frame with fasta column containing name of fasta files}
+\item{df}{Data frame with a \code{fasta} column containing the names of FASTA files.}
 
-\item{dir}{Character string: directory name with the fasta files.}
+\item{dir}{Character string specifying the directory containing the FASTA files.}
 }
 \value{
-Data frame with the read_count column added to the input.
+Data frame with an additional \code{read_count} column.
 }
 \description{
-Count the number of reads in all fasta files in the fasta column of a df.
-Add read_count column to df.
+Count the number of reads in all FASTA files listed in the \code{fasta} column
+of a data frame, and add a \code{read_count} column to it.
 }
 \examples{
 \dontrun{
 df <- add_read_counts(df, sorted_dir)
 }
+
 }

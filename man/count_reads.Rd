@@ -2,30 +2,32 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{count_reads}
 \alias{count_reads}
-\title{Count reads}
+\title{Count reads in sequence or text files}
 \usage{
 count_reads(file, file_type = "")
 }
 \arguments{
-\item{file}{Character string: name of the input file (including path).}
+\item{file}{Character string: path to the input file.}
 
-\item{file_type}{Character string with the following values: "fasta", "fastq".
-For all other values, the number of lines is returned.}
+\item{file_type}{Character string specifying the file type: \code{"fasta"} or \code{"fastq"}.
+For any other value, the function returns the number of lines in the file.}
 }
 \value{
-Integer: The number of sequences for fasta or fastq files,
-number of lines for other files.
+Integer: number of sequences for FASTA/FASTQ files, or number of
+lines for other file types.
 }
 \description{
-Count the number of sequences in a fasta or fastq file
-or the number of lines in other files.
-
-Efficient in linux-like systems, but slow on Windows for large files.
-Can handle gz compressed and uncompressed files, but not zip files.
+Count the number of sequences in FASTA or FASTQ files, or the number of lines
+in other file types.
+}
+\details{
+This function is optimized for Linux-like systems and may be slower on Windows
+for large files.
+It supports both gz-compressed and uncompressed files (ZIP archives are not supported).
 }
 \examples{
 \dontrun{
-count_reads(file="data/test.fasta", file_type="fasta")
-count_reads(file="data/test.fasta", file_type="")
+count_reads(file = "data/test.fasta", file_type = "fasta")
+count_reads(file = "data/test.txt", file_type = "")
 }
 }

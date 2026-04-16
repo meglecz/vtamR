@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{classify_control_occurrences}
 \alias{classify_control_occurrences}
-\title{classify_control_occurrences}
+\title{Classify control occurrences and compute performance metrics}
 \usage{
 classify_control_occurrences(
   read_count,
@@ -17,65 +17,59 @@ classify_control_occurrences(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate (optional), read_count, asv.}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}.}
 
-\item{sampleinfo}{Data frame or csv file with columns:
-sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}
+\item{sampleinfo}{Data frame or CSV file with columns:
+\code{sample}, \code{sample_type} (\code{mock}/\code{negative}/\code{real}), \code{habitat}, \code{replicate} (optional),
+and optionally \code{file}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns:
+\code{sample}, \code{action} (\code{keep}/\code{tolerate}), \code{asv}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{known_occurrences}{Character string: csv file containing
-known occurrences (expected occurrences in mock, and FP).
+\item{known_occurrences}{Character string specifying output CSV file for known occurrences
+(expected occurrences in mocks and false positives). If empty, no file is written.}
+
+\item{false_negatives}{Character string specifying output CSV file for false negatives.
 If empty, no file is written.}
 
-\item{false_negatives}{Character string: csv file containing
-the missing occurrences (FN). If empty, no file is written.}
+\item{performance_metrics}{Character string specifying output CSV file for performance metrics.
+If empty, no file is written.}
 
-\item{performance_metrics}{Character string: csv file containing performance
-metrics. If empty, no file is written.}
+\item{habitat_proportion}{Numeric between 0 and 1. For each ASV, if the proportion of reads
+within a habitat is below this threshold, it is considered an artifact in all samples
+of that habitat.}
 
-\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
-of reads in a habitat is below this cutoff,
-it is considered as an artifact in all samples of the habitat.}
-
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show warnings or errors.}
 }
 \value{
-List of data frames:
+A list containing:
 \itemize{
-\item known_occurrences_df: sample, action, asv_id, asv
-\item false_negatives_df: sample, action, asv, asv_id
-\item performance_metrics_df: TP, FP, FN, Precision, Sensitivity
+\item \code{known_occurrences_df}: sample, action, asv_id, asv
+\item \code{false_negatives_df}: sample, action, asv, asv_id
+\item \code{performance_metrics_df}: TP, FP, FN, Precision, Sensitivity
 }
 }
 \description{
-Prepare three data frames:
-\itemize{
-\item known_occurrences: Lists all occurrences that are expected in mock
-(True Positives) or
-False positives (unexpected variants in mocks, all variants in negative
-control samples, variants present in a wrong habitat).
-\item false_negatives: Lists all False Negatives (expected occurrences
-in mock samples that are missing).
-\item performance_metrics: Number of TP (expected in mock and present),
-FP (unexpected but present),
-FN (expected but absent), Precision (TP/(TP+FP)) and Sensitivity (TP/(TP+FN)).
+Identify expected and unexpected occurrences in control samples and summarize
+pipeline performance using true positives, false positives, and false negatives.
 }
+\details{
+This function also computes key evaluation metrics including precision and sensitivity.
 }
 \examples{
 \dontrun{
-results <- classify_control_occurrences(read_count_samples_df, 
-sampleinfo=sampleinfo_df, 
-mock_composition="data/mock_composition.csv", 
-habitat_proportion=0.7
+results <- classify_control_occurrences(
+  read_count_samples_df,
+  sampleinfo = sampleinfo_df,
+  mock_composition = "data/mock_composition.csv",
+  habitat_proportion = 0.7
 )
 known_occurrences_df <- results[[1]]
 false_negatives_df <- results[[2]]
 performance_metrics_df <- results[[3]]
 }
+
 }

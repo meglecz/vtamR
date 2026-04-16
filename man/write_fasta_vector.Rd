@@ -2,27 +2,33 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_fasta_vector}
 \alias{write_fasta_vector}
-\title{Write fasta file}
+\title{Write FASTA file}
 \usage{
 write_fasta_vector(sequences, filename, seq_as_id = F)
 }
 \arguments{
-\item{sequences}{Vector of sequences.}
+\item{sequences}{Character vector of DNA sequences.}
 
-\item{filename}{Character string: name of the output fasta file.}
+\item{filename}{Character string specifying the output FASTA file name.}
 
-\item{seq_as_id}{logical: Use sequences as seqID.}
+\item{seq_as_id}{Logical. If \code{TRUE}, sequences are used as FASTA identifiers;
+otherwise, default identifiers are assigned.}
 }
 \value{
-NULL; writes fasta file
+\code{NULL}. Writes a FASTA file to disk.
 }
 \description{
-Write a vector of sequeces to a fasta file using
-either the sequences as ID (seq_as_id==TRUE), or arbitrary sequence IDs
-(seq_as_id==FALSE)
+Write a vector of sequences to a FASTA file, either using the sequences
+themselves as identifiers (\code{seq_as_id = TRUE}) or generating arbitrary
+sequence identifiers (\code{seq_as_id = FALSE}).
 }
 \examples{
 \dontrun{
-write_fasta_vector(sequences=read_count_df$asv, filename="out/seq.fasta", seq_as_id=T)
+write_fasta_vector(
+  sequences = read_count_df$asv, 
+  filename = "out/seq.fasta", 
+  seq_as_id = TRUE
+)
 }
+
 }

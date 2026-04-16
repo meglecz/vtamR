@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{remove_leading_ones}
 \alias{remove_leading_ones}
-\title{remove_leading_ones}
+\title{Remove leading ones from a vector}
 \usage{
 remove_leading_ones(row)
 }
@@ -10,14 +10,15 @@ remove_leading_ones(row)
 \item{row}{Vector of taxids.}
 }
 \value{
-Vector of taxids.
+Vector of taxids with leading \code{1} values removed and replaced by \code{NA} at the end.
 }
 \description{
-Delete all 1 from the beginning of a raw, shift the other values and
-replace de missing ones at the end by NA
+Remove all leading \code{1} values from a vector, shift remaining values to the left,
+and pad the end with \code{NA} to preserve the original length.
 }
 \examples{
 \dontrun{
 remove_leading_ones(row)
 }
+
 }

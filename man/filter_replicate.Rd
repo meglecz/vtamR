@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_replicate}
 \alias{filter_replicate}
-\title{filter_replicate}
+\title{Filter replicates based on Renkonen distance}
 \usage{
 filter_replicate(
   read_count,
@@ -13,31 +13,39 @@ filter_replicate(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If empty, no file is written.}
 
-\item{cutoff}{Numeric. Value between 0 and 1:  Filter out all replicates that have
-renkonen distances above cutoff to most other replicates of the same sample.}
+\item{cutoff}{Numeric value between 0 and 1 specifying the maximum acceptable
+Renkonen distance for retaining replicates. Replicates exceeding this threshold
+relative to most others in the same sample are removed.}
 
-\item{renkonen_distance_quantile}{Numeric. Value between 0 and 1: if cutoff value is not given,
-use the \code{renkonen_distance_quantile} to determine cutoff value
-(e.g. with 0.9 as \code{renkonen_distance_quantile}, 90\% of the distances are bellow cutoff)}
+\item{renkonen_distance_quantile}{Numeric value between 0 and 1 specifying a
+quantile-based cutoff. If \code{cutoff} is not provided, this quantile of the
+Renkonen distance distribution is used to define the threshold (e.g., 0.9
+corresponds to the 90th percentile).}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame with inconsistent replicates removed.
 }
 \description{
-Filter out all replicates that have renkonen distances above \code{cutoff}
-to most other replicates of the same sample.
+Remove replicates that are inconsistent with other replicates of the same sample
+based on Renkonen distance. Replicates that show high dissimilarity to most other
+replicates are considered outliers and are filtered out.
 }
 \examples{
 \dontrun{
 filtered_read_count_df <- filter_replicate(read_count_df, cutoff = 0.6)
-filtered_read_count_df <- filter_replicate(read_count_df, renkonen_distance_quantile=0.9)
+filtered_read_count_df <- filter_replicate(
+  read_count_df, 
+  renkonen_distance_quantile = 0.9
+)
 }
+
 }

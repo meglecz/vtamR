@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{add_ids}
 \alias{add_ids}
-\title{Add ids to ASVs}
+\title{Add numerical identifiers to ASVs}
 \usage{
 add_ids(
   read_count,
@@ -13,32 +13,35 @@ add_ids(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv with columns: asv,sample,replicate,read_count}
+\item{read_count}{Data frame or path to a CSV file with columns:
+\code{asv}, \code{sample}, \code{replicate}, \code{read_count}.}
 
-\item{input_asv_list}{Data frame or csv with columns: file with asv - asv_id
-Optional. It is used to homogenize asv_ids between different data sets.}
+\item{input_asv_list}{Data frame or path to a CSV file containing \code{asv}–\code{asv_id}
+pairs. Optional; used to harmonize \code{asv_id} values across datasets.}
 
-\item{output_asv_list}{Character string: output file with
-the updated asv - asv_id pairs. Optional.}
+\item{output_asv_list}{Character string specifying the output file containing
+the updated \code{asv}–\code{asv_id} pairs. Optional.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-Data frame with asv_id column added to the input data frame.
+Data frame with an added \code{asv_id} column.
 }
 \description{
-Add asv_ids to a data frame or csv that have an asv column.
-Can take into account already existing asv - asv_id pairs
-(from earlier data sets) present in input_asv_list.
+Add \code{asv_id} values to a data frame or CSV file containing an \code{asv} column.
+Previously existing \code{asv}–\code{asv_id} pairs (from earlier datasets) can be taken
+into account via \code{input_asv_list}.
 
-If output_asv_list file name is given, the input_asv_list is
-completed by new asvs and asv_ids.
+If \code{output_asv_list} is provided, the \code{input_asv_list} is updated with newly
+observed ASVs and their corresponding \code{asv_id} values.
 }
 \examples{
 \dontrun{
-add_ids <- function(read_count_df, input_asv_list=asv_list)
+add_ids(read_count_df, input_asv_list = asv_list)
 }
+
 }

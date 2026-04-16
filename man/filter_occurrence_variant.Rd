@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_occurrence_variant}
 \alias{filter_occurrence_variant}
-\title{filter_occurrence_variant}
+\title{Filter low-abundance occurrences relative to total variant read count}
 \usage{
 filter_occurrence_variant(
   read_count,
@@ -16,56 +16,55 @@ filter_occurrence_variant(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{cutoff}{Numeric. Value between 0 and 1: minimum proportion of the read count of
-an occurrence within all reads of the asv or asv-replicate. Bellow this cutoff
-the occurrence is deleted.}
+\item{cutoff}{Numeric value between 0 and 1 specifying the minimum proportion
+of reads required for an occurrence to be retained. Occurrences below this
+threshold are removed.}
 
-\item{asv_specific_cutoffs}{A data frame or CSV file specifying ASV-specific
+\item{asv_specific_cutoffs}{Data frame or path to a CSV file specifying ASV-specific
 cutoff values. May include a \code{replicate} column if \code{by_replicate = TRUE}.}
 
-\item{by_replicate}{Logical; If TRUEn compare read count of the occurrence to the
-read counts of the ASV-replicate.}
+\item{by_replicate}{Logical. If \code{TRUE}, compare read counts to ASV abundance
+within each replicate.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If empty, no file is written.}
 
-\item{lost_asv_file}{Character string: name of the CSV file in which to save
-information about ASVs whose read counts in the output fall below
-\code{min_read_count_prop} of their counts in the input.}
+\item{lost_asv_file}{Character string specifying the CSV file used to store
+information about ASVs whose retained read counts fall below
+\code{min_read_count_prop} of their original abundance.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{min_read_count_prop}{Minimum proportion of total reads retained for
-each ASV after filtering. ASVs dropping below this threshold trigger a
-warning.}
+\item{min_read_count_prop}{Numeric value specifying the minimum proportion of
+total reads that must be retained per ASV after filtering. ASVs below this
+threshold trigger a warning.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Filters out potential false positives arising from tag-jumps or low-level
+Filter potential false positives arising from tag-jumps or low-level
 inter-sample contamination.
 
-When \emph{by_replicate = FALSE}, the function removes occurrences where the
-ratio (read_count/read_count of the asv in the dataset) is
-lower than \emph{cutoff}.
+When \code{by_replicate = FALSE}, occurrences are removed when the ratio
+\verb{read_count / total read count of the ASV in the dataset} is lower than \code{cutoff}.
 
-When \emph{by_replicate = TRUE}, the function removes occurrences where the
-ratio (read_count/read_count of the ASV across all samples of the same replicate) is
-lower than \emph{cutoff}.
+When \code{by_replicate = TRUE}, occurrences are removed when the ratio
+\verb{read_count / total read count of the ASV within the same replicate} is lower than \code{cutoff}.
 
-A warning is issued if the total read count of an ASV is reduced below
-\emph{min_read_count_prop} after filtering, as this may indicate that the cutoff
-value is too high.
+A warning is issued if the total read count of an ASV after filtering falls
+below \code{min_read_count_prop} of its original abundance, as this may indicate
+that the cutoff value is too stringent.
 
-By default, a single global cutoff value (argument \emph{cutoff}) is applied to
-all ASVs. Alternatively, ASV-specific cutoff values can be provided through
-the \emph{asv_specific_cutoffs} argument, either as a data frame or a CSV file.
-When both are provided, the global \emph{cutoff} is applied in cases where
-an ASV-specific cutoff is not defined or is lower than the global cutoff.
+By default, a single global cutoff value (\code{cutoff}) is applied to all ASVs.
+Alternatively, ASV-specific cutoff values can be provided via
+\code{asv_specific_cutoffs} (data frame or CSV file). When both are provided, the
+global \code{cutoff} is used when no ASV-specific cutoff is available or when the
+ASV-specific cutoff is lower than the global value.
 }
 \examples{
 \dontrun{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{cluster_asv}
 \alias{cluster_asv}
-\title{Cluster ASVs Using Swarm or VSEARCH}
+\title{Cluster ASVs using Swarm or VSEARCH}
 \usage{
 cluster_asv(
   read_count,
@@ -20,69 +20,73 @@ cluster_asv(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{group}{Logical; If TRUE, ASVs of the same cluster are pooled to one row.
-if FALSE, input Df is simply completed by a cluser_id column.}
+\item{group}{Logical; if TRUE, ASVs in the same cluster are aggregated into a single row.
+If FALSE, the input data frame is returned with an added \code{cluster_id} column.}
 
-\item{by_sample}{Logical: run clustering separately for each sample.}
+\item{by_sample}{Logical: if TRUE, clustering is performed separately for each sample.}
 
-\item{method}{Character string: program to use for clustering: swarm or vsearch}
+\item{method}{Character string specifying the clustering method: \code{"swarm"} or \code{"vsearch"}.}
 
-\item{path}{Character string: path to swarm or vsearch executables.}
+\item{path}{Character string: path to the Swarm or VSEARCH executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{swarm_d}{Positive integer: d parameter for swarm (if applicable).
-Maximum number of differences allowed between two ASVs,
-meaning that two ASVs will be grouped if they have d (or less) differences.}
+\item{swarm_d}{Positive integer: Swarm \code{d} parameter (maximum number of differences
+allowed between ASVs to cluster them together).}
 
-\item{fastidious}{Logical: When clustering with swarm and working with d = 1,
-perform a second clustering pass to reduce the number of small clusters.}
+\item{fastidious}{Logical: if TRUE and \code{swarm_d = 1}, performs an additional
+clustering pass to reduce small clusters.}
 
-\item{identity}{Numeric. Value between 0 and 1: the identity threshold used for
-clustering when the cluster_size algorithm of vsearch is used.}
+\item{identity}{Numeric value between 0 and 1. Identity threshold used for
+VSEARCH \code{cluster_size} clustering.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string: name of the output CSV file. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-read_count_df: same structure as the input, but ASVs of
-the same cluster pooled to one row if group==TRUE, or rows kept as in the input
-and an additional cluster_id column is added if group==FALSE.
+A data frame. If \code{group = TRUE}, ASVs are merged by cluster;
+otherwise, the original structure is preserved with an additional \code{cluster_id} column.
 }
 \description{
-This function can \strong{cluster} ASVs into mOTUs or perform \strong{denoising}.
-When using Swarm with \code{d = 1}, the clustering result corresponds to denoising.
+This function clusters ASVs into molecular operational taxonomic units (mOTUs)
+or performs denoising depending on the chosen method and parameters.
+When using Swarm with \code{d = 1}, the result is equivalent to denoising.
+}
+\details{
+The function can use either Swarm or VSEARCH (\code{cluster_size}) to cluster ASVs
+in the input data set. Each ASV is assigned to a cluster, and the output format
+depends on the \code{group} argument.
 
-The function runs either Swarm or VSEARCH's \code{cluster_size} command on the ASVs
-in the input data frame. Each ASV is assigned a cluster, and two output formats
-are available, controlled by the \code{group} argument.
+Two output modes are available:
 \itemize{
-\item If \code{group = TRUE}, ASVs in the same cluster are aggregated into a single row.
-In this case, the \code{asv_id} and \code{asv} columns contain the identifier and
-sequence of the cluster's centroid, and \code{read_count} is summed across ASVs.
-Sample and replicate information is retained.
-\item If \code{group = FALSE}, the function returns the original data frame with an
-additional column, \code{cluster_id}. Each row corresponds to one ASV.
+\item \strong{group = TRUE}: ASVs belonging to the same cluster are merged into a single row.
+The \code{asv_id} and \code{asv} columns correspond to the cluster centroid, and read counts
+are summed across all ASVs in the cluster for each sample (and replicate, if present).
+\item \strong{group = FALSE}: The original data frame is returned with an additional
+\code{cluster_id} column. Each row corresponds to an individual ASV.
 }
 
-Clustering can be performed on the entire data set or separately for each sample
-(\code{by_sample} argument).
+Clustering can be performed globally or independently for each sample using
+the \code{by_sample} argument.
 
-\strong{Note:} If \code{by_sample = TRUE} and \code{group = FALSE}, the same \code{asv_id} may be
-assigned different \code{cluster_id}s in different samples.
+Note: when \code{by_sample = TRUE} and \code{group = FALSE}, the same \code{asv_id} may be
+assigned different \code{cluster_id} values across samples.
 }
 \examples{
 \dontrun{
-read_count_df <- cluster_asv(read_count=read_count_df, group=TRUE,method="vsearch",
-by_sample=TRUE, path=swarm_path, 
-num_threads=4)
+read_count_df <- cluster_asv(
+  read_count = read_count_df,
+  group = TRUE,
+  method = "vsearch",
+  by_sample = TRUE,
+  path = swarm_path,
+  num_threads = 4
+)
 }
 }

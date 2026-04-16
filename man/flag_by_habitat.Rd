@@ -7,26 +7,28 @@
 flag_by_habitat(occurrence_df, habitat_proportion = 0.5)
 }
 \arguments{
-\item{occurrence_df}{Data frame with the following variables:
-asv, sample, read_count, sample_type, habitat, action.}
+\item{occurrence_df}{Data frame with columns \code{asv}, \code{sample}, \code{read_count},
+\code{sample_type}, \code{habitat}, \code{action}.}
 
-\item{habitat_proportion}{For each of ASVs, if the proportion
-of reads in a habitat is below this cutoff, it is considered as an
-artifact in all samples of the habitat.}
+\item{habitat_proportion}{Numeric value between 0 and 1. Minimum proportion
+of reads required for an ASV to be considered valid within a habitat.}
 }
 \value{
-The updated input data frame, with some occurrences flagged as
-delete in the action column.
+Updated input data frame with occurrences flagged as \code{"delete"} in
+the \code{action} column when they fail the habitat criterion.
 }
 \description{
-Flag False Positive occurrences based on the habitat of the samples.
-All ASVs present in more than one habitat are checked.
-For each of these ASVs, if the proportion of reads in a habitat is below
-a cutoff (\code{habitat_proportion}),
-it is considered as an artifact in all samples of the habitat.
+Identify and flag false-positive occurrences based on the distribution of
+ASVs across habitats.
+
+ASVs present in multiple habitats are evaluated:
+For each of these ASVs, the proportion of reads within each habitat is computed.
+If this proportion is below \code{habitat_proportion}, the occurrence is
+considered a likely artifact and flagged as \code{"delete"} in all samples of
+that habitat.
 }
 \examples{
 \dontrun{
-flag_by_habitat(occurrence_df, habitat_proportion=0.7)
+flag_by_habitat(occurrence_df, habitat_proportion = 0.7)
 }
 }

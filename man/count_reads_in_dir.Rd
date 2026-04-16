@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{count_reads_in_dir}
 \alias{count_reads_in_dir}
-\title{Count reads in directory}
+\title{Count reads in files within a directory}
 \usage{
 count_reads_in_dir(
   dir,
@@ -14,36 +14,35 @@ count_reads_in_dir(
 )
 }
 \arguments{
-\item{dir}{Character string: name of the input directory.}
+\item{dir}{Character string: path to the input directory.}
 
-\item{pattern}{Regular expression: pattern in the name of the files in the
-input directory. Read only files with pattern in their names.}
+\item{pattern}{Regular expression: pattern used to select files in the directory. Only files whose names match the pattern are processed.}
 
-\item{file_type}{Character string with the following values: "fasta", "fastq".
-For all other values, the number of lines is returned.}
+\item{file_type}{Character string specifying file type: \code{"fasta"} or \code{"fastq"}.
+For any other value, the function returns the number of lines in each file.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string: output CSV file name. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character in input and output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and show only warnings or errors.}
 }
 \value{
-Data frame with 2 columns: filename, read_count.
+Data frame with two columns: \code{filename}, \code{read_count}.
 }
 \description{
-Counts the number of sequences in fasta or fastq files, or the number of
-lines in other files. Reads all files in the input directory with
-\emph{pattern} in their names.
-
-Efficient in linux-like systems, but slow on Windows for large files.
-Can handle gz compressed and uncompressed files, but not zip files.
+Count the number of sequences in FASTA or FASTQ files, or the number of lines
+in other file types,
+for all files in a directory matching a given pattern.
+}
+\details{
+This function is optimized for Linux-like systems and may be slower on Windows
+for large files.
+It supports both gz-compressed and uncompressed files (ZIP archives are not supported).
 }
 \examples{
 \dontrun{
-count_reads_in_dir(dir="out", pattern=".fastq", file_type="fastq")
-count_reads_in_dir(dir="out", pattern="^mfzr", file_type="fasta")
+count_reads_in_dir(dir = "out", pattern = "\\\\.fastq", file_type = "fastq")
+count_reads_in_dir(dir = "out", pattern = "^mfzr", file_type = "fasta")
 }
 }

@@ -2,33 +2,36 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_occurrence_sample}
 \alias{filter_occurrence_sample}
-\title{filter_occurrence_sample}
+\title{Filter low-abundance occurrences relative to total sample-replicate read count}
 \usage{
 filter_occurrence_sample(read_count, cutoff = 0.001, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{cutoff}{Numeric. Value between 0 and 1: minimum proportion of the read count of an
-occurrence within the reads of its sample-replicate. Bellow this cutoff
-the occurrence is deleted.}
+\item{cutoff}{Numeric value between 0 and 1 specifying the minimum proportion
+of reads required for an occurrence to be retained. Occurrences below this
+threshold are removed.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Eliminate occurrences (presence of the ASV in a sample-replicate)
-where the \verb{read_count / sum(read_count of the sample-replicate)} is less than
-cutoff.
+Remove occurrences (presence of an ASV in a sample-replicate) where the
+relative abundance within the sample-replicate is below a given threshold.
+Specifically, occurrences are removed when:
+\verb{read_count / sum(read_count in sample-replicate) < cutoff}.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_occurrence_sample(read_count_df, cutoff=0.005)
+filtered_read_count_df <- filter_occurrence_sample(read_count_df, cutoff = 0.005)
 }
+
 }

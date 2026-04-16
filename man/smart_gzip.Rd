@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{smart_gzip}
 \alias{smart_gzip}
-\title{Compress or uncompress file}
+\title{Compress or uncompress a file}
 \usage{
 smart_gzip(
   file,
@@ -16,32 +16,39 @@ smart_gzip(
 )
 }
 \arguments{
-\item{file}{Character string: Input file name.}
+\item{file}{Character string specifying the input file.}
 
-\item{outfile}{Character string: Output file name. If empty, automatically derived from input.}
+\item{outfile}{Character string specifying the output file. If empty, it is
+automatically derived from file.}
 
-\item{remove}{Logical: Remove input file after successful operation.}
+\item{remove}{Logical. If \code{TRUE}, remove the input file after a successful
+operation.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string specifying the path to the \code{pigz}
+executable. Only required if \code{method = "pigz"} and it is not available
+in the system PATH.}
 
-\item{method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
-\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
+\item{method}{Character. Compression method: \code{pigz}, \code{gzip}, or \code{R}.
+\code{pigz} requires \code{pigz} to be installed and available in the system
+PATH (or specified via \code{pigz_path}).
+\code{gzip} is available on Linux systems.
+\code{R} uses \code{R.utils}, which is cross-platform but slower.
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to
+use. If \code{0}, all available CPUs are used.}
 
-\item{quiet}{Logical: If \code{TRUE}, suppress informational messages.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages.}
 
-\item{compress}{Logical: If \code{TRUE}, compress (\code{gzip}); if \code{FALSE}, decompress (\code{gunzip}).}
+\item{compress}{Logical. If \code{TRUE}, compress the file; if
+\code{FALSE}, decompress it.}
 }
 \value{
-Character string (invisibly): Name of the output file including path.
+Invisibly returns a character string: the path to the output file.
 }
 \description{
-Compress or uncompress a file using \code{pigz} (if available, faster) or fallback to \code{R.utils}.
+Compress or uncompress a file using \code{pigz} (if available, for faster
+performance) or fall back to \code{R.utils}.
 }
 \examples{
 \dontrun{
@@ -51,4 +58,5 @@ smart_gzip("data.fastq.gz", compress = FALSE)
 # Compress a file
 smart_gzip("data.fastq", compress = TRUE)
 }
+
 }

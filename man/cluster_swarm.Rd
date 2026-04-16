@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{cluster_swarm}
 \alias{cluster_swarm}
-\title{Cluster all input ASV by swarm}
+\title{Cluster ASVs using Swarm}
 \usage{
 cluster_swarm(
   read_count,
@@ -16,38 +16,39 @@ cluster_swarm(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, asv, read_count.}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv_id}, \code{asv}, \code{read_count}.}
 
-\item{swarm_d}{Positive integer: d for Swarm.}
+\item{swarm_d}{Positive integer: clustering distance parameter (\code{d}) for Swarm.}
 
-\item{fastidious}{logical: when working with d = 1, perform a second
-clustering pass to reduce the number of small clusters.}
+\item{fastidious}{Logical: if TRUE and \code{swarm_d = 1}, performs a second clustering
+pass to reduce the number of small clusters.}
 
-\item{swarm_path}{Character string: path to swarm executable.}
+\item{swarm_path}{Character string: path to the Swarm executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{outfile}{Character string: name of the output csv file
-with asv_id, cluster_id columns}
+\item{outfile}{Character string: name of the output CSV file containing
+\code{asv_id} and \code{cluster_id}. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-Data frame with the following columns: asv_id, cluster_id
+A data frame with columns: \code{asv_id}, \code{cluster_id}.
 }
 \description{
-Cluster all input ASV by swarm and return a data frame with asv_id, cluster_id
-columns
+Clusters all input ASVs using the Swarm algorithm and returns a data frame
+mapping each ASV to a cluster.
 }
 \examples{
 \dontrun{
-cluster_df <- cluster_swarm(read_count_df, 
-                     swarm_d=7, 
-                     swarm_path="swarm",
-                     num_threads=8)
+cluster_df <- cluster_swarm(
+  read_count_df,
+  swarm_d = 7,
+  swarm_path = "swarm",
+  num_threads = 8
+)
 }
 }

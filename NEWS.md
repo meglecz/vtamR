@@ -1,3 +1,7 @@
+# vtamR 1.0.2 (prerelease) 2026/04/16
+
+Documentation updated
+
 # vtamR 1.0.1 (prerelease) 2026/04/13
 
 Tutorial updated

@@ -2,30 +2,32 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{find_ltg}
 \alias{find_ltg}
-\title{Make LTG}
+\title{Determine the Lowest Taxonomic Group (LTG)}
 \usage{
 find_ltg(taxids, lineages, phit = 70)
 }
 \arguments{
-\item{taxids}{Vector of taxIDs (taxonomic IDs).
-There can be duplicated values.}
+\item{taxids}{Vector of taxids (taxonomic identifiers), possibly containing duplicates.}
 
-\item{lineages}{Data frame: taxids in the first column followed by
-their lineages represented by taxids (starting at the lowest resolution).}
+\item{lineages}{Data frame with taxids in the first column followed by their
+taxonomic lineages (represented as taxids, starting from the lowest resolution).}
 
-\item{phit}{Integer between 0 and 100: Percentage of taxids that should
-be included to the LTG.}
+\item{phit}{Integer between 0 and 100 specifying the minimum percentage of taxids
+that must be included in the LTG.}
 }
 \value{
-Numerical taxid of the LTG, or NA if LTG cannot be defined.
+Numeric taxid corresponding to the LTG, or \code{NA} if no LTG can be determined.
 }
 \description{
-Determine the Lowest Taxonomic Group (LTG) that contains
-phit percentage of the input taxids.
+Identify the Lowest Taxonomic Group (LTG) that contains at least \code{phit} percent
+of the input taxids.
 }
 \examples{
 \dontrun{
-taxids <- c(9593,9606,9606,9606,9606,9606,9606,9606,9606)
-find_ltg(taxids, lineages=lineages, phit=80)
+taxids <- c(189839, 1077837)
+tax_df <- read.delim(xxxxxxxxxxxx, package = "vtamR"), header = TRUE, sep = "\t", fill = TRUE, quote = "")
+lineages <- get_taxonomic_lineage(taxids, tax_df = tax_df)
+find_ltg(taxids, lineages = lineages, phit = 80)
 }
+
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{plot_pairwise_identity_swarm}
 \alias{plot_pairwise_identity_swarm}
-\title{Make a density plot: pairwise percent identities between ASVs within and across
-clusters using different Swarm's d for clustering.}
+\title{Density plot of pairwise ASV identities across Swarm clusters}
 \usage{
 plot_pairwise_identity_swarm(
   read_count,
@@ -21,55 +20,61 @@ plot_pairwise_identity_swarm(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{swarm_d_min}{Positive integer: Minimum value of d for Swarm.}
+\item{swarm_d_min}{Positive integer: minimum Swarm \code{d} value to test.}
 
-\item{swarm_d_max}{Positive integer: Maximum value of d for Swarm.}
+\item{swarm_d_max}{Positive integer: maximum Swarm \code{d} value to test.}
 
-\item{swarm_d_increment}{Positive integer: increase d by swarm_d_increment between
-swarm_d_min and swarm_d_max.}
+\item{swarm_d_increment}{Positive integer: increment step between \code{d} values.}
 
-\item{min_id}{Real: Bellow this percentage of identity asv pairs are not aligned
-and their identity is not plotted.}
+\item{min_id}{Numeric value between 0 and 1. Minimum identity threshold;
+ASV pairs below this value are excluded from the analysis.}
 
-\item{vsearch_path}{Character string: path to vsearch executable.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{swarm_path}{Character string: path to swarm executable.}
+\item{swarm_path}{Character string: path to the Swarm executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{outfile}{Character string: output csv file name with the following columns:
-pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.}
+\item{outfile}{Character string: name of the output CSV file containing
+pairwise ASV identities and clustering metadata. If empty, no file is written.}
 
-\item{plotfile}{Character string: png file name for the output plot;
+\item{plotfile}{Character string: name of the output PNG file for the density plot.
 If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-A density plot pairwise percentage of identities.
+A density plot object showing distributions of pairwise ASV identities
+within and between Swarm clusters across tested \code{d} values.
 }
 \description{
-Cluster by swarm all ASV with a range of d values.
-For each clustering (d), make a density plot of pairwise percentage of
-identities between ASVs, using different colors for identities between ASV
-of the same or different clusters.
+Computes pairwise sequence identities between ASVs clustered using Swarm
+across a range of \code{d} values, and generates density plots comparing identity
+distributions within clusters and between clusters.
+}
+\details{
+For each Swarm clustering result, pairwise ASV identities are computed.
+Identities below \code{min_id} are not included in the analysis or plot.
+Density distributions are then generated for within-cluster and between-cluster
+comparisons, using different colors.
 }
 \examples{
 \dontrun{
-plot <- plot_pairwise_identity_swarm(read_count_df, 
-                                      swarm_d_min=2, 
-                                      swarm_d_max=12,
-                                      swarm_d_increment=2,
-                                      min_id = 0.8, 
-                                      vsearch_path="vsearch", 
-                                      swarm_path="swarm",
-                                      num_threads=8,
-                                      plotfile="density_plot.png")
+plot <- plot_pairwise_identity_swarm(
+  read_count_df,
+  swarm_d_min = 2,
+  swarm_d_max = 12,
+  swarm_d_increment = 2,
+  min_id = 0.8,
+  vsearch_path = "vsearch",
+  swarm_path = "swarm",
+  num_threads = 8,
+  plotfile = "density_plot.png"
+)
 }
 }

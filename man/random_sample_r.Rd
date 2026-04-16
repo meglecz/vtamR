@@ -2,38 +2,39 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{random_sample_r}
 \alias{random_sample_r}
-\title{random_sample_r}
+\title{Randomly sample sequences from a FASTA file}
 \usage{
 random_sample_r(fasta, outfile, n = 1e+06, randseed = NULL, quiet = TRUE)
 }
 \arguments{
-\item{fasta}{Character string: Path to the input FASTA file. Can be gzipped.}
+\item{fasta}{Character string: path to the input FASTA file (optionally gzipped).}
 
-\item{outfile}{Character string: Path to the output FASTA file. If it ends with \code{.gz},
+\item{outfile}{Character string: path to the output FASTA file. If it ends in \code{.gz},
 the output will be gzip-compressed.}
 
-\item{n}{Positive integer: Number of sequences to randomly select.}
+\item{n}{Positive integer: number of sequences to randomly sample.}
 
-\item{randseed}{Positive integer or NULL: Seed for random sampling. NULL (default)
-uses a pseudo-random seed. A given non-zero seed ensures reproducible results.}
+\item{randseed}{Integer or NULL: random seed for reproducibility. If NULL (default),
+sampling is non-deterministic.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages; only warnings and errors are shown.}
+\item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
 }
 \value{
-Invisibly the number of sequences in the output file.
+Invisibly returns the number of sequences written to the output file.
 }
 \description{
-Randomly select \code{n} sequences from an input FASTA file.
+Randomly selects \code{n} sequences from an input FASTA file.
 }
 \details{
-The input FASTA can be uncompressed or gzipped. The output compression is
-determined automatically from the output file name (i.e., ends with \code{.gz} → gzip).
+The input FASTA file may be uncompressed or gzipped. Output compression is
+inferred automatically from the output file extension (i.e., \code{.gz} produces a
+gzipped file).
 
-This function is slow but works on any OS.
+This implementation is platform-independent but may be slower than
+system-optimized alternatives.
 
-If the number of sequences in the input file is less than or equal to the
-requested number (\code{n}), the input file is simply copied to the output,
-respecting the compression inferred from the output file name.
+If the input file contains fewer than or exactly \code{n} sequences, it is copied
+to the output file, preserving the requested output compression format.
 }
 \examples{
 \dontrun{

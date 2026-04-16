@@ -16,37 +16,44 @@ run_blast(
 )
 }
 \arguments{
-\item{df}{Data frame containing and asv and asv_id columns.}
+\item{df}{Data frame containing \code{asv} and \code{asv_id} columns.}
 
-\item{blast_db}{BLAST DB including path.}
+\item{blast_db}{Character string specifying the BLAST database (including path if needed).}
 
-\item{blast_path}{Character string: path to BLAST executables.}
+\item{blast_path}{Character string specifying the path to the BLAST executable.}
 
-\item{outdir}{Character string: output directory.}
+\item{outdir}{Character string specifying the output directory.}
 
-\item{qcov_hsp_perc}{Real between 0 and 100: minimum query coverage.}
+\item{qcov_hsp_perc}{Real number between 0 and 100 specifying the minimum query coverage.}
 
-\item{perc_identity}{Real between 0 and 100: minimum percentage of identity.}
+\item{perc_identity}{Real number between 0 and 100 specifying the minimum percentage identity.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
+warnings or errors.}
 }
 \value{
-data frame with the BLAST results: qseqid,pident,qcovhsp,staxids
+Data frame containing BLAST results with columns: \code{qseqid}, \code{pident},
+\code{qcovhsp}, \code{staxids}.
 }
 \description{
-Run BLAST using ASVs of the input data fram as queries.
+Perform BLAST searches using ASV sequences as query inputs.
+
+This function runs BLAST and returns a table of matching hits for downstream
+taxonomic assignment or filtering.
 }
 \examples{
 \dontrun{
-run_blast(df=read_count_df, 
-    blast_db="xxxxxxxx", 
-    blast_path="blastn", 
-    qcov_hsp_perc=80, 
-    perc_identity=00, 
-    num_threads=4
-    )
+run_blast(
+  df = read_count_df,
+  blast_db = "xxxxxxxx",
+  blast_path = "blastn",
+  qcov_hsp_perc = 80,
+  perc_identity = 90,
+  num_threads = 4
+)
 }
+
 }

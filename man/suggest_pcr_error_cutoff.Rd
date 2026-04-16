@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{suggest_pcr_error_cutoff}
 \alias{suggest_pcr_error_cutoff}
-\title{suggest_pcr_error_cutoff}
+\title{Suggest PCR error cutoff}
 \usage{
 suggest_pcr_error_cutoff(
   read_count,
@@ -17,49 +17,54 @@ suggest_pcr_error_cutoff(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns:
+\code{sample}, \code{action} (\code{keep} or \code{tolerate}), \code{asv}.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to vsearch executables.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the output CSV file. If empty,
+no file is written.}
 
-\item{max_mismatch}{Positive integer: maximum number of mismatches
-allowed between two asv to be compared.}
+\item{max_mismatch}{Positive integer specifying the maximum number of mismatches
+allowed between ASVs to be compared.}
 
-\item{min_read_count}{Positive integer: occurrences with fewer
-reads are ignored.}
+\item{min_read_count}{Positive integer specifying the minimum read count threshold;
+occurrences below this value are ignored.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only
 show warnings or errors.}
 }
 \value{
-Data frame with the following columns: sample,expected_read_count,
-unexpected_read_count,pcr_error_var_prop,expected_asv_id,unexpected_asv_id,
-expected_asv,unexpected_asv
+Data frame with the following columns: \code{sample}, \code{expected_read_count},
+\code{unexpected_read_count}, \code{pcr_error_var_prop}, \code{expected_asv_id},
+\code{unexpected_asv_id}, \code{expected_asv}, \code{unexpected_asv}.
 }
 \description{
-Prepare a data frame that lists pairs of expected and unexpected ASVs
-in mock samples with maximum \code{max_mismatch} difference between them.
-The \code{pcr_error_var_prop} parameter should be above the highest
-\code{pcr_error_var_prop} (unexpected_read_count/expected_read_count)
-value in the table.
+Identify pairs of expected and unexpected ASVs in mock samples that differ
+by at most \code{max_mismatch}, and compute their read count ratios to help
+determine an appropriate \code{pcr_error_var_prop} threshold.
+}
+\details{
+The suggested cutoff should be set above the maximum observed ratio
+(\code{unexpected_read_count / expected_read_count}) in the output table.
 }
 \examples{
 \dontrun{
-suggest_pcr_error_cutoff(read_count=read_count_df, 
-    mock_composition="data/mock_composition.csv", 
-    vsearch_path=vsearch_path, 
-    max_mismatch=2, 
-    min_read_count=5
-    )
+suggest_pcr_error_cutoff(
+  read_count = read_count_df,
+  mock_composition = "data/mock_composition.csv",
+  vsearch_path = vsearch_path,
+  max_mismatch = 2,
+  min_read_count = 5
+)
 }
+
 }

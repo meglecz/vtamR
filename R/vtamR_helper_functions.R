@@ -13,28 +13,30 @@
 #' @importFrom seqinr splitseq
 NULL
 
-
 #' Download from Zenodo
-#' 
-#' Downloads file from Zenodo.
-#' Extracts the .tar.gz archive, if necessary
-#' 
-#' @param filename character string specifying the name of the file to download.
-#' @param url URL of the Zenodo record (copy from the browser address bar).
-#' @param dest_dir path to the directory where the file should be downloaded.
-#' @param untar logical: If TRUE, the archive will be extracted after download.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' @return  Invisible full path to the directory where the file was downloaded to.
-#' show warnings or errors.
+#'
+#' Downloads a file from Zenodo and optionally extracts it if it is a
+#' `.tar.gz` archive.
+#'
+#' @param filename Character string specifying the name of the file to download.
+#' @param url Character string; URL of the Zenodo record (copy from browser address bar).
+#' @param dest_dir Character string; path to the directory where the file should be downloaded.
+#' @param untar Logical; if `TRUE`, the archive is extracted after download.
+#' @param quiet Logical; if `TRUE`, suppress informational messages and show only warnings or errors.
+#'
+#' @return Invisible full path to the directory where the file was downloaded.
+#'
 #' @examples
 #' \dontrun{
-#' download_zenodo(filename = "COInr_2025_05_23.tar.gz",
-#'    url = "https://zenodo.org/records/15515860",
-#'    dest_dir = "~/vtamR",
-#'    untar = TRUE,
-#'    quiet = FALSE
-#'    )
+#' download_zenodo(
+#'   filename = "COInr_2025_05_23.tar.gz",
+#'   url = "https://zenodo.org/records/15515860",
+#'   dest_dir = "~/vtamR",
+#'   untar = TRUE,
+#'   quiet = FALSE
+#' )
 #' }
+#'
 #' @export
 #' 
 download_zenodo <- function(
@@ -64,26 +66,29 @@ download_zenodo <- function(
 }
 
 #' Download from OSF
-#' 
-#' Downloads file from [OSF](https://osf.io/)
-#' Extracts the .tar.gz archive, if necessary
-#' 
-#' @param filename character string specifying the name of the file to download.
-#' @param url URL of the Zenodo record.
-#' @param dest_dir path to the directory where the file should be downloaded.
-#' @param untar logical: If TRUE, the archive will be extracted after download.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @return Invisible full path to the directory where the file was downloaded to.
+#'
+#' Downloads a file from the Open Science Framework (OSF).
+#' If the file is a `.tar.gz` archive, it can optionally be extracted after download.
+#'
+#' @param filename Character string specifying the name of the file to download.
+#' @param url Character string; direct download URL of the OSF file.
+#' @param dest_dir Character string; path to the directory where the file should be downloaded.
+#' @param untar Logical; if `TRUE`, the archive is extracted after download.
+#' @param quiet Logical; if `TRUE`, suppress informational messages and show only warnings or errors.
+#'
+#' @return Invisible full path to the directory where the file was downloaded.
+#'
 #' @examples
 #' \dontrun{
-#' download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
-#'    url = "https://osf.io/download/jyhz6/",
-#'    dest_dir = "~/vtamR/OSF",
-#'    untar = TRUE,
-#'    quiet = FALSE
-#'    )
+#' download_osf(
+#'   filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+#'   url = "https://osf.io/download/jyhz6/",
+#'   dest_dir = "~/vtamR/OSF",
+#'   untar = TRUE,
+#'   quiet = FALSE
+#' )
 #' }
+#'
 #' @export
 #' 
 download_osf <- function(

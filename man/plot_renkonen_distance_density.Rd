@@ -2,21 +2,22 @@
 % Please edit documentation in R/vtamR_graph.R
 \name{plot_renkonen_distance_density}
 \alias{plot_renkonen_distance_density}
-\title{plot_renkonen_distance_density}
+\title{Plot Renkonen Distance Density}
 \usage{
 plot_renkonen_distance_density(df, plotfile = "")
 }
 \arguments{
-\item{df}{data frame with the following columns:
-sample1,sample2,replicate1,replicate2,renkonen_d
-(can be produced by compute_renkonen_distances)}
+\item{df}{Data frame with the following columns:
+\code{sample1}, \code{sample2}, \code{replicate1}, \code{replicate2}, \code{renkonen_d}.
+This output can be produced using \code{compute_renkonen_distances()}.}
 
-\item{plotfile}{Character string: png file name for the output plot;
-If empty, no file is written.}
+\item{plotfile}{Character string: name of the output PNG file. If empty,
+no file is written.}
 }
 \value{
-Density plot
+A density plot object.
 }
 \description{
-Create density plot with Renkonen distances between pairs of sample-replicates
+Creates a density plot of Renkonen distances between pairs of samples or
+sample–replicates.
 }

@@ -5,40 +5,48 @@
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
 NULL
 
-
-#' assign_taxonomy_rdp
-#' 
-#' Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
-#' 
-#' This function needs the rRDP, rRDPData and Biostrings packages.
-#' 
-#' By default, the 16S Bacterial/Archaea RDP database is used from rRDPData. 
-#' (http://sourceforge.net/projects/rdp-classifier/). 
-#' Otherwise the directory name containing the a trained classifier object created 
-#' with trainRDP(), can be provided.
-#'  
-#' @param asv Data frame or csv file containing an asv and asv_id columns.
-#' @param dir Directory with the data for an existing classifier 
-#' (created with trainRDP()). If NULL, default classifier trained with 
-#' the data shipped with RDP is used. See RDP documentation (?rdp)
-#' @param max_memory Positive integer: RAM available for rRDP in Gb.
-#' @param confidence Numeric; Value between 0-1. Minimum confidence value, to accept
-#' the taxonomic assignment
-#' @param rm_chloroplast Logical; If true, reset the lineage to NA if class is
-#' Chloroplast
-#' @param sep Field separator character in input and output csv files.
-#' @param outfile Character string: csv file name to print the output data 
-#' frame if necessary. If empty, no file is written.
-#' @param quiet logical: If TRUE, suppress informational messages and only 
-#' show warnings or errors.
-#' @return Data frame with the following columns:
-#' asv_id,domain,kingdom,phylum,class,order,family,genus
+#' Assign Taxonomy Using RDP Classifier
+#'
+#' Assigns 16S bacterial and archaeal sequences to taxonomic ranks using the
+#' RDP classifier via the `rRDP` package.
+#'
+#' This function requires the `rRDP`, `rRDPData`, and `Biostrings` packages.
+#'
+#' By default, the RDP 16S Bacteria/Archaea reference database provided by
+#' `rRDPData` is used
+#' (http://sourceforge.net/projects/rdp-classifier/).
+#' Alternatively, a custom trained classifier directory (created using
+#' `trainRDP()`) can be provided.
+#'
+#' @param asv Data frame or CSV file containing `asv_id` and `asv` columns.
+#' @param dir Character string; path to a directory containing an existing
+#' trained classifier (created with `trainRDP()`). If `NULL`, the default
+#' RDP-trained classifier is used.
+#' @param max_memory Positive integer; maximum RAM available for `rRDP` in GB.
+#' @param confidence Numeric (0–1); minimum confidence threshold for accepting
+#' a taxonomic assignment.
+#' @param rm_chloroplast Logical; if `TRUE`, taxonomic assignments are set to
+#' `NA` when the class is Chloroplast.
+#' @param sep Field separator character for input and output CSV files.
+#' @param outfile Character string: name of the output CSV file. If empty, no
+#' file is written.
+#' @param quiet Logical; if `TRUE`, suppress informational messages and show
+#' only warnings or errors.
+#'
+#' @return A data frame with the following columns:
+#' `asv_id`, `domain`, `kingdom`, `phylum`, `class`, `order`, `family`, `genus`.
+#'
 #' @examples
 #' \dontrun{
-#' taxa <- assign_taxonomy_rdp(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
+#' taxa <- assign_taxonomy_rdp(
+#'   asv = read_count_df,
+#'   confidence = 0.7,
+#'   max_memory = 8,
+#'   rm_chloroplast = FALSE
+#' )
 #' }
-#' @export
 #'
+#' @export
 #'
 assign_taxonomy_rdp <- function(
     asv,

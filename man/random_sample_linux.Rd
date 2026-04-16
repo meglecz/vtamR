@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{random_sample_linux}
 \alias{random_sample_linux}
-\title{random_sample_linux}
+\title{Randomly sample sequences from a FASTA file (Linux, VSEARCH-based)}
 \usage{
 random_sample_linux(
   fasta,
@@ -17,53 +17,58 @@ random_sample_linux(
 )
 }
 \arguments{
-\item{fasta}{Character string: Path to the input FASTA file. Can be gzipped.}
+\item{fasta}{Character string: path to the input FASTA file (optionally gzipped).}
 
-\item{outfile}{Character string: Path to the output FASTA file. If it ends with \code{.gz},
+\item{outfile}{Character string: path to the output FASTA file. If it ends in \code{.gz},
 the output will be gzip-compressed.}
 
-\item{n}{Positive integer: Number of sequences to randomly select.}
+\item{n}{Positive integer: number of sequences to randomly sample.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
-\code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
+\item{compress_method}{Character or logical: compression method used for output files.
+Must be one of \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\itemize{
+\item \code{"pigz"} requires \code{pigz} to be installed and available in the system PATH
+(or specified via \code{pigz_path}).
+\item \code{"gzip"} is Linux-only.
+\item \code{"R"} uses \code{R.utils} and is cross-platform but slower.
+Performance (fastest → slowest): \code{pigz} > \code{gzip} > \code{R}.
+}}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string: path to the \code{pigz} executable. Only required if
+\code{pigz} is used and not available in the system PATH.}
 
-\item{randseed}{Positive integer or NULL: seed for random sampling.
-NULL or 0 by default means to use a pseudo-random seed.
-A given non-zero seed produces always the same result.}
+\item{randseed}{Integer or NULL: random seed for sampling. If NULL or 0 (default),
+a pseudo-random seed is used. A non-zero seed ensures reproducible results.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages; only warnings and errors are shown.}
+\item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPU threads to use. If 0, all available CPUs are used.}
 }
 \value{
-Invisibly the number of sequences in the output file.
+Invisibly returns the number of sequences written to the output file.
 }
 \description{
-Randomly select \code{n} sequences from an input FASTA file using \code{fastx_subsample} from
-VSEARCH.
+Randomly selects \code{n} sequences from an input FASTA file using \code{fastx_subsample}
+from VSEARCH.
 }
 \details{
-The input FASTA can be uncompressed or gzipped. The output compression is
-determined automatically from the output file name (i.e., ends with \code{.gz} → gzip).
+This function is Linux-specific. For a cross-platform alternative, use
+\code{random_sample_r()}.
 
-If the number of sequences in the input file is less than or equal to the
-requested number (\code{n}), the input file is simply copied to the output,
-respecting the compression inferred from the output file name.
+The input FASTA file can be uncompressed or gzipped. Output compression is
+inferred from the output file extension (i.e., \code{.gz} produces a gzipped file).
+
+If the input file contains fewer than or exactly \code{n} sequences, it is copied
+to the output file, preserving the requested compression format.
 }
 \examples{
 \dontrun{
 random_sample_linux(
   fasta = "all_sequences.fasta.gz",
   outfile = "subset_100.fasta.gz",
-  vsearch_path="vsearch",
+  vsearch_path = "vsearch",
   n = 100,
   randseed = 123,
   quiet = FALSE

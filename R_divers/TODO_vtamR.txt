@@ -630,6 +630,8 @@ Add test demo file for plate2 MFZR
 
 ## 2026/04/13 v1.0.1
 
+## get_taxonomic_lineage => correct; see example; see if it is a problem of partial taxonomy file
+
 Function names and tutorial updated
 
 ## 2026/04/16 short tuto

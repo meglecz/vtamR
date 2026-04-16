@@ -7,17 +7,21 @@
 check_dir(path, is_file = FALSE)
 }
 \arguments{
-\item{path}{Character string naming a directory or a file including path.}
+\item{path}{Character string specifying a directory or a file path.}
 
-\item{is_file}{logical; If TRUE, it is a file. Directory otherwise.}
+\item{is_file}{Logical. If \code{TRUE}, \code{path} is treated as a file path;
+otherwise, it is treated as a directory path.}
+}
+\value{
+\code{NULL}
 }
 \description{
-Check if a directory exists and create it if necessary.
-If a file path is provided, extract its directory path
-and create directory if needed.
+Check whether a directory exists and create it if necessary. If a file path
+is provided, the directory portion is extracted and created if needed.
 }
 \examples{
 \dontrun{
-check_dir(path="data")
+check_dir(path = "data")
 }
+
 }

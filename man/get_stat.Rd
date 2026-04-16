@@ -7,40 +7,46 @@
 get_stat(read_count, stat_df, stage = "", params = NA, outfile = "")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file containing the following
+variables: \code{asv_id}, \verb{sample``, }replicate,
+\code{read_count}, \code{asv}.}
 
-\item{stat_df}{Data frame with the following variables: parameters,
-asv_count, read_count, read_count, sample_count, sample_replicate_count.}
+\item{stat_df}{Data frame containing the following variables:
+\code{parameters}, \code{asv_count}, \code{read_count},
+\code{sample_count}, \code{sample_replicate_count}.}
 
-\item{stage}{Character string: name of the filtering step. It is used as
-row name in the stat_df.}
+\item{stage}{Character string specifying the name of the filtering step. It
+is used as the row name in \code{stat_df}.}
 
-\item{params}{Character string of concatenated parameter values used for
-the filtering step.}
+\item{params}{Character string containing concatenated parameter values used
+for the filtering step.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the name of a CSV file to write
+the updated data frame. If empty, no file is written.}
 }
 \value{
-Data frame (stat_df) completed with a new line.
+Data frame. The updated \code{stat_df} with an additional row.
 }
 \description{
-Get read, variant, sample and replicate counts.
-Complete the stat_df with the above statistics.
+Compute summary statistics (reads, variants, samples, and replicates) and
+append them to a statistics data frame.
 }
 \examples{
 \dontrun{
-get_stat(read_count_df, 
-   stat_df, 
-   stage="filter_occurrence_variant", 
-   params="0.002;by_replicate=TRUE"
-   )
-get_stat(read_count_df, 
-   stat_df, 
-   stage="filter_indel", 
-   params="0.002;by_replicate=TRUE", 
-   outfile="out/ReadCount_stat.csv"
-   )
+get_stat(
+  read_count_df,
+  stat_df,
+  stage = "filter_occurrence_variant",
+  params = "0.002;by_replicate=TRUE"
+)
+
+get_stat(
+  read_count_df,
+  stat_df,
+  stage = "filter_indel",
+  params = "0.002;by_replicate=TRUE",
+  outfile = "out/ReadCount_stat.csv"
+)
 }
+
 }

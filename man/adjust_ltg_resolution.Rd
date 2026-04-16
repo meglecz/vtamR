@@ -2,32 +2,34 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{adjust_ltg_resolution}
 \alias{adjust_ltg_resolution}
-\title{Adjust the resolution of LTG}
+\title{Adjust LTG resolution}
 \usage{
 adjust_ltg_resolution(taxres_df, tax_df)
 }
 \arguments{
-\item{taxres_df}{Data frame with the following columns: asv_id,ltg_taxid,
-ltg_name,ltg_rank,ltg_rank_index,domain_taxid,
-domain,kingdom_taxid,kingdom,phylum_taxid,phylum,class_taxid,class,
-order_taxid,order,family_taxid,family,genus_taxid,genus,species_taxid,species,pid,
-pcov,phit,taxn,seqn,refres,ltgres,asv.}
+\item{taxres_df}{Data frame with the following columns: \code{asv_id}, \code{ltg_taxid},
+\code{ltg_name}, \code{ltg_rank}, \code{ltg_rank_index}, \code{domain_taxid},
+\code{domain}, \code{kingdom_taxid}, \code{kingdom}, \code{phylum_taxid}, \code{phylum},
+\code{class_taxid}, \code{class}, \code{order_taxid}, \code{order}, \code{family_taxid}, \code{family},
+\code{genus_taxid}, \code{genus}, \code{species_taxid}, \code{species}, \code{pid},
+\code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}, \code{asv}.}
 
-\item{tax_df}{Data frame with the following columns:
-tax_id, parent_tax_id, rank, name_txt, taxlevel
+\item{tax_df}{Data frame with the following columns: \code{tax_id}, \code{parent_tax_id},
+\code{rank}, \code{name_txt}, \code{taxlevel}
 (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
 2: kingdom, 1: domain, 0: root).}
 }
 \value{
-The modified input data frame with lower resolution of LTGs if necessary.
+Data frame with LTG resolution adjusted where necessary.
 }
 \description{
-If the LTG has a higher resolution than the ltgres parameter,
-adjust the LTG and stop lineage at ltgres level.
+Reduce the resolution of the Lowest Taxonomic Group (LTG) when it exceeds
+the level specified by \code{ltgres}, truncating the lineage at the desired rank.
 }
 \examples{
 \dontrun{
-tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
+tax_df <- read.delim("xxxxxxxx", header = TRUE, sep = "\t", fill = TRUE, quote = "")
 adjust_ltg_resolution(taxres_df, tax_df)
 }
+
 }

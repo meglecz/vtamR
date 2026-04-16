@@ -2,29 +2,37 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{renkonen_dist}
 \alias{renkonen_dist}
-\title{Calculate Renkonen Distance}
+\title{Calculate Renkonen distance}
 \usage{
 renkonen_dist(df1, df2)
 }
 \arguments{
-\item{df1, df2}{Data frames with asv and read_count columns.}
+\item{df1, df2}{Data frames with \code{asv} and \code{read_count} columns.}
 }
 \value{
-Renkonen distance (Numeric. Value between 0 and 1) between the two data frames.
+Numeric value between 0 and 1 representing the Renkonen distance
+between the two samples.
 }
 \description{
-Calculate renkonen distance between two data frames with ASVs and read counts.
+Compute the Renkonen distance between two ASV abundance profiles.
+
+The Renkonen distance is based on the absolute differences in relative
+abundances of shared ASVs and ranges from 0 (identical compositions) to 1
+(completely different compositions).
 }
 \examples{
 \dontrun{
 df1 <- read_count_df \%>\%
-  filter(sample=="tpos1") \%>\%
-  group_by(asv) \%>\%
-  summarize(read_count = sum(read_count))
+  dplyr::filter(sample == "tpos1") \%>\%
+  dplyr::group_by(asv) \%>\%
+  dplyr::summarise(read_count = sum(read_count))
+
 df2 <- read_count_df \%>\%
-  filter(sample=="tnegtag") \%>\%
-  group_by(asv) \%>\%
-  summarize(read_count = sum(read_count))
+  dplyr::filter(sample == "tnegtag") \%>\%
+  dplyr::group_by(asv) \%>\%
+  dplyr::summarise(read_count = sum(read_count))
+
 renkonen_dist(df1, df2)
 }
+
 }

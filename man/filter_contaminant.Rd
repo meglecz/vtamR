@@ -13,31 +13,31 @@ filter_contaminant(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{sampleinfo}{Data frame or csv file with at least the following columns:
-sample,sample_type (negative/mock/real).}
+\item{sampleinfo}{Data frame or path to a CSV file with at least the following columns:
+\code{sample}, \code{sample_type} (negative/mock/real).}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the filtered
+data frame. If empty, no file is written.}
 
-\item{conta_file}{Character string: csv file name to print lines filtered out
-from the input dataset.
-If empty, no file is written.}
+\item{conta_file}{Character string specifying a CSV file to store the filtered-out
+contaminant ASVs. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame with contaminant ASVs removed.
 }
 \description{
-Eliminate ASVs that are likely to be contaminants, since
-they have higher read count in at least one negative control, than in any of
-the other samples.
+Remove ASVs that are likely contaminants, defined as ASVs that have a higher
+read count in at least one negative control than in any biological sample.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_contaminant(read_count_df, sampleinfo=sampleinfo)
+filtered_read_count_df <- filter_contaminant(read_count_df, sampleinfo = sampleinfo)
 }
+
 }

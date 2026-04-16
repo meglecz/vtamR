@@ -11,22 +11,26 @@
 #' @importFrom seqinr splitseq
 NULL
 
-#' plot_read_count_by_sample
-#' 
-#' Create barplot with the number of reads in each sample or sample-replicate;
-#' If information is given on sample types, bars are colored in function of them
-#' 
-#' @param read_count_df data frame with sample, read_count and replicate (optional) columns
-#' @param sampleinfo file with sample and sample_type (real/mock/negative) columns
-#' @param sep separator used in csv files
-#' @param sample_replicate Boolean. If TRUE barplot is made by sample-replicates,
-#' by sample otherwise
-#' @param x_axis_label_size size of labels in x axis
-#' @param plotfile Character string: png file name for the output plot; 
-#' If empty, no file is written.
-#' @return Barplot
+
+#' Plot Read Counts by Sample
+#'
+#' Creates a bar plot showing the number of reads per sample or sample–replicate.
+#' If sample metadata is provided, bars are colored according to sample type.
+#'
+#' @param read_count_df Data frame with at least `sample` and `read_count`
+#'   columns, and optionally a `replicate` column.
+#' @param sampleinfo Data frame or CSV file with `sample` and `sample_type`
+#'   columns (e.g. `real`, `mock`, `negative`).
+#' @param sep Field separator used in CSV files.
+#' @param sample_replicate Logical; if `TRUE`, the plot is generated per
+#'   sample–replicate combination, otherwise per sample.
+#' @param x_axis_label_size Numeric; size of x-axis labels.
+#' @param plotfile Character string: name of the output PNG file. If empty,
+#'   no file is written.
+#'
+#' @return A bar plot object.
+#'
 #' @export
-#' 
 #' 
 plot_read_count_by_sample <- function(read_count_df, 
                                       sampleinfo="", 
@@ -104,21 +108,25 @@ plot_read_count_by_sample <- function(read_count_df,
   return(p)
 }
 
-#' plot_read_count_histogram
-#' 
-#' Create histogram with the number of reads in each sample or sample-replicate;
-#' If information is given on sample types, bars are colored in function of them
-#' 
-#' @param read_count_df data frame with asv and read_count columns
-#' @param min_read_count filter out ASVs with less than min_read_count reads, 
-#' before making the graph
-#' @param binwidth width of the read count intervals 
-#' @param plotfile Character string: png file name for the output plot; 
-#' If empty, no file is written.
-#' @return Histogram
+
+#' Plot Read Count Histogram
+#'
+#' Creates a histogram of read counts per ASV.
+#'
+#' This function filters low-abundance ASVs (if requested) and then plots the
+#' distribution of read counts across ASVs.
+#'
+#' @param read_count_df Data frame with `asv` and `read_count` columns.
+#' @param min_read_count Numeric; minimum read count threshold. ASVs with fewer
+#'   reads are filtered out before plotting.
+#' @param binwidth Numeric; width of histogram bins for read count intervals.
+#' @param plotfile Character string: name of the output PNG file. If empty,
+#'   no file is written.
+#'
+#' @return A histogram plot object.
+#'
 #' @export
 #' 
-
 plot_read_count_histogram <- function(read_count_df, 
                                       min_read_count=0, 
                                       binwidth=100,
@@ -151,21 +159,25 @@ plot_read_count_histogram <- function(read_count_df,
   return(p)
 }
 
-#' plot_renkonen_distance_barplot
-#' 
-#' Create barplot with renkonen distances between pairs of sample-replicates
-#' If information is given on sample types, bars are colored in function of them
-#' 
-#' @param df data frame with the following columns: 
-#' sample1,sample2,replicate1,replicate2,renkonen_d 
-#' (can be produced by make_renkonen_distance_matrix)
-#' @param sampleinfo Data frame or CSV file with the following columns:
-#' sample, sample_type (real/mock/negative)
-#' @param sep separator used in csv files
-#' @param x_axis_label_size size of labels in x axis
-#' @param plotfile Character string: png file name for the output plot; 
-#' If empty, no file is written.
-#' @return Barplot
+#' Plot Renkonen Distance Barplot
+#'
+#' Creates a bar plot of Renkonen distances between pairs of samples or
+#' sample–replicates.
+#'
+#' If sample metadata is provided, bars are colored according to sample type.
+#'
+#' @param df Data frame with the following columns:
+#'   `sample1`, `sample2`, `replicate1`, `replicate2`, `renkonen_d`.
+#'   This output can be generated using `make_renkonen_distance_matrix()`.
+#' @param sampleinfo Data frame or CSV file with columns `sample` and
+#'   `sample_type` (e.g. `real`, `mock`, `negative`).
+#' @param sep Field separator used in CSV files.
+#' @param x_axis_label_size Numeric; size of x-axis labels.
+#' @param plotfile Character string: name of the output PNG file. If empty,
+#'   no file is written.
+#'
+#' @return A bar plot object.
+#'
 #' @export
 #' 
 plot_renkonen_distance_barplot <- function(df, 
@@ -221,16 +233,20 @@ plot_renkonen_distance_barplot <- function(df,
   return(p)
 }
 
-#' plot_renkonen_distance_density
-#' 
-#' Create density plot with Renkonen distances between pairs of sample-replicates
-#' 
-#' @param df data frame with the following columns: 
-#' sample1,sample2,replicate1,replicate2,renkonen_d 
-#' (can be produced by compute_renkonen_distances)
-#' @param plotfile Character string: png file name for the output plot; 
-#' If empty, no file is written.
-#' @return Density plot
+
+#' Plot Renkonen Distance Density
+#'
+#' Creates a density plot of Renkonen distances between pairs of samples or
+#' sample–replicates.
+#'
+#' @param df Data frame with the following columns:
+#'   `sample1`, `sample2`, `replicate1`, `replicate2`, `renkonen_d`.
+#'   This output can be produced using `compute_renkonen_distances()`.
+#' @param plotfile Character string: name of the output PNG file. If empty,
+#'   no file is written.
+#'
+#' @return A density plot object.
+#'
 #' @export
 #' 
 plot_renkonen_distance_density <- function(df, plotfile=""){

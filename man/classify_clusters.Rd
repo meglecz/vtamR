@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{classify_clusters}
 \alias{classify_clusters}
-\title{Classify clusters based on taxonomic agreement among their ASVs}
+\title{Classify clusters based on taxonomic agreement among ASVs}
 \usage{
 classify_clusters(
   cluster,
@@ -14,43 +14,48 @@ classify_clusters(
 )
 }
 \arguments{
-\item{cluster}{Data frame or csv file with the following variables:
-asv_id, cluster_id}
+\item{cluster}{Data frame or CSV file with the following columns:
+\code{asv_id}, \code{cluster_id}.}
 
-\item{taxa}{Data frame or CSV file with the following variables:
-asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order,
-family, genus, species).
-Missing values within the lineage are not allowed. If the taxonomic assignment
-is incomplete due to low resolution, higher-level taxa should be recorded as \code{NA}.}
+\item{taxa}{Data frame or CSV file containing taxonomic assignments with one
+column per taxonomic level (e.g. domain, phylum, class, order, family, genus, species).
+Missing values are allowed and should be represented as \code{NA} when higher-level
+resolution is unavailable.}
 
-\item{outfile}{Character string: name of the output csv file}
+\item{outfile}{Character string: name of the output CSV file. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 
-\item{taxlevels}{Character vector with names of the taxonomic levels}
+\item{taxlevels}{Character vector specifying the taxonomic levels to evaluate
+(e.g. \code{"species"}, \code{"genus"}, \code{"family"}).}
 }
 \value{
-Data frame with the following columns: cluster_id, classification
-for each taxonomic level
+A data frame with columns:
+\code{cluster_id} and one column per taxonomic level containing the classification
+(\code{closed}, \code{open}, or \code{hybrid}).
 }
 \description{
-Classifies each cluster according to the taxonomic assignment at a given level:
+Assigns each cluster a classification based on the taxonomic consistency
+of the ASVs it contains at one or more taxonomic levels.
+}
+\details{
+Clusters are classified as:
 \itemize{
-\item closed: All ASVs in the cluster are assigned to the same taxon,
-and all ASVs of that taxon belong exclusively to this cluster.
-\item open: All ASVs in the cluster are assigned to the same taxon,
-but some ASVs of that taxon are found in other clusters.
-\item hybrid: the cluster contains ASVs assigned to more than one taxon.
+\item \strong{closed}: all ASVs in the cluster belong to the same taxon, and that taxon
+is not present in any other cluster.
+\item \strong{open}: all ASVs in the cluster belong to the same taxon, but that taxon
+is found in multiple clusters.
+\item \strong{hybrid}: the cluster contains ASVs assigned to more than one taxon.
 }
 }
 \examples{
 \dontrun{
-df <- classify_clusters(read_count_df, 
-                                      swarm_d=7, 
-                                      vsearch_path="vsearch",
-                                      num_threads=8)
+df <- classify_clusters(
+  cluster = cluster_df,
+  taxa = taxa_df,
+  taxlevels = c("species", "genus")
+)
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_RDP.R
 \name{assign_taxonomy_rdp}
 \alias{assign_taxonomy_rdp}
-\title{assign_taxonomy_rdp}
+\title{Assign Taxonomy Using RDP Classifier}
 \usage{
 assign_taxonomy_rdp(
   asv,
@@ -16,45 +16,53 @@ assign_taxonomy_rdp(
 )
 }
 \arguments{
-\item{asv}{Data frame or csv file containing an asv and asv_id columns.}
+\item{asv}{Data frame or CSV file containing \code{asv_id} and \code{asv} columns.}
 
-\item{dir}{Directory with the data for an existing classifier
-(created with trainRDP()). If NULL, default classifier trained with
-the data shipped with RDP is used. See RDP documentation (?rdp)}
+\item{dir}{Character string; path to a directory containing an existing
+trained classifier (created with \code{trainRDP()}). If \code{NULL}, the default
+RDP-trained classifier is used.}
 
-\item{max_memory}{Positive integer: RAM available for rRDP in Gb.}
+\item{max_memory}{Positive integer; maximum RAM available for \code{rRDP} in GB.}
 
-\item{confidence}{Numeric; Value between 0-1. Minimum confidence value, to accept
-the taxonomic assignment}
+\item{confidence}{Numeric (0–1); minimum confidence threshold for accepting
+a taxonomic assignment.}
 
-\item{rm_chloroplast}{Logical; If true, reset the lineage to NA if class is
-Chloroplast}
+\item{rm_chloroplast}{Logical; if \code{TRUE}, taxonomic assignments are set to
+\code{NA} when the class is Chloroplast.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string: name of the output CSV file. If empty, no
+file is written.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show
+only warnings or errors.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character for input and output CSV files.}
 }
 \value{
-Data frame with the following columns:
-asv_id,domain,kingdom,phylum,class,order,family,genus
+A data frame with the following columns:
+\code{asv_id}, \code{domain}, \code{kingdom}, \code{phylum}, \code{class}, \code{order}, \code{family}, \code{genus}.
 }
 \description{
-Assign 16S bacteria/Archaea sequences to taxa using the rRDP package
+Assigns 16S bacterial and archaeal sequences to taxonomic ranks using the
+RDP classifier via the \code{rRDP} package.
 }
 \details{
-This function needs the rRDP, rRDPData and Biostrings packages.
+This function requires the \code{rRDP}, \code{rRDPData}, and \code{Biostrings} packages.
 
-By default, the 16S Bacterial/Archaea RDP database is used from rRDPData.
+By default, the RDP 16S Bacteria/Archaea reference database provided by
+\code{rRDPData} is used
 (http://sourceforge.net/projects/rdp-classifier/).
-Otherwise the directory name containing the a trained classifier object created
-with trainRDP(), can be provided.
+Alternatively, a custom trained classifier directory (created using
+\code{trainRDP()}) can be provided.
 }
 \examples{
 \dontrun{
-taxa <- assign_taxonomy_rdp(asv=read_count_df, confidence=0.7, max_memory=8, rm_chloroplast=FALSE)
+taxa <- assign_taxonomy_rdp(
+  asv = read_count_df,
+  confidence = 0.7,
+  max_memory = 8,
+  rm_chloroplast = FALSE
+)
 }
+
 }

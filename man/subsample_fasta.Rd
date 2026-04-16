@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{subsample_fasta}
 \alias{subsample_fasta}
-\title{Randomly Select Sequences from FASTA Files}
+\title{Randomly subsample sequences from FASTA files}
 \usage{
 subsample_fasta(
   fastainfo,
@@ -22,70 +22,72 @@ subsample_fasta(
 }
 \arguments{
 \item{fastainfo}{Data frame or CSV file containing a \code{fasta} column with input file names.
-Files can be gzipped.}
+Files may be gzipped.}
 
-\item{n}{Positive integer: number of sequences to randomly select from each file.}
+\item{n}{Positive integer: number of sequences to sample from each file.}
 
 \item{fasta_dir}{Character string: directory containing the input FASTA files.}
 
-\item{outdir}{Character string: directory to write the output FASTA files.}
+\item{outdir}{Character string: directory where output FASTA files are written.}
 
-\item{use_vsearch}{Logical: If TRUE, use VSEARCH for random sampling. Only available
-on Linux. Otherwise uses a cross-platform version`.}
+\item{use_vsearch}{Logical: if TRUE, uses VSEARCH for subsampling (Linux only).
+Otherwise uses a cross-platform R-based implementation.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{randseed}{Positive integer or NULL: seed for random sampling.
-NULL or 0 means to use a pseudo-random seed.
-A given non-zero seed produces always the same result.}
+\item{randseed}{Integer or NULL: random seed for reproducibility. If NULL or 0,
+a pseudo-random seed is used. A non-zero seed ensures reproducible results.}
 
-\item{compress_method}{Character or logical. Compression method
-(used only if \code{use_vsearch = TRUE}).
+\item{compress_method}{Character string: compression method (used only when \code{use_vsearch = TRUE}).
 Options are:
-\code{pigz} – Fastest; requires \code{pigz} to be installed (or specify its path via \code{pigz_path}).
-\code{gzip} – Slower; available only on Linux-like systems.
-\code{R} – Cross-platform; uses \code{R.utils}, but is the slowest option.
-Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
+\itemize{
+\item \code{"pigz"}: fastest; requires \code{pigz} installed (or \code{pigz_path} specified)
+\item \code{"gzip"}: slower; available on Linux-like systems
+\item \code{"R"}: cross-platform; uses \code{R.utils} but is slowest
+Performance order: \code{pigz} > \code{gzip} > \code{R}
+}}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string: path to the \code{pigz} executable. Required only if \code{pigz}
+is used and not available in the system PATH.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPU threads to use. If 0, all available CPUs are used.}
 
-\item{compress}{Logical: If TRUE, output files are compressed in gzip format.}
+\item{compress}{Logical: if TRUE, output FASTA files are gzip-compressed.}
 
-\item{sep}{Character: field separator for input and output CSV files.}
+\item{sep}{Character string: field separator used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages; only warnings and errors are shown.}
+\item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
 }
 \value{
-Updated input data frame with file name extensions adjusted (if needed)
-and \code{read_counts} updated.
+Updated input data frame with adjusted file names (if needed) and updated read counts.
 }
 \description{
-Randomly selects \code{n} sequences (without replacement) from each input FASTA file
+Randomly selects \code{n} sequences (without replacement) from each FASTA file
 listed in the \code{fastainfo} data frame.
-Useful to standardize the number of reads across sequencing libraries.
+This function is useful for standardizing sequencing depth across libraries.
 }
 \details{
-Can be used before or after demultiplexing (\code{demultiplex_and_trim}), but recommended
-after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim}.
+It can be applied before or after demultiplexing (\code{demultiplex_and_trim}),
+but is recommended after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim}.
 
-Two algorithms are available:
+Two implementations are available:
 \itemize{
-\item VSEARCH-based (\code{use_vsearch = TRUE}): Fast, but only on Linux-like systems.
-\item R-based (\code{use_vsearch = FALSE}): Slower, but works on all systems.
+\item VSEARCH-based (\code{use_vsearch = TRUE}): fast, but only available on Linux-like systems.
+\item R-based (\code{use_vsearch = FALSE}): slower, but fully cross-platform.
 }
 }
 \examples{
 \dontrun{
 # Fast version (Linux)
-fastainfo_df <- subsample_fasta(fastainfo_df, merged_dir, "random_seq",
-                          use_vsearch = TRUE, n = 10000, compress = TRUE)
+fastainfo_df <- subsample_fasta(
+  fastainfo_df, merged_dir, "random_seq",
+  use_vsearch = TRUE, n = 10000, compress = TRUE
+)
 
 # Cross-platform version
-fastainfo_df <- subsample_fasta(fastainfo_df, merged_dir, "random_seq",
-                          use_vsearch = FALSE, n = 10000, compress = TRUE)
+fastainfo_df <- subsample_fasta(
+  fastainfo_df, merged_dir, "random_seq",
+  use_vsearch = FALSE, n = 10000, compress = TRUE
+)
 }
-
 }

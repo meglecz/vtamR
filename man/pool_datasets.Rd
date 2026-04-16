@@ -2,51 +2,52 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{pool_datasets}
 \alias{pool_datasets}
-\title{Pool data sets}
+\title{Pool multiple datasets}
 \usage{
 pool_datasets(files, outfile = "", method = "mean", sep = ",", quiet = T)
 }
 \arguments{
-\item{files}{Character vector specifying the file paths of the data sets to pool.
-Each file must have the same format, with columns: \code{asv_id}, \code{sample},
-\code{replicate} (optional), \code{read_count}, and \code{asv}.}
+\item{files}{Character vector of file paths to the datasets to pool.
+Each file must follow the same format, containing \code{asv_id}, \code{sample},
+\code{read_count}, \code{asv}, and optionally \code{replicate}.}
 
-\item{outfile}{Character string specifying the name of the output CSV file.
+\item{outfile}{Character string specifying the output CSV file name.
 If empty, no file is written.}
 
 \item{method}{Character string specifying how read counts from identical
-sample–replicates should be aggregated. Must be one of "mean",
-"max", "sum", or "min".}
+sample–replicates are aggregated. Must be one of \code{"mean"}, \code{"max"},
+\code{"sum"}, or \code{"min"}.}
 
 \item{sep}{Character string specifying the field separator used in input
 and output CSV files.}
 
-\item{quiet}{Logical; if TRUE, suppress informational messages and
-display only warnings or errors.}
+\item{quiet}{Logical; if TRUE, suppress informational messages and show only
+warnings or errors.}
 }
 \value{
-A data frame with the following columns: \code{asv_id}, \code{sample},
-\code{replicate} (optional), \code{read_count}, and \code{asv}.
+A data frame with columns \code{asv_id}, \code{sample}, \code{replicate}
+(optional), \code{read_count}, and \code{asv}.
 }
 \description{
-Combine multiple data sets generated from the same marker (i.e., the same
-genetic region and primer pair).
+Combine multiple datasets generated from the same genetic marker (i.e.,
+the same genomic region and primer pair).
 }
 \details{
-If identical samples (sample–replicates) are present across different data sets,
-their read counts can be aggregated using one of the following methods: sum, mean,
+When identical sample–replicate combinations are present across datasets,
+their read counts are aggregated using the selected method: sum, mean,
 minimum, or maximum.
 
-Input files must be in long format and contain the following columns:
-\code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count},
-and \code{asv}.
+Input files must be in long format and include the columns:
+\code{asv_id}, \code{sample}, \code{read_count}, and \code{asv}, with an optional \code{replicate}
+column.
 
-Consistency between \code{asv_id} and \code{asv} across data sets is checked.
+Consistency between \code{asv_id} and \code{asv} across datasets is checked prior
+to pooling.
 }
 \examples{
 \dontrun{
-files = c("vtamR_test/run1/1_Input.csv", 
+files <- c("vtamR_test/run1/1_Input.csv",
            "vtamR_test/run2/1_Input.csv")
-df <- pool_datasets(files, method="sum")
+df <- pool_datasets(files, method = "sum")
 }
 }

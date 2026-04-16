@@ -13,33 +13,40 @@ flag_chimera(
 )
 }
 \arguments{
-\item{unique_asv_df}{Data frame with the following variables:
-asv, read_count; ASVs must be unique.}
+\item{unique_asv_df}{Data frame with the following columns: \code{asv}, \code{read_count}.
+ASVs must be unique.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 
-\item{abskew}{Positive integer: a chimera must be at least \code{abskew}
-times less frequent that the parental ASVs.}
+\item{abskew}{Positive integer specifying the minimum abundance ratio required
+between parent sequences and a chimera candidate.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
+warnings or errors.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 }
 \value{
-The input data frame completed by \code{chimera} column.
-1 if potential chimera, 0 otherwise.
+Input data frame with an added \code{chimera} column
+(1 = potential chimera, 0 = otherwise).
 }
 \description{
-Select chimeras in a data frame of unique ASVs.
-Add a column to the input data frame with 1 if the ASV is a probable
-chimera and 0 otherwise.
+Identify potential chimeric ASVs in a dataset of unique sequences.
+A new column is added to the input data frame indicating whether each ASV
+is a putative chimera.
+
+Chimeras are detected using abundance- and similarity-based criteria: an ASV
+is flagged when it can be explained as a combination of more abundant parent
+sequences under the specified \code{abskew} threshold.
 }
 \examples{
 \dontrun{
 unique_asv_df <- read_count_df \%>\%
-  group_by(asv) \%>\%
-  summarize(read_count = sum(read_count))
-flag_chimera(unique_asv_df, vsearch_path=vsearch_path, abskew=2)
+  dplyr::group_by(asv) \%>\%
+  dplyr::summarise(read_count = sum(read_count))
+
+flag_chimera(unique_asv_df, vsearch_path = vsearch_path, abskew = 2)
 }
+
 }

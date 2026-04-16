@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{cluster_vsearch}
 \alias{cluster_vsearch}
-\title{Cluster all input ASV by cluster_size function of Vsearch}
+\title{Cluster ASVs using VSEARCH}
 \usage{
 cluster_vsearch(
   read_count,
@@ -15,35 +15,36 @@ cluster_vsearch(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, asv, read_count.}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv_id}, \code{asv}, \code{read_count}.}
 
-\item{identity}{Numeric. Value between 0 and 1: Identity threshold for clustering.}
+\item{identity}{Numeric value between 0 and 1. Sequence identity threshold used for clustering.}
 
-\item{vsearch_path}{Character string: path to vsearch executable.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{outfile}{Character string: name of the output csv file with asv_id,
-and cluster_id columns}
+\item{outfile}{Character string: name of the output CSV file containing
+\code{asv_id} and \code{cluster_id}. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-Data frame with the following columns: asv_id, cluster_id
+A data frame with columns: \code{asv_id}, \code{cluster_id}.
 }
 \description{
-Cluster all input ASV and return a data frame with asv_id, cluster_id
-columns
+Clusters all input ASVs using the VSEARCH \code{--cluster_size} method and
+returns a data frame mapping each ASV to a cluster identifier.
 }
 \examples{
 \dontrun{
-cluster_df <- cluster_vsearch(read_count_df, 
-                                      identity=0.97,
-                                      vsearch_path="vsearch",
-                                      num_threads=8)
+cluster_df <- cluster_vsearch(
+  read_count_df,
+  identity = 0.97,
+  vsearch_path = "vsearch",
+  num_threads = 8
+)
 }
 }

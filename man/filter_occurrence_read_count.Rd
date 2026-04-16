@@ -2,32 +2,33 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_occurrence_read_count}
 \alias{filter_occurrence_read_count}
-\title{filter_occurrence_read_count}
+\title{Filter low-abundance occurrences using a read count cutoff}
 \usage{
 filter_occurrence_read_count(read_count, cutoff = 10, outfile = "", sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{cutoff}{Positive integer: minimum number of reads for an occurrence.
-Bellow this cutoff, the occurrence (presence of the ASV in a sample-replicate)
-is deleted.}
+\item{cutoff}{Positive integer specifying the minimum number of reads required
+for an occurrence to be retained. Occurrences below this threshold are removed.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Eliminate occurrences (presence of the ASV in a sample-replicate)
-with less than cutoff reads.
+Remove occurrences (presence of an ASV in a sample-replicate) with fewer
+than a given number of reads.
 }
 \examples{
 \dontrun{
-filtered_read_count <- filter_occurrence_read_count(read_count_df, cutoff=20)
+filtered_read_count <- filter_occurrence_read_count(read_count_df, cutoff = 20)
 }
+
 }

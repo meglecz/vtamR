@@ -2,21 +2,24 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_fasta_with_counts}
 \alias{write_fasta_with_counts}
-\title{write_fasta_with_counts}
+\title{Write FASTA file with optional read counts}
 \usage{
 write_fasta_with_counts(df, outfile, read_count = FALSE)
 }
 \arguments{
-\item{df}{Data frame with asv_id, asv and read_count (optional) columns}
+\item{df}{Data frame containing at least \code{asv_id} and \code{asv} columns, and optionally \code{read_count}.}
 
-\item{outfile}{character string: output fasta file name}
+\item{outfile}{Character string: output FASTA file name.}
 
-\item{read_count}{Boolean; If TRUE  definition line is >label;size=### format}
+\item{read_count}{Logical: if TRUE, include read counts in FASTA headers using \verb{;size=} format.}
 }
 \value{
-NULL; Write fasta file with definition lines in >label;size=### format or >label format
+NULL; writes a FASTA file to disk.
 }
 \description{
-Write a fasta file with definition lines in >label;size=### format (read_count=T)
-or in >label format (read_count=F)
+Writes a FASTA file from a data frame, optionally including read counts in the sequence headers.
+}
+\details{
+If \code{read_count = TRUE}, definition lines are written in the format \verb{>label;size=###}.
+If \code{read_count = FALSE}, definition lines are written in the format \verb{>label}.
 }

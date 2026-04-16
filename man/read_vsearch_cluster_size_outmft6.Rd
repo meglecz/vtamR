@@ -2,16 +2,18 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{read_vsearch_cluster_size_outmft6}
 \alias{read_vsearch_cluster_size_outmft6}
-\title{read_vsearch_cluster_size_outmft6}
+\title{Read VSEARCH cluster size output (outmft6 format)}
 \usage{
 read_vsearch_cluster_size_outmft6(filename)
 }
 \arguments{
-\item{filename}{Tab separeted file with merged and centroid asv_ids in the first 2 columns}
+\item{filename}{Character string: path to the tab-separated output file
+produced by \code{vsearch --cluster_size}.
+The file must contain merged and centroid ASV identifiers in the first two columns.}
 }
 \value{
-data frame with merged_id and centroid_id
+Data frame with columns \code{merged_id} and \code{centroid_id}.
 }
 \description{
-read output of vsearch --cluster_size to df
+Reads the output of \code{vsearch --cluster_size} into a data frame.
 }

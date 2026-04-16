@@ -2,31 +2,35 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_fasta_from_df}
 \alias{write_fasta_from_df}
-\title{Write data frame to fasta}
+\title{Write data frame to FASTA file}
 \usage{
 write_fasta_from_df(df, out, compress = F)
 }
 \arguments{
-\item{df}{input data frame with the following columns: header, sequence.}
+\item{df}{Input data frame with columns \code{header} and \code{sequence}.}
 
-\item{out}{Character string: name of the output file.}
+\item{out}{Character string specifying the output file name.}
 
-\item{compress}{logical: Compress output files to gzip format.}
+\item{compress}{logical; if TRUE, the output file is compressed using gzip.}
 }
 \value{
-Character string: name of the output file updated according to the compression.
+Character string giving the final output file name, updated to
+reflect compression if applicable.
 }
 \description{
-Writes input data frame to a fasta file. Can produce gz compressed file
-or uncompressed files.
-The output file name's extension is corrected according to the
-compression if necessary.
+Export a data frame to a FASTA file. Output can be written as plain text
+or gzip-compressed. The file extension is automatically adjusted based on
+the compression setting if necessary.
 }
 \examples{
 \dontrun{
-df <- data.frame(header=c("seq1", "seq2"),
-    sequence=c("AACTTGTTGTCACTGTAAACTGATGTA", "AACTTGTTGTCACTGTTTGACTGATGTA")
-    )
-write_fasta_from_df(df, out="out/test.fasta", compress=T)
+df <- data.frame(
+  header = c("seq1", "seq2"),
+  sequence = c(
+    "AACTTGTTGTCACTGTAAACTGATGTA",
+    "AACTTGTTGTCACTGTTTGACTGATGTA"
+  )
+)
+write_fasta_from_df(df, out = "out/test.fasta", compress = TRUE)
 }
 }
