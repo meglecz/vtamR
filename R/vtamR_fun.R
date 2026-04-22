@@ -108,7 +108,7 @@ check_dir <- function(path, is_file=FALSE){
 #' performance) or fall back to `R.utils`.
 #'
 #' @param file Character string specifying the input file.
-#' @param outfile Character string specifying the output file. If empty, it is 
+#' @param outfile Character string specifying the output file. If NULL 
 #'   automatically derived from file.
 #' @param remove Logical. If `TRUE`, remove the input file after a successful 
 #'   operation.
@@ -140,7 +140,7 @@ check_dir <- function(path, is_file=FALSE){
 #' 
 #' @export
 smart_gzip <- function(file,
-                       outfile = "",
+                       outfile = NULL,
                        remove = FALSE,
                        pigz_path = "pigz",
                        method = "R",
@@ -164,7 +164,7 @@ smart_gzip <- function(file,
          if (compress) "expected uncompressed input" else "expected .gz input")
   
   # Determine output file
-  if (!nzchar(outfile)) {
+  if (is.null(outfile)) {
     outfile <- if (compress) paste0(file, ".gz") else sub("\\.gz$", "", file)
   }else{ # check if output filename is coherent
     if (compress) {
@@ -235,15 +235,21 @@ smart_gzip <- function(file,
 #' @param read_count Data frame or path to a CSV file containing the following 
 #'   variables: `asv_id`, `sample``, `replicate, 
 #'   `read_count`, `asv`.
-#' @param stat_df Data frame containing the following variables: 
-#'   `parameters`, `asv_count`, `read_count`, 
-#'   `sample_count`, `sample_replicate_count`.
+#' @param stat_df A data frame containing the following variables:
+#' 
+#'     `parameters` Parameters used for the analysis
+#'     `asv_count` Number of ASVs detected
+#'     `read_count` Total number of reads
+#'     `sample_count` Number of samples analyzed
+#'     `sample_replicate_count` Number of replicates per sample
+#'   If provided, the function appends a new row to `stat_df`. If not provided,
+#'   a new data frame with a single row is initialized and returned.
 #' @param stage Character string specifying the name of the filtering step. It 
 #'   is used as the row name in `stat_df`.
 #' @param params Character string containing concatenated parameter values used 
 #'   for the filtering step.
 #' @param outfile Character string specifying the name of a CSV file to write 
-#'   the updated data frame. If empty, no file is written.
+#'   the updated data frame. If NULL, no file is written.
 #' 
 #' @return Data frame. The updated `stat_df` with an additional row.
 #' 
@@ -258,7 +264,7 @@ smart_gzip <- function(file,
 #' 
 #' get_stat(
 #'   read_count_df,
-#'   stat_df,
+#'   stat_df = NULL,
 #'   stage = "filter_indel",
 #'   params = "0.002;by_replicate=TRUE",
 #'   outfile = "out/ReadCount_stat.csv"
@@ -267,13 +273,23 @@ smart_gzip <- function(file,
 #' 
 #' @export
 #' 
-get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
+get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=NULL){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
     read_count_df <- read.csv(read_count, header=T, sep=sep)
   }else{
     read_count_df <- read_count
+  }
+  
+  if(is.null(stat_df)){
+    stat_df <- data.frame(
+      parameters = character(),
+      asv_count = integer(),
+      read_count = integer(),
+      sample_count = integer(),
+      sample_replicate_count = integer()
+    )
   }
   
   #define a temporary data frame
@@ -298,7 +314,7 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
   # add new data to stat_df
   stat_df <- rbind(stat_df, df)
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(stat_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -321,6 +337,7 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #' @param fastq_dir Character string specifying the directory containing input 
 #'   FASTQ files (listed in `fastqinfo$fastq_fw` and 
 #'   `fastqinfo$fastq_rv`).
+#' @param outdir Character string specifying the output directory.
 #' @param vsearch_path Character string specifying the path to the 
 #'   `vsearch` executable.
 #' @param compress_method Character or logical. Compression method: 
@@ -335,7 +352,6 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #'   available in the system PATH.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
-#' @param outdir Character string specifying the output directory.
 #' @param fastq_ascii Integer (33 or 64) specifying the ASCII offset used for 
 #'   FASTQ quality scores.
 #' @param fastq_maxdiffs Positive integer specifying the maximum number of 
@@ -399,11 +415,11 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=""){
 #'
 merge_fastq_pairs <- function(fastqinfo, 
                   fastq_dir, 
+                  outdir, 
                   vsearch_path="vsearch",
                   compress_method="R",
                   pigz_path="pigz",
                   num_threads=0,
-                  outdir="", 
                   fastq_ascii=33, 
                   fastq_maxdiffs=10, 
                   fastq_maxee=1, 
@@ -866,8 +882,8 @@ trim_primers_file <- function(fasta,
 #' \dontrun{
 #' fastainfo_df <- trim_primers(
 #'   fastainfo,
-#'   fasta_dir = "data/fasta",
-#'   outdir = "out",
+#'   fasta_dir,
+#'   outdir,
 #'   compress = TRUE,
 #'   check_reverse = TRUE,
 #'   primer_to_end = FALSE,
@@ -881,8 +897,8 @@ trim_primers_file <- function(fasta,
 #' @export
 #' 
 trim_primers <- function(fastainfo, 
-                       fasta_dir="", 
-                       outdir="", 
+                       fasta_dir, 
+                       outdir, 
                        compress=F, 
                        compress_method="R",
                        pigz_path="pigz",
@@ -1034,7 +1050,7 @@ trim_primers <- function(fastainfo,
 #' 
 demultiplex_and_trim <- function(fastainfo, 
                       fasta_dir, 
-                      outdir="", 
+                      outdir, 
                       cutadapt_path="cutadapt",
                       vsearch_path="vsearch", 
                       compress_method="R",
@@ -1300,7 +1316,7 @@ return(df)
 #' 
 demultiplex_and_trim_strand_plus <- function(fastainfo, 
                                  fasta_dir, 
-                                 outdir="", 
+                                 outdir, 
                                  cutadapt_path="cutadapt", 
                                  num_threads=0,
                                  tag_to_end=T, 
@@ -1478,7 +1494,7 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
 #' 
 #' @export
 #' 
-write_cutadapt_adapter_fasta <- function(fastainfo_df, fasta_file, tag_to_end=T, outdir=""){
+write_cutadapt_adapter_fasta <- function(fastainfo_df, fasta_file, outdir, tag_to_end=T){
   
   # select tag combinations for the fasta file
   tags <- fastainfo_df %>%
@@ -1589,13 +1605,13 @@ reverse_complement <- function(sequence){
 #' @param outfile Character string specifying the CSV output file containing the 
 #'   resulting data frame (`asv_id`, `sample`, `replicate`, `read_count`). If 
 #'   empty, no file is written.
-#' @param sep Character string specifying the field separator used in input and 
-#'   output CSV files.
 #' @param input_asv_list Data frame or path to a CSV file containing previously 
 #'   observed `asv`–`asv_id` pairs. Optional; used to harmonize `asv_id` 
 #'   across datasets.
 #' @param output_asv_list Character string specifying the output file containing 
 #'   the updated `asv`–`asv_id` pairs. Optional.
+#' @param sep Character string specifying the field separator used in input and 
+#'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
 #' 
@@ -1610,11 +1626,11 @@ reverse_complement <- function(sequence){
 #' @export
 #' 
 dereplicate <- function(sampleinfo, 
-                        dir="", 
-                        outfile="", 
+                        dir, 
+                        outfile=NULL, 
+                        input_asv_list=NULL, 
+                        output_asv_list=NULL, 
                         sep=",", 
-                        input_asv_list="", 
-                        output_asv_list="", 
                         quiet=T
                         ){
   # can accept df or file as an input
@@ -1669,7 +1685,7 @@ dereplicate <- function(sampleinfo,
                            )
   
   # write read_count table
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -1707,7 +1723,7 @@ dereplicate <- function(sampleinfo,
 #' 
 add_ids <- function(read_count, 
                     input_asv_list=NULL, 
-                    output_asv_list="", 
+                    output_asv_list=NULL, 
                     sep=",", 
                     quiet=T
                     ){
@@ -1760,7 +1776,7 @@ add_ids <- function(read_count,
     select(asv_id, sample, replicate, read_count, asv)
   
   # if input_asv_list should be updated, write it to a new file
-  if(output_asv_list != ""){
+  if(!is.null(output_asv_list)){
     write.table(asv_df, file=output_asv_list, row.names = FALSE, sep=sep)
   }
   
@@ -1932,7 +1948,7 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
     arrange(asv_id)
   t <- check_one_to_one(df1)
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(df1, file=outfile, row.names = FALSE, sep=sep)
   }
@@ -1951,9 +1967,9 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #' @param sampleinfo Data frame or path to a CSV file with at least the following columns: 
 #'   `sample`, `sample_type` (negative/mock/real).
 #' @param outfile Character string specifying the CSV file to write the filtered 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param conta_file Character string specifying a CSV file to store the filtered-out 
-#'   contaminant ASVs. If empty, no file is written.
+#'   contaminant ASVs. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -1966,8 +1982,8 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #' 
 #' @export
 #' 
-filter_contaminant <- function (read_count, sampleinfo, outfile="", 
-                                       conta_file="",sep=",") {
+filter_contaminant <- function (read_count, sampleinfo, outfile=NULL, 
+                                       conta_file=NULL,sep=",") {
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -1998,7 +2014,7 @@ filter_contaminant <- function (read_count, sampleinfo, outfile="",
   asv_conta <- unique(df$asv_id)
   
   # make a file with contaminants
-  if(conta_file != ""){
+  if(!is.null(conta_file)){
     check_dir(conta_file, is_file=TRUE)
     
     contaminant_df <- read_count_df %>%
@@ -2013,7 +2029,7 @@ filter_contaminant <- function (read_count, sampleinfo, outfile="",
   read_count_df <- read_count_df %>%
     filter(!(asv_id %in% asv_conta))
 
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2029,7 +2045,7 @@ filter_contaminant <- function (read_count, sampleinfo, outfile="",
 #' @param cutoff Positive integer specifying the minimum total number of reads 
 #'   required for an ASV to be retained. ASVs below this threshold are removed.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2042,7 +2058,7 @@ filter_contaminant <- function (read_count, sampleinfo, outfile="",
 #' 
 #' @export
 #' 
-filter_asv_global <- function (read_count, cutoff=10, outfile="", sep=",") {
+filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2058,7 +2074,7 @@ filter_asv_global <- function (read_count, cutoff=10, outfile="", sep=",") {
     ungroup()
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2076,7 +2092,7 @@ filter_asv_global <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' @param cutoff Positive integer specifying the minimum number of reads required 
 #'   for an occurrence to be retained. Occurrences below this threshold are removed.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2089,7 +2105,7 @@ filter_asv_global <- function (read_count, cutoff=10, outfile="", sep=",") {
 #' 
 #' @export
 #' 
-filter_occurrence_read_count <- function (read_count, cutoff=10, outfile="", sep=",") {
+filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2099,7 +2115,7 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile="", sep
   }
   
   read_count_df <- filter(read_count_df,  (read_count >= cutoff))
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2120,7 +2136,7 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile="", sep
 #'   of reads required for an occurrence to be retained. Occurrences below this 
 #'   threshold are removed.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2133,7 +2149,7 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile="", sep
 #' 
 #' @export
 #' 
-filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile="", sep=",") {
+filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, sep=",") {
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2153,7 +2169,7 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile="", sep=
     select(-sr_sum) %>%
     ungroup()
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2189,7 +2205,7 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile="", sep=
 #'   proportion of reads in a habitat is below this threshold, it is considered 
 #'   a false positive in all samples of that habitat.
 #' @param by_replicate Logical. If `TRUE`, compute cutoffs separately for each replicate.
-#' @param outfile Character string specifying the output file. If empty, no file is written.
+#' @param outfile Character string specifying the output file. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2210,10 +2226,10 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile="", sep=
 #'
 compute_asv_specific_cutoff <- function(read_count, 
                               max_cutoff=0.05,
-                              mock_composition="",
+                              mock_composition=NULL,
                               habitat_proportion=0.5,
                               by_replicate=FALSE, 
-                              outfile="", 
+                              outfile=NULL, 
                               sep=",")  {
   
   # can accept df or file as an input
@@ -2282,7 +2298,7 @@ compute_asv_specific_cutoff <- function(read_count,
       cutoff_asv_spec > max_cutoff, max_cutoff, cutoff_asv_spec))
   
   # write to outfile
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(asv_spec_cutoff_df, file=outfile, row.names = F, sep=sep)
   }
@@ -2318,13 +2334,13 @@ compute_asv_specific_cutoff <- function(read_count,
 #'   threshold are removed.
 #' @param asv_specific_cutoffs Data frame or path to a CSV file specifying ASV-specific 
 #'   cutoff values. May include a `replicate` column if `by_replicate = TRUE`.
-#' @param by_replicate Logical. If `TRUE`, compare read counts to ASV abundance 
-#'   within each replicate.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param lost_asv_file Character string specifying the CSV file used to store 
 #'   information about ASVs whose retained read counts fall below 
 #'   `min_read_count_prop` of their original abundance.
+#' @param by_replicate Logical. If `TRUE`, compare read counts to ASV abundance 
+#'   within each replicate.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' @param min_read_count_prop Numeric value specifying the minimum proportion of 
@@ -2348,9 +2364,9 @@ compute_asv_specific_cutoff <- function(read_count,
 filter_occurrence_variant <- function(read_count, 
                        cutoff=NULL, 
                        asv_specific_cutoffs = NULL,
+                       outfile=NULL,
+                       lost_asv_file =NULL,
                        by_replicate=FALSE, 
-                       outfile="",
-                       lost_asv_file ="",
                        sep=",", 
                        min_read_count_prop=0.7){
   
@@ -2479,12 +2495,12 @@ filter_occurrence_variant <- function(read_count,
   }
   
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
   
-  if(lost_asv_file != ""){
+  if(!is.null(lost_asv_file)){
     check_dir(lost_asv_file, is_file=TRUE)
     write.table(asvs, file = lost_asv_file,  row.names = F, sep=sep)
   }
@@ -2501,7 +2517,7 @@ filter_occurrence_variant <- function(read_count,
 #' @param ... Data frames with the following columns: 
 #'   `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2514,14 +2530,14 @@ filter_occurrence_variant <- function(read_count,
 #' 
 #' @export
 #' 
-pool_filters <- function(... , outfile="", sep=","){
+pool_filters <- function(... , outfile=NULL, sep=","){
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
     suppressMessages( merged <- inner_join(merged, df_list[[i]]) )
   }
 
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(merged, file = outfile,  row.names = F, sep=sep)
   }
@@ -2538,7 +2554,7 @@ pool_filters <- function(... , outfile="", sep=","){
 #' @param cutoff Positive integer specifying the minimum number of replicates 
 #'   in which an ASV must be detected within a sample to be retained.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2551,7 +2567,7 @@ pool_filters <- function(... , outfile="", sep=","){
 #' 
 #' @export
 #'
-filter_min_replicate <- function(read_count, cutoff=2, outfile="", sep=","){
+filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2572,7 +2588,7 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile="", sep=","){
   read_count_df <- filter(read_count_df, (read_count_df$tmp %in% df_tmp$tmp))
   read_count_df$tmp <- NULL
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2588,7 +2604,7 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile="", sep=","){
 #' @param read_count Data frame or path to a CSV file with the following columns: 
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2601,7 +2617,7 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile="", sep=","){
 #' 
 #' @export
 #' 
-filter_indel <- function(read_count, outfile="", sep=","){
+filter_indel <- function(read_count, outfile=NULL, sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2629,7 +2645,7 @@ filter_indel <- function(read_count, outfile="", sep=","){
   # delete the temporary column
   read_count_df$mod3 <- NULL
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2703,7 +2719,7 @@ get_stop_codons <- function(genetic_code=5){
 #'   `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`.
 #' @param genetic_code Positive integer specifying the NCBI genetic code number.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -2716,7 +2732,7 @@ get_stop_codons <- function(genetic_code=5){
 #' 
 #' @export
 #' 
-filter_stop_codon <- function(read_count, outfile="", genetic_code=5, sep=","){
+filter_stop_codon <- function(read_count, outfile=NULL, genetic_code=5, sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2775,7 +2791,7 @@ filter_stop_codon <- function(read_count, outfile="", genetic_code=5, sep=","){
   # filter out ASV from read_count_df, where here is a codon stop in all reading frame
   read_count_df <- filter(read_count_df, (asv %in% unique_asv_df$asv))
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -2990,7 +3006,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   of samples in which an ASV must be flagged as a PCR error (when `by_sample = TRUE`) 
 #'   to be removed.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param vsearch_path Character string specifying the path to the `vsearch` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
@@ -3024,7 +3040,7 @@ flag_pcr_error <- function(unique_asv_df,
 #' @export
 #' 
 filter_pcr_error <- function(read_count,
-                           outfile="", 
+                           outfile=NULL, 
                            vsearch_path="vsearch", 
                            num_threads=0,
                            pcr_error_var_prop=0.1,
@@ -3113,7 +3129,7 @@ filter_pcr_error <- function(read_count,
   read_count_df <- read_count_df %>%
     filter(!asv %in% unique_asv_df$asv)
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -3250,7 +3266,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   of samples in which an ASV must be flagged as a chimera (when `by_sample = TRUE`) 
 #'   to be removed.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param vsearch_path Character string specifying the path to the `vsearch` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
@@ -3282,7 +3298,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' @export
 #' 
 filter_chimera <- function(read_count, 
-                          outfile="", 
+                          outfile=NULL, 
                           vsearch_path="vsearch",
                           num_threads=0,
                           by_sample=T, 
@@ -3359,7 +3375,7 @@ filter_chimera <- function(read_count,
   read_count_df <- read_count_df %>%
     filter(!asv %in% unique_asv_df$asv)
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -3430,7 +3446,7 @@ renkonen_dist <- function(df1, df2){
 #'   pairs of sample-replicates. If `FALSE`, compute distances only between 
 #'   replicates of the same sample.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' 
 #' @return Data frame with columns: `sample1`, `sample2`, `replicate1`, 
 #'   `replicate2`, `renkonen_d`, `sample_comp` (indicating `"within"` if 
@@ -3445,7 +3461,7 @@ renkonen_dist <- function(df1, df2){
 #' 
 compute_renkonen_distances <- function(read_count_df, 
                                   compare_all=FALSE,
-                                  outfile=""){
+                                  outfile=NULL){
   
   df <- read_count_df %>%
     select(asv, sample, replicate, read_count)
@@ -3503,7 +3519,7 @@ compute_renkonen_distances <- function(read_count_df,
       }
     }
   }
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(renkonen_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -3526,7 +3542,7 @@ compute_renkonen_distances <- function(read_count_df,
 #'   Renkonen distance distribution is used to define the threshold (e.g., 0.9 
 #'   corresponds to the 90th percentile).
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -3544,7 +3560,7 @@ compute_renkonen_distances <- function(read_count_df,
 #' @export
 #' 
 filter_replicate <- function(read_count, 
-                           outfile="",
+                           outfile=NULL,
                            cutoff = NA, 
                            renkonen_distance_quantile=0.9,
                            sep=","
@@ -3604,7 +3620,7 @@ filter_replicate <- function(read_count,
       filter(!(sample == samp & replicate %in% sample_df$replicate1))
   }
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -3624,7 +3640,7 @@ filter_replicate <- function(read_count,
 #' @param digits Positive integer specifying the number of decimal places used 
 #'   when rounding mean read counts.
 #' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
+#'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' 
@@ -3638,7 +3654,7 @@ filter_replicate <- function(read_count,
 #' 
 #' @export
 #'
-pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep=","){
+pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, sep=","){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3685,7 +3701,7 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep
     read_count_samples_df <- left_join(read_count_samples_df, cluster_df, by="asv_id")
   }
   
-  if(outfile !=""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_samples_df, file = outfile,  row.names = F, sep=sep)
   }
@@ -3711,13 +3727,15 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep
 #' * `ltgres`: maximum resolution of the resulting LTG
 #'  
 #' @param asv Data frame or path to a CSV file containing at least `asv` and `asv_id` columns.
-#' @param ltg_params Data frame or path to a CSV file defining identity thresholds 
-#'   (`pid`) and associated parameters (`pcov`, `phit`, `taxn`, `seqn`, `refres`, `ltgres`).
 #' @param taxonomy TSV file containing the following columns: 
 #'   `tax_id`, `parent_tax_id`, `rank`, `name_txt`, `old_tax_id` (merged tax IDs), 
 #'   `taxlevel` (8: species ... 0: root).
 #' @param blast_db Character string specifying the BLAST database name.
 #' @param blast_path Character string specifying the path to the BLAST executable.
+#' @param ltg_params Data frame or path to a CSV file defining identity thresholds 
+#'   (`pid`) and associated parameters (`pcov`, `phit`, `taxn`, `seqn`, `refres`, `ltgres`).
+#' @param outfile Character string specifying the CSV file to write the output 
+#'   data frame. If NULL, no file is written.
 #' @param fill_lineage Logical. If `TRUE`, missing higher taxonomic levels are 
 #'   filled using the nearest known lower-level taxon with a prefix indicating 
 #'   the missing rank.
@@ -3726,8 +3744,6 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep
 #' @param tax_sep Character string specifying the field separator used in the taxonomy file.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' @param outfile Character string specifying the CSV file to write the output 
-#'   data frame. If empty, no file is written.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
 #' 
@@ -3750,18 +3766,19 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile="", sep
 #' 
 #' @export
 #'
-assign_taxonomy_ltg <- function(asv, 
-                      taxonomy, 
-                      blast_db, 
-                      blast_path="blastn", 
-                      ltg_params="", 
-                      outfile="", 
-                      num_threads=0, 
-                      tax_sep="\t", 
-                      sep=",",
-                      quiet=T, 
-                      fill_lineage=TRUE
-                      ){
+assign_taxonomy_ltg <- function(
+    asv, 
+    taxonomy, 
+    blast_db, 
+    blast_path="blastn", 
+    ltg_params=NULL, 
+    outfile=NULL, 
+    fill_lineage=TRUE,
+    num_threads=0, 
+    tax_sep="\t", 
+    sep=",",
+    quiet=TRUE
+    ){
 
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -3782,7 +3799,17 @@ asv_df <- asv_df %>%
   arrange(asv_id)
 t <- check_one_to_one(asv_df)
 
-if (is.character(ltg_params)){ 
+if(is.null(ltg_params)){
+  ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
+                              pcov=c(70,70,70,70,70,70),
+                              phit=c(70,70,70,70,70,70),
+                              taxn=c(1,1,2,3,4,4),
+                              seqn=c(1,1,2,3,4,4),
+                              refres=c(8,8,8,7,6,6),
+                              ltgres=c(8,8,8,8,7,7)
+  )
+} else if (is.character(ltg_params)){ 
+  
   if(ltg_params == ""){ # default value for ltg_params_df
     ltg_params_df = data.frame( pid=c(100,97,95,90,85,80),
                                 pcov=c(70,70,70,70,70,70),
@@ -3908,9 +3935,9 @@ taxres_df <- adjust_ltg_resolution(taxres_df, tax_df)
 # delete temporary  dir
 unlink(outdir_tmp, recursive = TRUE)
 
-if(outfile != ""){
+if(!is.null(outfile)){
   check_dir(outfile, is_file=TRUE)
-  write.table(taxres_df, file = outfile,  row.names = F, sep=sep)
+  write.table(taxres_df, file = outfile,  row.names = FALSE, sep=sep)
 }
 
 return(taxres_df)
@@ -3925,8 +3952,8 @@ return(taxres_df)
 #'  
 #' @param df Data frame containing `asv` and `asv_id` columns.
 #' @param blast_db Character string specifying the BLAST database (including path if needed).
-#' @param blast_path Character string specifying the path to the BLAST executable.
 #' @param outdir Character string specifying the output directory.
+#' @param blast_path Character string specifying the path to the BLAST executable.
 #' @param qcov_hsp_perc Real number between 0 and 100 specifying the minimum query coverage.
 #' @param perc_identity Real number between 0 and 100 specifying the minimum percentage identity.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
@@ -3953,8 +3980,8 @@ return(taxres_df)
 #'
 run_blast <- function(df, 
                       blast_db, 
+                      outdir, 
                       blast_path="blastn", 
-                      outdir="", 
                       qcov_hsp_perc=70, 
                       perc_identity=70, 
                       num_threads=0, 
@@ -4476,7 +4503,7 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #'  
 #' @param read_count Data frame or CSV file with the following variables: 
 #'   `asv_id`, `sample`, `replicate` (optional), `read_count`, `asv`, `cluster_id` (optional).
-#' @param outfile Character string specifying the output CSV file. If empty, no file is written.
+#' @param outfile Character string specifying the output CSV file. If NULL, no file is written.
 #' @param asv_tax Data frame or CSV file containing taxonomic assignments. 
 #'   Must include at least the columns `asv_id` and `asv`. Additional columns 
 #'   describe the taxonomy of each ASV (e.g. ranks, identifiers, 
@@ -4522,16 +4549,16 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #' @export
 #'
 write_asv_table <- function(read_count, 
-                          outfile="", 
+                          outfile=NULL, 
                           asv_tax=NULL, 
-                          sampleinfo="", 
+                          sampleinfo=NULL, 
                           pool_replicates=FALSE,
                           method="mean",
                           add_empty_samples=FALSE, 
                           add_sums_by_sample=FALSE, 
                           add_sums_by_asv=FALSE, 
                           add_expected_asv=FALSE,
-                          mock_composition="", 
+                          mock_composition=NULL, 
                           sep=","
                           ){
   
@@ -4570,10 +4597,12 @@ write_asv_table <- function(read_count,
   
   # read the sampleinfo to a data frame 
   if(add_empty_samples | add_expected_asv){
-    if(is.character(sampleinfo)){
-      sampleinfo_df <- read.csv(sampleinfo, header=T, sep=sep)
-    }else{
-      sampleinfo_df <- sampleinfo
+    if(!is.null(sampleinfo)){
+      if(is.character(sampleinfo)){
+        sampleinfo_df <- read.csv(sampleinfo, header=T, sep=sep)
+      }else{
+        sampleinfo_df <- sampleinfo
+      }
     }
   }
   
@@ -4682,13 +4711,16 @@ write_asv_table <- function(read_count,
       mock_samples <- unique(mock_samples)
     }
     
-    
-    if(is.character(mock_composition)){
-      mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
-      check_file_info(file=mock_composition, file_type="mock_composition", sep=sep, quiet=TRUE)
-    }else{
-      mock_asv <- mock_composition
+    if(is.null(mock_composition)){
+      stop("When add_expected_asv is TRUE, mock_composition must be provided")
     }
+    
+      if(is.character(mock_composition)){
+        mock_asv <-  read.csv(mock_composition, header=T, sep=sep)
+        check_file_info(file=mock_composition, file_type="mock_composition", sep=sep, quiet=TRUE)
+      }else{
+        mock_asv <- mock_composition
+      }
     # keep only keep and tolerate action, in case the file contains other lines 
     mock_asv <- mock_asv%>%
       filter(action=="keep" | action=="tolerate")
@@ -4725,7 +4757,7 @@ write_asv_table <- function(read_count,
   wide_read_count_df <- wide_read_count_df %>%
     select(-asv, everything(), asv)
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
   }
@@ -4749,7 +4781,7 @@ write_asv_table <- function(read_count,
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
-#' @param outfile Character string specifying the output CSV file. If empty, 
+#' @param outfile Character string specifying the output CSV file. If NULL, 
 #'   no file is written.
 #' @param max_mismatch Positive integer specifying the maximum number of mismatches 
 #'   allowed between ASVs to be compared.
@@ -4774,11 +4806,11 @@ write_asv_table <- function(read_count,
 #' @export
 #'
 suggest_pcr_error_cutoff <- function(read_count, 
-                             mock_composition="", 
+                             mock_composition, 
                              vsearch_path= "vsearch", 
                              num_threads=0,
                              sep=",", 
-                             outfile="", 
+                             outfile=NULL, 
                              max_mismatch=1, 
                              min_read_count=5,
                              quiet=TRUE
@@ -4993,7 +5025,7 @@ suggest_pcr_error_cutoff <- function(read_count,
   # Delete the temp directory
   unlink(outdir_tmp, recursive = TRUE)
   
-  if(outfile != "")
+  if(!is.null(outfile))
   {
     check_dir(outfile, is_file=TRUE)
     write.table(asv_pairs, file=outfile, sep=sep, row.names = F)
@@ -5015,7 +5047,7 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' @param mock_composition Data frame or CSV file with columns: 
 #'   `sample`, `action` (`keep` or `tolerate`), `asv`.
 #' @param sep Field separator character used in input and output CSV files.
-#' @param outfile Character string specifying the output CSV file. If empty, 
+#' @param outfile Character string specifying the output CSV file. If NULL, 
 #'   no file is written.
 #' @return Data frame with the following columns: `sample`, `replicate`, `action`, 
 #'   `asv_id`, `read_count`, `read_count_sample_replicate`, `sample_cutoff`, `asv`.
@@ -5029,7 +5061,7 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' 
 #' @export
 #'
-suggest_sample_cutoff <- function(read_count, mock_composition="", sep=",", outfile=""){
+suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile=NULL){
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5144,7 +5176,7 @@ suggest_sample_cutoff <- function(read_count, mock_composition="", sep=",", outf
            everything()
            )
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(asv_keep_df, file=outfile, sep=sep, row.names = F)
   }
@@ -5167,11 +5199,11 @@ suggest_sample_cutoff <- function(read_count, mock_composition="", sep=",", outf
 #'   `sample`, `action` (`keep`/`tolerate`), `asv`.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param known_occurrences Character string specifying output CSV file for known occurrences 
-#'   (expected occurrences in mocks and false positives). If empty, no file is written.
+#'   (expected occurrences in mocks and false positives). If NULL, no file is written.
 #' @param false_negatives Character string specifying output CSV file for false negatives. 
-#'   If empty, no file is written.
+#'   If NULL, no file is written.
 #' @param performance_metrics Character string specifying output CSV file for performance metrics. 
-#'   If empty, no file is written.
+#'   If NULL, no file is written.
 #' @param habitat_proportion Numeric between 0 and 1. For each ASV, if the proportion of reads 
 #'   within a habitat is below this threshold, it is considered an artifact in all samples 
 #'   of that habitat.
@@ -5202,9 +5234,9 @@ classify_control_occurrences <- function(read_count,
                                  sampleinfo, 
                                  mock_composition, 
                                  sep=",", 
-                                 known_occurrences="", 
-                                 false_negatives="", 
-                                 performance_metrics="", 
+                                 known_occurrences=NULL, 
+                                 false_negatives=NULL, 
+                                 performance_metrics=NULL, 
                                  habitat_proportion=0.5,
                                  quiet=TRUE){
   
@@ -5302,11 +5334,11 @@ classify_control_occurrences <- function(read_count,
   
   
   # write to outfiles (missing is written by function detect_false_negatives)
-  if(known_occurrences != ""){
+  if(!is.null(known_occurrences)){
     check_dir(known_occurrences, is_file=TRUE)
     write.table(occurrence_df, file=known_occurrences, row.names = F, sep=sep)
   }
-  if(performance_metrics != ""){
+  if(!is.null(performance_metrics)){
     check_dir(performance_metrics, is_file=TRUE)
     write.table(count_df, file=performance_metrics, row.names = F, sep=sep)
   }
@@ -5454,7 +5486,7 @@ flag_by_habitat <- function(occurrence_df, habitat_proportion=0.5){
 #' @param mock_composition Data frame or CSV file with columns
 #'   `sample`, `action` (keep/tolerate), and `asv`.
 #' @param sep Field separator character used in input and output CSV files.
-#' @param out Character string naming the output file. If empty, no file is written.
+#' @param out Character string naming the output file. If NULL, no file is written.
 #' @param quiet logical; if TRUE, suppress informational messages and show only
 #'   warnings or errors.
 #' @return Data frame with columns `sample`, `action`, `asv`, `asv_id`.
@@ -5467,7 +5499,7 @@ flag_by_habitat <- function(occurrence_df, habitat_proportion=0.5){
 #' }
 #' @export
 #'
-detect_false_negatives <- function(read_count_samples, mock_composition, sep=",", out="", quiet=TRUE){
+detect_false_negatives <- function(read_count_samples, mock_composition, sep=",", out=NULL, quiet=TRUE){
   
   # can accept df or file as an input
   if(is.character(mock_composition)){
@@ -5520,7 +5552,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
   
   
   # write to outfile
-  if(out != ""){
+  if(!is.null(out)){
     check_dir(out, is_file=TRUE)
     write.table(df, file=out, row.names = F, sep=sep)
   }
@@ -5548,7 +5580,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
 #' @param outdir Character string naming the output directory.
 #' @param known_occurrences Data frame or file produced by
 #'   `classify_control_occurrences()`, containing known true positives and
-#'   false positives. Optional; if not provided, it is computed from
+#'   false positives. Optional; if NULL, it is computed from
 #'   `mock_composition` and `sampleinfo`.
 #' @param mock_composition Data frame or CSV file with columns
 #'   `sample`, `action` (keep/tolerate), and `asv`.
@@ -5595,8 +5627,8 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
 suggest_variant_readcount_cutoffs <- function(read_count, 
                                            outdir, 
                                            known_occurrences = NULL, 
-                                           mock_composition = "",
-                                           sampleinfo = "",
+                                           mock_composition = NULL,
+                                           sampleinfo = NULL,
                                            habitat_proportion = 0.5,
                                            sep=",",
                                            min_read_count_cutoff=10, 
@@ -5761,7 +5793,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
 #' Each file must follow the same format, containing `asv_id`, `sample`,
 #' `read_count`, `asv`, and optionally `replicate`.
 #' @param outfile Character string specifying the output CSV file name.
-#' If empty, no file is written.
+#' If NULL, no file is written.
 #' @param method Character string specifying how read counts from identical
 #' sample–replicates are aggregated. Must be one of `"mean"`, `"max"`,
 #' `"sum"`, or `"min"`.
@@ -5780,7 +5812,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
 #' @export
 #' 
 pool_datasets <- function(files, 
-                         outfile="", 
+                         outfile=NULL, 
                          method="mean",
                          sep=",", 
                          quiet=T
@@ -5832,7 +5864,7 @@ pool_datasets <- function(files,
       mutate(read_count = round(read_count, digits=0))
   }
  
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
@@ -5864,7 +5896,7 @@ pool_datasets <- function(files,
 #' `files`. These IDs are appended to `asv_id` to ensure uniqueness across
 #' markers. If not provided, `asv_id`s must already be unique across datasets.
 #' @param outfile Character string specifying the output CSV file name.
-#' If empty, no file is written.
+#' If NULL, no file is written.
 #' @param asv_with_centroids Character string specifying an optional output CSV
 #' file containing the merged dataset annotated with `centroid_id` and
 #' `centroid` columns.
@@ -5897,8 +5929,8 @@ pool_datasets <- function(files,
 #' 
 pool_markers <- function(files, 
                          marker_ids = NULL,
-                         outfile="", 
-                         asv_with_centroids="",
+                         outfile=NULL, 
+                         asv_with_centroids=NULL,
                          method="mean", 
                          vsearch_path="vsearch", 
                          num_threads=0,
@@ -5989,12 +6021,12 @@ pool_markers <- function(files,
       select(asv_id, sample, read_count, asv)
   }
     
-  if(asv_with_centroids != ""){
+  if(!is.null(asv_with_centroids)){
     check_dir(asv_with_centroids, is_file=TRUE)
     write.table(asv_with_centroids_df, file=asv_with_centroids, sep=sep, row.names = F)
   }
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
@@ -6097,7 +6129,7 @@ history_by <- function(dir, feature, value, sep=","){
 #' one of `"asv_id"`, `"asv"`, `"sample"`, or `"replicate"`.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param outfile Character string specifying the output CSV file name.
-#' If empty, no file is written.
+#' If NULL, no file is written.
 #' @return An invisible data frame where columns correspond to input files,
 #' rows correspond to `grouped_by` values, and cell values represent either
 #' counts of `feature` occurrences or summed read counts.
@@ -6108,7 +6140,7 @@ history_by <- function(dir, feature, value, sep=","){
 #' }
 #' @export
 #'
-summarize_by <- function(dir, feature, grouped_by, outfile="", sep=","){
+summarize_by <- function(dir, feature, grouped_by, outfile=NULL, sep=","){
   
   # read file names in dir
   check_dir(dir)
@@ -6173,7 +6205,7 @@ summarize_by <- function(dir, feature, grouped_by, outfile="", sep=","){
                                        )
                            )
   # print outfile
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(wide_df, file=outfile, row.names = F, sep=sep)
   }
@@ -6301,11 +6333,10 @@ read_fasta_to_df <- function(file, dereplicate=F){
 #' @examples
 #' \dontrun{
 #' count_reads(file = "data/test.fasta", file_type = "fasta")
-#' count_reads(file = "data/test.txt", file_type = "")
 #' }
 #' @export
 #' 
-count_reads <- function(file, file_type=""){
+count_reads <- function(file, file_type="fastq"){
   
   if (endsWith(file, ".zip")) {
     stop("File compression type is not supported.")
@@ -6390,7 +6421,7 @@ count_reads <- function(file, file_type=""){
 #' @param file_type Character string specifying file type: `"fasta"` or `"fastq"`.
 #'   For any other value, the function returns the number of lines in each file.
 #' @param sep Field separator character in input and output CSV files.
-#' @param outfile Character string: output CSV file name. If empty, no file is written.
+#' @param outfile Character string: output CSV file name. If NULL, no file is written.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
 #' @return Data frame with two columns: `filename`, `read_count`.
 #' @examples
@@ -6403,7 +6434,7 @@ count_reads <- function(file, file_type=""){
 count_reads_in_dir<- function(dir, 
                          pattern=".", 
                          file_type="fasta", 
-                         outfile="", 
+                         outfile=NULL, 
                          sep=",", 
                          quiet=T
                          ){
@@ -6424,7 +6455,7 @@ count_reads_in_dir<- function(dir,
     df[i, "read_count"] <- n
   }
   
-  if(outfile != ""){
+  if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(df, file=outfile, sep=sep, row.names = F)
   }
@@ -6468,7 +6499,7 @@ count_reads_in_dir<- function(dir,
 #' }
 #' @export
 #' 
-check_file_info <- function(file, dir="", file_type="fastqinfo", sep=",", quiet=FALSE){
+check_file_info <- function(file, dir, file_type="fastqinfo", sep=",", quiet=FALSE){
   
   if(is.character(file)){
     # read known occurrences
@@ -6815,7 +6846,7 @@ check_file_info <- function(file, dir="", file_type="fastqinfo", sep=",", quiet=
 #' }
 #' @export
 #' 
-check_file_exists <- function(file_list, dir=""){
+check_file_exists <- function(file_list, dir){
   
   check_dir(dir)
   missing <- c()
@@ -6972,16 +7003,16 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #'   or closely related taxa. FASTA headers must follow the format:
 #'   `>HQ563207.1 taxID=1592914`, where `taxID` is a valid NCBI taxonomic identifier
 #'   (https://www.ncbi.nlm.nih.gov/taxonomy).
+#' @param sampleinfo Data frame or CSV file containing at least `sample` and `sample_type` columns.
 #' @param taxonomy Character string: path to a TSV taxonomy file containing columns:
 #'   `tax_id`, `parent_tax_id`, `rank`, `name_txt`, `old_tax_id` (merged into `tax_id`),
 #'   and `taxlevel` (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
 #'   2: kingdom, 1: domain, 0: root).
 #'   A COInr taxonomy file can be used.
+#' @param outdir Character string: output directory for generated files.
 #' @param blast_path Character string: path to BLAST executable.
-#' @param sampleinfo Data frame or CSV file containing at least `sample` and `sample_type` columns.
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
-#' @param outdir Character string: output directory for generated files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
 #' @return Data frame with columns: `sample`, `action`, `asv`, `taxon`, `asv_id`.
 #' @examples
@@ -6996,15 +7027,16 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #' }
 #' @export
 #'
-match_variants_to_mock_species <- function(read_count,
-                                   fas,
-                                   taxonomy="",
-                                   blast_path = "blastn",
-                                   sampleinfo = "",
-                                   outdir= NULL,
-                                   num_threads=0,
-                                   sep=",",
-                                   quiet=TRUE
+match_variants_to_mock_species <- function(
+    read_count,
+    fas,
+    sampleinfo,
+    taxonomy,
+    outdir,
+    blast_path = "blastn",
+    num_threads=0,
+    sep=",",
+    quiet=TRUE
 ){
   
   ##### Make blast db from mock fasta
@@ -7465,8 +7497,8 @@ random_sample_linux <- function(fasta,
 #' 
 subsample_fasta <- function(fastainfo, 
                        n,
-                       fasta_dir="",
-                       outdir="", 
+                       fasta_dir,
+                       outdir, 
                        use_vsearch=FALSE,
                        vsearch_path="vsearch",
                        randseed=NULL, 

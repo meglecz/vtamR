@@ -4,12 +4,7 @@
 \alias{write_cutadapt_adapter_fasta}
 \title{Make a FASTA file with adapters}
 \usage{
-write_cutadapt_adapter_fasta(
-  fastainfo_df,
-  fasta_file,
-  tag_to_end = T,
-  outdir = ""
-)
+write_cutadapt_adapter_fasta(fastainfo_df, fasta_file, outdir, tag_to_end = T)
 }
 \arguments{
 \item{fastainfo_df}{Data frame with columns: \code{tag_fw}, \code{tag_rv}, \code{fasta}.}
@@ -17,10 +12,10 @@ write_cutadapt_adapter_fasta(
 \item{fasta_file}{Character string specifying the FASTA file to be demultiplexed
 (must be present in the \code{fasta} column of \code{fastainfo_df}).}
 
+\item{outdir}{Character string specifying the output directory.}
+
 \item{tag_to_end}{Logical. If \code{TRUE}, tags are assumed to be located at the
 extremities of reads.}
-
-\item{outdir}{Character string specifying the output directory.}
 }
 \value{
 Path to the generated \code{tags.fasta} file. Returns \code{NA} if all tags

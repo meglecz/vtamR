@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-22" />
+<meta name="date" content="2026-04-16" />
 
-<title>Install vtamR and Third Party Programs - v1.0.3</title>
+<title>vtamR tutorials - v1.0.2</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1478,258 +1478,82 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Install vtamR and Third Party Programs -
-v1.0.3</h1>
-<h4 class="date">2026-04-22</h4>
+<h1 class="title toc-ignore">vtamR tutorials - v1.0.2</h1>
+<h4 class="date">2026-04-16</h4>
 
 </div>
 
 
-<style>
-/* Block console output (<pre>) scrolls horizontally AND vertically */
-pre {
-  white-space: pre !important;        /* preserve spacing, no wrapping */
-  overflow-x: auto !important;        /* horizontal scroll */
-  overflow-y: auto !important;        /* vertical scroll */
-  display: block;
-  max-width: 100%;
-  max-height: 500px;                  /* adjust height limit if you want */
-  box-sizing: border-box;
-}
-
-/* Ensure code inside <pre> also stays fixed and scrollable */
-pre code {
-  white-space: pre !important;
-}
-
-/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
-table {
-  display: block;
-  overflow-x: auto !important;
-  overflow-y: auto !important;
-  white-space: nowrap;                /* no wrapping of table cells */
-  max-width: 100%;
-  max-height: 500px;                  /* adjust as you like */
-  box-sizing: border-box;
-}
-</style>
-<div id="implementation" class="section level2">
-<h2>Implementation</h2>
-<p>The heavy lifting of sequence analyses are done by the following
-third party programs. They should be installed on your computer:</p>
+<p><strong>vtamR</strong> is a revised, completed version of <a href="https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext">VTAM</a>
+(Validation and Taxonomic Assignation of Metabarcoding Data) rewritten
+in R. It is a complete metabarcoding pipeline:</p>
 <ul>
-<li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et
-al., 1990</a>) (v2.11.0+)</li>
-<li>VSEARCH (<a href="https://peerj.com/articles/2584/">Rognes et al.,
-2016</a>) (v2.7.0)</li>
-<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479">Martin,
-2011</a>) (v4.0)</li>
-<li>SWARM (<a href="https://peerj.com/articles/1420/">Mahé et al.,
-2015</a>) (v2.1.12)</li>
-<li>PIGZ (optional)</li>
+<li>Sequence analyses <strong>from raw fastq files</strong> of amplicon
+sequences till Amplicon Sequence Variant (<a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary">ASV</a>)
+table of <strong>validated ASVs assigned to taxonomic
+groups</strong>.</li>
+<li>Handles technical or biological <strong>replicates</strong> of the
+same sample.</li>
+<li>Uses positive and negative <strong>control samples to fine tune the
+filtering</strong> and reduce <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary">false
+positive</a> and <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary">false
+negative</a> occurrences.</li>
+<li>Can pool multiple data sets (results of earlier analyses)</li>
+<li>Can pool results from overlapping markers</li>
 </ul>
-<p><code>vtamR</code> has been tested using the above mentioned
-versions, but it should work with later versions.</p>
-<p><code>vtamR</code> was tested on <strong>Windows</strong> and
-<strong>Linux</strong>, and should work in all operating systems.</p>
+<p><strong>Novelties compared to VTAM:</strong></p>
+<ul>
+<li>As it is a series of R functions, <code>vtamR</code> is highly
+adaptable to include/exclude and order different steps of the
+analyses</li>
+<li>Includes SWARM for denoising</li>
+<li>Graphic options</li>
+<li>Include functions to get statistics of each filtering steps (read
+and variant count etc.)</li>
+<li>ASV clustering to mOTU</li>
+<li>The notion of marker and run has been dropped to simplify the
+analyses</li>
+</ul>
+<div id="installation" class="section level2">
+<h2><a href="installation.html">Installation</a></h2>
+<ul>
+<li>Installation of vtamR package</li>
+<li>Installation of third party programs</li>
+<li>TaxAsssign data base</li>
+</ul>
 </div>
-<div id="install-vtamr" class="section level2">
-<h2>Install vtamR</h2>
-<p>Install <code>vtamR</code> and its CRAN dependencies by
-<code>pak</code>.</p>
-<pre class="r"><code>if(!requireNamespace(&quot;pak&quot;, quietly = TRUE)) install.packages(&quot;pak&quot;)
-pak::pkg_install(&quot;meglecz/vtamR&quot;, dependencies=TRUE)</code></pre>
-<p>Alternatively, you can use <code>devtools</code>.</p>
-<pre class="r"><code>if (!requireNamespace(&quot;devtools&quot;, quietly = TRUE)) install.packages(&quot;devtools&quot;)
-devtools::install_github(&quot;meglecz/vtamR&quot;, dependencies = TRUE)</code></pre>
-<p>Install Bioconductor packages manually if you intend to use
-<code>assign_taxonomy_rdp</code> function.</p>
-<pre class="r"><code># Install Bioconductor suggested packages manually if needed (only for assign_taxonomy_ltg)
-if (!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE)) install.packages(&quot;BiocManager&quot;)
-if (!requireNamespace(&quot;rRDP&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDP&quot;)
-if (!requireNamespace(&quot;rRDPData&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDPData&quot;)
-if (!requireNamespace(&quot;Biostrings&quot;, quietly = TRUE)) BiocManager::install(&quot;Biostrings&quot;)</code></pre>
-<p>Read the <strong><a href="https://people.imbe.fr/~emeglecz/vtamR">Manual</a></strong> on how
-to construct a full metabarcoding pipeline.</p>
+<div id="short-tutorial" class="section level2">
+<h2><a href="short-tutorial.html">Short tutorial</a></h2>
+<ul>
+<li>Pipeline</li>
+</ul>
 </div>
-<div id="install-third-party-programs" class="section level2">
-<h2>Install third party programs</h2>
-<div id="linux" class="section level3">
-<h3>Linux</h3>
+<div id="tutorial-vtamr-pipeline" class="section level2">
+<h2><a href="tutorial-vtamr-pipeline.html">Tutorial: vtamR
+pipeline</a></h2>
 <ul>
-<li><code>VSEARCH</code> <a href="https://github.com/torognes/vsearch">https://github.com/torognes/vsearch</a></li>
-<li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
-<li><code>CUTADAPT</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
-<li><code>SWARM</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
-<li><code>PIGZ</code> (optional) <a href="https://github.com/madler/pigz">https://github.com/madler/pigz</a></li>
+<li>How to construct a full metabarcoding pipeline</li>
+<li>Supplementary functions</li>
+<li>I/O files and data frames</li>
+<li>Glossary</li>
+<li>Trouble shooting</li>
 </ul>
-<p><strong>Add the executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your <code>PATH</code>, you won’t need to manually specify their
-locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>,
-be sure to provide the full path to each program using the corresponding
-<code>vtamR</code> function argument (e.g.,
-<code>vsearch_path</code>).</p>
-<ol style="list-style-type: decimal">
-<li>Edit (or create) your <code>~/.Renviron</code> file</li>
-</ol>
-<pre class="bash"><code>nano ~/.Renviron</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Add the directory to the PATH</li>
-</ol>
-<pre class="bash"><code>PATH=&quot;/home/user/tools/myprogram/bin:${PATH}&quot;</code></pre>
-<p><strong>Note:</strong> The PATH must contain a
-<strong>directory</strong>, not an executable file. For example, use:
-<code>/home/username/miniconda3/envs/vtamr/bin</code> and
-<strong>not</strong>:
-<code>/home/username/miniconda3/envs/vtamr/bin/cutadapt</code></p>
-<ol start="3" style="list-style-type: decimal">
-<li>Restart R or RStudio</li>
-</ol>
-<p>The new PATH is loaded at startup.</p>
-<ol start="4" style="list-style-type: decimal">
-<li>Verify that R sees the correct executables</li>
-</ol>
-<pre class="r"><code>system(&quot;cutadapt --version&quot;)
-system(&quot;swarm --version&quot;)
-system(&quot;vsearch --version&quot;)
-system(&quot;blastn -version&quot;)
-system(&quot;pigz --version&quot;)</code></pre>
 </div>
-<div id="windows" class="section level3">
-<h3>Windows</h3>
-<p>Download binaries and save them to a convenient place on your
-computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
-<p><strong>VSEARCH</strong></p>
+<div id="from-fastq-to-data-frame" class="section level2">
+<h2><a href="from-fastq-to-df.html">From fastq to data frame</a></h2>
+<p>Quality filtering, merging, trimming demultiplexing, dereplication
+according to different fastq content.</p>
 <ul>
-<li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a></li>
-<li>Decompress the zip file</li>
-<li>The executable are found in
-<code>vsearch-x.xx.x-win-x86_64/bin/</code></li>
+<li>One sample per fastq - no tag - no primer</li>
+<li>One sample per fastq - primer - no tag</li>
+<li>Several samples per fastq - tags - primers</li>
 </ul>
-<p><strong>CUTADAPT</strong></p>
-<ul>
-<li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases">https://github.com/marcelm/cutadapt/releases</a></li>
-</ul>
-<p><strong>SWARM</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/swarm/releases">https://github.com/torognes/swarm/releases</a></li>
-<li>Decompress the zip file</li>
-<li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code>
-directory</li>
-</ul>
-<p><strong>BLAST</strong></p>
-<ul>
-<li>Download the installer (ncbi-blast-x.xx.x+-win64.exe) from: <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/" class="uri">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
-<li>Double-click the .exe file, accept the license agreement, and keep
-the suggested installation path. This will automatically add BLAST to
-your system PATH, so you won’t need to specify its location when using
-it.</li>
-<li>The executables will be installed in:
-<code>C:\Program Files\NCBI\blast-x.xx.x+\bin</code></li>
-</ul>
-<p><strong>VSEARCH</strong> (Optional)</p>
-<ul>
-<li>Download <a href="https://sourceforge.net/projects/pigz-for-windows/files/">pigz-win32.zip</a></li>
-<li>Decompress the zip file</li>
-<li>The executable (pigz.exe) is in the pigz-win32 directory</li>
-</ul>
-<p><strong>Add executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your system PATH, you won’t need to manually specify their locations
-when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide
-the full path to each program through the appropriate <code>vtamR</code>
-function argument (e.g., <code>vsearch_path</code>).</p>
-<p>You can use either <strong>GUI</strong> or
-<strong>PowerShell</strong> to add executables to your PATH.</p>
-<ol style="list-style-type: decimal">
-<li>Using the Windows GUI (System Settings)</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>sysdm.cpl</code>, and
-press <strong>Enter</strong>. <em>(Opens System Properties.)</em></li>
-<li>Go to the <strong>Advanced</strong> tab.</li>
-<li>Click <strong>Environment Variables…</strong></li>
-<li>In the <strong>System variables</strong> section, find and select
-<strong>Path</strong>.</li>
-<li>Click <strong>Edit…</strong></li>
-<li>Click <strong>New</strong>, then paste the directory you want to add
-(for example: <code>C:\Users\YourName\Tools\bin</code>)</li>
-<li>Click <strong>OK</strong> on all windows to save.</li>
-</ul>
-<ol start="2" style="list-style-type: decimal">
-<li>Using PowerShell</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>powershell</code>, and
-press <strong>Enter</strong>. <em>(Opens Powershell)</em></li>
-</ul>
-<pre><code>setx PATH &quot;$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm&quot;</code></pre>
-<ul>
-<li>Close de Powershell, since the change applies only to
-<strong>new</strong> terminals, not the current one.</li>
-</ul>
-<p><strong>Verify Program Versions</strong></p>
-<p>Open a Command Prompt on Windows (<strong>Win + R</strong>, type
-<code>cmd</code>)</p>
-<pre class="bash"><code>cutadapt --version
-swarm --version
-vsearch --version
-pigz --version
-blastn -version</code></pre>
-<p><strong>Note</strong> <em>These commands will display the version of
-each program <strong>if the executables are in your PATH</strong>.
-Otherwise, don’t forget to provide the full path to the
-executables.</em></p>
-<p>Example:</p>
-<pre><code>C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version</code></pre>
 </div>
-</div>
-<div id="taxassign-reference-data-base" class="section level2">
-<h2>TaxAssign reference data base</h2>
-<div id="assign_taxonomy_ltg" class="section level3">
-<h3>assign_taxonomy_ltg</h3>
-<p>For <code>assign_taxonomy_ltg</code> (BLAST based Lowest Common
-Ancestor method), a ready-to-use COI database is available from OSF <a href="https://osf.io/vrfwz/">OSF</a>, (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p>Download and extract using:</p>
-<pre class="r"><code>library(vtamR)
-
-download_osf(filename = &quot;COInr_for_vtam_2025_05_23_dbV5.tar.gz&quot;,
-    url = &quot;https://osf.io/download/jyhz6/&quot;,
-    dest_dir = &quot;COInr_db&quot;,
-    untar = TRUE,
-    quiet = FALSE
-    )</code></pre>
-<p>To check for newer versions:</p>
-<ul>
-<li>Go to: <a href="https://osf.io/vrfwz/files/osfstorage">https://osf.io/vrfwz/files/osfstorage</a></li>
-<li>In <strong>Files</strong> open the the <strong>dbV5</strong>
-folder.</li>
-<li>Choose your version → Click on the tree-dot menu → Right-click
-Download → Copy Link Address.</li>
-</ul>
-<p>Alternatively, you can also create a custom version from the
-<strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860">Zenodo</a> and make a custom
-version using <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>
-(<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database
-formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy
-file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file
-provided in <a href="https://osf.io/vrfwz/">OSF</a> can be used without
-modification.</p>
-</div>
-<div id="assign_taxonomy_rdp" class="section level3">
-<h3>assign_taxonomy_rdp</h3>
-<p><code>assign_taxonomy_rdp</code> function uses de RDP algorithm to
-assign bacterial 16S sequences. The database is provided in the
-<code>rRDPData</code> R data package.</p>
-<p>It is also possible to provide a trained classifier object created
-with <code>trainRDP()</code>.</p>
-</div>
+<div id="make-mock_composition-file" class="section level2">
+<h2><a href="make-mock-composition-file.html">Make mock_composition
+file</a></h2>
+<p>How to pick the expected sequences in mock samples from your own data
+(in case you do not know them in advance).</p>
 </div>
 
 

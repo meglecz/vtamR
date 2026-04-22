@@ -7,8 +7,8 @@
 filter_contaminant(
   read_count,
   sampleinfo,
-  outfile = "",
-  conta_file = "",
+  outfile = NULL,
+  conta_file = NULL,
   sep = ","
 )
 }
@@ -20,10 +20,10 @@ filter_contaminant(
 \code{sample}, \code{sample_type} (negative/mock/real).}
 
 \item{outfile}{Character string specifying the CSV file to write the filtered
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{conta_file}{Character string specifying a CSV file to store the filtered-out
-contaminant ASVs. If empty, no file is written.}
+contaminant ASVs. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

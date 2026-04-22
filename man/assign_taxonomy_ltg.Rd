@@ -9,13 +9,13 @@ assign_taxonomy_ltg(
   taxonomy,
   blast_db,
   blast_path = "blastn",
-  ltg_params = "",
-  outfile = "",
+  ltg_params = NULL,
+  outfile = NULL,
+  fill_lineage = TRUE,
   num_threads = 0,
   tax_sep = "\\t",
   sep = ",",
-  quiet = T,
-  fill_lineage = TRUE
+  quiet = TRUE
 )
 }
 \arguments{
@@ -33,7 +33,11 @@ assign_taxonomy_ltg(
 (\code{pid}) and associated parameters (\code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}).}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
+
+\item{fill_lineage}{Logical. If \code{TRUE}, missing higher taxonomic levels are
+filled using the nearest known lower-level taxon with a prefix indicating
+the missing rank.}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to use.
 If \code{0}, all available CPUs are used.}
@@ -45,10 +49,6 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
 warnings or errors.}
-
-\item{fill_lineage}{Logical. If \code{TRUE}, missing higher taxonomic levels are
-filled using the nearest known lower-level taxon with a prefix indicating
-the missing rank.}
 }
 \value{
 Data frame with columns:

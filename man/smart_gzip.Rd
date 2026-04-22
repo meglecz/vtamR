@@ -6,7 +6,7 @@
 \usage{
 smart_gzip(
   file,
-  outfile = "",
+  outfile = NULL,
   remove = FALSE,
   pigz_path = "pigz",
   method = "R",
@@ -18,7 +18,7 @@ smart_gzip(
 \arguments{
 \item{file}{Character string specifying the input file.}
 
-\item{outfile}{Character string specifying the output file. If empty, it is
+\item{outfile}{Character string specifying the output file. If NULL
 automatically derived from file.}
 
 \item{remove}{Logical. If \code{TRUE}, remove the input file after a successful

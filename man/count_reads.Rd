@@ -4,7 +4,7 @@
 \alias{count_reads}
 \title{Count reads in sequence or text files}
 \usage{
-count_reads(file, file_type = "")
+count_reads(file, file_type = "fastq")
 }
 \arguments{
 \item{file}{Character string: path to the input file.}
@@ -28,6 +28,5 @@ It supports both gz-compressed and uncompressed files (ZIP archives are not supp
 \examples{
 \dontrun{
 count_reads(file = "data/test.fasta", file_type = "fasta")
-count_reads(file = "data/test.txt", file_type = "")
 }
 }

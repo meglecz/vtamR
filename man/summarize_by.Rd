@@ -4,7 +4,7 @@
 \alias{summarize_by}
 \title{Summarize intermediate filtering steps by feature}
 \usage{
-summarize_by(dir, feature, grouped_by, outfile = "", sep = ",")
+summarize_by(dir, feature, grouped_by, outfile = NULL, sep = ",")
 }
 \arguments{
 \item{dir}{Character string specifying the directory containing intermediate
@@ -18,7 +18,7 @@ one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or \c
 one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, or \code{"replicate"}.}
 
 \item{outfile}{Character string specifying the output CSV file name.
-If empty, no file is written.}
+If NULL, no file is written.}
 
 \item{sep}{Field separator character used in input and output CSV files.}
 }

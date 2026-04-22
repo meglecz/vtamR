@@ -8,7 +8,7 @@ pool_replicates(
   read_count,
   method = "mean",
   digits = 0,
-  outfile = "",
+  outfile = NULL,
   sep = ","
 )
 }
@@ -23,7 +23,7 @@ replicates. Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"
 when rounding mean read counts.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

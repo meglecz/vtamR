@@ -1,5 +1,5 @@
 ---
-title: "Tutorial - vtamR pipeline - v1.0.2"
+title: "Tutorial - vtamR pipeline - v1.0.3"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output: 
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.0.2}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.0.3}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -501,44 +501,44 @@ to **build your own pipeline** based on your specific needs.
 Each filtering function returns a **data frame with the filtered results**. 
 You can also save the output as a **CSV file** using the `outfile` argument. 
 This is especially useful if you want to track how ASVs or samples are retained 
-or removed throughout the analysis, using the [history_by](#history-by) and 
-[summarize_by](#summarize-by) functions.
+or removed throughout the analysis, using the [history_by](#history_by) and 
+[summarize_by](#summarize_by) functions.
 
 To keep things organized, I recommend 
 **starting output file names with a number** to reflect the order of the steps. 
-This also allows the [summarize_by](#summarize-by) function to easily generate 
+This also allows the [summarize_by](#summarize_by) function to easily generate 
 summary statistics at each stage of the analysis.
 
-**Following the evolution of the number of reads and ASVs (`stat_df`)**
+## Tracking the Evolution of Reads and ASVs (`stat_df`)
 
-You can also **track how the number of reads and ASVs changes** after 
-each filtering step. For this, we will create a data frame (`stat_df`) 
-that stores this information and update it along the way.
+You can **monitor changes in the number of reads and ASVs** after each filtering step using the `get_stat` function. This function either:
 
-### Initialize Statistics{#init-stat}
+* Creates a new data frame with read and ASV counts, or
+* Appends a new row to an existing data frame provided as an argument (`stat_df`).
 
-First, we create a data frame to **store summary statistics** at each step of the analysis:
+The resulting data frame contains the following columns:
 
-```{r set-stat}
-stat_df <- data.frame(
-  parameters = character(),
-  asv_count = integer(),
-  read_count = integer(),
-  sample_count = integer(),
-  sample_replicate_count = integer()
-)
-```
+* `parameters`: Parameters used for the analysis
+* `asv_count`: Number of ASVs detected
+* `read_count`: Total number of reads
+* `sample_count`: Number of samples analyzed
+* `sample_replicate_count`: Number of replicates per sample
 
-Next, we add a first row with information from the **unfiltered data set**:
+Each row summarizes the results of a single filtering step. By calling `get_stat` after each step, you can incrementally build a data frame with **key summary statistics** for every stage of your analysis.
+
+**The main arguments**
+
+- **`params`**: A string describing the key parameters applied during the filtering step.
+- **`stage`**: A string indicating the analysis stage (e.g., "input", "denoising", "filtering") to which the statistics correspond.
 
 ```{r get-initial-stat}
-stat_df <- get_stat(read_count_df, stat_df, stage = "input", params = NA)
+stat_df <- get_stat(read_count_df, stat_df = NULL, stage = "input", params = NA)
 ```
 
-Here’s what the main arguments mean:
-
-* `params`: a string describing the key parameters used at each filtering step
-* `stage`: a string indicating which step of the analysis the statistics correspond to
+Let's check number od reads, ASV, samples in the initial non-filtereg dataset.
+```{r}
+knitr::kable(stat_df, format = "markdown")
+```
 
 ### Denoising with SWARM {#denoise}
 
@@ -757,7 +757,7 @@ must be at least `abskew` times less abundant than its parental ASVs to be flagg
 ```{r filter-chimera}
 outfile <- file.path(outdir, "4_filter", "7_filter_chimera.csv")
 abskew=2
-by_sample = T
+by_sample = TRUE
 sample_prop = 0.8
 
 read_count_df <- filter_chimera(
@@ -781,7 +781,7 @@ knitr::kable(stat_df, format = "markdown")
 This filter removes **replicates that are very different** from other 
 replicates of the same sample.
 
-To do this, we calculate the **Renkonen distances** between all pairs of 
+To do this, we calculate the [Renkonen distances](#glossary) between all pairs of 
 replicates within each sample and identify those that deviate significantly from the others.
 
 ```{r renkonen-dist}
@@ -790,7 +790,7 @@ renkonen_within_df <- compute_renkonen_distances(read_count_df, compare_all=FALS
 
 #### Visualize Renkonen Distances
 
-We can create a **density plot** of the Renkonen distances to see how 
+We can create a **density plot** of the [Renkonen distances](#glossary) to see how 
 similar replicates are within each sample.
 
 **Note:** This example uses a very small test dataset, 
@@ -806,8 +806,9 @@ colors to represent **sample types** (real, mock, or negative).
 
 * `sampleinfo_df` must have `sample` and `sample_type` columns, 
 but any data frame with these columns will work.
-* If you restarted the analysis after running `demultiplex_and_trim` and `sampleinfo_df` 
-is not in your environment, you can simply use the **sample info file** from **vtamR_demo_out/mfzr_plate1/3_demultiplexed/sampleinfo.csv**.
+* If `sampleinfo_df` is not in your environment, you can use the 
+**sampleinfo.csv** instead of the data frame. This 
+files was produced by `demultiplex_and_trim` in this pipeline and found in the **vtamR_demo_out/mfzr_plate1/3_demultiplexed** folder.
 * This is a **very small test data set**, so your own data will likely produce 
 a **different-looking graph**.
 
@@ -833,7 +834,7 @@ The `filter_replicate` function removes replicates whose
 replicates of the same sample.
 Here, this means that **replicate 1 of `tnegtag` will be removed**.
 
-An alternative way to define the cutoff is to use the 
+An **alternative way to define the cutoff** is to use the 
 `renkonen_distance_quantile` parameter instead of a fixed `cutoff`.
 This automatically sets the cutoff based on a chosen **quantile of the within-sample distance distribution**. For example:
 
@@ -857,6 +858,10 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=par
 
 knitr::kable(stat_df, format = "markdown")
 ```
+
+Using `renkonen_distance_quantile <- 0.9` sets the cutoff at **0.289** (as indicated by the function output: *"The cutoff value for Renkonen distances is 0.289308176100629*). While this value is slightly lower than the **0.4** threshold chosen through graphical inspection, both cutoffs yield the same result: the exclusion of replicate 1 from the tentative control.
+
+You can use the `renkonen_distance_quantile` argument if the density plot is difficult to interpret or if you prefer to automate the pipeline and avoid manually selecting the `cutoff` for the `filter_replicate` function.
 
 ### Create `mock_composition` File {#match_variants_to_mock_species}
 
@@ -990,7 +995,7 @@ The `filter_occurrence_variant` function removes occurrences with
 **low read counts relative to the total reads of their ASV**.
 By default, the cutoff proportion is **0.001**.
 This filter is mainly designed to remove spurious detections caused by 
-**tag-jumps** or minor **cross-sample contamination**.
+**[tag-jumps](#glossary)** or minor **cross-sample contamination**.
 
 The `filter_occurrence_read_count` function, in contrast, removes occurrences 
 based on an **absolute read count threshold**, set to **10 by default**.
@@ -1028,7 +1033,7 @@ with `known_occurrences = NULL` (default), and provide:
 
 * `mock_composition`
 * `sampleinfo`
-* `habitat_proportion`
+* `habitat_proportion` (optional; see [`classify_control_occurrences`](#classify_control_occurrences)
 
 In this case, the function will automatically call 
 `classify_control_occurrences` and use its output to estimate optimal cutoff values.
@@ -1071,8 +1076,6 @@ suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
   read_count_df,
   mock_composition = mock_composition,
   sampleinfo = sampleinfo_df,
-  habitat_proportion = 0.5,
-  known_occurrences=NULL,
   outdir= outdir_suggest, 
   min_replicate_number=2
   )
@@ -1190,12 +1193,11 @@ outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
 read_count_sample_df <- pool_replicates(
   read_count_df,
   method = "mean",   # Aggregate replicates using the mean read count
-  digits = 0,        # Round aggregated read counts to integers
   outfile = outfile
 )
 ```
 
-### Performance Metrics {#classify_control_occurrences}
+### Performance Metrics {#performance-metrics}
 
 We now run `classify_control_occurrences` again to evaluate the performance 
 of the filtering.
@@ -1797,6 +1799,21 @@ The effect of compression may vary depending on which external programs are used
 * CUTADAPT can produce gzip-compressed outputs on all systems.
 * VSEARCH usually outputs uncompressed files, even when reading compressed inputs.
 
+## Detection of False Positives (FP), True Positives (TP), and False Negatives (FN) {#fp-tp-fn}
+
+The function `classify_control_occurrences` identifies occurrences as **false positives**, **false negatives**, or **true positives** based on control samples and habitat context.
+
+- **True Positives (TP):**
+  All expected occurrences detected in a mock sample (i.e., ASVs that correspond to the species intentionally included in the mock community).
+
+- **False Negatives (FN):**
+  Expected ASVs in the mock samples that are **not detected** during analysis.
+
+- **False Positives (FP):**
+  - **Unexpected ASVs** in mock samples (ASVs not included in the mock community).
+  - **All ASVs detected in negative controls** (indicating contamination or technical artifacts).
+  - **Habitat-inconsistent ASVs:** ASVs detected in a sample but unexpected for its habitat. If samples or mocks originate from distinct habitats (e.g., seawater vs. terrestrial), the function evaluates the proportion of reads for each ASV across habitats. If the proportion of reads for an ASV in a given habitat is below the `habitat_proportion` threshold, the ASV is flagged as a false positive for all samples from that habitat.
+
 ## Clustering or Denoising
 
 The `cluster_asv` function supports two algorithms for grouping ASVs:
@@ -2137,9 +2154,18 @@ Use `FALSE` for **Windows or macOS**, or when VSEARCH is not installed.
 
 ## `classify_control_occurrences` {#classify_control_occurrences}
 
-The `classify_control_occurrences` function identifies **false positive**, **false negative**, and **true positive** occurrences in **control samples** (mock and negative).
+The function `classify_control_occurrences` identifies occurrences as **false positives**, **false negatives**, or **true positives** based on control samples and habitat context.
 
-> Some false positives can be also detected in real samples, if the dataset contains samples from different habitats.
+- **True Positives (TP):**
+  All expected occurrences detected in a mock sample (i.e., ASVs that correspond to the species intentionally included in the mock community).
+
+- **False Negatives (FN):**
+  Expected ASVs in the mock samples that are **not detected** during analysis.
+
+- **False Positives (FP):**
+  - **Unexpected ASVs** in mock samples (ASVs not included in the mock community).
+  - **All ASVs detected in negative controls** (indicating contamination or technical artifacts).
+  - **Habitat-inconsistent ASVs:** ASVs detected in a sample but unexpected for its habitat. If samples or mocks originate from distinct habitats (e.g., seawater vs. terrestrial), the function evaluates the proportion of reads for each ASV across habitats. If the proportion of reads for an ASV in a given habitat is below the `habitat_proportion` threshold, the ASV is flagged as a false positive for all samples from that habitat.
 
 ### Outputs
 
@@ -2186,7 +2212,7 @@ performance_metrics_df <- results[[3]]
 
 Some ASVs may appear in many samples with high read counts, 
 which can make them resistant to a fixed cutoff in `filter_occurrence_variant`.
-This can occur due to tag-jump or inter-sample contamination.
+This can occur due to **[tag-jump](#glossary)** or inter-sample contamination.
 
 The `compute_asv_specific_cutoff` function computes ASV-specific cutoff values 
 for variants with known false-positive occurrences (identified by `classify_control_occurrences`), so filtering can be more targeted.
@@ -2488,7 +2514,7 @@ update_asv_list(
   outfile = updated_asv_list)
 ```
 
-## `pool_replicates` {#pool_replicates}
+## `pool_replicates` {#pool_replicates_detail}
 
 Replicates are used to ensure **repeatability** and reduce experimental variation.
 After the analysis, they can be pooled at the sample level.
@@ -2740,6 +2766,7 @@ likely resulting from sequencing or amplification errors.
 * **precision**: The proportion of detected positives that are true positives 
 (TP / (TP + FP)).
 * **real sample**: An environmental sample.
+* **Renkonen distance**:  $1 - \sum \min(p_{1i}, p_{2i})$, where $p_{1i}$ is the frequency of variant $i$ in sample-replicate1 (Renkonen, 1938)
 * **replicate**: Technical or biological replicate of a sample. Replicates must 
 have numerical identifiers (e.g. sample `tops1` can have replicates 1, 2, and 3).
 * **sample**: Name of the environmental or control sample. 
@@ -2750,6 +2777,8 @@ Must be alphanumeric and contain no spaces.
 * **singleton**: ASV with a single read in the entire data set.
 * **tag**: Short sequence at the extremity of the amplicon, used during demultiplexing 
 to identify the sample–replicate origin of each read.
+* **Tag-jump (or Tag-switch):** During PCR, chimeric sequences can cause molecular 
+tags (indices) to be exchanged. This leads to reads being attributed to the wrong sample, potentially distorting biodiversity estimates.
 * **taxIDs**: Numerical taxonomic identifiers. These can be valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy) values or arbitrary negative numbers 
 for taxa not present in NCBI.
 * **trimming**: Cutting sequence extremities, either based on sequence quality 
@@ -2903,4 +2932,5 @@ you need to adjust these settings to ensure the function searches for
 tags and primers in the correct positions.
 
 For more details, refer to the function documentation: `?demultiplex_and_trim`.
+
 

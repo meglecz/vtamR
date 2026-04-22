@@ -8,7 +8,7 @@ detect_false_negatives(
   read_count_samples,
   mock_composition,
   sep = ",",
-  out = "",
+  out = NULL,
   quiet = TRUE
 )
 }
@@ -21,7 +21,7 @@ detect_false_negatives(
 
 \item{sep}{Field separator character used in input and output CSV files.}
 
-\item{out}{Character string naming the output file. If empty, no file is written.}
+\item{out}{Character string naming the output file. If NULL, no file is written.}
 
 \item{quiet}{logical; if TRUE, suppress informational messages and show only
 warnings or errors.}

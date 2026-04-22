@@ -6,8 +6,8 @@
 \usage{
 trim_primers(
   fastainfo,
-  fasta_dir = "",
-  outdir = "",
+  fasta_dir,
+  outdir,
   compress = F,
   compress_method = "R",
   pigz_path = "pigz",
@@ -90,8 +90,8 @@ output files is also computed.
 \dontrun{
 fastainfo_df <- trim_primers(
   fastainfo,
-  fasta_dir = "data/fasta",
-  outdir = "out",
+  fasta_dir,
+  outdir,
   compress = TRUE,
   check_reverse = TRUE,
   primer_to_end = FALSE,

@@ -7,10 +7,10 @@
 compute_asv_specific_cutoff(
   read_count,
   max_cutoff = 0.05,
-  mock_composition = "",
+  mock_composition = NULL,
   habitat_proportion = 0.5,
   by_replicate = FALSE,
-  outfile = "",
+  outfile = NULL,
   sep = ","
 )
 }
@@ -29,7 +29,7 @@ a false positive in all samples of that habitat.}
 
 \item{by_replicate}{Logical. If \code{TRUE}, compute cutoffs separately for each replicate.}
 
-\item{outfile}{Character string specifying the output file. If empty, no file is written.}
+\item{outfile}{Character string specifying the output file. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

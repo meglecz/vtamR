@@ -1,5 +1,5 @@
 ---
-title: "Short Tutorial vtamR - v1.0.2"
+title: "Short Tutorial vtamR - v1.0.3"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.2}
+  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.3}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -502,8 +502,7 @@ outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
 asv_tax <- assign_taxonomy_ltg(
   asv=read_count_sample_df,
   taxonomy=taxonomy,
-  blast_db=blast_db,
-  outfile=outfile
+  blast_db=blast_db
 )
 ```
 

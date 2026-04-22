@@ -4,7 +4,7 @@
 \alias{compute_renkonen_distances}
 \title{Compute Renkonen distances}
 \usage{
-compute_renkonen_distances(read_count_df, compare_all = FALSE, outfile = "")
+compute_renkonen_distances(read_count_df, compare_all = FALSE, outfile = NULL)
 }
 \arguments{
 \item{read_count_df}{Data frame with \code{asv}, \code{sample}, \code{replicate}, and
@@ -15,7 +15,7 @@ pairs of sample-replicates. If \code{FALSE}, compute distances only between
 replicates of the same sample.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 }
 \value{
 Data frame with columns: \code{sample1}, \code{sample2}, \code{replicate1},

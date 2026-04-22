@@ -4,7 +4,7 @@
 \alias{pool_datasets}
 \title{Pool multiple datasets}
 \usage{
-pool_datasets(files, outfile = "", method = "mean", sep = ",", quiet = T)
+pool_datasets(files, outfile = NULL, method = "mean", sep = ",", quiet = T)
 }
 \arguments{
 \item{files}{Character vector of file paths to the datasets to pool.
@@ -12,7 +12,7 @@ Each file must follow the same format, containing \code{asv_id}, \code{sample},
 \code{read_count}, \code{asv}, and optionally \code{replicate}.}
 
 \item{outfile}{Character string specifying the output CSV file name.
-If empty, no file is written.}
+If NULL, no file is written.}
 
 \item{method}{Character string specifying how read counts from identical
 sample–replicates are aggregated. Must be one of \code{"mean"}, \code{"max"},

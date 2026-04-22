@@ -4,14 +4,14 @@
 \alias{filter_indel}
 \title{Filter ASVs by frame consistency (indel detection)}
 \usage{
-filter_indel(read_count, outfile = "", sep = ",")
+filter_indel(read_count, outfile = NULL, sep = ",")
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
 \code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

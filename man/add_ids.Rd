@@ -7,7 +7,7 @@
 add_ids(
   read_count,
   input_asv_list = NULL,
-  output_asv_list = "",
+  output_asv_list = NULL,
   sep = ",",
   quiet = T
 )

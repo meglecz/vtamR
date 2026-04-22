@@ -7,8 +7,8 @@
 run_blast(
   df,
   blast_db,
+  outdir,
   blast_path = "blastn",
-  outdir = "",
   qcov_hsp_perc = 70,
   perc_identity = 70,
   num_threads = 0,
@@ -20,9 +20,9 @@ run_blast(
 
 \item{blast_db}{Character string specifying the BLAST database (including path if needed).}
 
-\item{blast_path}{Character string specifying the path to the BLAST executable.}
-
 \item{outdir}{Character string specifying the output directory.}
+
+\item{blast_path}{Character string specifying the path to the BLAST executable.}
 
 \item{qcov_hsp_perc}{Real number between 0 and 100 specifying the minimum query coverage.}
 

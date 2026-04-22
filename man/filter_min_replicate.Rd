@@ -4,7 +4,7 @@
 \alias{filter_min_replicate}
 \title{Filter occurrences by minimum number of replicates per sample}
 \usage{
-filter_min_replicate(read_count, cutoff = 2, outfile = "", sep = ",")
+filter_min_replicate(read_count, cutoff = 2, outfile = NULL, sep = ",")
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -14,7 +14,7 @@ filter_min_replicate(read_count, cutoff = 2, outfile = "", sep = ",")
 in which an ASV must be detected within a sample to be retained.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

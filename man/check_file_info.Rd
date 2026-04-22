@@ -4,13 +4,7 @@
 \alias{check_file_info}
 \title{Validate input file formats and consistency}
 \usage{
-check_file_info(
-  file,
-  dir = "",
-  file_type = "fastqinfo",
-  sep = ",",
-  quiet = FALSE
-)
+check_file_info(file, dir, file_type = "fastqinfo", sep = ",", quiet = FALSE)
 }
 \arguments{
 \item{file}{Character string or data frame: input file path or already-loaded data frame.}

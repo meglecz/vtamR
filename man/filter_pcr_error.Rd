@@ -6,7 +6,7 @@
 \usage{
 filter_pcr_error(
   read_count,
-  outfile = "",
+  outfile = NULL,
   vsearch_path = "vsearch",
   num_threads = 0,
   pcr_error_var_prop = 0.1,
@@ -22,7 +22,7 @@ filter_pcr_error(
 \code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 

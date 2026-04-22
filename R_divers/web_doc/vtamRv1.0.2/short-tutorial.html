@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-22" />
+<meta name="date" content="2026-04-16" />
 
-<title>Install vtamR and Third Party Programs - v1.0.3</title>
+<title>Short Tutorial vtamR - v1.0.2</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1478,9 +1478,8 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Install vtamR and Third Party Programs -
-v1.0.3</h1>
-<h4 class="date">2026-04-22</h4>
+<h1 class="title toc-ignore">Short Tutorial vtamR - v1.0.2</h1>
+<h4 class="date">2026-04-16</h4>
 
 </div>
 
@@ -1513,222 +1512,481 @@ table {
   box-sizing: border-box;
 }
 </style>
-<div id="implementation" class="section level2">
-<h2>Implementation</h2>
-<p>The heavy lifting of sequence analyses are done by the following
-third party programs. They should be installed on your computer:</p>
-<ul>
-<li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et
-al., 1990</a>) (v2.11.0+)</li>
-<li>VSEARCH (<a href="https://peerj.com/articles/2584/">Rognes et al.,
-2016</a>) (v2.7.0)</li>
-<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479">Martin,
-2011</a>) (v4.0)</li>
-<li>SWARM (<a href="https://peerj.com/articles/1420/">Mahé et al.,
-2015</a>) (v2.1.12)</li>
-<li>PIGZ (optional)</li>
-</ul>
-<p><code>vtamR</code> has been tested using the above mentioned
-versions, but it should work with later versions.</p>
-<p><code>vtamR</code> was tested on <strong>Windows</strong> and
-<strong>Linux</strong>, and should work in all operating systems.</p>
+<div id="short-tutorial" class="section level1">
+<h1>Short Tutorial</h1>
+<p>This is a short version of the tutorial using the ZFZR demo data set.
+For more details check out the appropriate section of the <a href="tutorial-vtamr-pipeline.html">detailed tutorial</a> and the
+documentation of the functions (<code>?function_name</code>)</p>
+<div id="set-up" class="section level2">
+<h2>Set up</h2>
+<div id="load-library" class="section level3">
+<h3>Load library</h3>
+<pre class="r"><code>library(vtamR)</code></pre>
 </div>
-<div id="install-vtamr" class="section level2">
-<h2>Install vtamR</h2>
-<p>Install <code>vtamR</code> and its CRAN dependencies by
-<code>pak</code>.</p>
-<pre class="r"><code>if(!requireNamespace(&quot;pak&quot;, quietly = TRUE)) install.packages(&quot;pak&quot;)
-pak::pkg_install(&quot;meglecz/vtamR&quot;, dependencies=TRUE)</code></pre>
-<p>Alternatively, you can use <code>devtools</code>.</p>
-<pre class="r"><code>if (!requireNamespace(&quot;devtools&quot;, quietly = TRUE)) install.packages(&quot;devtools&quot;)
-devtools::install_github(&quot;meglecz/vtamR&quot;, dependencies = TRUE)</code></pre>
-<p>Install Bioconductor packages manually if you intend to use
-<code>assign_taxonomy_rdp</code> function.</p>
-<pre class="r"><code># Install Bioconductor suggested packages manually if needed (only for assign_taxonomy_ltg)
-if (!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE)) install.packages(&quot;BiocManager&quot;)
-if (!requireNamespace(&quot;rRDP&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDP&quot;)
-if (!requireNamespace(&quot;rRDPData&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDPData&quot;)
-if (!requireNamespace(&quot;Biostrings&quot;, quietly = TRUE)) BiocManager::install(&quot;Biostrings&quot;)</code></pre>
-<p>Read the <strong><a href="https://people.imbe.fr/~emeglecz/vtamR">Manual</a></strong> on how
-to construct a full metabarcoding pipeline.</p>
-</div>
-<div id="install-third-party-programs" class="section level2">
-<h2>Install third party programs</h2>
-<div id="linux" class="section level3">
-<h3>Linux</h3>
-<ul>
-<li><code>VSEARCH</code> <a href="https://github.com/torognes/vsearch">https://github.com/torognes/vsearch</a></li>
-<li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
-<li><code>CUTADAPT</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
-<li><code>SWARM</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
-<li><code>PIGZ</code> (optional) <a href="https://github.com/madler/pigz">https://github.com/madler/pigz</a></li>
-</ul>
-<p><strong>Add the executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your <code>PATH</code>, you won’t need to manually specify their
-locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>,
-be sure to provide the full path to each program using the corresponding
-<code>vtamR</code> function argument (e.g.,
-<code>vsearch_path</code>).</p>
-<ol style="list-style-type: decimal">
-<li>Edit (or create) your <code>~/.Renviron</code> file</li>
-</ol>
-<pre class="bash"><code>nano ~/.Renviron</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Add the directory to the PATH</li>
-</ol>
-<pre class="bash"><code>PATH=&quot;/home/user/tools/myprogram/bin:${PATH}&quot;</code></pre>
-<p><strong>Note:</strong> The PATH must contain a
-<strong>directory</strong>, not an executable file. For example, use:
-<code>/home/username/miniconda3/envs/vtamr/bin</code> and
-<strong>not</strong>:
-<code>/home/username/miniconda3/envs/vtamr/bin/cutadapt</code></p>
-<ol start="3" style="list-style-type: decimal">
-<li>Restart R or RStudio</li>
-</ol>
-<p>The new PATH is loaded at startup.</p>
-<ol start="4" style="list-style-type: decimal">
-<li>Verify that R sees the correct executables</li>
-</ol>
-<pre class="r"><code>system(&quot;cutadapt --version&quot;)
-system(&quot;swarm --version&quot;)
-system(&quot;vsearch --version&quot;)
-system(&quot;blastn -version&quot;)
-system(&quot;pigz --version&quot;)</code></pre>
-</div>
-<div id="windows" class="section level3">
-<h3>Windows</h3>
-<p>Download binaries and save them to a convenient place on your
-computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
-<p><strong>VSEARCH</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a></li>
-<li>Decompress the zip file</li>
-<li>The executable are found in
-<code>vsearch-x.xx.x-win-x86_64/bin/</code></li>
-</ul>
-<p><strong>CUTADAPT</strong></p>
-<ul>
-<li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases">https://github.com/marcelm/cutadapt/releases</a></li>
-</ul>
-<p><strong>SWARM</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/swarm/releases">https://github.com/torognes/swarm/releases</a></li>
-<li>Decompress the zip file</li>
-<li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code>
-directory</li>
-</ul>
-<p><strong>BLAST</strong></p>
-<ul>
-<li>Download the installer (ncbi-blast-x.xx.x+-win64.exe) from: <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/" class="uri">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
-<li>Double-click the .exe file, accept the license agreement, and keep
-the suggested installation path. This will automatically add BLAST to
-your system PATH, so you won’t need to specify its location when using
-it.</li>
-<li>The executables will be installed in:
-<code>C:\Program Files\NCBI\blast-x.xx.x+\bin</code></li>
-</ul>
-<p><strong>VSEARCH</strong> (Optional)</p>
-<ul>
-<li>Download <a href="https://sourceforge.net/projects/pigz-for-windows/files/">pigz-win32.zip</a></li>
-<li>Decompress the zip file</li>
-<li>The executable (pigz.exe) is in the pigz-win32 directory</li>
-</ul>
-<p><strong>Add executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your system PATH, you won’t need to manually specify their locations
-when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide
-the full path to each program through the appropriate <code>vtamR</code>
-function argument (e.g., <code>vsearch_path</code>).</p>
-<p>You can use either <strong>GUI</strong> or
-<strong>PowerShell</strong> to add executables to your PATH.</p>
-<ol style="list-style-type: decimal">
-<li>Using the Windows GUI (System Settings)</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>sysdm.cpl</code>, and
-press <strong>Enter</strong>. <em>(Opens System Properties.)</em></li>
-<li>Go to the <strong>Advanced</strong> tab.</li>
-<li>Click <strong>Environment Variables…</strong></li>
-<li>In the <strong>System variables</strong> section, find and select
-<strong>Path</strong>.</li>
-<li>Click <strong>Edit…</strong></li>
-<li>Click <strong>New</strong>, then paste the directory you want to add
-(for example: <code>C:\Users\YourName\Tools\bin</code>)</li>
-<li>Click <strong>OK</strong> on all windows to save.</li>
-</ul>
-<ol start="2" style="list-style-type: decimal">
-<li>Using PowerShell</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>powershell</code>, and
-press <strong>Enter</strong>. <em>(Opens Powershell)</em></li>
-</ul>
-<pre><code>setx PATH &quot;$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm&quot;</code></pre>
-<ul>
-<li>Close de Powershell, since the change applies only to
-<strong>new</strong> terminals, not the current one.</li>
-</ul>
-<p><strong>Verify Program Versions</strong></p>
-<p>Open a Command Prompt on Windows (<strong>Win + R</strong>, type
-<code>cmd</code>)</p>
-<pre class="bash"><code>cutadapt --version
-swarm --version
-vsearch --version
-pigz --version
-blastn -version</code></pre>
-<p><strong>Note</strong> <em>These commands will display the version of
-each program <strong>if the executables are in your PATH</strong>.
-Otherwise, don’t forget to provide the full path to the
-executables.</em></p>
-<p>Example:</p>
-<pre><code>C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version</code></pre>
+<div id="set-paths-if-needed" class="section level3">
+<h3>Set paths (if needed)</h3>
+<p>I suppose all third party tools are in your PATH. If not, see the <a href="tutorial-vtamr-pipeline.html#set-path">detailed tutorial on how to
+set the PATH</a>.</p>
 </div>
 </div>
-<div id="taxassign-reference-data-base" class="section level2">
-<h2>TaxAssign reference data base</h2>
-<div id="assign_taxonomy_ltg" class="section level3">
-<h3>assign_taxonomy_ltg</h3>
-<p>For <code>assign_taxonomy_ltg</code> (BLAST based Lowest Common
-Ancestor method), a ready-to-use COI database is available from OSF <a href="https://osf.io/vrfwz/">OSF</a>, (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p>Download and extract using:</p>
-<pre class="r"><code>library(vtamR)
+<div id="input-data" class="section level2">
+<h2>Input data</h2>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#input-data">Input
+data</a> for more details.</em></p>
+<div id="demo-data" class="section level3">
+<h3>Demo data</h3>
+<pre class="r"><code>outdir &lt;- &quot;vtamR_demo_out/zfzr_plate1&quot;
 
-download_osf(filename = &quot;COInr_for_vtam_2025_05_23_dbV5.tar.gz&quot;,
-    url = &quot;https://osf.io/download/jyhz6/&quot;,
-    dest_dir = &quot;COInr_db&quot;,
-    untar = TRUE,
-    quiet = FALSE
-    )</code></pre>
-<p>To check for newer versions:</p>
-<ul>
-<li>Go to: <a href="https://osf.io/vrfwz/files/osfstorage">https://osf.io/vrfwz/files/osfstorage</a></li>
-<li>In <strong>Files</strong> open the the <strong>dbV5</strong>
-folder.</li>
-<li>Choose your version → Click on the tree-dot menu → Right-click
-Download → Copy Link Address.</li>
-</ul>
-<p>Alternatively, you can also create a custom version from the
-<strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860">Zenodo</a> and make a custom
-version using <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>
-(<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database
-formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy
-file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file
-provided in <a href="https://osf.io/vrfwz/">OSF</a> can be used without
-modification.</p>
+fastq_dir &lt;- system.file(&quot;extdata/demo/fastq&quot;, package = &quot;vtamR&quot;)
+fastqinfo &lt;- system.file(&quot;extdata/demo/fastqinfo_zfzr_plate1.csv&quot;, package = &quot;vtamR&quot;)
+mock_ncbi_fasta &lt;- system.file(&quot;extdata/demo/mock_ncbi.fasta&quot;, package = &quot;vtamR&quot;)
+asv_list &lt;- system.file(&quot;extdata/demo/ASV_list_with_IDs.csv&quot;, package = &quot;vtamR&quot;) # all ASV of MFZR</code></pre>
 </div>
-<div id="assign_taxonomy_rdp" class="section level3">
-<h3>assign_taxonomy_rdp</h3>
-<p><code>assign_taxonomy_rdp</code> function uses de RDP algorithm to
-assign bacterial 16S sequences. The database is provided in the
-<code>rRDPData</code> R data package.</p>
-<p>It is also possible to provide a trained classifier object created
-with <code>trainRDP()</code>.</p>
+<div id="database" class="section level3">
+<h3>Database</h3>
+<pre class="r"><code>taxonomy &lt;- system.file(&quot;extdata/db_test/taxonomy_reduced.tsv&quot;, package = &quot;vtamR&quot;)
+blast_db &lt;- system.file(&quot;extdata/db_test&quot;, package = &quot;vtamR&quot;)
+blast_db &lt;- file.path(blast_db, &quot;COInr_reduced&quot;)</code></pre>
+</div>
+</div>
+<div id="pre-processing" class="section level2">
+<h2>Pre-processing</h2>
+<div id="merge-fastq-pairs" class="section level3">
+<h3>Merge Fastq Pairs</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#merge">Merge Fastq
+Pairs and Quality Filter</a> for more details.</em></p>
+<pre class="r"><code>merged_dir &lt;- file.path(outdir, &quot;1_merged&quot;)
+
+fastainfo_df &lt;- merge_fastq_pairs(
+  fastqinfo=fastqinfo,
+  fastq_dir=fastq_dir,
+  outdir=merged_dir,
+  fastq_maxee=1,
+  fastq_maxns=0,
+  fastq_allowmergestagger=T
+)</code></pre>
+</div>
+<div id="subsampling" class="section level3">
+<h3>Subsampling</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#subsample">Randomly
+Select Sequences</a> for more details.</em></p>
+<pre class="r"><code>randomseq_dir &lt;- file.path(outdir, &quot;2_random_seq&quot;)
+
+fastainfo_df &lt;- subsample_fasta(
+  fastainfo = fastainfo_df,
+  fasta_dir = merged_dir,
+  outdir = randomseq_dir,
+  n = 40000
+)
+#&gt; Warning: vtamR_demo_out/zfzr_plate1/1_merged/zfzr_3_fw.fasta contains 39603 sequences.
+#&gt; The input file is copied to output.</code></pre>
+</div>
+<div id="demultiplex" class="section level3">
+<h3>Demultiplex</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#demultiplex">Demultiplex and Trim</a>
+for more details.</em></p>
+<pre class="r"><code>demultiplexed_dir &lt;- file.path(outdir, &quot;3_demultiplexed&quot;)
+
+sampleinfo_df &lt;- demultiplex_and_trim(
+  fastainfo=fastainfo_df,
+  fasta_dir=randomseq_dir,
+  outdir=demultiplexed_dir,
+  check_reverse=TRUE,
+  cutadapt_minimum_length = 150,
+  cutadapt_maximum_length = 165
+)</code></pre>
+</div>
+<div id="dereplicate" class="section level3">
+<h3>Dereplicate</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#dereplicate">Dereplicate</a> for more
+details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;1_before_filter.csv&quot;)
+updated_asv_list &lt;- file.path(outdir, &quot;ASV_list_with_IDs.csv&quot;)
+
+read_count_df &lt;- dereplicate(
+  sampleinfo_df,
+  dir=demultiplexed_dir,
+  outfile=outfile,
+  input_asv_list=asv_list,
+  output_asv_list=updated_asv_list
+)</code></pre>
+</div>
+</div>
+<div id="filtering" class="section level2">
+<h2>Filtering</h2>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filtering">Filtering</a> for more
+details.</em></p>
+<div id="initialize-statistics" class="section level3">
+<h3>Initialize Statistics</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#init-stat">Initialize
+Statistics</a> for more details.</em></p>
+<pre class="r"><code>stat_df &lt;- data.frame(
+  parameters = character(),
+  asv_count = integer(),
+  read_count = integer(),
+  sample_count = integer(),
+  sample_replicate_count = integer()
+)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage = &quot;input&quot;, params = NA)</code></pre>
+</div>
+<div id="filtering-asvs" class="section level3">
+<h3>Filtering ASVs</h3>
+<div id="denoising" class="section level4">
+<h4>Denoising</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#denoise">Denoising with
+SWARM</a> for more details.</em></p>
+<pre class="r"><code>split_clusters &lt;- TRUE
+by_sample &lt;- TRUE
+
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;2_swarm_denoise.csv&quot;)
+read_count_df &lt;- denoise_by_swarm(
+  read_count_df,
+  outfile=outfile,
+  by_sample=by_sample,
+  split_clusters=split_clusters
+)
+
+param &lt;- paste(&quot;by_sample:&quot;, by_sample, &quot;split_clusters:&quot;, split_clusters)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;swarm_denoise&quot;, params=param)</code></pre>
+</div>
+<div id="filter-asvs-global" class="section level4">
+<h4>Filter ASVs Global</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_asv_global">Filter out ASVs
+with Low Total Read Count</a> for more details.</em></p>
+<pre class="r"><code>global_read_count_cutoff = 2
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;3_filter_asv_global.csv&quot;)
+
+read_count_df &lt;- filter_asv_global(
+  read_count_df, 
+  outfile=outfile, 
+  cutoff=global_read_count_cutoff
+  )
+
+param &lt;- paste(&quot;global_read_count_cutoff:&quot;, global_read_count_cutoff)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_asv_global&quot;, params=param)</code></pre>
+</div>
+<div id="filter-asvs-read-length" class="section level4">
+<h4>Filter ASVs Read Length</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_indel">Filter
+ASVs Based on Read Length</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;4_filter_indel.csv&quot;)
+
+read_count_df &lt;- filter_indel(
+  read_count_df, 
+  outfile=outfile
+  )
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_indel&quot;, params=NA)</code></pre>
+</div>
+<div id="filter-asvs-stop-codons" class="section level4">
+<h4>Filter ASVs Stop Codons</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_stop_codon">Filter ASVs with
+Stop Codons</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;5_filter_stop_codon.csv&quot;)
+
+read_count_df &lt;- filter_stop_codon(
+  read_count_df, 
+  outfile=outfile
+  )
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_stop_codon&quot;, params=NA)</code></pre>
+</div>
+<div id="filter-contaminant-asvs" class="section level4">
+<h4>Filter Contaminant ASVs</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_contaminant">Filter Potential
+Contaminant ASVs</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;6_filter_contaminant.csv&quot;)
+conta_file &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;potential_contaminants.csv&quot;)
+
+read_count_df &lt;- filter_contaminant(
+  read_count_df,
+  sampleinfo=sampleinfo_df,
+  conta_file=conta_file,
+  outfile=outfile
+)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_contaminant&quot;, params=NA)</code></pre>
+</div>
+<div id="filter-chimeric-asvs" class="section level4">
+<h4>Filter Chimeric ASVs</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_chimera">Filter
+Chimeric ASVs</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;7_filter_chimera.csv&quot;)
+
+read_count_df &lt;- filter_chimera(
+  read_count_df,
+  outfile=outfile
+)
+
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_chimera&quot;, params=NA)</code></pre>
+</div>
+</div>
+<div id="filter-replicates" class="section level3">
+<h3>Filter Replicates</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_replicate">Filter Aberrant
+Replicates</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;8_filter_replicate.csv&quot;)
+renkonen_distance_quantile &lt;- 0.9
+
+read_count_df &lt;- filter_replicate(
+  read_count_df,
+  renkonen_distance_quantile = renkonen_distance_quantile,
+  outfile = outfile
+)
+#&gt; [1] &quot;The cutoff value for Renkonen distances is  0.433097031457687&quot;
+
+param &lt;- paste(&quot;renkonen_distance_quantile:&quot;, renkonen_distance_quantile)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_replicate&quot;, params=param)</code></pre>
+</div>
+<div id="filtering-occurrences" class="section level3">
+<h3>Filtering Occurrences</h3>
+<div id="create-mock_composition-file" class="section level4">
+<h4>Create <code>mock_composition</code> File</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#match_variants_to_mock_species">Create
+<code>mock_composition</code> File</a> for more details.</em></p>
+<pre class="r"><code>outdir_mock &lt;- file.path(outdir, &quot;mock_composition&quot;)
+
+mock_template &lt;- match_variants_to_mock_species(
+  read_count=read_count_df,
+  fas=mock_ncbi_fasta,
+  taxonomy=taxonomy,
+  sampleinfo = sampleinfo_df,
+  outdir= outdir_mock
+)
+
+mock_composition &lt;- file.path(outdir_mock, &quot;mock_composition_template_to_check.csv&quot;)
+mock_composition_df &lt;- read.csv(mock_composition)</code></pre>
+<p><strong>Note:</strong></p>
+<p>The <code>mock_composition_template_to_check.csv</code> file contains
+only 5 of the 6 expected ASVs. Since the NCBI reference sequences were
+correctly chosen, this indicates that the ZFZP primer pair did not
+amplify <em>Phoxinus phoxinus</em>.</p>
+<p>Because this sequence is absent from the
+<code>mock_composition</code>, it will not be counted as a false
+negative when evaluating performance. This is an artefact, and it should
+be kept in mind that it is in fact a false negative.</p>
+<p>See <a href="tutorial-vtamr-pipeline.html#match_variants_to_mock_species">Create
+<code>mock_composition</code> File</a> for more details.</p>
+</div>
+<div id="filter-occurrences-by-samples" class="section level4">
+<h4>Filter Occurrences by Samples</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_occurrence_sample">Filter
+Low-Abundance Occurrences within Samples</a> for more details.</em></p>
+<p><strong>Suggest parameter value</strong></p>
+<pre class="r"><code>outfile = file.path(outdir, &quot;4_filter&quot;, &quot;suggest_parameters&quot;, &quot;sample_cutoff.csv&quot;)
+
+suggest_sample_cutoff_df &lt;- suggest_sample_cutoff(
+  read_count=read_count_df,
+  mock_composition=mock_composition,
+  outfile=outfile
+)
+
+head(suggest_sample_cutoff_df)
+#&gt;   sample replicate action asv_id sample_cutoff read_count
+#&gt; 1  tpos1         3   keep      9        0.0001          2
+#&gt; 2  tpos1         1   keep      9        0.0004         12
+#&gt; 3  tpos1         2   keep      9        0.0004         11
+#&gt; 4  tpos1         2   keep     10        0.0018         43
+#&gt; 5  tpos1         1   keep     10        0.0024         69
+#&gt; 6  tpos1         3   keep     10        0.0024         46
+#&gt;   read_count_sample_replicate
+#&gt; 1                       18727
+#&gt; 2                       28444
+#&gt; 3                       22869
+#&gt; 4                       22869
+#&gt; 5                       28444
+#&gt; 6                       18727
+#&gt;                                                                                                                                                             asv
+#&gt; 1 TATCTGATCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
+#&gt; 2 TATCTGATCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
+#&gt; 3 TATCTGATCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
+#&gt; 4 TGCTTGATCAGGGATAGTGGGAACTTCTTTAAGAATTCTTATTCGAGCTGAACTTGGTCATGCGGGATCTTTAATCGGAGACGATCAAATTTACAATGTAATTGTTACTGCACACGCCTTTGTAATAATTTTTTTTATAGTTATACCTATTTTAATT
+#&gt; 5 TGCTTGATCAGGGATAGTGGGAACTTCTTTAAGAATTCTTATTCGAGCTGAACTTGGTCATGCGGGATCTTTAATCGGAGACGATCAAATTTACAATGTAATTGTTACTGCACACGCCTTTGTAATAATTTTTTTTATAGTTATACCTATTTTAATT
+#&gt; 6 TGCTTGATCAGGGATAGTGGGAACTTCTTTAAGAATTCTTATTCGAGCTGAACTTGGTCATGCGGGATCTTTAATCGGAGACGATCAAATTTACAATGTAATTGTTACTGCACACGCCTTTGTAATAATTTTTTTTATAGTTATACCTATTTTAATT
+#&gt;                        taxon
+#&gt; 1    Hydropsyche pellucidula
+#&gt; 2    Hydropsyche pellucidula
+#&gt; 3    Hydropsyche pellucidula
+#&gt; 4 Synorthocladius semivirens
+#&gt; 5 Synorthocladius semivirens
+#&gt; 6 Synorthocladius semivirens</code></pre>
+<p><strong>Apply filter</strong></p>
+<pre class="r"><code>sample_cutoff &lt;- 0.0001
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;9_filter_occurrence_sample.csv&quot;)
+
+read_count_df &lt;- filter_occurrence_sample(
+  read_count_df, 
+  cutoff=sample_cutoff, 
+  outfile=outfile)
+
+param &lt;- paste(&quot;cutoff:&quot;, sample_cutoff)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_occurrence_sample&quot;, params=param)</code></pre>
+</div>
+<div id="filter-occurrences-by-replicate" class="section level4">
+<h4>Filter Occurrences by Replicate</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_min_replicate-1">Filter
+Occurrences by Replicate Consistency</a> for more details.</em></p>
+<pre class="r"><code>min_replicate_number &lt;- 2
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;10_filter_min_replicate.csv&quot;)
+
+read_count_df &lt;- filter_min_replicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )
+
+param &lt;- paste(&quot;cutoff:&quot;, min_replicate_number)
+stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_min_replicate&quot;, params=param)</code></pre>
+</div>
+<div id="filter-occurrences-by-variant-and-read-count" class="section level4">
+<h4>Filter Occurrences by Variant and Read count</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_occurrence_variant">Filter
+Low-Abundance Occurrences (<code>filter_occurrence_variant</code> and
+<code>filter_occurrence_read_count</code>)</a> for more
+details.</em></p>
+<p><strong>Suggest parameter values</strong></p>
+<pre class="r"><code>outdir_suggest = file.path(outdir, &quot;4_filter&quot;, &quot;suggest_parameters&quot;)
+
+suggest_variant_readcount_cutoffs_df &lt;- suggest_variant_readcount_cutoffs(
+  read_count_df,
+  mock_composition = mock_composition,
+  sampleinfo = sampleinfo_df,
+  outdir= outdir_suggest,
+  min_replicate_number=2
+)
+
+head(suggest_variant_readcount_cutoffs_df)
+#&gt;   read_count_cutoff variant_cutoff FN TP FP
+#&gt; 1                10          0.001  0  5  3
+#&gt; 2                10          0.002  0  5  3
+#&gt; 3                10          0.003  0  5  3
+#&gt; 4                10          0.004  0  5  3
+#&gt; 5                10          0.005  0  5  3
+#&gt; 6                10          0.006  0  5  3</code></pre>
+<p><strong>Filter occurrences by variant</strong></p>
+<pre class="r"><code>variant_cutoff = 0.001
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;11_filter_occurrence_variant.csv&quot;)
+
+read_count_df_variant &lt;- filter_occurrence_variant(read_count_df, cutoff=variant_cutoff, outfile=outfile)</code></pre>
+<p><strong>Filter occurrences by read count</strong></p>
+<pre class="r"><code>read_count_cutoff &lt;- 10
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;12_filter_occurrence_read_count.csv&quot;)
+
+read_count_df_rc &lt;- filter_occurrence_read_count(
+  read_count_df, 
+  cutoff=read_count_cutoff, 
+  outfile=outfile
+  )</code></pre>
+<p><strong>Pool results</strong></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;13_pool_filters.csv&quot;)
+
+read_count_df &lt;- pool_filters(
+  read_count_df_rc, 
+  read_count_df_variant, 
+  outfile=outfile
+  )
+
+rm(read_count_df_rc)
+rm(read_count_df_variant)</code></pre>
+</div>
+<div id="filter-occurrences-by-replicate-again" class="section level4">
+<h4>Filter Occurrences by Replicate Again</h4>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#filter_min_replicate-2">Filter
+Occurrences by Replicate Consistency</a> for more details.</em></p>
+<pre class="r"><code>min_replicate_number &lt;- 2
+outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;14_filter_min_replicate.csv&quot;)
+
+read_count_df &lt;- filter_min_replicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )</code></pre>
+</div>
+</div>
+</div>
+<div id="final-steps" class="section level2">
+<h2>Final steps</h2>
+<div id="pool-replicates" class="section level3">
+<h3>Pool replicates</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#pool_replicates">Pool
+replicates</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;15_pool_replicates.csv&quot;)
+
+read_count_sample_df &lt;- pool_replicates(
+  read_count_df,
+  outfile = outfile
+)</code></pre>
+</div>
+<div id="performance-metrics" class="section level3">
+<h3>Performance Metrics</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#classify_control_occurrences">Performance
+Metrics</a> for more details.</em></p>
+<pre class="r"><code>false_negatives &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;false_negatives.csv&quot;)
+performance_metrics &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;performance_metrics.csv&quot;)
+known_occurrences &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;known_occurrences.csv&quot;)
+
+results &lt;- classify_control_occurrences(
+  read_count_sample_df, 
+  sampleinfo=sampleinfo_df, 
+  mock_composition=mock_composition, 
+  known_occurrences=known_occurrences, 
+  false_negatives=false_negatives,
+  performance_metrics=performance_metrics
+  )
+
+head(read.csv(performance_metrics))
+#&gt;   TP FP FN Precision Sensitivity
+#&gt; 1  5  3  0     0.625           1</code></pre>
+<p><strong>Note:</strong> Keep in mind that one expected sequence in the
+mock is not present in the <code>mock_composition</code>. Therefore, the
+true number of false negatives is 1, and the sensitivity is:</p>
+<p>TP / (TP + FN) = 5 / (5 + 1) = 0.833</p>
+</div>
+<div id="print-summary-statistics" class="section level3">
+<h3>Print Summary Statistics</h3>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#print_stats">Print
+Summary Statistics</a> for more details.</em></p>
+<pre class="r"><code>write.csv(stat_df, file = file.path(outdir, &quot;summary.csv&quot;))</code></pre>
+</div>
+</div>
+<div id="taxonomic-assignment" class="section level2">
+<h2>Taxonomic Assignment</h2>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#taxonomic-assignment">Taxonomic
+Assignment</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;assign_taxonomy_ltg.csv&quot;)
+
+asv_tax &lt;- assign_taxonomy_ltg(
+  asv=read_count_sample_df,
+  taxonomy=taxonomy,
+  blast_db=blast_db,
+  outfile=outfile
+)</code></pre>
+</div>
+<div id="clustering-motus" class="section level2">
+<h2>Clustering (mOTUs)</h2>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#cluster_asv">Clustering
+(mOTUs)</a> for more details.</em></p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;5_cluster&quot;, &quot;16_mOTU_vsearch.csv&quot;)
+
+read_count_samples_df_ClusterSize &lt;- cluster_asv(
+  read_count_sample_df,
+  method = &quot;swarm&quot;,
+  swarm_d  = 7,
+  outfile=outfile
+)</code></pre>
+</div>
+<div id="output-table" class="section level2">
+<h2>Output table</h2>
+<p><em>See <a href="tutorial-vtamr-pipeline.html#write_asv_table">Output
+table</a> for more details.</em></p>
+<pre class="r"><code>outfile=file.path(outdir, &quot;motu_table_taxa.csv&quot;)
+
+asv_table_df &lt;- write_asv_table(
+  read_count_sample_df,
+  outfile=outfile,
+  asv_tax=asv_tax,
+  sampleinfo=sampleinfo_df
+)</code></pre>
 </div>
 </div>
 

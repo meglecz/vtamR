@@ -4,7 +4,7 @@
 \alias{filter_asv_global}
 \title{Filter out ASVs with Low Total Read Count}
 \usage{
-filter_asv_global(read_count, cutoff = 10, outfile = "", sep = ",")
+filter_asv_global(read_count, cutoff = 10, outfile = NULL, sep = ",")
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -14,7 +14,7 @@ filter_asv_global(read_count, cutoff = 10, outfile = "", sep = ",")
 required for an ASV to be retained. ASVs below this threshold are removed.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

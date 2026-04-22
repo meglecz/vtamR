@@ -8,7 +8,7 @@ count_reads_in_dir(
   dir,
   pattern = ".",
   file_type = "fasta",
-  outfile = "",
+  outfile = NULL,
   sep = ",",
   quiet = T
 )
@@ -21,7 +21,7 @@ count_reads_in_dir(
 \item{file_type}{Character string specifying file type: \code{"fasta"} or \code{"fastq"}.
 For any other value, the function returns the number of lines in each file.}
 
-\item{outfile}{Character string: output CSV file name. If empty, no file is written.}
+\item{outfile}{Character string: output CSV file name. If NULL, no file is written.}
 
 \item{sep}{Field separator character in input and output CSV files.}
 

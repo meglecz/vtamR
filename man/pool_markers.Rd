@@ -7,8 +7,8 @@
 pool_markers(
   files,
   marker_ids = NULL,
-  outfile = "",
-  asv_with_centroids = "",
+  outfile = NULL,
+  asv_with_centroids = NULL,
   method = "mean",
   vsearch_path = "vsearch",
   num_threads = 0,
@@ -27,7 +27,7 @@ Must be positive non-zero integers and provided in the same order as
 markers. If not provided, \code{asv_id}s must already be unique across datasets.}
 
 \item{outfile}{Character string specifying the output CSV file name.
-If empty, no file is written.}
+If NULL, no file is written.}
 
 \item{asv_with_centroids}{Character string specifying an optional output CSV
 file containing the merged dataset annotated with \code{centroid_id} and

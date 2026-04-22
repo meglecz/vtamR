@@ -6,11 +6,11 @@
 \usage{
 suggest_pcr_error_cutoff(
   read_count,
-  mock_composition = "",
+  mock_composition,
   vsearch_path = "vsearch",
   num_threads = 0,
   sep = ",",
-  outfile = "",
+  outfile = NULL,
   max_mismatch = 1,
   min_read_count = 5,
   quiet = TRUE
@@ -30,7 +30,7 @@ If \code{0}, all available CPUs are used.}
 
 \item{sep}{Field separator character used in input and output CSV files.}
 
-\item{outfile}{Character string specifying the output CSV file. If empty,
+\item{outfile}{Character string specifying the output CSV file. If NULL,
 no file is written.}
 
 \item{max_mismatch}{Positive integer specifying the maximum number of mismatches

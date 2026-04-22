@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-22" />
+<meta name="date" content="2026-04-16" />
 
-<title>Install vtamR and Third Party Programs - v1.0.3</title>
+<title>From fastq to data frame - v1.0.2</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1478,9 +1478,8 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Install vtamR and Third Party Programs -
-v1.0.3</h1>
-<h4 class="date">2026-04-22</h4>
+<h1 class="title toc-ignore">From fastq to data frame - v1.0.2</h1>
+<h4 class="date">2026-04-16</h4>
 
 </div>
 
@@ -1513,222 +1512,281 @@ table {
   box-sizing: border-box;
 }
 </style>
-<div id="implementation" class="section level2">
-<h2>Implementation</h2>
-<p>The heavy lifting of sequence analyses are done by the following
-third party programs. They should be installed on your computer:</p>
-<ul>
-<li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/">Altschul et
-al., 1990</a>) (v2.11.0+)</li>
-<li>VSEARCH (<a href="https://peerj.com/articles/2584/">Rognes et al.,
-2016</a>) (v2.7.0)</li>
-<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479">Martin,
-2011</a>) (v4.0)</li>
-<li>SWARM (<a href="https://peerj.com/articles/1420/">Mahé et al.,
-2015</a>) (v2.1.12)</li>
-<li>PIGZ (optional)</li>
-</ul>
-<p><code>vtamR</code> has been tested using the above mentioned
-versions, but it should work with later versions.</p>
-<p><code>vtamR</code> was tested on <strong>Windows</strong> and
-<strong>Linux</strong>, and should work in all operating systems.</p>
+<p>According to your wet lab and sequencing protocol, each FASTQ file
+may contain one or more <a href="tutorial-vtamr-pipeline.html#glossary">sample-replicates</a>. In
+addition, sequences may include <a href="tutorial-vtamr-pipeline.html#glossary">tags</a> (used for <a href="tutorial-vtamr-pipeline.html#glossary">demultiplexing</a>) as well
+as primer sequences.</p>
+<p>In the following sections, we present <strong>three common
+scenarios</strong> for generating the <a href="tutorial-vtamr-pipeline.html#read_count_df">read_count_df</a> data
+frame, which serves as the input for the filtering steps.</p>
+<div id="set-up" class="section level1">
+<h1>Set up</h1>
+<p><em>Load library</em></p>
+<pre class="r"><code>library(vtamR)</code></pre>
+<p><em>Set path to third party programs</em></p>
+<pre class="r"><code># Example for Windows
+cutadapt_path &lt;- &quot;C:/Users/Public/cutadapt&quot;
+vsearch_path &lt;- &quot;C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch&quot;
+pigz_path &lt;- &quot;C:/Users/Public/pigz-win32/pigz&quot; # optional to speed file compression</code></pre>
+<pre class="r"><code>#  Example for Linux
+cutadapt_path &lt;- &quot;~/miniconda3/envs/vtam/bin/cutadapt&quot; # v3.4
+vsearch_path &lt;- &quot;~/miniconda3/envs/vtam/bin/vsearch&quot; # v2.15.1
+pigz_path &lt;- &quot;~/miniconda3/envs/vtam/bin/pigz&quot; # optional to speed file compression</code></pre>
+<p><strong>Adapt the path</strong> to third party programs according to
+your installation (See <a href="installation.html">Installation</a>).</p>
+<p>If third party programs are in your <code>PATH</code> (See <a href="installation.html#install-third-party-programs">Installation</a>),
+simply omit the <code>cutadapt_path</code>, <code>pigz_path</code>,
+<code>vsearch_path</code> argument when calling the <code>vtamR</code>
+functions.</p>
+<p><code>compress = FALSE</code> In the tutorial we will use
+uncompressed files, but see <a href="tutorial-vtamr-pipeline.html#to-compress-or-not-to-compress">To
+compress or not to compress</a> for the best strategy for you. See also
+<a href="tutorial-vtamr-pipeline.html#files-to-keep">Files to keep</a>
+on how to handle the large intermediate files that should be compressed
+or deleted once the analyses are complete.</p>
 </div>
-<div id="install-vtamr" class="section level2">
-<h2>Install vtamR</h2>
-<p>Install <code>vtamR</code> and its CRAN dependencies by
-<code>pak</code>.</p>
-<pre class="r"><code>if(!requireNamespace(&quot;pak&quot;, quietly = TRUE)) install.packages(&quot;pak&quot;)
-pak::pkg_install(&quot;meglecz/vtamR&quot;, dependencies=TRUE)</code></pre>
-<p>Alternatively, you can use <code>devtools</code>.</p>
-<pre class="r"><code>if (!requireNamespace(&quot;devtools&quot;, quietly = TRUE)) install.packages(&quot;devtools&quot;)
-devtools::install_github(&quot;meglecz/vtamR&quot;, dependencies = TRUE)</code></pre>
-<p>Install Bioconductor packages manually if you intend to use
-<code>assign_taxonomy_rdp</code> function.</p>
-<pre class="r"><code># Install Bioconductor suggested packages manually if needed (only for assign_taxonomy_ltg)
-if (!requireNamespace(&quot;BiocManager&quot;, quietly = TRUE)) install.packages(&quot;BiocManager&quot;)
-if (!requireNamespace(&quot;rRDP&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDP&quot;)
-if (!requireNamespace(&quot;rRDPData&quot;, quietly = TRUE)) BiocManager::install(&quot;rRDPData&quot;)
-if (!requireNamespace(&quot;Biostrings&quot;, quietly = TRUE)) BiocManager::install(&quot;Biostrings&quot;)</code></pre>
-<p>Read the <strong><a href="https://people.imbe.fr/~emeglecz/vtamR">Manual</a></strong> on how
-to construct a full metabarcoding pipeline.</p>
-</div>
-<div id="install-third-party-programs" class="section level2">
-<h2>Install third party programs</h2>
-<div id="linux" class="section level3">
-<h3>Linux</h3>
+<div id="case-1---one-sample-per-fastq---no-tag---no-primer" class="section level1">
+<h1>Case 1 - One sample per fastq - no tag - no primer</h1>
+<p>In this scenario, each pair of fasta files correspond to a sample (or
+a replicate of a sample if you have replicates), so no demultiplexing is
+necessary.</p>
+<p>The reads have been trimmed from all artificial add-ons, such as
+adapters, tags, indices and also from primers.</p>
+<p>Read pairs should be <strong>quality filtered</strong>,
+<strong>merged</strong> and written to <strong>fasta format</strong>.
+This can be done by the <code>merge_fastq_pairs</code> function.</p>
+<p>See the help (<code>?merge_fastq_pairs</code>) for setting the
+correct parameters for quality filtering.</p>
+<div id="set-input" class="section level2">
+<h2>Set Input</h2>
 <ul>
-<li><code>VSEARCH</code> <a href="https://github.com/torognes/vsearch">https://github.com/torognes/vsearch</a></li>
-<li><code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a></li>
-<li><code>CUTADAPT</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html">https://cutadapt.readthedocs.io/en/stable/installation.html</a></li>
-<li><code>SWARM</code> <a href="https://github.com/torognes/swarm">https://github.com/torognes/swarm</a></li>
-<li><code>PIGZ</code> (optional) <a href="https://github.com/madler/pigz">https://github.com/madler/pigz</a></li>
+<li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: is
+either a csv file, or a data frame. The key information for
+<code>merge_fastq_pairs</code> is the list of the fastq file pairs that
+should be merged. The <code>tag_fw</code>, <code>primer_fw</code>,
+<code>tag_rv</code>, <code>primer_rv</code> are irrelevant in this case,
+just fill them with <code>NA</code>.</li>
+<li><code>fastq_dir</code>: Directory containing the input fastq
+files.</li>
+<li><a href="tutorial-vtamr-pipeline.html#fastainfo">sampleinfo_df</a>:
+Output of <code>merge_fastq_pairs</code>. It is the updated version of
+fastqinfo, where fastq file names have been replaced by fasta file names
+and the read counts are included for each file.</li>
+<li><code>outdir</code>: Name of the output directory.</li>
 </ul>
-<p><strong>Add the executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your <code>PATH</code>, you won’t need to manually specify their
-locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>,
-be sure to provide the full path to each program using the corresponding
-<code>vtamR</code> function argument (e.g.,
-<code>vsearch_path</code>).</p>
-<ol style="list-style-type: decimal">
-<li>Edit (or create) your <code>~/.Renviron</code> file</li>
-</ol>
-<pre class="bash"><code>nano ~/.Renviron</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Add the directory to the PATH</li>
-</ol>
-<pre class="bash"><code>PATH=&quot;/home/user/tools/myprogram/bin:${PATH}&quot;</code></pre>
-<p><strong>Note:</strong> The PATH must contain a
-<strong>directory</strong>, not an executable file. For example, use:
-<code>/home/username/miniconda3/envs/vtamr/bin</code> and
-<strong>not</strong>:
-<code>/home/username/miniconda3/envs/vtamr/bin/cutadapt</code></p>
-<ol start="3" style="list-style-type: decimal">
-<li>Restart R or RStudio</li>
-</ol>
-<p>The new PATH is loaded at startup.</p>
-<ol start="4" style="list-style-type: decimal">
-<li>Verify that R sees the correct executables</li>
-</ol>
-<pre class="r"><code>system(&quot;cutadapt --version&quot;)
-system(&quot;swarm --version&quot;)
-system(&quot;vsearch --version&quot;)
-system(&quot;blastn -version&quot;)
-system(&quot;pigz --version&quot;)</code></pre>
-</div>
-<div id="windows" class="section level3">
-<h3>Windows</h3>
-<p>Download binaries and save them to a convenient place on your
-computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
-<p><strong>VSEARCH</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a></li>
-<li>Decompress the zip file</li>
-<li>The executable are found in
-<code>vsearch-x.xx.x-win-x86_64/bin/</code></li>
-</ul>
-<p><strong>CUTADAPT</strong></p>
-<ul>
-<li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases">https://github.com/marcelm/cutadapt/releases</a></li>
-</ul>
-<p><strong>SWARM</strong></p>
-<ul>
-<li>Download binaries from <a href="https://github.com/torognes/swarm/releases">https://github.com/torognes/swarm/releases</a></li>
-<li>Decompress the zip file</li>
-<li>The executable is in the <code>swarm-x.x.x-win-x86_64/bin</code>
-directory</li>
-</ul>
-<p><strong>BLAST</strong></p>
-<ul>
-<li>Download the installer (ncbi-blast-x.xx.x+-win64.exe) from: <a href="https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/" class="uri">https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/</a></li>
-<li>Double-click the .exe file, accept the license agreement, and keep
-the suggested installation path. This will automatically add BLAST to
-your system PATH, so you won’t need to specify its location when using
-it.</li>
-<li>The executables will be installed in:
-<code>C:\Program Files\NCBI\blast-x.xx.x+\bin</code></li>
-</ul>
-<p><strong>VSEARCH</strong> (Optional)</p>
-<ul>
-<li>Download <a href="https://sourceforge.net/projects/pigz-for-windows/files/">pigz-win32.zip</a></li>
-<li>Decompress the zip file</li>
-<li>The executable (pigz.exe) is in the pigz-win32 directory</li>
-</ul>
-<p><strong>Add executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in
-your system PATH, you won’t need to manually specify their locations
-when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide
-the full path to each program through the appropriate <code>vtamR</code>
-function argument (e.g., <code>vsearch_path</code>).</p>
-<p>You can use either <strong>GUI</strong> or
-<strong>PowerShell</strong> to add executables to your PATH.</p>
-<ol style="list-style-type: decimal">
-<li>Using the Windows GUI (System Settings)</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>sysdm.cpl</code>, and
-press <strong>Enter</strong>. <em>(Opens System Properties.)</em></li>
-<li>Go to the <strong>Advanced</strong> tab.</li>
-<li>Click <strong>Environment Variables…</strong></li>
-<li>In the <strong>System variables</strong> section, find and select
-<strong>Path</strong>.</li>
-<li>Click <strong>Edit…</strong></li>
-<li>Click <strong>New</strong>, then paste the directory you want to add
-(for example: <code>C:\Users\YourName\Tools\bin</code>)</li>
-<li>Click <strong>OK</strong> on all windows to save.</li>
-</ul>
-<ol start="2" style="list-style-type: decimal">
-<li>Using PowerShell</li>
-</ol>
-<ul>
-<li>Press <strong>Win + R</strong>, type <code>powershell</code>, and
-press <strong>Enter</strong>. <em>(Opens Powershell)</em></li>
-</ul>
-<pre><code>setx PATH &quot;$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm&quot;</code></pre>
-<ul>
-<li>Close de Powershell, since the change applies only to
-<strong>new</strong> terminals, not the current one.</li>
-</ul>
-<p><strong>Verify Program Versions</strong></p>
-<p>Open a Command Prompt on Windows (<strong>Win + R</strong>, type
-<code>cmd</code>)</p>
-<pre class="bash"><code>cutadapt --version
-swarm --version
-vsearch --version
-pigz --version
-blastn -version</code></pre>
-<p><strong>Note</strong> <em>These commands will display the version of
-each program <strong>if the executables are in your PATH</strong>.
-Otherwise, don’t forget to provide the full path to the
-executables.</em></p>
-<p>Example:</p>
-<pre><code>C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version</code></pre>
-</div>
-</div>
-<div id="taxassign-reference-data-base" class="section level2">
-<h2>TaxAssign reference data base</h2>
-<div id="assign_taxonomy_ltg" class="section level3">
-<h3>assign_taxonomy_ltg</h3>
-<p>For <code>assign_taxonomy_ltg</code> (BLAST based Lowest Common
-Ancestor method), a ready-to-use COI database is available from OSF <a href="https://osf.io/vrfwz/">OSF</a>, (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p>Download and extract using:</p>
-<pre class="r"><code>library(vtamR)
+<p>The demo files below are included with the <code>vtamR</code>
+package, which is why we use <code>system.file()</code> to access them
+in this tutorial. When using your own data, simply provide the file and
+directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is
+<strong>no space in the path and file names</strong>.</p>
+<pre class="r"><code>fastq_dir &lt;- system.file(&quot;extdata/demo/fastq&quot;, package = &quot;vtamR&quot;)
+fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo1.csv&quot;, package = &quot;vtamR&quot;)
 
-download_osf(filename = &quot;COInr_for_vtam_2025_05_23_dbV5.tar.gz&quot;,
-    url = &quot;https://osf.io/download/jyhz6/&quot;,
-    dest_dir = &quot;COInr_db&quot;,
-    untar = TRUE,
-    quiet = FALSE
-    )</code></pre>
-<p>To check for newer versions:</p>
-<ul>
-<li>Go to: <a href="https://osf.io/vrfwz/files/osfstorage">https://osf.io/vrfwz/files/osfstorage</a></li>
-<li>In <strong>Files</strong> open the the <strong>dbV5</strong>
-folder.</li>
-<li>Choose your version → Click on the tree-dot menu → Right-click
-Download → Copy Link Address.</li>
-</ul>
-<p>Alternatively, you can also create a custom version from the
-<strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860">Zenodo</a> and make a custom
-version using <a href="https://github.com/meglecz/mkCOInr">mkCOInr</a>
-(<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756">Meglécz,
-2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database
-formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy
-file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file
-provided in <a href="https://osf.io/vrfwz/">OSF</a> can be used without
-modification.</p>
+outdir &lt;- &quot;vtamR_demo_case1&quot;
+merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
 </div>
-<div id="assign_taxonomy_rdp" class="section level3">
-<h3>assign_taxonomy_rdp</h3>
-<p><code>assign_taxonomy_rdp</code> function uses de RDP algorithm to
-assign bacterial 16S sequences. The database is provided in the
-<code>rRDPData</code> R data package.</p>
-<p>It is also possible to provide a trained classifier object created
-with <code>trainRDP()</code>.</p>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>sampleinfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate-reads" class="section level2">
+<h2>Dereplicate reads</h2>
+<p>The fasta files produced by <code>merge_fastq_pairs</code> can be
+read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
+<code>dereplicate</code> function. See the help
+(<code>?dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
+information.</p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
+
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=merged_dir, 
+  outfile=outfile
+  )</code></pre>
+</div>
+</div>
+<div id="case-2---one-aample-per-fastq---primer---no-tag" class="section level1">
+<h1>Case 2 - One Aample per Fastq - Primer - No Tag</h1>
+<p>This is one of the most frequent case. Each pair of fasta files
+correspond to a sample (or a replicate of a sample if you have
+replicates), so no demultiplexing is necessary.</p>
+<p>The reads has been trimmed from all artificial add-ons, such as
+adapters, tags, BUT they still have the primers.</p>
+<p>Read pairs should be <strong>quality filtered</strong>,
+<strong>merged</strong> and written to <strong>fasta format</strong> by
+<code>merge_fastq_pairs</code> function as in the previous section.</p>
+<p>Then the <code>trim_primer</code> function will <strong>trim the
+primers</strong> from the reads. See the help
+(<code>?trim_primer</code>) for setting the correct parameters for
+primer trimming.</p>
+<div id="set-input-1" class="section level2">
+<h2>Set Input</h2>
+<ul>
+<li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>:
+Either a csv file, or a data frame.<br />
+The key information for <code>merge_fastq_pairs</code> is the list of
+the fastq file pairs that should be merged. The <code>primer_fw</code>,
+<code>primer_rv</code> columns are irrelevant in this case, just fill
+them with <code>NA</code>.</li>
+<li><code>fastq_dir</code>: Directory containing the input fastq
+files.</li>
+<li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>:
+is the output of <code>merge_fastq_pairs</code>. It is the updated
+version of <code>fastqinfo</code>, where fastq file names have been
+replaced by fasta file names containing the merged sequences.</li>
+<li><code>fasta_dir</code>: Directory containing the input fasta files
+for <code>trim_primer</code>. This directory is created by
+<code>merge_fastq_pairs</code>.</li>
+<li>If <code>check_reverse</code> is TRUE, <code>trim_primer</code>
+checks the reverse complementary strand as well.</li>
+<li><code>sampleinfo_df</code>: is updated version of fastainfo. This
+data frame and the files listed in it are the input for
+<code>dereplicate</code>.</li>
+<li><code>outdir</code>: Name of the output directory.</li>
+</ul>
+<p>The demo files below are included with the <code>vtamR</code>
+package, which is why we use <code>system.file()</code> to access them
+in this tutorial. When using your own data, simply provide the file and
+directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is
+<strong>no space in the path and file names</strong>.</p>
+<pre class="r"><code>fastq_dir &lt;- system.file(&quot;extdata/demo/fastq&quot;, package = &quot;vtamR&quot;)
+fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo2.csv&quot;, package = &quot;vtamR&quot;)
+
+outdir &lt;- &quot;vtamR_demo_case2&quot;
+merged_dir &lt;- file.path(outdir, &quot;merged&quot;)</code></pre>
+</div>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads-1" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="trim-primers" class="section level2">
+<h2>Trim Primers</h2>
+<pre class="r"><code>
+demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)
+sampleinfo_df &lt;- trim_primers(
+  fastainfo_df, 
+  fasta_dir=merged_dir, 
+  outdir=demultiplexed_dir, 
+  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  check_reverse=T,
+  primer_to_end=F,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate" class="section level2">
+<h2>Dereplicate</h2>
+<p>The fasta files produced by <code>TrimPrimer</code> can be read to a
+data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
+<code>Dereplicate</code> function. See the help
+(<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
+information.</p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
+
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=demultiplexed_dir, 
+  outfile=outfile
+  )</code></pre>
+</div>
+</div>
+<div id="case-3---several-samples-per-fastq---tags---primers" class="section level1">
+<h1>Case 3 - Several Samples per Fastq - Tags - Primers</h1>
+<p>In this case, one pair of fastq files contains reads from multiples
+samples or sample-replicates, so it is necessary to demultiplex them,
+and trim from tags and primers.</p>
+<p>Read pairs should be <strong>quality filtered</strong>,
+<strong>merged</strong> and written to <strong>fasta format</strong> as
+in the previous sections.</p>
+<p>Then the <code>demultiplex_and_trim</code> function will <strong><a href="tutorial-vtamr-pipeline.html#glossary">demultiplex</a></strong>
+the fasta files according to the <strong><a href="tutorial-vtamr-pipeline.html#glossary">tag</a></strong>
+combinations and <strong><a href="tutorial-vtamr-pipeline.html#glossary">trim</a></strong> the
+primers from the reads.</p>
+<p>See the help (<code>?demultiplex_and_trim</code>) for setting the
+correct parameters for demultiplexing and primer trimming:</p>
+<div id="set-input-2" class="section level2">
+<h2>Set Input</h2>
+<ul>
+<li><a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>:
+Either a csv file, or a data frame. The key information for
+<code>merge_fastq_pairs</code> is the list of the fastq file pairs that
+should be merged.</li>
+<li><code>fastq_dir</code>: Directory containing the input fastq
+files.</li>
+<li><a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>:
+Output of <code>merge_fastq_pairs</code>. It is the updated version of
+<code>fastqinfo</code>, where fastq file names have been replaced by
+fasta file names.</li>
+<li><code>fasta_dir</code>: Directory containing the input fasta files
+for <code>demultiplex_and_trim</code>. This directory is created by
+<code>merge_fastq_pairs</code>.</li>
+<li>If <code>check_reverse</code> is TRUE,
+<code>demultiplex_and_trim</code> checks the reverse complementary stand
+as well.</li>
+<li><code>sampleinfo_df</code>: Updated version of
+<code>fastainfo</code>. This data frame and the files listed in it are
+the input of the <code>dereplicate</code>.</li>
+<li><code>outdir</code>: Name of the output directory.</li>
+</ul>
+<p>The demo files below are included with the <code>vtamR</code>
+package, which is why we use <code>system.file()</code> to access them
+in this tutorial. When using your own data, simply provide the file and
+directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is
+<strong>no space in the path and file names</strong>.</p>
+<pre class="r"><code>fastq_dir &lt;- system.file(&quot;extdata/demo/fastq&quot;, package = &quot;vtamR&quot;)
+fastqinfo &lt;-  system.file(&quot;extdata/demo/fastqinfo_mfzr_plate1.csv&quot;, package = &quot;vtamR&quot;)
+
+outdir &lt;- &quot;vtamR_demo_case3&quot;
+merged_dir &lt;- file.path(outdir, &quot;merged&quot;)
+demultiplexed_dir &lt;- file.path(outdir, &quot;demultiplexed&quot;)</code></pre>
+</div>
+<div id="merge-fastq-file-pairs-and-quality-filter-reads-2" class="section level2">
+<h2>Merge Fastq File Pairs and Quality Filter Reads</h2>
+<pre class="r"><code>fastainfo_df &lt;- merge_fastq_pairs(
+  fastqinfo, 
+  fastq_dir=fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir=merged_dir,
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="demultiplex-trim-off-tags-and-primers" class="section level2">
+<h2>Demultiplex, Trim off Tags and Primers**</h2>
+<pre class="r"><code>sampleinfo_df &lt;- demultiplex_and_trim(
+  fastainfo_df, 
+  fasta_dir=merged_dir, 
+  outdir=demultiplexed_dir, 
+  check_reverse=TRUE, 
+  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  compress=FALSE
+  )</code></pre>
+</div>
+<div id="dereplicate-1" class="section level2">
+<h2>Dereplicate</h2>
+<p>The fasta files produced by <code>demultiplex_and_trim</code> can be
+read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the
+<code>Dereplicate</code> function. See the help
+(<code>?dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more
+information.</p>
+<pre class="r"><code>outfile &lt;- file.path(outdir, &quot;1_before_filter.csv&quot;)
+read_count_df &lt;- dereplicate(
+  sampleinfo_df, 
+  dir=demultiplexed_dir, 
+  outfile=outfile
+  )</code></pre>
 </div>
 </div>
 

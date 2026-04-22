@@ -7,10 +7,10 @@
 match_variants_to_mock_species(
   read_count,
   fas,
-  taxonomy = "",
+  sampleinfo,
+  taxonomy,
+  outdir,
   blast_path = "blastn",
-  sampleinfo = "",
-  outdir = NULL,
   num_threads = 0,
   sep = ",",
   quiet = TRUE
@@ -24,17 +24,17 @@ or closely related taxa. FASTA headers must follow the format:
 \verb{>HQ563207.1 taxID=1592914}, where \code{taxID} is a valid NCBI taxonomic identifier
 (https://www.ncbi.nlm.nih.gov/taxonomy).}
 
+\item{sampleinfo}{Data frame or CSV file containing at least \code{sample} and \code{sample_type} columns.}
+
 \item{taxonomy}{Character string: path to a TSV taxonomy file containing columns:
 \code{tax_id}, \code{parent_tax_id}, \code{rank}, \code{name_txt}, \code{old_tax_id} (merged into \code{tax_id}),
 and \code{taxlevel} (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
 2: kingdom, 1: domain, 0: root).
 A COInr taxonomy file can be used.}
 
-\item{blast_path}{Character string: path to BLAST executable.}
-
-\item{sampleinfo}{Data frame or CSV file containing at least \code{sample} and \code{sample_type} columns.}
-
 \item{outdir}{Character string: output directory for generated files.}
+
+\item{blast_path}{Character string: path to BLAST executable.}
 
 \item{num_threads}{Positive integer: number of CPU threads to use. If 0, all available CPUs are used.}
 

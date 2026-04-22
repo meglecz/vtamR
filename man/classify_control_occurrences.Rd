@@ -9,9 +9,9 @@ classify_control_occurrences(
   sampleinfo,
   mock_composition,
   sep = ",",
-  known_occurrences = "",
-  false_negatives = "",
-  performance_metrics = "",
+  known_occurrences = NULL,
+  false_negatives = NULL,
+  performance_metrics = NULL,
   habitat_proportion = 0.5,
   quiet = TRUE
 )
@@ -30,13 +30,13 @@ and optionally \code{file}.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{known_occurrences}{Character string specifying output CSV file for known occurrences
-(expected occurrences in mocks and false positives). If empty, no file is written.}
+(expected occurrences in mocks and false positives). If NULL, no file is written.}
 
 \item{false_negatives}{Character string specifying output CSV file for false negatives.
-If empty, no file is written.}
+If NULL, no file is written.}
 
 \item{performance_metrics}{Character string specifying output CSV file for performance metrics.
-If empty, no file is written.}
+If NULL, no file is written.}
 
 \item{habitat_proportion}{Numeric between 0 and 1. For each ASV, if the proportion of reads
 within a habitat is below this threshold, it is considered an artifact in all samples

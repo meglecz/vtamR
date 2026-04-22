@@ -6,11 +6,11 @@
 \usage{
 dereplicate(
   sampleinfo,
-  dir = "",
-  outfile = "",
+  dir,
+  outfile = NULL,
+  input_asv_list = NULL,
+  output_asv_list = NULL,
   sep = ",",
-  input_asv_list = "",
-  output_asv_list = "",
   quiet = T
 )
 }
@@ -25,15 +25,15 @@ The \code{fasta} column contains the names of FASTA files to be dereplicated.}
 resulting data frame (\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}). If
 empty, no file is written.}
 
-\item{sep}{Character string specifying the field separator used in input and
-output CSV files.}
-
 \item{input_asv_list}{Data frame or path to a CSV file containing previously
 observed \code{asv}–\code{asv_id} pairs. Optional; used to harmonize \code{asv_id}
 across datasets.}
 
 \item{output_asv_list}{Character string specifying the output file containing
 the updated \code{asv}–\code{asv_id} pairs. Optional.}
+
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
 only display warnings or errors.}

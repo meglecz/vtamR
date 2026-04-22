@@ -4,14 +4,14 @@
 \alias{pool_filters}
 \title{Retain occurrences shared across multiple filtered datasets}
 \usage{
-pool_filters(..., outfile = "", sep = ",")
+pool_filters(..., outfile = NULL, sep = ",")
 }
 \arguments{
 \item{...}{Data frames with the following columns:
 \code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

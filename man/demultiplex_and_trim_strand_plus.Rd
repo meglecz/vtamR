@@ -7,7 +7,7 @@
 demultiplex_and_trim_strand_plus(
   fastainfo,
   fasta_dir,
-  outdir = "",
+  outdir,
   cutadapt_path = "cutadapt",
   num_threads = 0,
   tag_to_end = T,

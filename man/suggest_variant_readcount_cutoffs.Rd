@@ -8,8 +8,8 @@ suggest_variant_readcount_cutoffs(
   read_count,
   outdir,
   known_occurrences = NULL,
-  mock_composition = "",
-  sampleinfo = "",
+  mock_composition = NULL,
+  sampleinfo = NULL,
   habitat_proportion = 0.5,
   sep = ",",
   min_read_count_cutoff = 10,
@@ -31,7 +31,7 @@ suggest_variant_readcount_cutoffs(
 
 \item{known_occurrences}{Data frame or file produced by
 \code{classify_control_occurrences()}, containing known true positives and
-false positives. Optional; if not provided, it is computed from
+false positives. Optional; if NULL, it is computed from
 \code{mock_composition} and \code{sampleinfo}.}
 
 \item{mock_composition}{Data frame or CSV file with columns

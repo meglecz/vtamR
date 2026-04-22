@@ -6,7 +6,7 @@
 \usage{
 filter_replicate(
   read_count,
-  outfile = "",
+  outfile = NULL,
   cutoff = NA,
   renkonen_distance_quantile = 0.9,
   sep = ","
@@ -17,7 +17,7 @@ filter_replicate(
 \code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{cutoff}{Numeric value between 0 and 1 specifying the maximum acceptable
 Renkonen distance for retaining replicates. Replicates exceeding this threshold

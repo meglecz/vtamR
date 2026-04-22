@@ -4,7 +4,12 @@
 \alias{filter_occurrence_read_count}
 \title{Filter low-abundance occurrences using a read count cutoff}
 \usage{
-filter_occurrence_read_count(read_count, cutoff = 10, outfile = "", sep = ",")
+filter_occurrence_read_count(
+  read_count,
+  cutoff = 10,
+  outfile = NULL,
+  sep = ","
+)
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -14,7 +19,7 @@ filter_occurrence_read_count(read_count, cutoff = 10, outfile = "", sep = ",")
 for an occurrence to be retained. Occurrences below this threshold are removed.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

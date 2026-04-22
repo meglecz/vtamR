@@ -4,7 +4,7 @@
 \alias{filter_occurrence_sample}
 \title{Filter low-abundance occurrences relative to total sample-replicate read count}
 \usage{
-filter_occurrence_sample(read_count, cutoff = 0.001, outfile = "", sep = ",")
+filter_occurrence_sample(read_count, cutoff = 0.001, outfile = NULL, sep = ",")
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -15,7 +15,7 @@ of reads required for an occurrence to be retained. Occurrences below this
 threshold are removed.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

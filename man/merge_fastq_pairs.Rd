@@ -7,11 +7,11 @@
 merge_fastq_pairs(
   fastqinfo,
   fastq_dir,
+  outdir,
   vsearch_path = "vsearch",
   compress_method = "R",
   pigz_path = "pigz",
   num_threads = 0,
-  outdir = "",
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
   fastq_maxee = 1,
@@ -39,6 +39,8 @@ merge_fastq_pairs(
 FASTQ files (listed in \code{fastqinfo$fastq_fw} and
 \code{fastqinfo$fastq_rv}).}
 
+\item{outdir}{Character string specifying the output directory.}
+
 \item{vsearch_path}{Character string specifying the path to the
 \code{vsearch} executable.}
 
@@ -56,8 +58,6 @@ available in the system PATH.}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}
-
-\item{outdir}{Character string specifying the output directory.}
 
 \item{fastq_ascii}{Integer (33 or 64) specifying the ASCII offset used for
 FASTQ quality scores.}

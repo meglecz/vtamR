@@ -4,7 +4,7 @@
 \alias{check_file_exists}
 \title{Check existence of files}
 \usage{
-check_file_exists(file_list, dir = "")
+check_file_exists(file_list, dir)
 }
 \arguments{
 \item{file_list}{Character vector of file names to check.}

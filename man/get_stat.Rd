@@ -4,16 +4,24 @@
 \alias{get_stat}
 \title{get_stat}
 \usage{
-get_stat(read_count, stat_df, stage = "", params = NA, outfile = "")
+get_stat(read_count, stat_df, stage = "", params = NA, outfile = NULL)
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file containing the following
 variables: \code{asv_id}, \verb{sample``, }replicate,
 \code{read_count}, \code{asv}.}
 
-\item{stat_df}{Data frame containing the following variables:
-\code{parameters}, \code{asv_count}, \code{read_count},
-\code{sample_count}, \code{sample_replicate_count}.}
+\item{stat_df}{A data frame containing the following variables:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{`parameters` Parameters used for the analysis
+`asv_count` Number of ASVs detected
+`read_count` Total number of reads
+`sample_count` Number of samples analyzed
+`sample_replicate_count` Number of replicates per sample
+}\if{html}{\out{</div>}}
+
+If provided, the function appends a new row to \code{stat_df}. If not provided,
+a new data frame with a single row is initialized and returned.}
 
 \item{stage}{Character string specifying the name of the filtering step. It
 is used as the row name in \code{stat_df}.}
@@ -22,7 +30,7 @@ is used as the row name in \code{stat_df}.}
 for the filtering step.}
 
 \item{outfile}{Character string specifying the name of a CSV file to write
-the updated data frame. If empty, no file is written.}
+the updated data frame. If NULL, no file is written.}
 }
 \value{
 Data frame. The updated \code{stat_df} with an additional row.
@@ -42,7 +50,7 @@ get_stat(
 
 get_stat(
   read_count_df,
-  stat_df,
+  stat_df = NULL,
   stage = "filter_indel",
   params = "0.002;by_replicate=TRUE",
   outfile = "out/ReadCount_stat.csv"

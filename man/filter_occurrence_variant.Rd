@@ -8,9 +8,9 @@ filter_occurrence_variant(
   read_count,
   cutoff = NULL,
   asv_specific_cutoffs = NULL,
+  outfile = NULL,
+  lost_asv_file = NULL,
   by_replicate = FALSE,
-  outfile = "",
-  lost_asv_file = "",
   sep = ",",
   min_read_count_prop = 0.7
 )
@@ -26,15 +26,15 @@ threshold are removed.}
 \item{asv_specific_cutoffs}{Data frame or path to a CSV file specifying ASV-specific
 cutoff values. May include a \code{replicate} column if \code{by_replicate = TRUE}.}
 
-\item{by_replicate}{Logical. If \code{TRUE}, compare read counts to ASV abundance
-within each replicate.}
-
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{lost_asv_file}{Character string specifying the CSV file used to store
 information about ASVs whose retained read counts fall below
 \code{min_read_count_prop} of their original abundance.}
+
+\item{by_replicate}{Logical. If \code{TRUE}, compare read counts to ASV abundance
+within each replicate.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}

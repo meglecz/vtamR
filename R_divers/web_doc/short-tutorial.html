@@ -10,9 +10,9 @@
 
 
 
-<meta name="date" content="2026-04-16" />
+<meta name="date" content="2026-04-22" />
 
-<title>Short Tutorial vtamR - v1.0.2</title>
+<title>Short Tutorial vtamR - v1.0.3</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1478,8 +1478,8 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Short Tutorial vtamR - v1.0.2</h1>
-<h4 class="date">2026-04-16</h4>
+<h1 class="title toc-ignore">Short Tutorial vtamR - v1.0.3</h1>
+<h4 class="date">2026-04-22</h4>
 
 </div>
 
@@ -1733,7 +1733,7 @@ read_count_df &lt;- filter_replicate(
   renkonen_distance_quantile = renkonen_distance_quantile,
   outfile = outfile
 )
-#&gt; [1] &quot;The cutoff value for Renkonen distances is  0.433097031457687&quot;
+#&gt; [1] &quot;The cutoff value for Renkonen distances is  0.43204653622422&quot;
 
 param &lt;- paste(&quot;renkonen_distance_quantile:&quot;, renkonen_distance_quantile)
 stat_df &lt;- get_stat(read_count_df, stat_df, stage=&quot;filter_replicate&quot;, params=param)</code></pre>
@@ -1784,17 +1784,17 @@ suggest_sample_cutoff_df &lt;- suggest_sample_cutoff(
 head(suggest_sample_cutoff_df)
 #&gt;   sample replicate action asv_id sample_cutoff read_count
 #&gt; 1  tpos1         3   keep      9        0.0001          2
-#&gt; 2  tpos1         1   keep      9        0.0004         12
-#&gt; 3  tpos1         2   keep      9        0.0004         11
-#&gt; 4  tpos1         2   keep     10        0.0018         43
+#&gt; 2  tpos1         1   keep      9        0.0004         14
+#&gt; 3  tpos1         2   keep      9        0.0004         10
+#&gt; 4  tpos1         2   keep     10        0.0017         40
 #&gt; 5  tpos1         1   keep     10        0.0024         69
 #&gt; 6  tpos1         3   keep     10        0.0024         46
 #&gt;   read_count_sample_replicate
 #&gt; 1                       18727
-#&gt; 2                       28444
-#&gt; 3                       22869
-#&gt; 4                       22869
-#&gt; 5                       28444
+#&gt; 2                       28405
+#&gt; 3                       22864
+#&gt; 4                       22864
+#&gt; 5                       28405
 #&gt; 6                       18727
 #&gt;                                                                                                                                                             asv
 #&gt; 1 TATCTGATCAGGTCTCGTAGGATCATCACTTAGATTTATTATTCGAATAGAATTAAGAACTCCTGGTAGATTTATTGGCAACGACCAAATTTATAACGTAATTGTTACATCTCATGCATTTATTATAATTTTTTTTATAGTTATACCAATCATAATT
@@ -1857,12 +1857,12 @@ suggest_variant_readcount_cutoffs_df &lt;- suggest_variant_readcount_cutoffs(
 
 head(suggest_variant_readcount_cutoffs_df)
 #&gt;   read_count_cutoff variant_cutoff FN TP FP
-#&gt; 1                10          0.001  0  5  3
-#&gt; 2                10          0.002  0  5  3
-#&gt; 3                10          0.003  0  5  3
-#&gt; 4                10          0.004  0  5  3
-#&gt; 5                10          0.005  0  5  3
-#&gt; 6                10          0.006  0  5  3</code></pre>
+#&gt; 1                10          0.001  0  5  2
+#&gt; 2                10          0.002  0  5  2
+#&gt; 3                10          0.003  0  5  2
+#&gt; 4                10          0.004  0  5  2
+#&gt; 5                10          0.005  0  5  2
+#&gt; 6                10          0.006  0  5  2</code></pre>
 <p><strong>Filter occurrences by variant</strong></p>
 <pre class="r"><code>variant_cutoff = 0.001
 outfile &lt;- file.path(outdir, &quot;4_filter&quot;, &quot;11_filter_occurrence_variant.csv&quot;)
@@ -1936,7 +1936,7 @@ results &lt;- classify_control_occurrences(
 
 head(read.csv(performance_metrics))
 #&gt;   TP FP FN Precision Sensitivity
-#&gt; 1  5  3  0     0.625           1</code></pre>
+#&gt; 1  5  2  0 0.7142857           1</code></pre>
 <p><strong>Note:</strong> Keep in mind that one expected sequence in the
 mock is not present in the <code>mock_composition</code>. Therefore, the
 true number of false negatives is 1, and the sensitivity is:</p>
@@ -1958,8 +1958,7 @@ Assignment</a> for more details.</em></p>
 asv_tax &lt;- assign_taxonomy_ltg(
   asv=read_count_sample_df,
   taxonomy=taxonomy,
-  blast_db=blast_db,
-  outfile=outfile
+  blast_db=blast_db
 )</code></pre>
 </div>
 <div id="clustering-motus" class="section level2">

@@ -7,8 +7,8 @@
 subsample_fasta(
   fastainfo,
   n,
-  fasta_dir = "",
-  outdir = "",
+  fasta_dir,
+  outdir,
   use_vsearch = FALSE,
   vsearch_path = "vsearch",
   randseed = NULL,

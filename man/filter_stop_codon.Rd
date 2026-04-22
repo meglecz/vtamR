@@ -4,14 +4,14 @@
 \alias{filter_stop_codon}
 \title{Filter ASVs containing stop codons}
 \usage{
-filter_stop_codon(read_count, outfile = "", genetic_code = 5, sep = ",")
+filter_stop_codon(read_count, outfile = NULL, genetic_code = 5, sep = ",")
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
 \code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
-data frame. If empty, no file is written.}
+data frame. If NULL, no file is written.}
 
 \item{genetic_code}{Positive integer specifying the NCBI genetic code number.}
 

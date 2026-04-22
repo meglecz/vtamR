@@ -6,16 +6,16 @@
 \usage{
 write_asv_table(
   read_count,
-  outfile = "",
+  outfile = NULL,
   asv_tax = NULL,
-  sampleinfo = "",
+  sampleinfo = NULL,
   pool_replicates = FALSE,
   method = "mean",
   add_empty_samples = FALSE,
   add_sums_by_sample = FALSE,
   add_sums_by_asv = FALSE,
   add_expected_asv = FALSE,
-  mock_composition = "",
+  mock_composition = NULL,
   sep = ","
 )
 }
@@ -23,7 +23,7 @@ write_asv_table(
 \item{read_count}{Data frame or CSV file with the following variables:
 \code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}, \code{cluster_id} (optional).}
 
-\item{outfile}{Character string specifying the output CSV file. If empty, no file is written.}
+\item{outfile}{Character string specifying the output CSV file. If NULL, no file is written.}
 
 \item{asv_tax}{Data frame or CSV file containing taxonomic assignments.
 Must include at least the columns \code{asv_id} and \code{asv}. Additional columns

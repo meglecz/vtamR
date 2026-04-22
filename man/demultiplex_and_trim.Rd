@@ -7,7 +7,7 @@
 demultiplex_and_trim(
   fastainfo,
   fasta_dir,
-  outdir = "",
+  outdir,
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
   compress_method = "R",
