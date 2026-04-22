@@ -2,37 +2,39 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{get_ranked_lineages}
 \alias{get_ranked_lineages}
-\title{Get Ranked Lineages}
+\title{Get ranked taxonomic lineages}
 \usage{
 get_ranked_lineages(taxids, tax_df, fill_lineage = TRUE)
 }
 \arguments{
-\item{taxids}{Vector of taxIDs.}
+\item{taxids}{Vector of taxids (taxonomic identifiers).}
 
-\item{tax_df}{Data frame with the following columns:
-tax_id, parent_tax_id, rank, name_txt, taxlevel
+\item{tax_df}{Data frame with the following columns: \code{tax_id}, \code{parent_tax_id},
+\code{rank}, \code{name_txt}, \code{taxlevel}
 (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
 2: kingdom, 1: domain, 0: root).}
 
-\item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
-in the lineage using the name of the next known lower-level taxon, prefixed
-by the current taxonomic level
-(e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).}
+\item{fill_lineage}{Logical. If \code{TRUE}, fill missing higher-level taxa using the
+name of the next known lower-level taxon, prefixed by the corresponding rank
+(e.g., \code{No_kingdom_Chrysophyceae} if kingdom is missing but class is known).}
 }
 \value{
-Data frame with the ranked lineages of taxids.
-Columns: ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-domain_taxid,domain,kingdom_taxid,kingdom,phylum_taxid,phylum,
-class_taxid,class,order_taxid,order,family_taxid,family,
-genus_taxid,genus,species_taxid,species).
+Data frame containing ranked lineages with columns:
+\code{ltg_taxid}, \code{ltg_name}, \code{ltg_rank}, \code{ltg_rank_index},
+\code{domain_taxid}, \code{domain}, \code{kingdom_taxid}, \code{kingdom},
+\code{phylum_taxid}, \code{phylum}, \code{class_taxid}, \code{class},
+\code{order_taxid}, \code{order}, \code{family_taxid}, \code{family},
+\code{genus_taxid}, \code{genus}, \code{species_taxid}, \code{species}.
 }
 \description{
-For each input taxid, get the major taxonomic ranks of their lineage.
+Retrieve major taxonomic ranks for each input taxid based on a reference
+taxonomy table.
 }
 \examples{
 \dontrun{
-taxids <- c(9593,9606)
-tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
+taxids <- c(9593, 9606)
+tax_df <- read.delim("xxxxxxxx", header = TRUE, sep = "\t", fill = TRUE, quote = "")
 get_ranked_lineages(taxids, tax_df)
 }
+
 }

@@ -2,26 +2,27 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{count_seq}
 \alias{count_seq}
-\title{Count sequences in fasta}
+\title{Count sequences in FASTA}
 \usage{
 count_seq(file)
 }
 \arguments{
-\item{file}{Character string: input fasta file (including path).}
+\item{file}{Character string specifying the input FASTA file (including path).}
 }
 \value{
-The number of sequences in the input file.
+Integer. The number of sequences in the input file.
 }
 \description{
-Count the number of sequences in the input fasta file.
+Count the number of sequences in a FASTA file.
 
-Input can be uncompressed or gzip compressed file,
-but other compression types are not supported.
-For linux-like systems, uses the bash commands grep and wc and it is quick.
-For other operating systems it uses count.fields, and it is slower.
+The input file can be uncompressed or gzip-compressed; other compression
+formats are not supported. On Unix/Linux-like systems, the function uses
+the \code{grep} and \code{wc} shell commands for fast processing. On other
+operating systems, it falls back to \code{count.fields}, which is slower.
 }
 \examples{
 \dontrun{
-n <- count_seq(file="data/test.fasta")
+n <- count_seq(file = "data/test.fasta")
 }
+
 }

@@ -1,41 +1,18 @@
 # Ideas for vtamR
 
-Dezip fichier (clique droit, extraire ici)
-Completer l'ajout de chemin dans cmd
-Install => expliquer 
+## Expliquer 4 FP
 
-make full R script for fromfastq till filtered ASV
+## add explanation sto tuto:
+- Dezip fichier (clique droit, extraire ici)
+- Completer l'ajout de chemin dans cmd
+- Install => expliquer 
+
+## make full R script for from fastq till filtered ASV
  - mfzr_plate1 
  - mfzr_plate2
  - zfzr_plate1
 
-filter_occurrence_variant
-filter_occurrence_read_count
-
-# revise install in readme.
-
-Check links '(#'
-
-#makeknownoccurrences section do not extits check and correct links
-Create `mock_composition` File section or make-mock-composition-file.html
-
-rename lfn_sample_replicate_cutoff in output of suggest, and tuto.
-lfn_variant_cutoff
-lfn_read_count_cutoff
-lfn_sample_replicate_cutoff
-
-suggest_filter_parameters_pcr_error
-suggest_filter_parameters_readcount_variant
-suggest_filter_parameters_sample
-
-suggest_pcr_error_cutoff
-suggest_variant_readcount_cutoffs
-suggest_sample_cutoff
-
-variant_cutoff
-read_count_cutoff
-sample_cutoff
-pcr_error_cutoff
+## revise install in readme.
 
 
 ## stage
@@ -655,7 +632,48 @@ Add test demo file for plate2 MFZR
 
 ## 2026/04/13 v1.0.1
 
+## get_taxonomic_lineage => correct; see example; see if it is a problem of partial taxonomy file
+
 Function names and tutorial updated
+
+## 2026/04/16 short tuto
+
+short tutorial
+
+rename lfn_xxx_cutoff in output of suggest, and tuto.
+lfn_variant_cutoff => variant_cutoff
+lfn_read_count_cutoff => read_count_cutoff
+lfn_sample_replicate_cutoff => sample_cutoff
+
+suggest_filter_parameters_pcr_error => suggest_pcr_error_cutoff
+suggest_filter_parameters_readcount_variant => suggest_variant_readcount_cutoffs
+suggest_filter_parameters_sample => suggest_sample_cutoff
+
+## 2026/04/22
+
+Glossaire 
+- Renkonen distance and add link when appropriate
+- Tag_jump
+
+simplify tuto by deleting
+- habitat_proportion = 0.5 (link to classify_control_occurrences)
+- digits = 0
+
+Visualize Renkonen Distances 
+- Explian the use of **vtamR_demo_out/mfzr_plate1/3_demultiplexed/sampleinfo.csv**
+- Explanation of  distance_quantil vs. cutoff
+
+correct link history_by summarize_by
+
+Initialize stat_df in the function if no input.
+
+Make dir, outdir obligatory
+
+Define optional file names as NULL by default
+
+
+
+
 
 
 

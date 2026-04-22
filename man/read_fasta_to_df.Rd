@@ -2,30 +2,30 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{read_fasta_to_df}
 \alias{read_fasta_to_df}
-\title{Read fasta file to data frame}
+\title{Read FASTA file to data frame}
 \usage{
 read_fasta_to_df(file, dereplicate = F)
 }
 \arguments{
-\item{file}{Character string: name of the input fasta file.
-Can be  uncompressed or compressed in gz format (zip files are not supported).}
+\item{file}{Character string specifying the input FASTA file path.}
 
-\item{dereplicate}{logical: If TRUE returns a data frame with asv and
-read_count columns. If FALSE data frame with header and sequence columns.}
+\item{dereplicate}{logical; if TRUE, returns a data frame of unique ASVs
+with read counts. If FALSE, returns a data frame of individual sequences.}
 }
 \value{
-Data frame with two columns:
+A data frame with:
 \itemize{
-\item headers and sequences if dereplicate==FALSE
-\item asv and read_count if dereplicate==TRUE
+\item \code{header} and \code{sequence} columns if \code{dereplicate = FALSE}
+\item \code{asv} and \code{read_count} columns if \code{dereplicate = TRUE}
 }
 }
 \description{
-Read a fasta file to a data frame
+Import a FASTA file into a data frame. The file can be plain text or
+gzip-compressed (ZIP files are not supported).
 }
 \examples{
 \dontrun{
-read_fasta_to_df(file="data/test.fasta", dereplicate=F)
-read_fasta_to_df(file="data/test.fasta", dereplicate=T)
+read_fasta_to_df(file = "data/test.fasta", dereplicate = FALSE)
+read_fasta_to_df(file = "data/test.fasta", dereplicate = TRUE)
 }
 }

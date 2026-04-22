@@ -2,11 +2,11 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_chimera}
 \alias{filter_chimera}
-\title{filter_chimera}
+\title{Filter chimeric sequences}
 \usage{
 filter_chimera(
   read_count,
-  outfile = "",
+  outfile = NULL,
   vsearch_path = "vsearch",
   num_threads = 0,
   by_sample = T,
@@ -17,49 +17,65 @@ filter_chimera(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 
-\item{by_sample}{logical: ASVs are flagged as chimera separately
-for each sample.}
+\item{by_sample}{Logical. If \code{TRUE}, chimera detection is performed separately
+within each sample.}
 
-\item{sample_prop}{logical: if by_sample=TRUE, the ASV deleted if
-they are flagged as chimera in at least \code{sample_prop} of the
-samples among the sample they are present.}
+\item{sample_prop}{Numeric value between 0 and 1 specifying the minimum proportion
+of samples in which an ASV must be flagged as a chimera (when \code{by_sample = TRUE})
+to be removed.}
 
-\item{abskew}{Positive integer: a chimera must be at least \code{abskew}
-times less frequent that the parental ASVs.}
+\item{abskew}{Positive integer specifying the minimum abundance ratio used to
+identify chimeric sequences.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
+warnings or errors.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame with chimeric ASVs removed.
 }
 \description{
-Filter out Chimeras.
+Remove ASVs identified as chimeras based on abundance- and similarity-based
+detection using \code{vsearch}.
+
+Chimeras are detected using the \code{abskew} parameter, which defines the minimum
+abundance ratio required between parental sequences and a chimera candidate.
+
+Detection can be performed across the full dataset (\code{by_sample = FALSE}) or
+independently within each sample (\code{by_sample = TRUE}).
+
+When \code{by_sample = TRUE}, an ASV is removed if it is flagged as a chimera in
+at least a proportion \code{sample_prop} of the samples in which it is present.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_chimera(read_count_df, 
-     vsearch_path=vsearch_path, 
-     by_sample=T, 
-     sample_prop=0.7, 
-     abskew=4
-     )
-filtered_read_count_df <- filter_chimera(read_count_df,
-     vsearch_path=vsearch_path, 
-     by_sample=F, 
-     abskew=4
-     )
+filtered_read_count_df <- filter_chimera(
+  read_count_df,
+  vsearch_path = vsearch_path,
+  by_sample = TRUE,
+  sample_prop = 0.7,
+  abskew = 4
+)
+
+filtered_read_count_df <- filter_chimera(
+  read_count_df,
+  vsearch_path = vsearch_path,
+  by_sample = FALSE,
+  abskew = 4
+)
 }
+
 }

@@ -2,28 +2,30 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{pool_filters}
 \alias{pool_filters}
-\title{pool_filters}
+\title{Retain occurrences shared across multiple filtered datasets}
 \usage{
-pool_filters(..., outfile = "", sep = ",")
+pool_filters(..., outfile = NULL, sep = ",")
 }
 \arguments{
-\item{...}{Data frames with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{...}{Data frames with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count_df} data frame containing only shared occurrences.
 }
 \description{
-Pool all count_read_df data frames, and keep only occurrences
+Pool multiple \code{read_count_df} data frames and retain only occurrences
 present in all filters.
 }
 \examples{
 \dontrun{
 filtered_read_count_df <- pool_filters(read_count_df1, read_count_df2)
 }
+
 }

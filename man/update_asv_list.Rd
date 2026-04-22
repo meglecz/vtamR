@@ -7,34 +7,38 @@
 update_asv_list(asv_list1, asv_list2, outfile, sep = ",", return_df = FALSE)
 }
 \arguments{
-\item{asv_list1}{Data frame or csv file with columns:
-asv_id,asv}
+\item{asv_list1}{Data frame or path to a CSV file with columns \code{asv_id}, \code{asv};
+same format as \code{asv_list2}.}
 
-\item{asv_list2}{Data frame or csv file with columns:
-asv_id,asv}
+\item{asv_list2}{Data frame or path to a CSV file with columns \code{asv_id}, \code{asv}.}
 
-\item{outfile}{Character string: output csv file name.}
+\item{outfile}{Character string specifying the output CSV file name.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{return_df}{logical; if TRUE returns a data frame}
+\item{return_df}{Logical. If \code{TRUE}, the function returns a data frame.}
 }
 \value{
-Updated data frame or csv file with all unique asv_id - asv pairs
-in the input data frame and csv file.
-If there is a conflict within or between the input data stops with
-an error message.
+Data frame or CSV file containing all unique \code{asv_id}–\code{asv} pairs
+from the inputs. If any conflict is detected within or between inputs, the
+function stops with an error.
 }
 \description{
-Pools unique asv - asv_id pairs in the input data frames or csv files.
-Check if there is no conflict within an between the input data.
-Returns a complete and unique list of asv - asv_id pairs.
+Merge unique \code{asv}–\code{asv_id} pairs from two input data frames or CSV files.
+The function checks for consistency and ensures there are no conflicts
+within or between inputs.
+}
+\details{
+The result is a complete, non-redundant list of \code{asv}–\code{asv_id} pairs.
 }
 \examples{
 \dontrun{
-update_asv_list(asv_list1=read_count_df, 
-asv_list2="data/asv_list.csv", 
-outfile="out/updated_asv_list.csv"
+update_asv_list(
+  asv_list1 = read_count_df, 
+  asv_list2 = "data/asv_list.csv", 
+  outfile = "out/updated_asv_list.csv"
 )
 }
+
 }

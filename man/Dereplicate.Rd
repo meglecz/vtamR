@@ -2,58 +2,60 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{dereplicate}
 \alias{dereplicate}
-\title{Read all fasta files to a data frame and dereplicate}
+\title{Read all FASTA files to a data frame and dereplicate}
 \usage{
 dereplicate(
   sampleinfo,
-  dir = "",
-  outfile = "",
+  dir,
+  outfile = NULL,
+  input_asv_list = NULL,
+  output_asv_list = NULL,
   sep = ",",
-  input_asv_list = "",
-  output_asv_list = "",
   quiet = T
 )
 }
 \arguments{
-\item{sampleinfo}{Data frame or csv file with columns:
-sample,replicate,fasta, optional: sample_type,habitat.
-The fasta column contains the names of the fasta file to be dereplicated.}
+\item{sampleinfo}{Data frame or path to a CSV file with columns:
+\code{sample}, \code{replicate}, \code{fasta}, and optionally \code{sample_type}, \code{habitat}.
+The \code{fasta} column contains the names of FASTA files to be dereplicated.}
 
-\item{dir}{Character string naming of the directory with input fasta files.}
+\item{dir}{Character string specifying the directory containing input FASTA files.}
 
-\item{outfile}{Character string: csv for the output data frame
-(asv_id, sample, replicate, read_count). If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV output file containing the
+resulting data frame (\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}). If
+empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{input_asv_list}{Data frame or path to a CSV file containing previously
+observed \code{asv}–\code{asv_id} pairs. Optional; used to harmonize \code{asv_id}
+across datasets.}
 
-\item{input_asv_list}{Data frame or CSV file with asvs and asv_ids
-from earlier analyses. Optional. It is used to homogenize asv_ids
-between different data sets.}
+\item{output_asv_list}{Character string specifying the output file containing
+the updated \code{asv}–\code{asv_id} pairs. Optional.}
 
-\item{output_asv_list}{Character string naming of the output file
-with updated asv_id - asv pairs. Optional.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-Data frame with the following columns:
-asv_id,sample,replicate,read_count,asv
+Data frame with columns: \code{asv_id}, \code{sample}, \code{replicate},
+\code{read_count}, \code{asv}.
 }
 \description{
-Read all fasta files in the fasta columns of sampleinfo data frame (or csv file).
-dereplicate reads to ASVs.
-Count the number of reads of each ASV in each input file.
-Add a unique asv_id to each asv.
+Read all FASTA files listed in the \code{fasta} column of a \code{sampleinfo} data
+frame (or CSV file), then dereplicate reads into ASVs. The number of reads
+per ASV is counted for each input file, and a unique \code{asv_id} is assigned
+to each ASV.
 
-If input_asv_list is given (containing earlier asv and asv_id pairs),
-uses already existing asv_id when possible for the present data
-and adds new unique asv_id, to new ASVs.
-If output_asv_list is given, writes an updated file containing
-all asv - asv_id pairs.
+If \code{input_asv_list} is provided (containing previously observed ASV and
+\code{asv_id} pairs), existing \code{asv_id} values are reused when possible and new
+unique \code{asv_id} values are assigned to novel ASVs. If \code{output_asv_list} is
+provided, an updated file containing all \code{asv}–\code{asv_id} pairs is written.
 }
 \examples{
 \dontrun{
-dereplicate(sampleinfo=sampleinfo, dir="data/sorted")
+dereplicate(sampleinfo = sampleinfo, dir = "data/sorted")
 }
+
 }

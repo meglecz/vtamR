@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_graph.R
 \name{plot_renkonen_distance_barplot}
 \alias{plot_renkonen_distance_barplot}
-\title{plot_renkonen_distance_barplot}
+\title{Plot Renkonen Distance Barplot}
 \usage{
 plot_renkonen_distance_barplot(
   df,
@@ -13,24 +13,27 @@ plot_renkonen_distance_barplot(
 )
 }
 \arguments{
-\item{df}{data frame with the following columns:
-sample1,sample2,replicate1,replicate2,renkonen_d
-(can be produced by make_renkonen_distance_matrix)}
+\item{df}{Data frame with the following columns:
+\code{sample1}, \code{sample2}, \code{replicate1}, \code{replicate2}, \code{renkonen_d}.
+This output can be generated using \code{make_renkonen_distance_matrix()}.}
 
-\item{sampleinfo}{Data frame or CSV file with the following columns:
-sample, sample_type (real/mock/negative)}
+\item{sampleinfo}{Data frame or CSV file with columns \code{sample} and
+\code{sample_type} (e.g. \code{real}, \code{mock}, \code{negative}).}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator used in CSV files.}
 
-\item{x_axis_label_size}{size of labels in x axis}
+\item{x_axis_label_size}{Numeric; size of x-axis labels.}
 
-\item{plotfile}{Character string: png file name for the output plot;
-If empty, no file is written.}
+\item{plotfile}{Character string: name of the output PNG file. If empty,
+no file is written.}
 }
 \value{
-Barplot
+A bar plot object.
 }
 \description{
-Create barplot with renkonen distances between pairs of sample-replicates
-If information is given on sample types, bars are colored in function of them
+Creates a bar plot of Renkonen distances between pairs of samples or
+sample–replicates.
+}
+\details{
+If sample metadata is provided, bars are colored according to sample type.
 }

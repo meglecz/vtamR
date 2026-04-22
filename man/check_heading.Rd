@@ -2,28 +2,29 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{check_heading}
 \alias{check_heading}
-\title{Check heading of a files}
+\title{Check file column headings}
 \usage{
 check_heading(list1, list2, file = "")
 }
 \arguments{
-\item{list1, list2}{Vectors: \code{list1} is a heading of file,
-\code{list2} is the expected heading for the file.}
+\item{list1}{Character vector: actual column names found in the file.}
 
-\item{file}{Character string: name of the file.}
+\item{list2}{Character vector: expected column names to compare against.}
+
+\item{file}{Character string: name of the file being checked (used for error reporting).}
 }
 \value{
-Error message with elements of \code{list1} that are not on \code{list2}.
+Throws an error listing elements in \code{list1} that are missing from \code{list2}.
 }
 \description{
-Compare the heading of files to an input vector.
+Compares the column names (header) of a file or vector against an expected set of names.
 }
 \examples{
 \dontrun{
 list1 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample",
-"sample_type","habitat","replicate","fasta")
+           "sample_type","habitat","replicate","fasta")
 list2 <- c("tag_fw","primer_fw","tag_rv","primer_rv","sample",
-"sample_type","habitat","replicate","fastq_fw","fastq_rv")
+           "sample_type","habitat","replicate","fastq_fw","fastq_rv")
 check_heading(list1, list2)
 }
 }

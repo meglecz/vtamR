@@ -2,11 +2,11 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_pcr_error}
 \alias{filter_pcr_error}
-\title{Filter PCR error}
+\title{Filter PCR errors}
 \usage{
 filter_pcr_error(
   read_count,
-  outfile = "",
+  outfile = NULL,
   vsearch_path = "vsearch",
   num_threads = 0,
   pcr_error_var_prop = 0.1,
@@ -18,58 +18,71 @@ filter_pcr_error(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 
-\item{pcr_error_var_prop}{Numeric. Value between 0 and 1: if the proportion of read_counts of
-two similar ASVs is less or equal to \code{pcr_error_var_prop},
-the less abundant is flagged as a PCR error.}
+\item{pcr_error_var_prop}{Numeric value between 0 and 1 specifying the maximum
+abundance ratio between similar ASVs for PCR error assignment. Less abundant
+ASVs at or below this threshold are flagged as PCR errors.}
 
-\item{max_mismatch}{Positive integer: maximum number of mismatches
-(gaps included) to consider two ASVs as similar}
+\item{max_mismatch}{Positive integer specifying the maximum number of mismatches
+(including gaps) used to define sequence similarity.}
 
-\item{by_sample}{logical: if TRUE ASVs are flagged as an PCR error
-separately for each sample.}
+\item{by_sample}{Logical. If \code{TRUE}, PCR error detection is performed separately
+within each sample.}
 
-\item{sample_prop}{Numeric. Value between 0 and 1: if by_sample=TRUE, the ASV must be
-flagged as a PCRerror in \code{sample_prop} of the samples to be eliminated.}
+\item{sample_prop}{Numeric value between 0 and 1 specifying the minimum proportion
+of samples in which an ASV must be flagged as a PCR error (when \code{by_sample = TRUE})
+to be removed.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
+warnings or errors.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame with PCR error ASVs removed.
 }
 \description{
-Filter out an ASVs if it is very similar (\code{max_mismatch}) to another
-more frequent ASV (\code{pcr_error_var_prop}).
+Remove ASVs flagged as potential PCR errors based on sequence similarity
+(\code{max_mismatch}) and relative abundance (\code{pcr_error_var_prop}).
 
-The whole data set can be analyzed at once (\code{by_sample=F})
-or sample by sample.
+ASVs are considered PCR errors when they are highly similar to a more abundant
+ASV and their abundance ratio is below or equal to \code{pcr_error_var_prop}.
+
+The analysis can be performed across the full dataset (\code{by_sample = FALSE})
+or independently within each sample (\code{by_sample = TRUE}).
+
+When \code{by_sample = TRUE}, an ASV is removed only if it is flagged as a PCR error
+in at least a proportion \code{sample_prop} of samples.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_pcr_error(read_count_df, 
-     vsearch_path=vsearch_path, 
-     pcr_error_var_prop=0.2, 
-     max_mismatch=2, 
-     by_sample=T, 
-     sample_prop=0.8
-     )
-filtered_read_count_df <- filter_pcr_error(read_count_df, 
-    vsearch_path=vsearch_path, 
-    pcr_error_var_prop=0.2,
-    max_mismatch=2, 
-    by_sample=F
-    )
+filtered_read_count_df <- filter_pcr_error(
+  read_count_df,
+  vsearch_path = vsearch_path,
+  pcr_error_var_prop = 0.2,
+  max_mismatch = 2,
+  by_sample = TRUE,
+  sample_prop = 0.8
+)
+
+filtered_read_count_df <- filter_pcr_error(
+  read_count_df,
+  vsearch_path = vsearch_path,
+  pcr_error_var_prop = 0.2,
+  max_mismatch = 2,
+  by_sample = FALSE
+)
 }
+
 }

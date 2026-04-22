@@ -2,29 +2,37 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{compute_renkonen_distances}
 \alias{compute_renkonen_distances}
-\title{Make Renkonen Distances}
+\title{Compute Renkonen distances}
 \usage{
-compute_renkonen_distances(read_count_df, compare_all = FALSE, outfile = "")
+compute_renkonen_distances(read_count_df, compare_all = FALSE, outfile = NULL)
 }
 \arguments{
-\item{read_count_df}{Data frame with asv, sample, replicate, and read_count columns.}
+\item{read_count_df}{Data frame with \code{asv}, \code{sample}, \code{replicate}, and
+\code{read_count} columns.}
 
-\item{compare_all}{logical: if TRUE calculate the Renkonen distance among all pairs
-of sample-replicates. Only between replicates of the same sample otherwise.}
+\item{compare_all}{Logical. If \code{TRUE}, compute Renkonen distances for all
+pairs of sample-replicates. If \code{FALSE}, compute distances only between
+replicates of the same sample.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 }
 \value{
-Data frame with the following columns:
-sample1,sample2,replicate1,replicate2,renkonen_d,sample_comp
-(within, if sample1 and sample2 are identical, between otherwise).
+Data frame with columns: \code{sample1}, \code{sample2}, \code{replicate1},
+\code{replicate2}, \code{renkonen_d}, \code{sample_comp} (indicating \code{"within"} if
+sample1 equals sample2, \code{"between"} otherwise).
 }
 \description{
-Calculate the Renkonen distance between pairs of sample-replicates.
+Calculate pairwise Renkonen distances between sample-replicates.
+}
+\details{
+Distances can be computed either between all sample-replicate pairs
+(\code{compare_all = TRUE}) or only between replicates within the same sample
+(\code{compare_all = FALSE}).
 }
 \examples{
 \dontrun{
-compute_renkonen_distances(read_count_df, compare_all=FALSE)
+compute_renkonen_distances(read_count_df, compare_all = FALSE)
 }
+
 }

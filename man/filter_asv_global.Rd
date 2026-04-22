@@ -2,30 +2,32 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_asv_global}
 \alias{filter_asv_global}
-\title{filter_asv_global}
+\title{Filter out ASVs with Low Total Read Count}
 \usage{
-filter_asv_global(read_count, cutoff = 10, outfile = "", sep = ",")
+filter_asv_global(read_count, cutoff = 10, outfile = NULL, sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{cutoff}{Positive integer: minimum number of reads for an ASV in the
-whole data set. Bellow this cutoff, the ASV is deleted from the data set.}
+\item{cutoff}{Positive integer specifying the minimum total number of reads
+required for an ASV to be retained. ASVs below this threshold are removed.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Eliminate ASVs with less than cutoff reads in the data set.
+Remove ASVs with fewer than a given number of reads across the entire dataset.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_asv_global(read_count_df, cutoff=2)
+filtered_read_count_df <- filter_asv_global(read_count_df, cutoff = 2)
 }
+
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{flag_pcr_error}
 \alias{flag_pcr_error}
-\title{Flag PCR error using vsearch}
+\title{Flag PCR errors using vsearch}
 \usage{
 flag_pcr_error(
   unique_asv_df,
@@ -14,42 +14,52 @@ flag_pcr_error(
 )
 }
 \arguments{
-\item{unique_asv_df}{Data frame with the following variables:
-asv, read_count. ASVs must be unique.}
+\item{unique_asv_df}{Data frame with the following columns: \code{asv}, \code{read_count}.
+ASVs must be unique.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to
+use. If \code{0}, all available CPUs are used.}
 
-\item{pcr_error_var_prop}{Numeric. Value between 0 and 1: if the proportion of read counts
-of two similar ASVs is bellow \code{pcr_error_var_prop}, the less abundant
-is flagged as a PCR error.}
+\item{pcr_error_var_prop}{Numeric value between 0 and 1 specifying the
+maximum allowed abundance ratio between similar ASVs. Less abundant ASVs
+below this threshold are flagged as PCR errors.}
 
-\item{max_mismatch}{Positive integer: maximum number of mismatches
-(gaps included) to consider two ASVs as similar.}
+\item{max_mismatch}{Positive integer specifying the maximum number of
+mismatches (including gaps) used to define similarity between ASVs.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-Input data frame completed by a PCRerror column
-(1 if potential PCR error, 0 otherwise).
+Input data frame with an added \code{PCRerror} column
+(1 = potential PCR error, 0 = otherwise).
 }
 \description{
-Identify potential PCRerrors: ASVs very similar (\code{max_mismatch}) to another
-more frequent ASV (\code{pcr_error_var_prop}) in the input data frame.
-Adds a column to the input data frame, with 1 if sequence is a
-probable PCR error, and 0 otherwise.
+Identify potential PCR errors: ASVs that are highly similar (within
+\code{max_mismatch}) to a more abundant ASV, based on abundance ratios in the
+input dataset.
+}
+\details{
+A sequence is flagged as a potential PCR error when it is closely related to
+a more abundant ASV and its relative abundance is below \code{pcr_error_var_prop}.
+A new column is added to the input data frame: \code{PCRerror} (1 = potential PCR
+error, 0 = otherwise).
 }
 \examples{
 \dontrun{
 unique_asv_df <- read_count_df \%>\%
-  group_by(asv) \%>\%
-  summarize(read_count = sum(read_count))
-unique_asv_df_flagged <- flag_pcr_error(unique_asv_df, 
-     vsearch_path=vsearch_path, 
-     pcr_error_var_prop=0,2, 
-     max_mismatch=2
-     )
+  dplyr::group_by(asv) \%>\%
+  dplyr::summarise(read_count = sum(read_count))
+
+unique_asv_df_flagged <- flag_pcr_error(
+  unique_asv_df,
+  vsearch_path = vsearch_path,
+  pcr_error_var_prop = 0.2,
+  max_mismatch = 2
+)
 }
+
 }

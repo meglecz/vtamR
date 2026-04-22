@@ -2,22 +2,26 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{get_stop_codons}
 \alias{get_stop_codons}
-\title{Codon stops from genetic code}
+\title{Codon stop set for a genetic code}
 \usage{
 get_stop_codons(genetic_code = 5)
 }
 \arguments{
-\item{genetic_code}{Integer: genetic code number from \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.}
+\item{genetic_code}{Integer specifying the NCBI genetic code number.}
 }
 \value{
-Vector of codon stops.
+Character vector of stop codons.
 }
 \description{
-Returns a vector of codon stops corresponding the genetic
-code number in \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.
+Return the set of stop codons corresponding to a given genetic code number
+as defined by NCBI.
+
+Genetic codes follow the NCBI translation tables:
+https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes
 }
 \examples{
 \dontrun{
-get_stop_codons(genetic_code=1)
+get_stop_codons(genetic_code = 1)
 }
+
 }

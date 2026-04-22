@@ -2,30 +2,33 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_stop_codon}
 \alias{filter_stop_codon}
-\title{filter_stop_codon}
+\title{Filter ASVs containing stop codons}
 \usage{
-filter_stop_codon(read_count, outfile = "", genetic_code = 5, sep = ",")
+filter_stop_codon(read_count, outfile = NULL, genetic_code = 5, sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{genetic_code}{Positive integer: genetic code number from \href{https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes}{NCBI}.}
+\item{genetic_code}{Positive integer specifying the NCBI genetic code number.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Filter out all ASVs, if there is a codon stop in all three reading
-frames of the direct strand.
+Remove ASVs that contain stop codons in all three reading frames of the
+forward (direct) strand, which typically indicates non-coding sequences or
+sequencing errors.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_stop_codon(read_count_df, genetic_code=5)
+filtered_read_count_df <- filter_stop_codon(read_count_df, genetic_code = 5)
 }
+
 }

@@ -20,57 +20,56 @@ denoise_by_swarm(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{by_sample}{Logical. If \code{TRUE}, clustering is performed separately for
+\item{by_sample}{Logical; if \code{TRUE}, clustering is performed separately for
 each sample.}
 
-\item{split_clusters}{Logical. If \code{TRUE}, apply post-processing to split
-clusters based on relatively abundant ASVs compared to the centroid.}
+\item{split_clusters}{Logical; if \code{TRUE}, apply post-processing to split
+clusters based on highly abundant ASVs relative to the centroid.}
 
-\item{min_abundance_ratio}{Numeric. Used when \code{split_clusters = TRUE}.
-Minimum ratio of an ASV's read count relative to the centroid's read count
+\item{min_abundance_ratio}{Numeric; used when \code{split_clusters = TRUE}.
+Minimum ratio of an ASV's read count relative to the centroid read count
 required for the ASV to define a new cluster.}
 
-\item{min_read_count}{Numeric. Used when \code{split_clusters = TRUE}.
+\item{min_read_count}{Numeric; used when \code{split_clusters = TRUE}.
 Minimum absolute read count required for an ASV to be considered for splitting.}
 
-\item{swarm_path}{Character string: path to swarm executable.}
+\item{swarm_path}{Character string: path to SWARM executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, use all available CPUs.}
 
-\item{swarm_d}{Positive integer: d parameter for swarm (if applicable).
-Maximum number of differences allowed between two ASVs,
-meaning that two ASVs will be grouped if they have d (or less) differences.}
+\item{swarm_d}{Positive integer; SWARM \code{d} parameter. Maximum number of
+differences allowed between two ASVs for clustering (ASVs are grouped if
+they differ by ≤ d positions).}
 
-\item{fastidious}{Logical: When clustering with swarm and working with d = 1,
-perform a second clustering pass to reduce the number of small clusters.}
+\item{fastidious}{Logical; when \code{swarm_d = 1}, perform an additional clustering
+pass to reduce the number of small clusters.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character for input and output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings/errors.}
 }
 \value{
 A data frame with the same structure as the input, where ASVs
-belonging to the same cluster are pooled (summed) within each
+belonging to the same cluster are pooled (read counts summed) within each
 sample–replicate combination. If \code{split_clusters = TRUE}, clusters may be
 further subdivided according to the splitting criteria.
 }
 \description{
-This function performs \strong{denoising} using SWARM.
+This function performs \strong{denoising} using SWARM clustering.
 }
 \details{
-Clustering can be applied to the entire dataset or performed separately
-for each sample using the \code{by_sample} argument.
+Clustering can be applied to the entire dataset or independently for each
+sample using the \code{by_sample} argument.
 
 By default, read counts of ASVs belonging to the same cluster are summed
-within each sample–replicate combination. Optionally, an experimental
+within each sample–replicate combination. Optionally, an additional
 post-processing step (\code{split_clusters = TRUE}) can be applied to further
 refine clusters. In this step, clusters are split based on the relative
-abundance of ASVs compared to the centroid (see \code{?split_swarm_clusters}).
-This option is only available when clustering is performed by sample
+abundance of ASVs compared to the cluster centroid (see \code{?split_swarm_clusters}).
+This option is only available when clustering is performed per sample
 (\code{by_sample = TRUE}).
 }
 \examples{

@@ -2,35 +2,43 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{history_by}
 \alias{history_by}
-\title{History By}
+\title{Filter processing history by feature}
 \usage{
 history_by(dir, feature, value, sep = ",")
 }
 \arguments{
-\item{dir}{Character string: directory containing the output files
-of intermediate filtering steps. File names should start with a number
-followed by an underscore (e.g. 5_filter_occurrence_sample.csv).}
+\item{dir}{Character string specifying the directory containing intermediate
+filtering output files.}
 
-\item{feature}{Character string with the following possible values:
-"asv_id", "asv", "sample", "replicate", "read_count".}
+\item{feature}{Character string specifying the feature to filter by.
+Must be one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or
+\code{"read_count"}.}
 
-\item{value}{Character string: values of feature that should selected.
-The output data frame contains all lines where value is present
-in feature in the input files.}
+\item{value}{Character or numeric value to match in the selected feature.
+Only rows containing this value are retained.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 }
 \value{
-An invisible data frame with the selected lines of the input files.
+An invisible data frame containing all rows matching the selected
+feature value across all intermediate files.
 }
 \description{
-Filters a feature (asv_id/asv/sample/replicate),
-in all output files of intermediate filtering steps to retain only
-lines corresponding a value.
+Filter a feature (\code{asv_id}, \code{asv}, \code{sample}, \code{replicate}, or \code{read_count})
+across all intermediate filtering output files to retain only rows matching
+a specified value.
+}
+\details{
+This function scans all output files from intermediate filtering steps in a
+directory and extracts rows where the selected feature matches the given
+value.
+
+Input files must be named with a numeric prefix followed by an underscore
+(e.g. \verb{5_filter_occurrence_sample.csv}).
 }
 \examples{
 \dontrun{
-history_by(dir="out", feature="asv_id", value=1)
-history_by(dir="out", feature="sample", value="tpos1")
+history_by(dir = "out", feature = "asv_id", value = 1)
+history_by(dir = "out", feature = "sample", value = "tpos1")
 }
 }

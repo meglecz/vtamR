@@ -6,84 +6,79 @@
 \usage{
 write_asv_table(
   read_count,
-  outfile = "",
+  outfile = NULL,
   asv_tax = NULL,
-  sampleinfo = "",
+  sampleinfo = NULL,
   pool_replicates = FALSE,
   method = "mean",
   add_empty_samples = FALSE,
   add_sums_by_sample = FALSE,
   add_sums_by_asv = FALSE,
   add_expected_asv = FALSE,
-  mock_composition = "",
+  mock_composition = NULL,
   sep = ","
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate (optional), read_count, asv, cluster_id (optional)}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv_id}, \code{sample}, \code{replicate} (optional), \code{read_count}, \code{asv}, \code{cluster_id} (optional).}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the output CSV file. If NULL, no file is written.}
 
-\item{asv_tax}{Data frame or CSV file with taxonomic assignments with the following columns:
-asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-domain_taxid,domain,kingdom_taxid,kingdom,
-phylum_taxid,phylum,class_taxid,class,order_taxid,order,
-family_taxid,family,genus_taxid,genus,species_taxid,species.
-pid,pcov,phit,taxn,seqn,refres,ltgres,asv.
-If given, the output is completed with taxonomic assignment of each ASV.}
+\item{asv_tax}{Data frame or CSV file containing taxonomic assignments.
+Must include at least the columns \code{asv_id} and \code{asv}. Additional columns
+describe the taxonomy of each ASV (e.g. ranks, identifiers,
+or other annotations).
+If provided, taxonomic annotations are appended to the output.}
 
-\item{sampleinfo}{Data frame or csv file with columns: sample, sample_type.
-Only necessary if add_empty_samples==T or add_expected_asv==T.}
+\item{sampleinfo}{Data frame or CSV file with columns: \code{sample}, \code{sample_type}.
+Required if \code{add_empty_samples = TRUE} or \code{add_expected_asv = TRUE}.}
 
-\item{pool_replicates}{Logical: if replicate column is present in the
-input data, read counts are aggregated (see method) over replicates (pool_replicates== TRUE),
-or kept separately (pool_replicates== FALSE).
-In this case, each column in the output df is a
-sample.replicate.}
+\item{pool_replicates}{Logical. If \code{TRUE}, aggregate read counts across replicates
+(see \code{method}). If \code{FALSE}, keep replicates separate (columns are \code{sample.replicate}).}
 
-\item{method}{Character string specifying how replicate read counts should be aggregated
-Must be one of "mean", "max", "sum" or "min".}
+\item{method}{Character string specifying how replicate read counts are aggregated.
+Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
 
-\item{add_empty_samples}{Logical: add a column for each samples
-in the original data set, even if they do not have reads after filtering.}
+\item{add_empty_samples}{Logical. If \code{TRUE}, include all samples from the original dataset,
+even if they have zero reads after filtering.}
 
-\item{add_sums_by_sample}{Logical: add a line with the total number of reads
-in each sample, and another with the number of ASVs in each sample.}
+\item{add_sums_by_sample}{Logical. If \code{TRUE}, add rows with total read counts and
+number of ASVs per sample.}
 
-\item{add_sums_by_asv}{Logical: add a column with the total number of reads
-for each ASV, and another with the number of samples, where the ASV is present.}
+\item{add_sums_by_asv}{Logical. If \code{TRUE}, add columns with total read counts per ASV
+and the number of samples in which each ASV is present.}
 
-\item{add_expected_asv}{Logical: add a column for each mock sample in which
-keep and tolerate ASVs are flagged.}
+\item{add_expected_asv}{Logical. If \code{TRUE}, add columns indicating expected ASVs
+(e.g. in mock samples).}
 
-\item{mock_composition}{Data frame or CSV file with the following columns:
-sample,action,asv. Action can take the following values: keep/tolerate.
-Only necessary if add_expected_asv==T.}
+\item{mock_composition}{Data frame or CSV file with columns: \code{sample}, \code{action}, \code{asv}.
+\code{action} can be \code{keep} or \code{tolerate}. Required if \code{add_expected_asv = TRUE}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 }
 \value{
-An invisible data frame corresponding to the output file.
-Columns represent samples, rows represent ASVs, and cells contain
-read counts, along with additional information depending on the
-input parameters.
+Invisible data frame corresponding to the ASV table. Columns represent samples,
+rows represent ASVs, and cells contain read counts, optionally extended with
+taxonomic and summary information.
 }
 \description{
-Write csv file with samples in columns, ASVs in lines, read_counts in cells.
+Generate and optionally write an ASV abundance table with samples as columns,
+ASVs as rows, and read counts as values.
 }
 \examples{
 \dontrun{
-write_asv_table(read_count_samples_df, 
-    outfile="out/asv_table.csv", 
-    asv_tax=asv_tax, 
-    sampleinfo=sampleinfo_df,
-    add_empty_samples=T, 
-    add_sums_by_sample=T,
-    add_sums_by_asv=T, 
-    add_expected_asv=T,
-    mock_composition="data/mock_compostion.csv"
-    )
+write_asv_table(
+  read_count_samples_df,
+  outfile = "out/asv_table.csv",
+  asv_tax = asv_tax,
+  sampleinfo = sampleinfo_df,
+  add_empty_samples = TRUE,
+  add_sums_by_sample = TRUE,
+  add_sums_by_asv = TRUE,
+  add_expected_asv = TRUE,
+  mock_composition = "data/mock_compostion.csv"
+)
 }
+
 }

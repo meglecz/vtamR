@@ -2,7 +2,7 @@
 % Please edit documentation in R/vtamR_graph.R
 \name{plot_read_count_by_sample}
 \alias{plot_read_count_by_sample}
-\title{plot_read_count_by_sample}
+\title{Plot Read Counts by Sample}
 \usage{
 plot_read_count_by_sample(
   read_count_df,
@@ -14,24 +14,26 @@ plot_read_count_by_sample(
 )
 }
 \arguments{
-\item{read_count_df}{data frame with sample, read_count and replicate (optional) columns}
+\item{read_count_df}{Data frame with at least \code{sample} and \code{read_count}
+columns, and optionally a \code{replicate} column.}
 
-\item{sampleinfo}{file with sample and sample_type (real/mock/negative) columns}
+\item{sampleinfo}{Data frame or CSV file with \code{sample} and \code{sample_type}
+columns (e.g. \code{real}, \code{mock}, \code{negative}).}
 
-\item{sample_replicate}{Boolean. If TRUE barplot is made by sample-replicates,
-by sample otherwise}
+\item{sample_replicate}{Logical; if \code{TRUE}, the plot is generated per
+sample–replicate combination, otherwise per sample.}
 
-\item{sep}{separator used in csv files}
+\item{sep}{Field separator used in CSV files.}
 
-\item{x_axis_label_size}{size of labels in x axis}
+\item{x_axis_label_size}{Numeric; size of x-axis labels.}
 
-\item{plotfile}{Character string: png file name for the output plot;
-If empty, no file is written.}
+\item{plotfile}{Character string: name of the output PNG file. If empty,
+no file is written.}
 }
 \value{
-Barplot
+A bar plot object.
 }
 \description{
-Create barplot with the number of reads in each sample or sample-replicate;
-If information is given on sample types, bars are colored in function of them
+Creates a bar plot showing the number of reads per sample or sample–replicate.
+If sample metadata is provided, bars are colored according to sample type.
 }

@@ -2,23 +2,25 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{expand_rows}
 \alias{expand_rows}
-\title{Expand Rows}
+\title{Expand rows by splitting taxid field}
 \usage{
 expand_rows(row)
 }
 \arguments{
-\item{row}{Row of a data frame with the following columns:
-qseqid,pident,qcovhsp,staxids}
+\item{row}{A data frame row containing the columns: \code{qseqid}, \code{pident},
+\code{qcovhsp}, \code{staxids}.}
 }
 \value{
-Data frame with the following columns: qseqid,pident,qcovhsp,staxids
+Data frame with one row per taxid, with columns: \code{qseqid}, \code{pident},
+\code{qcovhsp}, \code{staxids}.
 }
 \description{
-Split the taxid column to different taxids in the input data frame.
-Make one line for each taxid.
+Split entries containing multiple taxonomy IDs into separate rows, ensuring
+a one-to-one mapping between hits and taxids.
 }
 \examples{
 \dontrun{
 expand_rows(row)
 }
+
 }

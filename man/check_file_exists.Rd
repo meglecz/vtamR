@@ -4,22 +4,22 @@
 \alias{check_file_exists}
 \title{Check existence of files}
 \usage{
-check_file_exists(file_list, dir = "")
+check_file_exists(file_list, dir)
 }
 \arguments{
-\item{file_list}{Vector of file names.}
+\item{file_list}{Character vector of file names to check.}
 
-\item{dir}{Character string: name of the directory containing the input files}
+\item{dir}{Character string: path to the directory containing the input files.}
 }
 \value{
-Error message if some files do not exist and stop program.
+Throws an error and stops execution if one or more files are missing.
 }
 \description{
-Check if all files in the input vector exist.
+Verifies that all files listed in \code{file_list} exist in the specified directory.
 }
 \examples{
 \dontrun{
 file_list <- c("14ben01-1.fasta", "14ben01-2.fasta")
-check_file_exists(file_list=file_list, dir="vtamR_test/out_mfzr/sorted")
+check_file_exists(file_list = file_list, dir = "vtamR_test/out_mfzr/sorted")
 }
 }

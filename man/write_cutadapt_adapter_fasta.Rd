@@ -2,39 +2,37 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_cutadapt_adapter_fasta}
 \alias{write_cutadapt_adapter_fasta}
-\title{Make a fasta file with adapters}
+\title{Make a FASTA file with adapters}
 \usage{
-write_cutadapt_adapter_fasta(
-  fastainfo_df,
-  fasta_file,
-  tag_to_end = T,
-  outdir = ""
-)
+write_cutadapt_adapter_fasta(fastainfo_df, fasta_file, outdir, tag_to_end = T)
 }
 \arguments{
-\item{fastainfo_df}{Data frame with columns: tag_fw,tag_rv,fasta}
+\item{fastainfo_df}{Data frame with columns: \code{tag_fw}, \code{tag_rv}, \code{fasta}.}
 
-\item{fasta_file}{Character string: fasta file that needs
-to be demultiplexed (present in the fasta column of fastainfo_df).}
+\item{fasta_file}{Character string specifying the FASTA file to be demultiplexed
+(must be present in the \code{fasta} column of \code{fastainfo_df}).}
 
-\item{tag_to_end}{logical: tags are at the extremity of the reads.}
+\item{outdir}{Character string specifying the output directory.}
 
-\item{outdir}{Character string: output directory.}
+\item{tag_to_end}{Logical. If \code{TRUE}, tags are assumed to be located at the
+extremities of reads.}
 }
 \value{
-tags.fasta file containing the tag combinations present in fasta_file.
-NA if all tags are NA in fastainfo_df for fasta_file.
+Path to the generated \code{tags.fasta} file. Returns \code{NA} if all tags
+are \code{NA} in \code{fastainfo_df} for the given \code{fasta_file}.
 }
 \description{
-Make a fasta file with tag combinations using cutadapt syntax.
-This will be used in demultiplex_and_trim to demultiplex the input fasta file.
+Create a FASTA file containing tag combinations formatted for \code{cutadapt}.
+This file is used by \code{demultiplex_and_trim} to demultiplex input FASTA files.
 }
 \examples{
 \dontrun{
-write_cutadapt_adapter_fasta(fastainfo_df=fastainfo_df, 
-    fasta_file="test.fasta", 
-    tag_to_end=F, 
-    outdir="data/out"
-    )
+write_cutadapt_adapter_fasta(
+  fastainfo_df = fastainfo_df, 
+  fasta_file = "test.fasta", 
+  tag_to_end = FALSE, 
+  outdir = "data/out"
+)
 }
+
 }

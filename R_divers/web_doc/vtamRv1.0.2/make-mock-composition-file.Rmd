@@ -1,0 +1,356 @@
+---
+title: "How to make a mock_composition file - v1.0.2"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{How to make a mock_composition file - v1.0.2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  echo=TRUE,
+  eval=TRUE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+
+# What it is and when to use it
+
+The [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) file
+defines which ASVs are expected in each mock sample and is a key input for the analysis.
+
+It is provided as a CSV file with the following columns:
+
+* sample: name of the [mock](tutorial-vtamr-pipeline.html#glossary) sample
+* action:
+
+  * `keep`: ASV expected in the mock that should be retained in the dataset
+  * `tolerate`: ASV that may be present in the mock but is not critical to retain (e.g. poorly amplified organism)
+* [asv](tutorial-vtamr-pipeline.html#glossary): ASV sequence
+* taxon: optional; organism name
+* [asv_id](tutorial-vtamr-pipeline.html#glossary): optional; if both `asv` and `asv_id` are provided and conflict, `asv_id` is ignored
+
+The [known_occurrences](tutorial-vtamr-pipeline.html#known_occurrences) file
+is required to run the following functions:
+
+* `suggest_pcr_error_cutoff`
+* `suggest_sample_cutoff`
+* `suggest_variant_readcount_cutoffs`
+* `compute_asv_specific_cutoff`
+* `classify_control_occurrences`
+
+These functions are used to:
+
+* assess filtering performance in terms of precision (TP / (TP + FP)) 
+and sensitivity (TP / (TP + FN)) — via `classify_control_occurrences`
+* identify optimal parameter values for several filters (`suggest_pcr_error_cutoff`, 
+`suggest_sample_cutoff`, `suggest_variant_readcount_cutoffs`, `compute_asv_specific_cutoff`)
+
+The [mock_composition](tutorial-vtamr-pipeline.html#mock_composition) file is 
+also useful—though not required—for the `write_asv_table` function, 
+if you want to include an output column that highlights expected occurrences in 
+each mock sample.
+
+
+# Constructing the `mock_composition` File
+
+I suggest two different methods to construct the `mock_composition` file:
+
+1. Using the `match_variants_to_mock_species` function
+2. Prefiltering the dataset and manually selecting the expected ASVs
+
+## 1. Using `match_variants_to_mock_species`
+
+This function offers a quick and convenient way to generate a 
+`mock_composition` file.
+However, it may occasionally miss some expected occurrences. 
+In such cases, you can manually retrieve the expected ASVs from a 
+prefiltered dataset (see below).
+
+### Prerequisites
+
+* **Reference sequences**
+
+  Prepare one reference sequence for each species expected in the mock samples.
+  Each sequence should span at least 70% of the region targeted by the primers.
+  It can be longer or slightly shorter than the ASV and may include minor 
+  mismatches relative to the true sequence.
+
+  Reference sequences must be provided in FASTA format, with headers including a valid NCBI taxonomic identifier:
+
+  ```
+  >SequenceName taxID=12345
+  ```
+
+  The `taxID` must correspond to an entry in the
+  [NCBI Taxonomy database](https://www.ncbi.nlm.nih.gov/taxonomy).
+
+* **Taxonomy file**
+
+  A taxonomy file is required.
+  The file distributed with the **COInr** database is appropriate, even for non-COI markers
+  (see [TaxAssign reference data base](installation.html#taxassign-reference-data-base)).
+
+* **Read count data**
+
+  Provide a `read_count_df` data frame containing read counts for each mock sample.
+  For better performance, it is recommended to use data that has already undergone 
+  initial filtering to remove artefactual ASVs and substantially reduce dataset size
+  (e.g. after Denoising with SWARM, `LFNglobalReadCount`, `FilterIndel`,
+  `FilterCodonStop`, `FilterExternalContaminant`, and `FilterChimera`).
+
+  Although this improves speed, the function can also be run on unfiltered data.
+
+### Function Overview
+
+The `match_variants_to_mock_species` function performs the following steps:
+
+1. **Builds a small BLAST database** from reference sequences representing 
+expected species or closely related taxa.
+2. **Assigns taxonomy** to all ASVs detected in mock samples using this 
+custom database. Because the database is small, this step is fast.
+3. **Selects the most abundant ASV** for each taxon.
+4. **Generates a `mock_composition` template file**, which should be reviewed 
+and edited if necessary.
+
+### Run `match_variants_to_mock_species`
+
+We will use files generated in the first part of the
+[Tutorial](tutorial-vtamr-pipeline.html) (up to
+[filter_replicate](tutorial-vtamr-pipeline.html#filter-replicate)).
+
+* Demo files are included in the `vtamR` package (hence the use of `system.file()`).
+  When using your own data, simply replace these with your file paths.
+* `read_count_file` corresponds to the output of `filter_replicate` from the
+  [Tutorial](tutorial-vtamr-pipeline.html).
+* `blast_db` and `taxonomy` are configured as described in the
+  [Tutorial](tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment).
+
+```{r set_db, eval=TRUE}
+library(vtamR)
+
+read_count_file <- system.file("extdata/demo/8_filter_replicate.csv", package = "vtamR")
+reference_mock_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
+sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
+
+outdir_mock <- "mock_composition"
+
+mock_template <- match_variants_to_mock_species(
+  read_count=read_count_file,
+  fas=reference_mock_fasta,
+  taxonomy=taxonomy,
+  sampleinfo = sampleinfo,
+  outdir= outdir_mock,
+  blast_path=blast_path
+  )
+```
+
+**Note**: If BLAST is available in your PATH (see [Installation](installation.html)),
+you can omit the `blast_path` argument.
+
+### Output
+
+The main output file is **`mock_composition_template_to_check.csv`**,
+which serves as a template for the final `mock_composition` file.
+
+```{r show_results, eval=TRUE}
+mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
+mock_composition_df <- read.csv(mock_composition)
+
+knitr::kable(mock_composition_df, format = "markdown")
+```
+
+It contains the most abundant sequence for each `ltg_name` identified 
+during taxonomic assignment,
+replicated across all mock samples.
+If mock samples differ in composition, you should remove entries 
+corresponding to taxa not expected in a given sample.
+
+**Note:**
+The file does **not** include species that did not show significant similarity to any ASV.
+This can happen if:
+
+* the species was not amplified in the mock samples, or
+* the reference sequence in the custom database is incorrect.
+
+Here is your text with **correct R Markdown internal link syntax preserved and consistent** (anchors cleaned + safer IDs where needed).
+
+
+## 2. Prefiltering the dataset and manually picking the expected ASVs
+
+The idea is to 
+
+- Prefilter your data set
+- Assign ASV to taxa
+- Examine the ASV in the mock samples and their read counts and pick the correct sequences.
+
+I suggest that you start by filtering/denoising your data set by using at least some of
+the following functions as in the [Tutorial](tutorial-vtamr-pipeline.html). 
+This will eliminate most of the erroneous ASV, so
+it will be easier to identify the expected ASV from your mock samples. 
+
+- [Denoising with SWARM](tutorial-vtamr-pipeline.html#denoising-with-swarm)
+- [filter_asv_global](tutorial-vtamr-pipeline.html#filter_asv_global)
+- [filter_indel](tutorial-vtamr-pipeline.html#filter_indel)
+- [filter_stop_codon](tutorial-vtamr-pipeline.html#filter_stop_codon)
+- [filter_chimera](tutorial-vtamr-pipeline.html#filter_chimera)
+
+### Set parameters and access the demo files
+
+We will use some of the files created by the first part of the 
+[Tutorial](tutorial-vtamr-pipeline.html) (till the 
+[filter_replicate](tutorial-vtamr-pipeline.html#filter-replicate))
+
+- The demo files are included in the `vtamR` package, hence the use of 
+`system.file()`. When using your own data just enter your file names.
+- `read_count_file` is the output of `filter_replicate` of the
+[Tutorial](tutorial-vtamr-pipeline.html#filter-replicate).
+- The `blast_db` and `taxonomy` are set up as in the 
+[Tutorial](tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment)
+
+
+```{r set_db2}
+library(vtamR)
+library(dplyr)
+
+read_count_file <- system.file("extdata/demo/8_filter_replicate.csv", package = "vtamR")
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
+blast_db <- system.file("extdata/db_test", package = "vtamR")
+blast_db <- file.path(blast_db, "COInr_reduced")
+blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
+```
+
+Let's limit the analyses to the mock samples
+
+```{r}
+read_count_df <- read.csv(read_count_file)
+sampleinfo_df <- read.csv(sampleinfo)
+
+# select mock samples in sampleinfo
+mock_samples <- sampleinfo_df %>%
+  filter(sample_type == "mock")
+
+# select mock samples from read_count_df
+read_count_mock <- read_count_df %>%
+  filter(sample %in% mock_samples$sample)
+```
+
+### Assign taxa to ASVs {#taxassign}
+
+`assign_taxonomy_ltg` will assign all ASV in the input csv file or data frame (`read_count_file`).
+
+See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#taxonomic-assignment).
+
+**Note**: If BLAST is in your PATH, you can omit the `blast_path` argument.
+
+```{r}
+asv_tax <- assign_taxonomy_ltg(
+  asv = read_count_mock, 
+  taxonomy = taxonomy, 
+  blast_db = blast_db,
+  quiet = TRUE,
+  blast_path = blast_path
+)
+```
+
+### Make an ASV table with taxonomic assignments {#print-output}
+
+Make a data frame with ASVs and read counts in the
+[wide format](tutorial-vtamr-pipeline.html#glossary)
+and add their taxonomic assignment.
+
+This format is easier to read for humans than `read_count_df`.
+
+See details of `write_asv_table` [here](tutorial-vtamr-pipeline.html#print-output).
+
+```{r}
+asv_table_mock <- write_asv_table(
+  read_count_mock, 
+  sampleinfo = sampleinfo, 
+  asv_tax = asv_tax,
+  pool_replicates = TRUE
+)
+```
+
+Sort the output by the taxon name and then by decreasing read count.
+
+```{r}
+asv_table_mock <- asv_table_mock %>%
+  arrange(ltg_name, desc(tpos1))
+```
+
+Let's see the ASV present in `tpos1`.
+
+```{r}
+knitr::kable(asv_table_mock, format = "markdown")
+```
+
+In this mock sample, there should be the following 6 species:
+
+* *Caenis pusilla*
+* *Rheocricotopus*
+* *Phoxinus phoxinus*
+* *Hydropsyche pellucidula*
+* *Synorthocladius semivirens*
+* *Baetis rhodani*
+
+We can see that in spite of all the filtering we have done so far, there are still
+a lot of unexpected occurrences in this sample.
+
+Most of them have low read counts and could be filtered out by
+[Low Frequency Noise Filters](tutorial-vtamr-pipeline.html#glossary) such as 
+`filter_occurrence_read_count`, `filter_occurrence_sample`, `filter_occurrence_variant`.
+
+
+### Select the expected ASV and make mock_composition {#mock-composition}
+
+You can now pick the correct sequences of the expected ASVs in each mock and make the
+[mock_composition](tutorial-vtamr-pipeline.html#mock_composition) file.
+
+

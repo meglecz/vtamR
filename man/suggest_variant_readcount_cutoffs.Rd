@@ -2,14 +2,14 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{suggest_variant_readcount_cutoffs}
 \alias{suggest_variant_readcount_cutoffs}
-\title{suggest_variant_readcount_cutoffs}
+\title{Suggest cutoff values for \code{filter_occurrence_variant} and \code{filter_occurrence_read_count}}
 \usage{
 suggest_variant_readcount_cutoffs(
   read_count,
   outdir,
   known_occurrences = NULL,
-  mock_composition = "",
-  sampleinfo = "",
+  mock_composition = NULL,
+  sampleinfo = NULL,
   habitat_proportion = 0.5,
   sep = ",",
   min_read_count_cutoff = 10,
@@ -24,85 +24,82 @@ suggest_variant_readcount_cutoffs(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or CSV file with columns
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{outdir}{Character string: name of the output directory.}
+\item{outdir}{Character string naming the output directory.}
 
 \item{known_occurrences}{Data frame or file produced by
-\code{classify_control_occurrences} function, with known False Positives and True Positives.
-Optional; If no \emph{known_occurrences} is provided by the user, it will be calculated
-from mock_composition and sampleinfo and habitat_proportion.}
+\code{classify_control_occurrences()}, containing known true positives and
+false positives. Optional; if NULL, it is computed from
+\code{mock_composition} and \code{sampleinfo}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns
+\code{sample}, \code{action} (keep/tolerate), and \code{asv}.}
 
-\item{sampleinfo}{Data frame or csv file with columns:
-sample, sample_type(mock/negative/real), habitat, replicate, (optional: file).}
+\item{sampleinfo}{Data frame or CSV file with columns
+\code{sample}, \code{sample_type} (mock/negative/real), \code{habitat}, \code{replicate}
+(optional), and optional file metadata.}
 
-\item{habitat_proportion}{Numeric. Value between 0 and 1: for each asv, if the proportion
-of reads in a habitat is below this cutoff,
-it is considered as an artifact in all samples of the habitat.}
+\item{habitat_proportion}{Numeric value between 0 and 1. Used to infer
+habitat-based artifacts when constructing known occurrences.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{min_read_count_cutoff}{Positive integer: the lowest cutoff value for
-\code{filter_occurrence_read_count} function.}
+\item{min_read_count_cutoff}{Positive integer specifying the minimum value
+tested for \code{filter_occurrence_read_count()}.}
 
-\item{max_read_count_cutoff}{Positive integer: the highest cutoff value
-for \code{filter_occurrence_read_count} function.}
+\item{max_read_count_cutoff}{Positive integer specifying the maximum value
+tested for \code{filter_occurrence_read_count()}.}
 
-\item{increment_read_count_cutoff}{Positive integer: values from
-\code{min_read_count_cutoff} to \code{max_read_count_cutoff}
-are tested by \code{increment_lfn_read_count_cutof} of increment.}
+\item{increment_read_count_cutoff}{Positive integer defining the step size
+between tested read count cutoff values.}
 
-\item{min_variant_cutoff}{Numeric. Value between 0 and 1: the lowest cutoff value for
-\code{filter_occurrence_variant} function.}
+\item{min_variant_cutoff}{Numeric value between 0 and 1 specifying the
+minimum value tested for \code{filter_occurrence_variant()}.}
 
-\item{max_variant_cutoff}{Numeric. Value between 0 and 1: the highest value for \code{filter_occurrence_variant}
-function.}
+\item{max_variant_cutoff}{Numeric value between 0 and 1 specifying the
+maximum value tested for \code{filter_occurrence_variant()}.}
 
-\item{increment_variant_cutoff}{Numeric. Value between 0 and 1: values from
-\code{min_variant_cutoff} to \code{max_variant_cutoff} are tested by
-\code{increment_variant_cutoff} increment.}
+\item{increment_variant_cutoff}{Numeric value between 0 and 1 defining the
+step size between tested variant cutoff values.}
 
-\item{by_replicate}{logical: compare read count of the occurrence to the
-read counts of the ASV-replicate in \code{filter_occurrence_variant} function.}
+\item{by_replicate}{logical; argument passed to filter_occurrence_variant}
 
-\item{min_replicate_number}{Positive integer: minimum number of replicates
-for \code{filter_min_replicate}.}
+\item{quiet}{logical; if TRUE, suppress informational messages and show only
+warnings or errors.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{`min_replicate_number()`}{Positive integer specifying the minimum number of
+replicates for \code{filter_min_replicate()}.}
 }
 \value{
-Data frame with the following columns:
-read_count_cutoff, variant_cutoff, FN, TP, FP.
+Data frame with columns \code{read_count_cutoff}, \code{variant_cutoff},
+\code{FN}, \code{TP}, and \code{FP}.
 }
 \description{
-Suggest optimal parameters for \code{read_count_cutoff} and \code{variant_cutoff}
-functions.
-
-The the \code{filter_occurrence_read_count} and \code{filter_occurrence_variant} is run for a series of parameter value
-combinations followed by \code{filter_min_replicate}.
-For each parameter combination, the number of FN, TP, and FP is reported.
-Users should chose the parameter setting that minimizes, FN and FP.
+Explore combinations of parameters for \code{filter_occurrence_read_count} and
+\code{filter_occurrence_variant} (followed by \code{filter_min_replicate}) in order
+to identify optimal filtering thresholds.
 }
 \details{
-This function need a \emph{known_occurrences} data frame or CSV file. If it is not
-provided, it will be calculated from \emph{read_count}, \emph{mock_composition}, \emph{sampleinfo} and
-\emph{habitat_proportion}.
+For each parameter combination, the number of false negatives (FN),
+true positives (TP), and false positives (FP) is computed. Users are
+encouraged to select parameter settings that minimize both FN and FP.
+
+If \code{known_occurrences} is not provided, it is constructed from
+\code{read_count}, \code{mock_composition}, \code{sampleinfo}, and \code{habitat_proportion}.
 }
 \examples{
 \dontrun{
-suggest_variant_readcount_cutoffs(read_count_df, 
-    known_occurrences="data/known_occurrences.csv", 
-    min_read_count_cutoff=10,
-     max_read_count_cutoff=50, 
-     increment_read_count_cutoff=10, 
-     min_variant_cutoff=0.001, 
-     max_variant_cutoff=0.005, 
-     increment_variant_cutoff=0.001
-     )
+suggest_variant_readcount_cutoffs(
+  read_count_df,
+  known_occurrences = "data/known_occurrences.csv",
+  min_read_count_cutoff = 10,
+  max_read_count_cutoff = 50,
+  increment_read_count_cutoff = 10,
+  min_variant_cutoff = 0.001,
+  max_variant_cutoff = 0.005,
+  increment_variant_cutoff = 0.001
+)
 }
 }

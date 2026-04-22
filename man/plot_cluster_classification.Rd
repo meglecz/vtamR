@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{plot_cluster_classification}
 \alias{plot_cluster_classification}
-\title{Plot Cluster Classification according to taxa}
+\title{Plot cluster classification according to taxonomy}
 \usage{
 plot_cluster_classification(
   read_count,
@@ -20,65 +20,70 @@ plot_cluster_classification(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, asv, read_count}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv_id}, \code{asv}, \code{read_count}.}
 
-\item{taxa}{Data frame or CSV file with the following variables:
-asv_id, one columns per taxonomic level. (e.g. domain, phylum, class, order,
-family, genus, species).
-Missing values within the lineage are not allowed. If the taxonomic assignment
-is incomplete due to low resolution, higher-level taxa should be recorded as \code{NA}.}
+\item{taxa}{Data frame or CSV file containing taxonomic assignments with one
+column per taxonomic level (e.g. domain, phylum, class, order, family, genus, species).
+Missing values should be represented as \code{NA} when no assignment is available.}
 
-\item{clustering_method}{character; swarm or vsearch}
+\item{clustering_method}{Character string; clustering method to use:
+\code{"swarm"} or \code{"vsearch"}.}
 
-\item{cluster_params}{numerical vector of either swarm's d to be used, or
-identity threshold (Value between 0 and 1) for the cluster_size algorithm of vsearch.}
+\item{cluster_params}{Numeric vector of clustering parameters:
+Swarm \code{d} values or VSEARCH identity thresholds (values between 0 and 1).}
 
-\item{vsearch_path}{Character string: path to vsearch executable.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{swarm_path}{Character string: path to swarm executable.}
+\item{swarm_path}{Character string: path to the Swarm executable.}
 
-\item{taxlevels}{Character vector with names of the taxonomic levels to be classed and plotted}
+\item{taxlevels}{Character vector specifying taxonomic levels to classify and plot
+(e.g. \code{"species"}, \code{"genus"}).}
 
-\item{outfile}{Character string: name of the output csv file with the following
-columns: classification, number_of_clusters, taxlevel, clustering_parameter;
+\item{outfile}{Character string: name of the output CSV file containing columns:
+\code{classification}, \code{number_of_clusters}, \code{taxlevel}, \code{clustering_parameter}.
 If empty, no file is written.}
 
-\item{plotfile}{Character string: png file name for the output plot;
+\item{plotfile}{Character string: name of the output PNG file for the plot.
 If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-A connected scatterplot of the number of clusters in different classes
-(open, closed, hybrid)
+A connected scatterplot showing the number of clusters in each class
+(closed, open, hybrid) across clustering parameters and taxonomic levels.
 }
 \description{
-Cluster ASV with using different clustering parameters, than classify each
-cluster at each cluster setting :
+Clusters ASVs using different clustering parameters and classifies each
+cluster based on taxonomic consistency at selected taxonomic levels.
+}
+\details{
+Clusters are classified as:
 \itemize{
-\item closed: ASVs in the cluster are assigned to the same taxon,
-and all ASVs of that taxon belong exclusively to this cluster.
-\item open: ASVs in the cluster are assigned to the same taxon,
-but some ASVs of that taxon are found in other clusters.
-\item hybrid: the cluster contains ASVs assigned to more than one taxon.
+\item \strong{closed}: all ASVs in the cluster belong to the same taxon, and that taxon
+is not present in any other cluster.
+\item \strong{open}: all ASVs in the cluster belong to the same taxon, but that taxon
+is found in multiple clusters.
+\item \strong{hybrid}: the cluster contains ASVs assigned to more than one taxon.
 }
 
-Plot the number of clusters in each class for each setting.
+The function then plots the number of clusters in each class for each clustering
+parameter and taxonomic level.
 }
 \examples{
 \dontrun{
-plot <- plot_cluster_classification(read_count, 
-                                   taxa,
-                                   clustering_method = "swarm"
-                                   cluster_params = c(2, 4, 6, 8, 10)
-                                   swarm_path= swarm_path,
-                                   taxlevels = c(species, genus),
-                                   num_threads=8)
+plot <- plot_cluster_classification(
+  read_count,
+  taxa,
+  clustering_method = "swarm",
+  cluster_params = c(2, 4, 6, 8, 10),
+  swarm_path = swarm_path,
+  taxlevels = c("species", "genus"),
+  num_threads = 8
+)
 }
 }

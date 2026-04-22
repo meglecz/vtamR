@@ -2,27 +2,34 @@
 % Please edit documentation in R/cluster_fun.R
 \name{pool_by_cluster}
 \alias{pool_by_cluster}
-\title{Pool ASVs of the same cluster}
+\title{Pool ASVs within clusters}
 \usage{
 pool_by_cluster(read_count_df, cluster_df)
 }
 \arguments{
-\item{read_count_df}{Data frame with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count_df}{Data frame containing the following columns:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{cluster_df}{Data frame with the following variables:
-asv_id, cluster_id.}
+\item{cluster_df}{Data frame containing the following columns:
+\code{asv_id}, \code{cluster_id}.}
 }
 \value{
-Data frame: same structure as the input (read_count_df), but ASVs of
-the same cluster pooled to one row.
+A data frame with the same structure as \code{read_count_df}, where ASVs
+belonging to the same cluster are pooled into a single entry per sample
+(and replicate, if applicable).
 }
 \description{
-Pools variants of the same cluster and sums read counts of the
-underlying ASVs.
+Aggregates ASVs belonging to the same cluster and sums their read counts.
+}
+\details{
+All ASVs assigned to the same \code{cluster_id} are merged, and their read counts
+are summed for each sample (and replicate, if present).
 }
 \examples{
 \dontrun{
-pool_by_cluster(read_count=read_count_df, cluster_df=cluster_df)
+pooled_df <- pool_by_cluster(
+  read_count = read_count_df,
+  cluster_df = cluster_df
+)
 }
 }

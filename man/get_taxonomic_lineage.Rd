@@ -2,28 +2,32 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{get_taxonomic_lineage}
 \alias{get_taxonomic_lineage}
-\title{Get the complete taxonomic lineage using taxIDS}
+\title{Retrieve complete taxonomic lineages from taxids}
 \usage{
 get_taxonomic_lineage(taxids, tax_df)
 }
 \arguments{
-\item{taxids}{Vector of taxIDs (taxonomic IDs).}
+\item{taxids}{Vector of taxids (taxonomic identifiers).}
 
-\item{tax_df}{Data frame with the following columns:
-tax_id, parent_tax_id, rank, name_txt, taxlevel
-(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum, 2: kingdom, 1: domain, 0: root).}
+\item{tax_df}{Data frame with the following columns: \code{tax_id}, \code{parent_tax_id},
+\code{rank}, \code{name_txt}, \code{taxlevel}
+(8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
+2: kingdom, 1: domain, 0: root).}
 }
 \value{
-Data frame with each line starting by a taxID followed by a vector taxids
-in its full lineage (starting by the highest taxonomic level).
+Data frame where each row corresponds to an input taxid and contains
+its full lineage as a sequence of taxids from the root to the queried taxid.
 }
 \description{
-Get the complete taxonomic lineage of each taxID in the input vector.
+Construct the full taxonomic lineage for each input taxid using a reference
+taxonomy table. Lineages are returned from the highest taxonomic level to
+the queried taxid.
 }
 \examples{
 \dontrun{
-taxids <- c(9606, 9593)
-tax_df <- read.delim(taxonomy="xxxxxxxx", header=T, sep="\t", fill=T, quote="")
-get_taxonomic_lineage(taxids, tax_df=tax_df)
+taxids <- c(197147, 43823)
+tax_df <- read.delim("xxxxxxxxxxxxxxx", header = TRUE, sep = "\t", fill = TRUE, quote = "")
+get_taxonomic_lineage(taxids, tax_df = tax_df)
 }
+
 }

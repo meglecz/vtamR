@@ -7,18 +7,20 @@
 run_system2(path, args, quiet = FALSE)
 }
 \arguments{
-\item{path}{Character string naming a path to a program.}
+\item{path}{Character string specifying the path to the executable.}
 
-\item{args}{vector; Arguments of the command.}
+\item{args}{Character vector of arguments passed to the command.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \description{
-Run a command using system2 and handles quite or verbose output
+Execute a system command using \code{system2}, with optional control over
+the verbosity of the output.
 }
 \examples{
 \dontrun{
-run_system2(path="ls", args=c("-all"), quiet=FALSE)
+run_system2(path = "ls", args = c("-all"), quiet = FALSE)
 }
+
 }

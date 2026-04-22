@@ -2,33 +2,32 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{write_taxid_mapping}
 \alias{write_taxid_mapping}
-\title{Create a TaxID Mapping File from a FASTA File}
+\title{Create a taxID mapping file from a FASTA file}
 \usage{
 write_taxid_mapping(file, outfile)
 }
 \arguments{
-\item{file}{Character string; path to a FASTA file containing sequences whose
-headers include taxonomic identifiers in the format \verb{taxID=<number>}.}
+\item{file}{Character string: path to a FASTA file containing sequences with
+taxonomic identifiers in the header (format \verb{taxID=<number>}).}
 
-\item{outfile}{Character string; path to the output file to be created.
-The file will contain two tab-separated columns: \code{seq_id} and \code{tax_id},
-without headers or quotes.}
+\item{outfile}{Character string: path to the output file to be created.
+The file contains two tab-separated columns: \code{seq_id} and \code{tax_id},
+without header or quotes.}
 }
 \value{
-NULL; A tab-delimited file is written to the specified \code{outfile} location.
+NULL; writes a tab-delimited file to \code{outfile}.
 }
 \description{
-This function reads a FASTA file and extracts sequence identifiers (\code{seq_id})
-and corresponding NCBI taxonomic identifiers (\code{tax_id}) from the FASTA headers.
-The output is a simple two-column tab-separated file containing these mappings.
+Extracts sequence identifiers and NCBI taxonomic identifiers from FASTA headers
+and writes them as a two-column tab-separated file.
 }
 \details{
-The FASTA headers must include a taxonomic identifier in the following format:
+The FASTA headers must contain a taxonomic identifier in the format:
 \verb{>SequenceName taxID=12345}
 \itemize{
-\item The function uses an internal helper \code{read_fasta_to_df()} to read the FASTA file.
-\item Only the first two space-separated elements of the FASTA header are used;
-extra elements are ignored.
+\item Uses the internal helper \code{read_fasta_to_df()} to parse the FASTA file.
+\item Only the first two space-separated elements of each FASTA header are used;
+any additional information is ignored.
 \item The \verb{taxID=} prefix is removed before converting values to numeric.
 }
 }
@@ -36,5 +35,4 @@ extra elements are ignored.
 \dontrun{
 write_taxid_mapping("input_sequences.fasta", "taxid_mapping.tsv")
 }
-
 }

@@ -2,26 +2,26 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{check_one_to_one}
 \alias{check_one_to_one}
-\title{Check one to one relationship}
+\title{Check one-to-one relationship}
 \usage{
 check_one_to_one(df)
 }
 \arguments{
-\item{df}{Data frame with the following variables: asv_id, asv
-(can have other columns as well).}
+\item{df}{Data frame containing at least the columns \code{asv_id} and \code{asv}}
 }
 \value{
-TRUE if one to one relationship between asv - asv_id pairs.
-Otherwise stops the run with an error message.
+Logical. Returns \code{TRUE} if a one-to-one relationship exists between
+\code{asv} and \code{asv_id}. Otherwise, the function stops execution with an error.
 }
 \description{
-Check if there is a one to one relationship between
-unique ASVs and unique asv_ids in the input data frame.
+Check whether there is a one-to-one relationship between unique ASVs and
+unique \code{asv_id} values in the input data frame.
 
-The same asv - asv_id combination can appear more than once in the data frame.
+The same \code{asv}–\code{asv_id} combination may appear multiple times in the data frame.
 }
 \examples{
 \dontrun{
-check_one_to_one(df=read_count_df)
+check_one_to_one(df = read_count_df)
 }
+
 }

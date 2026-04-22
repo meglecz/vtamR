@@ -1,5 +1,5 @@
 ---
-title: "From fastq to data frame - v1.0.1"
+title: "From fastq to data frame - v1.0.3"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{From fastq to data frame - v1.0.1}
+  %\VignetteIndexEntry{From fastq to data frame - v1.0.3}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

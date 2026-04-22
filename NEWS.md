@@ -1,3 +1,13 @@
+# vtamR 1.0.3 (prerelease) 2026/04/16
+
+- Short tutoriel added
+- Initialize stat_df from get_stat
+- Make dir, outdir obligatory
+
+# vtamR 1.0.2 (prerelease) 2026/04/16
+
+Documentation updated
+
 # vtamR 1.0.1 (prerelease) 2026/04/13
 
 Tutorial updated

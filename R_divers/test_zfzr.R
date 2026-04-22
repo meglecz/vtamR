@@ -1,5 +1,5 @@
 
-computer = "Bombyx" # Bombyx/Endoume/Win
+computer = "windows" # Bombyx/Endoume/Win
 if(computer == "Bombyx"){
   setwd("/home/meglecz/vtamR/")
   cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"

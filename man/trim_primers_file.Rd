@@ -24,70 +24,80 @@ trim_primers_file(
 )
 }
 \arguments{
-\item{fasta}{Character string: input fasta file (icluding path).}
+\item{fasta}{Character string specifying the input FASTA file (including path).}
 
-\item{outfile}{Character string: output fasta file (icluding path).}
+\item{outfile}{Character string specifying the output FASTA file (including path).}
 
-\item{primer_fw}{Character string: forward primer (IUPAC ambiguity codes are accepted).}
+\item{primer_fw}{Character string specifying the forward primer (IUPAC ambiguity codes are accepted).}
 
-\item{primer_rv}{Character string: reverse primer (IUPAC ambiguity codes are accepted).}
+\item{primer_rv}{Character string specifying the reverse primer (IUPAC ambiguity codes are accepted).}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables.}
+\item{cutadapt_path}{Character string specifying the path to the
+\code{cutadapt} executable.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
+\item{compress_method}{Character or logical. Compression method:
+\code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and available in the
+system PATH (or specified via \code{pigz_path}).
+\code{"gzip"} is available on Linux systems.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig
-Only needed if \code{check_reverse} is TRUE.}
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.
+Only used if \code{check_reverse = TRUE}.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string specifying the path to the \code{pigz}
+executable. Only required if \code{compress_method = "pigz"} and it is not
+available in the system PATH.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to
+use. If \code{0}, all available CPUs are used.}
 
-\item{check_reverse}{logical: if TRUE, check the reverse complementary
-sequences of the input fasta as well.}
+\item{check_reverse}{Logical. If \code{TRUE}, also check reverse-complemented
+sequences from the input FASTA file.}
 
-\item{primer_to_end}{logical: primers follow directly the tags
-(no heterogeneity spacer).}
+\item{primer_to_end}{Logical. If \code{TRUE}, primers are assumed to be
+directly adjacent to tags (i.e., no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
-between primers and reads (for tags, exact match is required).}
+\item{cutadapt_error_rate}{Numeric value between 0 and 1 specifying the
+maximum allowed error rate between primers and reads (exact match is
+required for tags).}
 
-\item{cutadapt_minimum_length}{Positive integer: minimum length of the
-trimmed sequence.}
+\item{cutadapt_minimum_length}{Positive integer specifying the minimum length
+of trimmed sequences.}
 
-\item{cutadapt_maximum_length}{Positive integer: maximum length of the
-trimmed sequence.}
+\item{cutadapt_maximum_length}{Positive integer specifying the maximum length
+of trimmed sequences.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-NULL; Produces an output fasta file.
+\code{NULL}. Produces an output FASTA file.
 }
 \description{
-Trim primers from the input fasta file
+Trim primer sequences from an input FASTA file.
 
-Input fasta can be uncompressed or gzip compressed file,
-but other compression types are not supported.
-The outfut file compression is determined from the output filename.
+The input FASTA file can be uncompressed or gzip-compressed; other
+compression formats are not supported. The compression of the output file
+is determined by the output filename.
 }
 \examples{
 \dontrun{
-trim_primers_file(fasta="data/test.fasta", 
-    outfile="out/test_trimmed.fasta", 
-    primer_fw="TCCACTAATCACAARGATATTGGTAC", 
-    primer_rv="WACTAATCAATTWCCAAATCCTCC", 
-    check_reverse=T, 
-    primer_to_end=T, 
-    cutadapt_minimum_length=300,
-    cutadapt_maximum_length=400
-    )
+trim_primers_file(
+  fasta = "data/test.fasta",
+  outfile = "out/test_trimmed.fasta",
+  primer_fw = "TCCACTAATCACAARGATATTGGTAC",
+  primer_rv = "WACTAATCAATTWCCAAATCCTCC",
+  check_reverse = TRUE,
+  primer_to_end = TRUE,
+  cutadapt_minimum_length = 300,
+  cutadapt_maximum_length = 400
+)
 }
+
 }

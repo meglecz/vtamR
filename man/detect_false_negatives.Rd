@@ -2,42 +2,42 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{detect_false_negatives}
 \alias{detect_false_negatives}
-\title{Make Missing Occurrences}
+\title{Detect false negatives in mock}
 \usage{
 detect_false_negatives(
   read_count_samples,
   mock_composition,
   sep = ",",
-  out = "",
+  out = NULL,
   quiet = TRUE
 )
 }
 \arguments{
-\item{read_count_samples}{Data frame or csv file with the following variables:
-asv, sample, read_count.}
+\item{read_count_samples}{Data frame or CSV file with columns
+\code{asv}, \code{sample}, \code{read_count}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns
+\code{sample}, \code{action} (keep/tolerate), and \code{asv}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{out}{Character string: output file. If empty, no file is written.}
+\item{out}{Character string naming the output file. If NULL, no file is written.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{logical; if TRUE, suppress informational messages and show only
+warnings or errors.}
 }
 \value{
-Data frame with the following columns:
-sample, action, asv, asv_id
+Data frame with columns \code{sample}, \code{action}, \code{asv}, \code{asv_id}.
 }
 \description{
-Prepare a data fram that list all expected occurrences that are missing
-(False negatives).
+Build a data frame of expected occurrences that are absent from the data
+(false negatives) based on a reference mock composition.
 }
 \examples{
 \dontrun{
-detect_false_negatives(read_count_samples=read_count_samples_df, 
-    mock_composition="data/mock_composition.csv"
-    )
+detect_false_negatives(
+  read_count_samples = read_count_samples_df,
+  mock_composition = "data/mock_composition.csv"
+)
 }
 }

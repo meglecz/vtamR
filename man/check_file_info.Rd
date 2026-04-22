@@ -2,53 +2,53 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{check_file_info}
 \alias{check_file_info}
-\title{Check File formats}
+\title{Validate input file formats and consistency}
 \usage{
-check_file_info(
-  file,
-  dir = "",
-  file_type = "fastqinfo",
-  sep = ",",
-  quiet = FALSE
-)
+check_file_info(file, dir, file_type = "fastqinfo", sep = ",", quiet = FALSE)
 }
 \arguments{
-\item{file}{Character string: name of the input file to be checked or
-data frame with the content of the input file.}
+\item{file}{Character string or data frame: input file path or already-loaded data frame.}
 
-\item{dir}{Character string: Name of the directory containing the files
-in \code{fastq_fw}, \code{fastq_rv} and \code{fasta} columns in the input file.}
+\item{dir}{Character string: directory containing files referenced in \code{fastq_fw}, \code{fastq_rv},
+or \code{fasta} columns.}
 
-\item{file_type}{Character string with the following possible values:
-"fastqinfo", "fastainfo", "sampleinfo", "mock_composition", "known_occurrences",
-"read_count", "read_count_sample", "asv_list".}
+\item{file_type}{Character string specifying the type of input file. Must be one of:
+\code{"fastqinfo"}, \code{"fastainfo"}, \code{"sampleinfo"}, \code{"mock_composition"},
+\code{"known_occurrences"}, \code{"read_count"}, \code{"read_count_sample"}, \code{"asv_list"}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: if TRUE, suppress informational messages and show only warnings or errors.}
 }
 \value{
-Error message if problem with the files and stop the script.
+Throws an error and stops execution if inconsistencies are detected.
 }
 \description{
-Check the format and coherence of different file types:
+Performs a series of checks on input files or data frames to ensure format validity
+and internal consistency across different pipeline inputs.
+}
+\details{
+The function performs the following checks depending on \code{file_type}:
 \itemize{
-\item Check if all obligatory columns are present (all file_type)
-\item Check if all sample names are alpha-numerical
-\item Check if asv, tag_fw, tag_rv primer_fw, primer_rv have only IUPAC codes
-\item Check if read_count is numerical
-\item Check sample type, habitat homogeneity across replicates
-(fastqinfo, fastainfo, sampleinfo)
-\item Check if fastq file pairs are coherent (e.g. 1 to 1 relation; fastqinfo)
-\item Check if tag combinations are unique within a file(pair)s (fastqinfo, fastainfo)
-\item Check action (mock_composition, known_occurrences)
-\item Check if 1 to 1 relation between asv_id ad asv (read_count,read_count_sample,asv_list)
+\item Presence of all required columns for each file type
+\item Validity of sample names (alphanumeric format)
+\item Validity of sequence-related fields (e.g. \code{asv}, \code{tag_fw}, \code{tag_rv}, \code{primer_fw}, \code{primer_rv})
+restricted to IUPAC nucleotide codes
+\item Numeric format of \code{read_count} values
+\item Consistency of sample type and habitat across replicates
+(\code{fastqinfo}, \code{fastainfo}, \code{sampleinfo})
+\item One-to-one pairing of FASTQ files (e.g. forward/reverse reads; \code{fastqinfo})
+\item Existence of referenced files in \code{fastq_fw}, \code{fastq_rv}, and \code{fasta} columns
+(\code{fastqinfo}, \code{fastainfo}, \code{sampleinfo})
+\item Uniqueness of tag combinations within file pairs (\code{fastqinfo}, \code{fastainfo})
+\item Validity of action values (\code{mock_composition}, \code{known_occurrences})
+\item One-to-one mapping between \code{asv_id} and \code{asv}
+(\code{read_count}, \code{read_count_sample}, \code{asv_list})
 }
 }
 \examples{
 \dontrun{
-check_file_info(file="input/sampleinfo.csv", dir="fasta", file_type="sampleinfo")
-check_file_info(file=sampleinfo_df, dir="fasta", file_type="read_count_sample")
+check_file_info(file = "input/sampleinfo.csv", dir = "fasta", file_type = "sampleinfo")
+check_file_info(file = sampleinfo_df, dir = "fasta", file_type = "read_count_sample")
 }
 }

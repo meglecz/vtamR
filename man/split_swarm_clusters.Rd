@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{split_swarm_clusters}
 \alias{split_swarm_clusters}
-\title{Split swarm clusters}
+\title{Split SWARM Clusters}
 \usage{
 split_swarm_clusters(
   read_count,
@@ -15,25 +15,26 @@ split_swarm_clusters(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{cluster}{Data frame or csv file with the following columns: asv_id, cluster_id}
+\item{cluster}{Data frame or CSV file with the following variables:
+\code{asv_id}, \code{cluster_id}.}
 
-\item{min_abundance_ratio}{Numeric. Minimum ratio of an ASV's read count
-relative to the centroid's read count required for the ASV to define a new
-split cluster (e.g., 0.2 means 20\% of the centroid abundance).}
+\item{min_abundance_ratio}{Numeric; minimum ratio of an ASV's read count
+relative to the cluster centroid required for the ASV to define a new
+cluster (e.g., 0.2 corresponds to 20\% of centroid abundance).}
 
-\item{min_read_count}{Numeric. Minimum absolute read count required for an
+\item{min_read_count}{Numeric; minimum absolute read count required for an
 ASV to be considered for splitting.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string: name of the output CSV file. If empty, no
+file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character for input and output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show
+only warnings or errors.}
 }
 \value{
 A data frame with the same structure as the input. For each
@@ -41,26 +42,28 @@ cluster–sample–replicate combination, ASVs are either:
 \itemize{
 \item split into multiple clusters defined by ASVs that meet the
 \code{min_abundance_ratio} and \code{min_read_count} criteria, with read counts
-redistributed among them while preserving their relative abundances, or
+redistributed while preserving relative abundances, or
 \item pooled into a single row (reads summed across ASVs) if no ASV meets
 the splitting criteria.
 }
 }
 \description{
-During denoising with SWARM (even with \code{fastidious = TRUE} and \code{d = 1}),
+During SWARM denoising (including when \code{fastidious = TRUE} and \code{d = 1}),
 ASVs differing by a single nucleotide can be grouped into the same cluster,
-even when they have similar read abundances. This function refines such
-clusters by identifying ASVs whose read counts exceed a given proportion
-(\code{min_abundance_ratio}) of the centroid’s read count and are also above a
-minimum threshold (\code{min_read_count}).
+even when they have comparable abundances. This function refines such
+clusters by identifying ASVs whose read counts exceed both a minimum
+relative abundance threshold (\code{min_abundance_ratio}) and a minimum absolute
+read count (\code{min_read_count}).
+}
+\details{
+For each cluster, ASVs meeting both criteria are retained as independent
+units and each defines a new cluster. The total number of reads in the
+original cluster is then redistributed among these selected ASVs while
+preserving their relative abundances.
 
-For each cluster, ASVs meeting both criteria are retained as distinct units
-and each defines a new cluster. The total number of reads in the original
-cluster is then redistributed among these selected ASVs while preserving
-their original relative abundances.
-
-If no ASVs meet the criteria, read counts are summed across ASVs within each
-cluster–sample–replicate combination, and the cluster is kept as a single unit.
+If no ASVs meet the criteria, reads are summed across ASVs within each
+cluster–sample–replicate combination, and the cluster is retained as a
+single unit.
 }
 \examples{
 \dontrun{

@@ -2,12 +2,12 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{trim_primers}
 \alias{trim_primers}
-\title{Trim primers from fasta files}
+\title{Trim primers from FASTA files}
 \usage{
 trim_primers(
   fastainfo,
-  fasta_dir = "",
-  outdir = "",
+  fasta_dir,
+  outdir,
   compress = F,
   compress_method = "R",
   pigz_path = "pigz",
@@ -23,68 +23,83 @@ trim_primers(
 )
 }
 \arguments{
-\item{fastainfo}{Data frame or csv file with the following columns:
-tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type,habitat,replicate,fasta,read_count}
+\item{fastainfo}{Data frame or path to a CSV file with the following columns:
+\code{tag_fw}, \code{primer_fw}, \code{tag_rv}, \code{primer_rv},
+\code{sample}, \code{sample_type}, \code{habitat}, \code{replicate},
+\code{fasta}, \code{read_count}.}
 
-\item{fasta_dir}{Character string: directory of the fasta files to be trimmed}
+\item{fasta_dir}{Character string specifying the directory containing the
+input FASTA files.}
 
-\item{outdir}{Character string: output directory for the trimmed fasta files.}
+\item{outdir}{Character string specifying the output directory for trimmed
+FASTA files.}
 
-\item{compress}{logical: Compress output files to gzip format.}
+\item{compress}{Logical. If \code{TRUE}, compress output files using gzip.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
+\item{compress_method}{Character or logical. Compression method:
+\code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and available in the
+system PATH (or specified via \code{pigz_path}).
+\code{"gzip"} is available on Linux systems.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string specifying the path to the \code{pigz}
+executable. Only required if \code{compress_method = "pigz"} and it is not
+available in the system PATH.}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables.}
+\item{cutadapt_path}{Character string specifying the path to the
+\code{cutadapt} executable.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
 
-\item{check_reverse}{logical: if TRUE, check the reverse complementary sequences
-of the input fasta as well.}
+\item{check_reverse}{Logical. If \code{TRUE}, also check reverse-complemented
+sequences from the input FASTA files.}
 
-\item{primer_to_end}{logical: primers follow directly the tags (no heterogeneity spacer).}
+\item{primer_to_end}{Logical. If \code{TRUE}, primers are assumed to be
+directly adjacent to tags (i.e., no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
-between primers and reads (for tags, exact match is required).}
+\item{cutadapt_error_rate}{Numeric value between 0 and 1 specifying the
+maximum allowed error rate between primers and reads (exact match is
+required for tags).}
 
-\item{cutadapt_minimum_length}{Positive integer: minimum length of the
-trimmed sequence.}
+\item{cutadapt_minimum_length}{Positive integer specifying the minimum length
+of trimmed sequences.}
 
-\item{cutadapt_maximum_length}{Positive integer: maximum length of the
-trimmed sequence.}
+\item{cutadapt_maximum_length}{Positive integer specifying the maximum length
+of trimmed sequences.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-fastainfo_df the input data frame, with updated files names and sequence counts.
+Data frame. The updated \code{fastainfo} data frame with modified
+file names and sequence counts.
 }
 \description{
-Trim primers from each fasta file in input fastainfo data frame or csv file.
-Keep only trimmed reads.
-Can check both orientations.
-Count the number of reads in the output files.
+Trim primer sequences from each FASTA file listed in the input
+\code{fastainfo} data frame or CSV file. Only trimmed reads are retained.
+Both orientations can be checked if required. The number of reads in the
+output files is also computed.
 }
 \examples{
 \dontrun{
-fastainfo_df <- trim_primers(fastainfo, 
-    fasta_dir="data/fasta", 
-    outdir="out", 
-    compress=T, 
-    check_reverse=T, 
-    primer_to_end=F, 
-    cutadapt_error_rate=0.1, 
-    cutadapt_minimum_length=300, 
-    cutadapt_maximum_length=350, 
-    quiet=T
-    )
+fastainfo_df <- trim_primers(
+  fastainfo,
+  fasta_dir,
+  outdir,
+  compress = TRUE,
+  check_reverse = TRUE,
+  primer_to_end = FALSE,
+  cutadapt_error_rate = 0.1,
+  cutadapt_minimum_length = 300,
+  cutadapt_maximum_length = 350,
+  quiet = TRUE
+)
 }
+
 }

@@ -2,41 +2,44 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{pool_replicates}
 \alias{pool_replicates}
-\title{Pool replicates sample by sample}
+\title{Pool replicates by sample}
 \usage{
 pool_replicates(
   read_count,
   method = "mean",
   digits = 0,
-  outfile = "",
+  outfile = NULL,
   sep = ","
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv, cluster_id (optional).}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}, \code{cluster_id} (optional).}
 
-\item{method}{Character string specifying how replicate read counts should be pooled.
-Must be one of "mean", "max", "sum" or "min".}
+\item{method}{Character string specifying the aggregation method used to pool
+replicates. Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
 
-\item{digits}{Positive integer: round the mean read counts to digits.}
+\item{digits}{Positive integer specifying the number of decimal places used
+when rounding mean read counts.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Data frame with the following columns:
-asv, sample, read_count (over replicates), cluster_id (optional)
+Data frame with columns: \code{asv}, \code{sample}, \code{read_count} (aggregated
+across replicates), and optional \code{cluster_id}.
 }
 \description{
-For each sample, replicates are pooled. The read count for a given
-sample and ASV can be calculated as the mean of non-zero read counts
-across replicates, or alternatively as the sum, maximum, or minimum.
+Aggregate replicates within each sample by combining read counts for each ASV.
+For a given sample-ASV pair, read counts can be summarized using different
+strategies such as mean, sum, maximum, or minimum across replicates.
 }
 \examples{
 \dontrun{
 pool_replicates(read_count_df)
 }
+
 }

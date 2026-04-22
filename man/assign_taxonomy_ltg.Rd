@@ -2,83 +2,89 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{assign_taxonomy_ltg}
 \alias{assign_taxonomy_ltg}
-\title{assign_taxonomy_ltg using BLAST based Lowest Common Ancestor Method}
+\title{Assign taxonomy using BLAST-based Lowest Common Ancestor (LTG) method}
 \usage{
 assign_taxonomy_ltg(
   asv,
   taxonomy,
   blast_db,
   blast_path = "blastn",
-  ltg_params = "",
-  outfile = "",
+  ltg_params = NULL,
+  outfile = NULL,
+  fill_lineage = TRUE,
   num_threads = 0,
   tax_sep = "\\t",
   sep = ",",
-  quiet = T,
-  fill_lineage = TRUE
+  quiet = TRUE
 )
 }
 \arguments{
-\item{asv}{Data frame or csv file containing an asv and asv_id columns.}
+\item{asv}{Data frame or path to a CSV file containing at least \code{asv} and \code{asv_id} columns.}
 
 \item{taxonomy}{TSV file containing the following columns:
-tax_id,parent_tax_id,rank,name_txt,old_tax_id(has been merged to tax_id),
-taxlevel (8: species, 7: genus, 6: family, 5: order, 4: class, 3: phylum,
-2: kingdom, 1: domain, 0: root).}
+\code{tax_id}, \code{parent_tax_id}, \code{rank}, \code{name_txt}, \code{old_tax_id} (merged tax IDs),
+\code{taxlevel} (8: species ... 0: root).}
 
-\item{blast_db}{Character string naming the BLAST database.}
+\item{blast_db}{Character string specifying the BLAST database name.}
 
-\item{blast_path}{Character string: path to BLAST executable.}
+\item{blast_path}{Character string specifying the path to the BLAST executable.}
 
-\item{ltg_params}{Data frame or csv file with a list of
-percentage of identity values (pid) and associated parameters
-(pcov,phit,taxn,seqn,refres,ltgres).}
+\item{ltg_params}{Data frame or path to a CSV file defining identity thresholds
+(\code{pid}) and associated parameters (\code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}).}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{fill_lineage}{Logical. If \code{TRUE}, missing higher taxonomic levels are
+filled using the nearest known lower-level taxon with a prefix indicating
+the missing rank.}
 
-\item{tax_sep}{Field separator character used in taxonomy file.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to use.
+If \code{0}, all available CPUs are used.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{tax_sep}{Character string specifying the field separator used in the taxonomy file.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{fill_lineage}{Boolean. If TRUE, fill in missing higher-level taxa
-in the lineage using the name of the next known lower-level taxon, prefixed
-by the current taxonomic level
-(e.g., No_kingdom_Chrysophyceae if kingdom is missing but class is known).}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
+warnings or errors.}
 }
 \value{
-Data frame with the following columns:
-asv_id,ltg_taxid,ltg_name,ltg_rank,ltg_rank_index,
-domain_taxid,domain,kingdom_taxid,kingdom,
-phylum_taxid,phylum,class_taxid,class,order_taxid,order,
-family_taxid,family,genus_taxid,genus,species_taxid,species,
-pid,pcov,phit,taxn,seqn,refres,ltgres,asv
+Data frame with columns:
+\code{asv_id}, \code{ltg_taxid}, \code{ltg_name}, \code{ltg_rank}, \code{ltg_rank_index},
+\code{domain_taxid}, \code{domain}, \code{kingdom_taxid}, \code{kingdom},
+\code{phylum_taxid}, \code{phylum}, \code{class_taxid}, \code{class}, \code{order_taxid}, \code{order},
+\code{family_taxid}, \code{family}, \code{genus_taxid}, \code{genus}, \code{species_taxid}, \code{species},
+\code{pid}, \code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}, \code{asv}
 }
 \description{
-Find Lowest Taxonomic Group (LTG) for each ASV in the input data frame.
+Assign the Lowest Taxonomic Group (LTG) for each ASV using a BLAST-based
+Lowest Common Ancestor approach.
 
-assign_taxonomy_ltg uses the mkLTG algorithm described
-in \href{https://rdcu.be/dxABF}{Meglécz, 2024} and
-\url{https://github.com/meglecz/mkLTG}.
-This is a BLAST based method using a series of identity percentage of cutoff
-values to validate BLAST hits and each cutoff is associated with
-further parameters:
+This function implements the mkLTG algorithm described in
+Meglécz (2024) https://rdcu.be/dxABF and
+https://github.com/meglecz/mkLTG. It evaluates BLAST hits across multiple
+identity thresholds, each associated with specific filtering parameters.
+
+For each identity threshold (\code{pid}), the following parameters are used:
 \itemize{
-\item pcov: Percentage of coverage
-\item phit: Perentage of the validated hits to be included in LTG
-\item taxn: Minimum number of taxa among the validated hits
-\item seqn: Minimum number of sequences among the validated hits
-\item refres: Minimum resolution of the hit to be validated
-\item ltgres: Maximum resolution of the LTG.
+\item \code{pcov}: percentage of query coverage
+\item \code{phit}: proportion of validated hits required for LTG assignment
+\item \code{taxn}: minimum number of taxa among validated hits
+\item \code{seqn}: minimum number of sequences among validated hits
+\item \code{refres}: minimum resolution of validated hits
+\item \code{ltgres}: maximum resolution of the resulting LTG
 }
 }
 \examples{
 \dontrun{
-assign_taxonomy_ltg(asv=read_count_df, taxonomy="xxxxxx", blast_db="xxxxxxxxx", num_threads=4)
+assign_taxonomy_ltg(
+  asv = read_count_df,
+  taxonomy = "xxxxxx",
+  blast_db = "xxxxxxxxx",
+  num_threads = 4
+)
 }
+
 }

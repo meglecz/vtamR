@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{pairwise_identity}
 \alias{pairwise_identity}
-\title{Pairwise identity}
+\title{Pairwise Identity}
 \usage{
 pairwise_identity(
   asv,
@@ -15,36 +15,40 @@ pairwise_identity(
 )
 }
 \arguments{
-\item{asv}{Data frame or csv file with asv and asv_id columns.}
+\item{asv}{Data frame or CSV file containing \code{asv} and \code{asv_id} columns.}
 
-\item{min_id}{Numeric. Value between 0 and 1: Bellow this identity do not align asv}
+\item{min_id}{Numeric value between 0 and 1. Minimum identity threshold;
+ASV pairs with identity below this value are ignored.}
 
-\item{vsearch_path}{Character string: path to vsearch executable.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{outfile}{Character string: csv file name to print the output data frame.
-If empty, no file is written.}
+\item{outfile}{Character string: name of the output CSV file. If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical: If TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-Data frame with asv pairs and their percentage of identity.
-asv pairs with identity bellow min_id are not listed. Colums: query, target, identity
+A data frame listing ASV pairs and their sequence identity, with columns:
+\code{query}, \code{target}, \code{identity}.
 }
 \description{
-Align all pairs of asv with at least min_id similarity and
-make a data frame with pairs of asv and their percentage of identity.
-asv pairs with identity bellow min_id are not listed.
+Computes pairwise sequence identity between ASVs.
+}
+\details{
+All ASV pairs with sequence similarity greater than or equal to \code{min_id}
+are aligned, and their percentage identity is reported in a data frame.
+Pairs with identity below \code{min_id} are not included in the output.
 }
 \examples{
 \dontrun{
-identity_df <- pairwise_identity(asv, 
-                                min_id = 0.8, 
-                                vsearch_path=vsearch, 
-                                num_threads=8)
+identity_df <- pairwise_identity(
+  asv,
+  min_id = 0.8,
+  vsearch_path = vsearch,
+  num_threads = 8
+)
 }
 }

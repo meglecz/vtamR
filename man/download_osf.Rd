@@ -7,31 +7,32 @@
 download_osf(filename, url, dest_dir = ".", untar = TRUE, quiet = FALSE)
 }
 \arguments{
-\item{filename}{character string specifying the name of the file to download.}
+\item{filename}{Character string specifying the name of the file to download.}
 
-\item{url}{URL of the Zenodo record.}
+\item{url}{Character string; direct download URL of the OSF file.}
 
-\item{dest_dir}{path to the directory where the file should be downloaded.}
+\item{dest_dir}{Character string; path to the directory where the file should be downloaded.}
 
-\item{untar}{logical: If TRUE, the archive will be extracted after download.}
+\item{untar}{Logical; if \code{TRUE}, the archive is extracted after download.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings or errors.}
 }
 \value{
-Invisible full path to the directory where the file was downloaded to.
+Invisible full path to the directory where the file was downloaded.
 }
 \description{
-Downloads file from \href{https://osf.io/}{OSF}
-Extracts the .tar.gz archive, if necessary
+Downloads a file from the Open Science Framework (OSF).
+If the file is a \code{.tar.gz} archive, it can optionally be extracted after download.
 }
 \examples{
 \dontrun{
-download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
-   url = "https://osf.io/download/jyhz6/",
-   dest_dir = "~/vtamR/OSF",
-   untar = TRUE,
-   quiet = FALSE
-   )
+download_osf(
+  filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+  url = "https://osf.io/download/jyhz6/",
+  dest_dir = "~/vtamR/OSF",
+  untar = TRUE,
+  quiet = FALSE
+)
 }
+
 }

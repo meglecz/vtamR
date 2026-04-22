@@ -2,36 +2,39 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{fill_missing_taxa}
 \alias{fill_missing_taxa}
-\title{Fill in missing higher-level taxa}
+\title{Fill missing higher-level taxa in lineages}
 \usage{
 fill_missing_taxa(df)
 }
 \arguments{
-\item{df}{A data frame containing taxonomic lineages. Major taxonomic levels
-are located in every second column, starting from column 6 (e.g. 6: domain,
-8: kingdom, 10: phylum, 12: class, 14: order, 16:family, 18: genus, 20 species).}
+\item{df}{Data frame containing taxonomic lineages. Major taxonomic levels are
+located in every second column, starting from column 6
+(e.g. 6: domain, 8: kingdom, 10: phylum, 12: class, 14: order,
+16: family, 18: genus, 20: species).}
 }
 \value{
-Input data frame with missing taxon names replaced by the
-next known lower-level taxon, prefixed by the current taxonomic level
+Input data frame with missing taxon names filled using lower-level taxa,
+prefixed by their corresponding rank.
 }
 \description{
-Fill in missing higher-level taxa in the lineage using the name of the
-next known lower-level taxon, prefixed by the current taxonomic level
+Replace missing higher-level taxon names using the name of the next available
+lower-level taxon, prefixed by the corresponding taxonomic rank.
 }
 \examples{
 \dontrun{
 df <- data.frame(
-id = 1:3,
-name = c("OTU1", "OTU2", "OTU3"),
-sample1 = c(10, 5, 0),
-sample2 = c(3, 7, 2),
-domain_taxid = c(2, 2759, 2759),
-domain = c("Bacteria", "Eukaryota", "Eukaryota"),
-phylum_taxid = c(1224, 4762, NA),
-phylum = c("Pseudomonadota", "Oomycota", NA),
-class_taxid = c(1236, NA, 2825),
-class = c("Gammaproteobacteria", NA, "Chrysophyceae"))
+  id = 1:3,
+  name = c("OTU1", "OTU2", "OTU3"),
+  sample1 = c(10, 5, 0),
+  sample2 = c(3, 7, 2),
+  domain_taxid = c(2, 2759, 2759),
+  domain = c("Bacteria", "Eukaryota", "Eukaryota"),
+  phylum_taxid = c(1224, 4762, NA),
+  phylum = c("Pseudomonadota", "Oomycota", NA),
+  class_taxid = c(1236, NA, 2825),
+  class = c("Gammaproteobacteria", NA, "Chrysophyceae")
+)
 df1 <- fill_missing_taxa(df)
 }
+
 }

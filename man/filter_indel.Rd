@@ -2,28 +2,31 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_indel}
 \alias{filter_indel}
-\title{filter_indel}
+\title{Filter ASVs by frame consistency (indel detection)}
 \usage{
-filter_indel(read_count, outfile = "", sep = ",")
+filter_indel(read_count, outfile = NULL, sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Filter out all ASVs, if the modulo 3 of their length is not the same as
-that of the majority of the ASVs.
+Remove ASVs whose length is not compatible with the dominant reading frame
+of the dataset. Specifically, ASVs are filtered out if their length modulo 3
+differs from that of the majority of ASVs, which can indicate indel errors.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <-filter_indel(read_count_df)
+filtered_read_count_df <- filter_indel(read_count_df)
 }
+
 }

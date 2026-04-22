@@ -7,11 +7,11 @@
 merge_fastq_pairs(
   fastqinfo,
   fastq_dir,
+  outdir,
   vsearch_path = "vsearch",
   compress_method = "R",
   pigz_path = "pigz",
   num_threads = 0,
-  outdir = "",
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
   fastq_maxee = 1,
@@ -29,100 +29,114 @@ merge_fastq_pairs(
 )
 }
 \arguments{
-\item{fastqinfo}{Data frame or csv file with columns: tag_fw,primer_fw,tag_rv,
-primer_rv,sample,sample_type(mock/negative/real),habitat(optional),replicate,
-fastq_fw,fastq_rv}
+\item{fastqinfo}{Data frame or path to a CSV file with the following columns:
+\code{tag_fw}, \code{primer_fw}, \code{tag_rv}, \code{primer_rv},
+\code{sample}, \code{sample_type} (mock/negative/real),
+\code{habitat} (optional), \code{replicate}, \code{fastq_fw},
+\code{fastq_rv}.}
 
-\item{fastq_dir}{Character string: directory with input fastq files
-(listed in fastqinfo_df$fastq_fw and fastqinfo_df$fastq_rv).}
+\item{fastq_dir}{Character string specifying the directory containing input
+FASTQ files (listed in \code{fastqinfo$fastq_fw} and
+\code{fastqinfo$fastq_rv}).}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{outdir}{Character string specifying the output directory.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
+
+\item{compress_method}{Character or logical. Compression method:
+\code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and available in the
+system PATH (or specified via \code{pigz_path}).
+\code{"gzip"} is available on Linux systems.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pigz}
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string specifying the path to the \code{pigz}
+executable. Only required if \code{compress_method = "pigz"} and it is not
+available in the system PATH.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to
+use. If \code{0}, all available CPUs are used.}
 
-\item{outdir}{Character string: output directory.}
+\item{fastq_ascii}{Integer (33 or 64) specifying the ASCII offset used for
+FASTQ quality scores.}
 
-\item{fastq_ascii}{ASCII character number (33 or 64) used as the basis for
-the FASTQ quality score.}
+\item{fastq_maxdiffs}{Positive integer specifying the maximum number of
+mismatches allowed in the overlapping region.}
 
-\item{fastq_maxdiffs}{Maximum number of non-matching nucleotides allowed in
-the overlapping region (positive integer).}
+\item{fastq_maxee}{Positive integer specifying the maximum number of expected
+errors allowed per sequence.}
 
-\item{fastq_maxee}{Discard sequences with more than the specified number of
-expected error (positive integer).}
+\item{fastq_minlen}{Positive integer specifying the minimum allowed sequence
+length.}
 
-\item{fastq_minlen}{Discard sequences with less than fastq_minlen bases
-(positive integer).}
+\item{fastq_maxlen}{Positive integer specifying the maximum allowed sequence
+length.}
 
-\item{fastq_maxlen}{Discard sequences with more than fastq_maxlen bases
-(positive integer).}
+\item{fastq_minmergelen}{Positive integer specifying the minimum length of
+merged sequences.}
 
-\item{fastq_minmergelen}{Minimum length of the merged sequence
-(positive integer).}
+\item{fastq_maxmergelen}{Positive integer specifying the maximum length of
+merged sequences.}
 
-\item{fastq_maxmergelen}{Maximum length of the merged sequence
-(positive integer).}
+\item{fastq_maxns}{Positive integer specifying the maximum number of
+ambiguous bases (\code{N}) allowed per sequence.}
 
-\item{fastq_maxns}{Discard sequences with more than fastq_maxns of N’s
-(positive integer).}
+\item{fastq_truncqual}{Positive integer specifying the quality score threshold
+for truncating sequences.}
 
-\item{fastq_truncqual}{Truncate sequences starting from the first base with
-fastq_truncqual base quality score or lower (positive integer).}
+\item{fastq_minovlen}{Positive integer specifying the minimum overlap length
+required for merging reads.}
 
-\item{fastq_minovlen}{Minimum overlap between the merged reads
-(positive integer).}
+\item{fastq_allowmergestagger}{Logical. If \code{TRUE}, allow merging of
+staggered read pairs (where the reverse read extends beyond the forward
+read).}
 
-\item{fastq_allowmergestagger}{Boolean to allow to merge staggered read pairs.
-Staggered pairs are pairs where the 3’ end of the reverse read has an
-overhang to the left of the 5’ end of the forward read.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{compress}{Logical. If \code{TRUE}, compress output files using gzip.}
 
-\item{compress}{logical: Compress output files to gzip format.}
-
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-Data frame corresponding to the output fastainfo.csv file
+Data frame corresponding to the generated \code{fastainfo.csv} file.
 }
 \description{
-Merge forward are reverse fastq read pairs and transform the files to fasta.
-Output fasta files can be compressed if compress option is used.
-The output fastainfo.csv file is similar to the fastqinfo file, but the
-fastq columns are replaced by a fasta column with the name of the output files.
+Merge paired-end FASTQ reads (forward and reverse) and convert the resulting
+sequences to FASTA format. Output FASTA files can optionally be compressed.
+The generated \code{fastainfo.csv} file is similar to the input
+\code{fastqinfo} file, but FASTQ file columns are replaced by a
+\code{fasta} column containing the names of the output files.
 }
 \examples{
 \dontrun{
-merge_fastq_pairs(fastqinfo_df, 
-   fastq_dir="data/fastqdir", 
-   vsearch_path="C:/Users/Public", 
-   outdir="data/fastadir", 
-   compress=T, 
-   quiet=F
-   )
-merge_fastq_pairs(fastqinfo_df, 
-   fastq_dir="data/fastqdir", 
-   outdir="data/fastadir", 
-   fastq_maxdiffs=5, 
-   fastq_maxee=2, 
-   fastq_minlen=60, 
-   fastq_maxlen=100, 
-   fastq_minmergelen=80, 
-   fastq_maxmergelen=100, 
-   fastq_maxns=1, 
-   fastq_truncqual=20, 
-   fastq_minovlen=20,
-   fastq_allowmergestagger=T
-   )
+merge_fastq_pairs(
+  fastqinfo_df,
+  fastq_dir = "data/fastqdir",
+  vsearch_path = "C:/Users/Public/vsearch",
+  outdir = "data/fastadir",
+  compress = TRUE,
+  quiet = FALSE
+)
+
+merge_fastq_pairs(
+  fastqinfo_df,
+  fastq_dir = "data/fastqdir",
+  outdir = "data/fastadir",
+  fastq_maxdiffs = 5,
+  fastq_maxee = 2,
+  fastq_minlen = 60,
+  fastq_maxlen = 100,
+  fastq_minmergelen = 80,
+  fastq_maxmergelen = 100,
+  fastq_maxns = 1,
+  fastq_truncqual = 20,
+  fastq_minovlen = 20,
+  fastq_allowmergestagger = TRUE
+)
 }
+
 }

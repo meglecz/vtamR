@@ -2,30 +2,33 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_min_replicate}
 \alias{filter_min_replicate}
-\title{filter_min_replicate}
+\title{Filter occurrences by minimum number of replicates per sample}
 \usage{
-filter_min_replicate(read_count, cutoff = 2, outfile = "", sep = ",")
+filter_min_replicate(read_count, cutoff = 2, outfile = NULL, sep = ",")
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or path to a CSV file with the following columns:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{cutoff}{Positive integer: minimum number of replicates.}
+\item{cutoff}{Positive integer specifying the minimum number of replicates
+in which an ASV must be detected within a sample to be retained.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the CSV file to write the output
+data frame. If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 }
 \value{
-Filtered read_count_df data frame.
+Filtered \code{read_count} data frame.
 }
 \description{
-Filter out all occurrences where the asv in not present in at least
-\code{cutoff} number of replicates of the sample.
+Remove occurrences where an ASV is not present in at least \code{cutoff}
+replicates within a sample.
 }
 \examples{
 \dontrun{
-filtered_read_count_df <- filter_min_replicate(read_count_df, cutoff=3)
+filtered_read_count_df <- filter_min_replicate(read_count_df, cutoff = 3)
 }
+
 }

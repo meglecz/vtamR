@@ -2,41 +2,45 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{summarize_by}
 \alias{summarize_by}
-\title{summarize_by}
+\title{Summarize intermediate filtering steps by feature}
 \usage{
-summarize_by(dir, feature, grouped_by, outfile = "", sep = ",")
+summarize_by(dir, feature, grouped_by, outfile = NULL, sep = ",")
 }
 \arguments{
-\item{dir}{Character string: directory containing the output files
-of intermediate filtering steps. File names should start with a number
-followed by an underscore (e.g. 5_filter_occurrence_sample.csv).}
+\item{dir}{Character string specifying the directory containing intermediate
+filtering output files. Files must start with a numeric prefix followed by
+an underscore (e.g. \verb{5_filter_occurrence_sample.csv}).}
 
-\item{feature}{Character string with the following possible values:
-"asv_id", "asv", "sample", "replicate", "read_count".}
+\item{feature}{Character string specifying the feature to summarize. Must be
+one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or \code{"read_count"}.}
 
-\item{grouped_by}{Character string with the following possible values:
-"asv_id", "asv", "sample", "replicate". Group data by this variable.}
+\item{grouped_by}{Character string specifying the grouping variable. Must be
+one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, or \code{"replicate"}.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the output CSV file name.
+If NULL, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 }
 \value{
-An invisible data frame with input file names in columns, \code{grouped_by} values in
-lines, and the number of features or the read counts in the cells.
+An invisible data frame where columns correspond to input files,
+rows correspond to \code{grouped_by} values, and cell values represent either
+counts of \code{feature} occurrences or summed read counts.
 }
 \description{
-Summarizes the output of each intermediate filtering steps.
-Takes all files in the directory, that start with a number.
-For each file, groups the lines by \code{grouped_by} variable,
-and gets the number of distinct values of \code{feature} for
-each group, or if \code{feature} is \code{read_count}, gets the total
-number of reads of each group.
+Summarize the outputs of intermediate filtering steps across all files in a
+directory. Only files whose names begin with a numeric prefix are included.
+}
+\details{
+For each file, rows are grouped by \code{grouped_by}, and either:
+\itemize{
+\item the number of distinct values of \code{feature} is computed, or
+\item if \code{feature = "read_count"}, the total read counts are summed per group.
+}
 }
 \examples{
 \dontrun{
-summarize_by(dir="vtamR_test/out_mfzr", feature="asv", grouped_by="sample")
-summarize_by(dir="vtamR_test/out_mfzr", feature="read_count", grouped_by="sample")
+summarize_by(dir = "vtamR_test/out_mfzr", feature = "asv", grouped_by = "sample")
+summarize_by(dir = "vtamR_test/out_mfzr", feature = "read_count", grouped_by = "sample")
 }
 }

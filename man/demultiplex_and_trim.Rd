@@ -2,12 +2,12 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{demultiplex_and_trim}
 \alias{demultiplex_and_trim}
-\title{Demultiplex and trim off tags and primers}
+\title{Demultiplex and trim tags and primers}
 \usage{
 demultiplex_and_trim(
   fastainfo,
   fasta_dir,
-  outdir = "",
+  outdir,
   cutadapt_path = "cutadapt",
   vsearch_path = "vsearch",
   compress_method = "R",
@@ -25,80 +25,90 @@ demultiplex_and_trim(
 )
 }
 \arguments{
-\item{fastainfo}{Data frame or csv file with columns:
-tag_fw,primer_fw,tag_rv,primer_rv,sample,sample_type(mock/negative/real),
-habitat(optional),replicate,fasta}
+\item{fastainfo}{Data frame or path to a CSV file with the following columns:
+\code{tag_fw}, \code{primer_fw}, \code{tag_rv}, \code{primer_rv},
+\code{sample}, \code{sample_type} (mock/negative/real),
+\code{habitat} (optional), \code{replicate}, \code{fasta}.}
 
-\item{fasta_dir}{Character string: directory with input fasta files
-(listed in the fasta columns of fastainfo).}
+\item{fasta_dir}{Character string specifying the directory containing input
+FASTA files (listed in the \code{fasta} column of \code{fastainfo}).}
 
-\item{outdir}{Character string: output directory.}
+\item{outdir}{Character string specifying the output directory.}
 
-\item{cutadapt_path}{Character string: path to cutadapt executables.}
+\item{cutadapt_path}{Character string specifying the path to the
+\code{cutadapt} executable.}
 
-\item{vsearch_path}{Character string: path to vsearch executables.}
+\item{vsearch_path}{Character string specifying the path to the
+\code{vsearch} executable.}
 
-\item{compress_method}{Character or logical. Compression method: \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
-Only needed if \code{check_reverse == TRUE}.
-\code{"pigz"} requires \code{pigz} to be installed and in the system path (or \code{pigz_path} specified).
-\code{"gzip"} is Linux-only.
+\item{compress_method}{Character or logical. Compression method:
+\code{"pigz"}, \code{"gzip"}, or \code{"R"}.
+\code{"pigz"} requires \code{pigz} to be installed and available in the
+system PATH (or specified via \code{pigz_path}).
+\code{"gzip"} is available on Linux systems.
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
-Speed: R.utils < gzip (only linux) < pig}
+Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.
+Only needed if \code{check_reverse = TRUE}.}
 
-\item{pigz_path}{Character string: Path to \code{pigz} executable. Only needed is pigz
-is used for file compression, and it is not in the PATH.}
+\item{pigz_path}{Character string specifying the path to the \code{pigz}
+executable. Only required if \code{compress_method = "pigz"} and it is not
+available in the system PATH.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer specifying the number of CPU threads to
+use. If \code{0}, all available CPUs are used.}
 
-\item{check_reverse}{logical: if TRUE, check the reverse complementary
-sequences of the input fasta as well.}
+\item{check_reverse}{Logical. If \code{TRUE}, also check reverse-complemented
+sequences from the input FASTA files.}
 
-\item{tag_to_end}{logical: tags are at the extremity of the reads
-(starting at the first base).}
+\item{tag_to_end}{Logical. If \code{TRUE}, tags are expected to be located
+at the extremities of reads (starting at the first base).}
 
-\item{primer_to_end}{logical: primers follow directly the tags
-(no heterogeneity spacer).}
+\item{primer_to_end}{Logical. If \code{TRUE}, primers are assumed to follow
+directly after tags (i.e., no heterogeneity spacer).}
 
-\item{cutadapt_error_rate}{Numeric. Value between 0 and 1: maximum proportion of errors
-between primers and reads (for tags, exact match is required).}
+\item{cutadapt_error_rate}{Numeric value between 0 and 1 specifying the
+maximum allowed error rate between primers and reads (exact match is
+required for tags).}
 
-\item{cutadapt_minimum_length}{Positive integer: minimum length of the
-trimmed sequence.}
+\item{cutadapt_minimum_length}{Positive integer specifying the minimum length
+of trimmed sequences.}
 
-\item{cutadapt_maximum_length}{Positive integer: maximum length of the
-trimmed sequence.}
+\item{cutadapt_maximum_length}{Positive integer specifying the maximum length
+of trimmed sequences.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Character string specifying the field separator used in input and
+output CSV files.}
 
-\item{compress}{logical: Compress output files to gzip format.}
+\item{compress}{Logical. If \code{TRUE}, compress output files using gzip.}
 
-\item{quiet}{logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
+only display warnings or errors.}
 }
 \value{
-Data frame corresponding to the output sampleinfo.csv file
-and one fasta file for each tag combination for each input fasta file,
+Data frame corresponding to the output \code{sampleinfo.csv} file
+and one FASTA file per tag combination for each input FASTA file,
 containing trimmed reads.
 }
 \description{
-Demultiplex each input fasta file using the tag combinations at the
-extremities of the merged reads.
-Trim primers from demultiplexed reads.
+Demultiplex each input FASTA file using tag combinations located at the
+ends of merged reads, then trim primer sequences from the resulting reads.
 
-The output sampleinfo.csv file is similar to the input fastainfo,
-but the but do not have tag and primer columns.
+The output \code{sampleinfo.csv} file is similar to the input \code{fastainfo},
+but without the tag and primer columns.
 }
 \examples{
 \dontrun{
-fastainfo_df <- demultiplex_and_trim(fastainfo=fastainfo_df, 
-     fasta_dir="data/fasta", 
-     outdir="data/sorted", 
-     check_reverse=F, 
-     tag_to_end=T, 
-     primer_to_end=T, 
-     cutadapt_minimum_length=300,
-     cutadapt_maximum_length=350, 
-     sep=","
-     )
+fastainfo_df <- demultiplex_and_trim(
+  fastainfo = fastainfo_df,
+  fasta_dir = "data/fasta",
+  outdir = "data/sorted",
+  check_reverse = FALSE,
+  tag_to_end = TRUE,
+  primer_to_end = TRUE,
+  cutadapt_minimum_length = 300,
+  cutadapt_maximum_length = 350,
+  sep = ","
+)
 }
+
 }

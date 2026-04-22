@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_fun.R
 \name{plot_pairwise_identity_vsearch}
 \alias{plot_pairwise_identity_vsearch}
-\title{Make a density plot}
+\title{Density plot of pairwise ASV identities across VSEARCH clustering thresholds}
 \usage{
 plot_pairwise_identity_vsearch(
   read_count,
@@ -19,56 +19,62 @@ plot_pairwise_identity_vsearch(
 )
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv, sample, replicate (optional), read_count.}
+\item{read_count}{Data frame or CSV file containing the following columns:
+\code{asv}, \code{sample}, \code{replicate} (optional), \code{read_count}.}
 
-\item{identity_min}{Numeric. Value between 0 and 1: Minimum identity threshold between asv and centroid.}
+\item{identity_min}{Numeric value between 0 and 1. Minimum clustering identity threshold.}
 
-\item{identity_max}{Numeric. Value between 0 and 1: Maximum identity threshold between asv and centroid.}
+\item{identity_max}{Numeric value between 0 and 1. Maximum clustering identity threshold.}
 
-\item{identity_increment}{Numeric. Value between 0 and 1: Identity thresholds vary from identity_min
-to identity_max by identity_increment.}
+\item{identity_increment}{Numeric value between 0 and 1. Step size used to vary
+clustering identity thresholds from \code{identity_min} to \code{identity_max}.}
 
-\item{min_id}{Numeric. Value between 0 and 1: Bellow this pairwise identity asv pairs are not aligned
-and their identity is not plotted.}
+\item{min_id}{Numeric value between 0 and 1. Minimum pairwise identity;
+ASV pairs below this threshold are excluded from alignment and plotting.}
 
-\item{vsearch_path}{Character string: path to vsearch executable.}
+\item{vsearch_path}{Character string: path to the VSEARCH executable.}
 
-\item{num_threads}{Positive integer: Number of CPUs. If 0, use all available CPUs.}
+\item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
-\item{outfile}{Character string: csv file name with the following columns:
-pairwise_asv_identity, cluster, clustering_parameter; If empty, no file is written.}
-
-\item{plotfile}{Character string: png file name for the output plot;
+\item{outfile}{Character string: name of the output CSV file containing
+\code{pairwise_asv_identity}, cluster assignment, and clustering parameter.
 If empty, no file is written.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{plotfile}{Character string: name of the output PNG file for the plot.
+If empty, no file is written.}
 
-\item{quiet}{Logical: If TRUE, suppress informational messages and only
-show warnings or errors.}
+\item{sep}{Field separator character used in input and output CSV files.}
+
+\item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 }
 \value{
-A density plot of pairwise percentage of identities.
+A density plot of pairwise ASV identity distributions across clustering thresholds.
 }
 \description{
-Make a density plot pf pairwise percent identities between ASVs within and across
-clusters using different clustering identity thresholds.
+Generates density plots of pairwise ASV sequence identities within and
+between clusters obtained using VSEARCH clustering across a range of
+identity thresholds.
+}
+\details{
+ASVs are clustered using the VSEARCH \code{--cluster_size} algorithm for each
+identity threshold between \code{identity_min} and \code{identity_max}.
+For each clustering result, pairwise ASV identities are computed and
+visualized as density distributions, separating within-cluster and
+between-cluster comparisons.
 
-Cluster all ASVs using cluster_size algorithm of vsearch with a range of identity values.
-
-For each clustering identity threshold, make a density plot of pairwise
-percentage of identities between ASVs, using different colors for identities
-between ASVs of the same or different clusters.
+Identity values below \code{min_id} are excluded from the analysis and are not plotted.
 }
 \examples{
 \dontrun{
-plot <- plot_pairwise_identity_vsearch(read_count_df, 
-                                      identity_min=0.9, 
-                                      identity_max=0.99,
-                                      identity_increment=0.01,
-                                      min_id = 0.8, 
-                                      vsearch_path="vsearch", 
-                                      num_threads=8,
-                                      plotfile="density_plot.png")
+plot <- plot_pairwise_identity_vsearch(
+  read_count_df,
+  identity_min = 0.9,
+  identity_max = 0.99,
+  identity_increment = 0.01,
+  min_id = 0.8,
+  vsearch_path = "vsearch",
+  num_threads = 8,
+  plotfile = "density_plot.png"
+)
 }
 }

@@ -2,41 +2,41 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{suggest_sample_cutoff}
 \alias{suggest_sample_cutoff}
-\title{suggest_sample_cutoff}
+\title{Suggest cutoff for \code{filter_occurrence_sample}}
 \usage{
-suggest_sample_cutoff(
-  read_count,
-  mock_composition = "",
-  sep = ",",
-  outfile = ""
-)
+suggest_sample_cutoff(read_count, mock_composition, sep = ",", outfile = NULL)
 }
 \arguments{
-\item{read_count}{Data frame or csv file with the following variables:
-asv_id, sample, replicate, read_count, asv.}
+\item{read_count}{Data frame or CSV file with the following variables:
+\code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}.}
 
-\item{mock_composition}{Data frame or csv file with columns:
-sample, action (keep/tolerate), asv.}
+\item{mock_composition}{Data frame or CSV file with columns:
+\code{sample}, \code{action} (\code{keep} or \code{tolerate}), \code{asv}.}
 
-\item{sep}{Field separator character in input and output csv files.}
+\item{sep}{Field separator character used in input and output CSV files.}
 
-\item{outfile}{Character string: csv file name to print the output data
-frame if necessary. If empty, no file is written.}
+\item{outfile}{Character string specifying the output CSV file. If NULL,
+no file is written.}
 }
 \value{
-Data frame with the following columns: sample, replicate, action,
-asv_id, read_count, read_count_sample_replicate, sample_cutoff,
-asv
+Data frame with the following columns: \code{sample}, \code{replicate}, \code{action},
+\code{asv_id}, \code{read_count}, \code{read_count_sample_replicate}, \code{sample_cutoff}, \code{asv}.
 }
 \description{
-Prepare a data frame that lists all expected occurrences in all mock
-sample-replicates their read_counts and the proportion of
-their read_counts to the total number of reads in the sample-replicate.
-The cutoff parameter in filter_occurrence_sample should be bellow the smallest
-proportion in order to keep all expected ASVs in the data set.
+Compute read count proportions of expected ASV occurrences in mock
+sample-replicates to help determine an appropriate cutoff for
+\code{filter_occurrence_sample}.
+}
+\details{
+The cutoff should be set below the smallest observed proportion to ensure
+that all expected ASVs are retained in the dataset.
 }
 \examples{
 \dontrun{
-suggest_sample_cutoff(read_count_df, mock_composition="data/mock_composition.csv")
+suggest_sample_cutoff(
+  read_count_df,
+  mock_composition = "data/mock_composition.csv"
+)
 }
+
 }
