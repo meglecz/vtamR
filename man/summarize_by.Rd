@@ -4,12 +4,21 @@
 \alias{summarize_by}
 \title{Summarize intermediate filtering steps by feature}
 \usage{
-summarize_by(dir, feature, grouped_by, outfile = NULL, sep = ",")
+summarize_by(
+  dir,
+  pattern = "^\\\\d",
+  feature,
+  grouped_by,
+  outfile = NULL,
+  sep = ","
+)
 }
 \arguments{
 \item{dir}{Character string specifying the directory containing intermediate
 filtering output files. Files must start with a numeric prefix followed by
 an underscore (e.g. \verb{5_filter_occurrence_sample.csv}).}
+
+\item{pattern}{A regular expression used to select filenames to be scanned.}
 
 \item{feature}{Character string specifying the feature to summarize. Must be
 one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or \code{"read_count"}.}
@@ -29,7 +38,9 @@ counts of \code{feature} occurrences or summed read counts.
 }
 \description{
 Summarize the outputs of intermediate filtering steps across all files in a
-directory. Only files whose names begin with a numeric prefix are included.
+directory.
+By default, input filenames must start by a number (e.g. \verb{5_filter_occurrence_sample.csv}).
+See \code{pattern} to change this behavior.
 }
 \details{
 For each file, rows are grouped by \code{grouped_by}, and either:

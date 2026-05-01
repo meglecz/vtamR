@@ -4,11 +4,13 @@
 \alias{history_by}
 \title{Filter processing history by feature}
 \usage{
-history_by(dir, feature, value, sep = ",")
+history_by(dir, pattern = "^\\\\d", feature, value, sep = ",")
 }
 \arguments{
 \item{dir}{Character string specifying the directory containing intermediate
 filtering output files.}
+
+\item{pattern}{A regular expression used to select filenames to be scanned.}
 
 \item{feature}{Character string specifying the feature to filter by.
 Must be one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or
@@ -33,8 +35,8 @@ This function scans all output files from intermediate filtering steps in a
 directory and extracts rows where the selected feature matches the given
 value.
 
-Input files must be named with a numeric prefix followed by an underscore
-(e.g. \verb{5_filter_occurrence_sample.csv}).
+By default, input filenames must start by a number (e.g. \verb{5_filter_occurrence_sample.csv}).
+See \code{pattern} to change this behavior.
 }
 \examples{
 \dontrun{

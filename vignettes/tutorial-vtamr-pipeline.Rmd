@@ -509,7 +509,7 @@ To keep things organized, I recommend
 This also allows the [summarize_by](#summarize_by) function to easily generate 
 summary statistics at each stage of the analysis.
 
-## Tracking the Evolution of Reads and ASVs (`stat_df`)
+### Tracking the Evolution of Reads and ASVs (`stat_df`)
 
 You can **monitor changes in the number of reads and ASVs** after each filtering step using the `get_stat` function. This function either:
 
@@ -2030,7 +2030,23 @@ to evaluate for PCR error.
 this value relative to the more abundant ASV, it is flagged as a PCR error. 
 Default = 0.1 (arbitrary).
 
-### `suggest_pcr_error_cutoff`: Suggesting a PCR Error Cutoff {#suggest_pcr_error_cutoff}
+**Example**
+
+This will remove ASVs likely caused by PCR errors, cleaning your dataset for downstream analyses.
+For more details and advanced options, see `?filter_pcr_error`.
+
+```{r filter-pcr-error, eval=FALSE}
+outfile <- file.path(outdir, "filter_pcr_error.csv")
+
+read_count_df <- filter_pcr_error(
+  read_count_df, 
+  outfile=outfile, 
+  vsearch_path=vsearch_path,
+  pcr_error_var_prop=0.15
+  )
+```
+
+## `suggest_pcr_error_cutoff`: Suggesting a PCR Error Cutoff {#suggest_pcr_error_cutoff}
 
 The default `pcr_error_var_prop` may not be ideal for your dataset. Use `suggest_pcr_error_cutoff` to guide the choice.
 
@@ -2059,25 +2075,6 @@ suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
 
 > **Tip:** If you do not yet have the exact sequences for your mock samples, see [How to make a mock_composition file](make-mock-composition-file.html) before running this function.
 
-### Applying `filter_pcr_error`
-
-Once you have determined an appropriate `pcr_error_var_prop`, run:
-
-```{r filter-pcr-error, eval=FALSE}
-outfile <- file.path(outdir, "filter_pcr_error.csv")
-
-read_count_df <- filter_pcr_error(
-  read_count_df, 
-  outfile=outfile, 
-  vsearch_path=vsearch_path,
-  pcr_error_var_prop=0.15
-  )
-```
-
-This will remove ASVs likely caused by PCR errors, cleaning your dataset for downstream analyses.
-
-For more details and advanced options, see `?filter_pcr_error`.
-
 ## `subsample_fasta` {#subsample_fasta}
 
 The `subsample_fasta` function randomly selects `n` sequences (without replacement) 
@@ -2088,9 +2085,9 @@ This step is useful for normalizing sequencing depth across libraries. It can be
 > **Note:** If your workflow includes `filter_occurrence_variant` or `filter_occurrence_read_count`, which rely on total reads in negative controls, standardizing read numbers across samples is **not recommended**.
 > Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim` to ensure all replicate series have the same number of reads.
 
-### Available Algorithms
+**Available Algorithms**
 
-**1. Using VSEARCH (`use_vsearch = TRUE`)**
+*1. Using VSEARCH (`use_vsearch = TRUE`)*
 
 * Uses the [`fastx_subsample`](https://github.com/torognes/vsearch) command from VSEARCH.
 * Very fast, but only available on Linux-like systems.
@@ -2100,14 +2097,14 @@ This step is useful for normalizing sequencing depth across libraries. It can be
   * `gzip`: slower, Linux only.
   * `R`: cross-platform but slowest (via `R.utils`).
 
-**2. Using R only (`use_vsearch = FALSE`)**
+*2. Using R only (`use_vsearch = FALSE`)*
 
 * Performs sampling entirely in R.
 * Works on all operating systems.
 * No external dependencies or compression tools required.
 * Slower than VSEARCH, especially for large FASTA files.
 
-### Input Parameters
+**Input Parameters**
 
 * `fastainfo` – CSV file or data frame with columns:
   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, `sample`, `sample_type`, `habitat`, `replicate`, `fasta`.
@@ -2118,7 +2115,7 @@ This step is useful for normalizing sequencing depth across libraries. It can be
 * `compress` – Whether to compress output files (`TRUE` or `FALSE`).
 * `compress_method` – `"pigz"`, `"gzip"`, or `"R"`.
 
-### Example: Fast Version (Linux-like systems)
+**Example: Fast Version (Linux-like systems)**
 
 ```{r, eval=FALSE}
 randomseq_dir <- file.path(outdir, "random_seq")
@@ -2135,7 +2132,7 @@ fastainfo_df <- subsample_fasta(
                 compress     = TRUE)
 ```
 
-### Example: Cross-Platform Version
+**Example: Cross-Platform Version**
 
 ```{r, eval=FALSE}
 randomseq_dir <- file.path(outdir, "random_seq")
@@ -2152,6 +2149,7 @@ fastainfo_df <- subsample_fasta(
 > **Tip:** Choose `use_vsearch = TRUE` when possible for speed. 
 Use `FALSE` for **Windows or macOS**, or when VSEARCH is not installed.
 
+
 ## `classify_control_occurrences` {#classify_control_occurrences}
 
 The function `classify_control_occurrences` identifies occurrences as **false positives**, **false negatives**, or **true positives** based on control samples and habitat context.
@@ -2167,7 +2165,7 @@ The function `classify_control_occurrences` identifies occurrences as **false po
   - **All ASVs detected in negative controls** (indicating contamination or technical artifacts).
   - **Habitat-inconsistent ASVs:** ASVs detected in a sample but unexpected for its habitat. If samples or mocks originate from distinct habitats (e.g., seawater vs. terrestrial), the function evaluates the proportion of reads for each ASV across habitats. If the proportion of reads for an ASV in a given habitat is below the `habitat_proportion` threshold, the ASV is flagged as a false positive for all samples from that habitat.
 
-### Outputs
+**Outputs**
 
 * `known_occurrences`: Data frame (or CSV file) containing:
 
@@ -2180,7 +2178,7 @@ false positives, and false negatives.
 
 > For details on parameters and options, see `?classify_control_occurrences`.
 
-### Input Requirements
+**Input Requirements**
 
 * `read_count_df`: Data frame containing ASV read counts for each sample.
 * `sampleinfo_df`: Must include columns:
@@ -2191,7 +2189,7 @@ false positives, and false negatives.
 > If you restarted the analysis after `demultiplex_and_trim` and `sampleinfo_df` 
 is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplexed`.
 
-### Notes
+**Notes**
 
 * If you do **not** know the exact sequences in your mock samples, you will need the **[mock_composition](#mock_composition) file** before running this function. See [How to make a mock_composition file](make-mock-composition-file.html) for guidance.
 * This function is particularly useful to assess the performance of filtering steps.
@@ -2217,7 +2215,7 @@ This can occur due to **[tag-jump](#glossary)** or inter-sample contamination.
 The `compute_asv_specific_cutoff` function computes ASV-specific cutoff values 
 for variants with known false-positive occurrences (identified by `classify_control_occurrences`), so filtering can be more targeted.
 
-### How It Works
+**How It Works**
 
 For each ASV:
 
@@ -2230,7 +2228,7 @@ For each ASV:
 > * Filter the dataset thoroughly before computing ASV-specific cutoffs.
 > * Use the `max_cutoff` parameter to set a reasonable upper limit.
 
-### Example
+**Example**
 
 ```{r, eval=FALSE}
 asv_spec <- compute_asv_specific_cutoff(
@@ -2247,7 +2245,7 @@ asv_spec <- compute_asv_specific_cutoff(
 
 > Only ASVs with **known false-positive occurrences** are included.
 
-### Using ASV-Specific Cutoffs in Filtering
+**Using ASV-Specific Cutoffs in Filtering**
 
 Pass `asv_spec` to `filter_occurrence_variant`:
 
@@ -2261,7 +2259,7 @@ read_count_df <- filter_occurrence_variant(
 
 * A warning is issued if less than `min_read_count_prop` of reads remain for some ASVs after filtering. This suggests the cutoff may be too high and should be reduced.
 
-### Combining Global and ASV-Specific Cutoffs
+**Combining Global and ASV-Specific Cutoffs**
 
 You can also use a global cutoff together with ASV-specific cutoffs.
 
@@ -2290,7 +2288,7 @@ For **16S rRNA** data, the **RDP (Ribosomal Database Project)** provides a curat
 The **pre-trained sets** are included in the **`rRDPData`** package, 
 and the **`rRDP`** package performs the taxonomic classification.
 
-### Installing `rRDP` and `rRDPData` {#install-rdp}
+**Installing `rRDP` and `rRDPData`** {#install-rdp}
 
 These packages are available through **Bioconductor** and are 
 **not installed automatically** with `vtamR`:
@@ -2303,7 +2301,7 @@ BiocManager::install("rRDP")
 BiocManager::install("rRDPData")
 ```
 
-### Running the RDP classifier via vtamR
+**Running the RDP classifier via vtamR**
 
 The `assign_taxonomy_rdp()` function is a wrapper around the RDP classifier, 
 allowing direct application to your ASV dataset.
@@ -2328,7 +2326,7 @@ taxa <- assign_taxonomy_rdp(
 * `rm_chloroplast`: if `TRUE`, sequences classified as 
 *Chloroplast* are replaced with `NA`
 
-### Using a Custom RDP Training Set
+**Using a Custom RDP Training Set**
 
 You can provide your own RDP-trained dataset instead of the default from `rRDPData`.
 This requires a folder containing the trained classifier created with `trainRDP()`:
@@ -2349,20 +2347,21 @@ For more details, see `?rRDP::rdp` for training and using custom classifiers.
 The `history_by` function allows you to **track the filtering history** of 
 specific features (ASVs, samples, or replicates) across multiple filtering steps.
 
-### How It Works
+**How It Works**
 
-* Scans all files in a directory (`dir`) whose names start with a number.
+* Scans all files in a directory (`dir`) whose names mathch a `pattern` (by default 
+start with a number).
   These are typically the outputs from different [filtering steps](#filtering).
 * Selects all rows where the specified **feature** has a given **value**.
 
-### Key Arguments
+**Key Arguments**
 
 * `dir`: Path to the directory containing the filtering output files.
 * `feature`: Column to track (`asv_id`, `asv`, `sample`, or `replicate`).
 * `value`: The specific value of the feature you want to follow.
 
 
-### Examples
+**Examples**
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
@@ -2399,9 +2398,10 @@ The `summarize_by` function is used to summarize how your data changes
 across filtering steps.
 
 
-### How It Works
+**How It Works**
 
-* Scans all files in a directory (`dir`) whose names start with a number
+* Scans all files in a directory (`dir`) whose names match a pattern
+(by default, start with a number)
   (i.e. outputs from the different [filtering steps](#filtering)).
 
 * For each file, it:
@@ -2415,9 +2415,9 @@ across filtering steps.
 * If `feature = "read_count"`, it returns the **sum of reads** for each group.
 * Otherwise, it returns the number of distinct values of the feature within each group.
 
-### Examples
+**Examples**
 
-**Get the number of reads per sample after each filtering step:**
+*Get the number of reads per sample after each filtering step:*
 
 ```{r}
 read_count_by_sample <- summarize_by(
@@ -2429,7 +2429,7 @@ read_count_by_sample <- summarize_by(
 knitr::kable(read_count_by_sample, format = "markdown")
 ```
 
-**Get the number of ASVs for each sample after each filtering steps.**
+*Get the number of ASVs for each sample after each filtering steps.*
 
 ```{r}
 asv_by_sample <- summarize_by(
@@ -2442,7 +2442,7 @@ knitr::kable(asv_by_sample, format = "markdown")
 ```
 
 
-**Get the number asv_id for each replicate after each filtering steps.**
+*Get the number asv_id for each replicate after each filtering steps.*
 
 ```{r}
 asvid_by_replicate <- summarize_by(
@@ -2459,7 +2459,7 @@ knitr::kable(asvid_by_replicate, format = "markdown")
 The `update_asv_list` function merges **unique `asv`–`asv_id` pairs** 
 from two input data frames or CSV files.
 
-### How It Works
+**How It Works**
 
 * Combines ASV lists from two sources
 * Checks for **inconsistencies** within or between the datasets
@@ -2469,7 +2469,7 @@ from two input data frames or CSV files.
 
 This ensures that **`asv_id`s remain consistent** across different analyses.
 
-### Recommended Usage
+**Recommended Usage**
 
 The safest and simplest approach is to let `dereplicate` handle this automatically:
 
@@ -2484,7 +2484,7 @@ In this case:
 * A new combined ASV list is generated
 * You do not need to call `update_asv_list` manually
 
-### Working with Large Datasets
+**Working with Large Datasets**
 
 When processing many large datasets, the ASV list can become very large
 (often filled with singletons that will be filtered out later).
@@ -2502,7 +2502,7 @@ This way:
 * You do not keep very rare ASVs, that will be eliminated later anyways.
 * The ASV list stays smaller and easier to manage
 
-### Example
+**Example**
 
 ```{r update-asv-list, eval=FALSE}
 asv_list <- "PATH/TO/CSV/WITH/Earlier_asv-asv_id_pairs.csv"
@@ -2522,7 +2522,7 @@ After the analysis, they can be pooled at the sample level.
 The `pool_replicates` function performs this step and is automatically 
 called by `write_asv_table` when `pool_replicates = TRUE`.
 
-### How It Works
+**How It Works**
 
 For each sample and ASV, the function computes the read count across 
 replicates using the method specified by the `method` argument. 

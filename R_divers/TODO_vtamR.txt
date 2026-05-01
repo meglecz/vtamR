@@ -1,5 +1,8 @@
 # Ideas for vtamR
 
+## check download_osf on both systems
+## allow sortedinfo WO sample_type and habitat.
+
 ## Expliquer 4 FP
 
 ## add explanation sto tuto:
@@ -671,6 +674,12 @@ Make dir, outdir obligatory
 
 Define optional file names as NULL by default
 
+
+###
+
+add patter to history_by and summarize_by
+
+filter_asv_global =< cutoff instead of < cutoff
 
 
 

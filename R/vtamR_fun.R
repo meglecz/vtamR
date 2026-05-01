@@ -273,7 +273,7 @@ smart_gzip <- function(file,
 #' 
 #' @export
 #' 
-get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=NULL){
+get_stat <- function(read_count, stat_df=NULL, stage="", params=NA, outfile=NULL){
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2070,7 +2070,7 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
   df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count_all=sum(read_count)) %>%
-    filter(read_count_all > cutoff) %>%
+    filter(read_count_all >= cutoff) %>%
     ungroup()
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
@@ -6045,11 +6045,12 @@ pool_markers <- function(files,
 #' directory and extracts rows where the selected feature matches the given
 #' value.
 #' 
-#' Input files must be named with a numeric prefix followed by an underscore
-#' (e.g. `5_filter_occurrence_sample.csv`).
+#' By default, input filenames must start by a number (e.g. `5_filter_occurrence_sample.csv`).
+#' See `pattern` to change this behavior.
 #' 
 #' @param dir Character string specifying the directory containing intermediate
 #' filtering output files.
+#' @param pattern A regular expression used to select filenames to be scanned.
 #' @param feature Character string specifying the feature to filter by.
 #' Must be one of `"asv_id"`, `"asv"`, `"sample"`, `"replicate"`, or
 #' `"read_count"`.
@@ -6064,11 +6065,11 @@ pool_markers <- function(files,
 #' history_by(dir = "out", feature = "sample", value = "tpos1")
 #' }
 #' @export
-#'
-history_by <- function(dir, feature, value, sep=","){
+#
+history_by <- function(dir, pattern="^\\d", feature, value, sep=","){
 
   check_dir(dir)
-  files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
+  files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to df and arrange the according to the number at the beginning of the filename
   df <- data.frame("files"= files)
@@ -6114,7 +6115,9 @@ history_by <- function(dir, feature, value, sep=","){
 #' Summarize intermediate filtering steps by feature
 #' 
 #' Summarize the outputs of intermediate filtering steps across all files in a
-#' directory. Only files whose names begin with a numeric prefix are included.
+#' directory.
+#' By default, input filenames must start by a number (e.g. `5_filter_occurrence_sample.csv`).
+#' See `pattern` to change this behavior.
 #' 
 #' For each file, rows are grouped by `grouped_by`, and either:
 #' - the number of distinct values of `feature` is computed, or
@@ -6123,6 +6126,7 @@ history_by <- function(dir, feature, value, sep=","){
 #' @param dir Character string specifying the directory containing intermediate
 #' filtering output files. Files must start with a numeric prefix followed by
 #' an underscore (e.g. `5_filter_occurrence_sample.csv`).
+#' @param pattern A regular expression used to select filenames to be scanned.
 #' @param feature Character string specifying the feature to summarize. Must be
 #' one of `"asv_id"`, `"asv"`, `"sample"`, `"replicate"`, or `"read_count"`.
 #' @param grouped_by Character string specifying the grouping variable. Must be
@@ -6140,11 +6144,11 @@ history_by <- function(dir, feature, value, sep=","){
 #' }
 #' @export
 #'
-summarize_by <- function(dir, feature, grouped_by, outfile=NULL, sep=","){
+summarize_by <- function(dir, pattern = "^\\d", feature, grouped_by, outfile=NULL, sep=","){
   
   # read file names in dir
   check_dir(dir)
-  files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
+  files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to file_df and arrange the according to the number 
   # at the beginning of the file name

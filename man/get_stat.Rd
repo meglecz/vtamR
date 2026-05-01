@@ -4,7 +4,7 @@
 \alias{get_stat}
 \title{get_stat}
 \usage{
-get_stat(read_count, stat_df, stage = "", params = NA, outfile = NULL)
+get_stat(read_count, stat_df = NULL, stage = "", params = NA, outfile = NULL)
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file containing the following
