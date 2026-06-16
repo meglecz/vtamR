@@ -2352,13 +2352,12 @@ specific features (ASVs, samples, or replicates) across multiple filtering steps
 * Scans all files in a directory (`dir`) whose names mathch a `pattern` (by default 
 start with a number).
   These are typically the outputs from different [filtering steps](#filtering).
-* Selects all rows where the specified **feature** has a given **value**.
-
+* Selects all rows where the selected **feature** matches any of the **values** provided in a vector.
 **Key Arguments**
 
 * `dir`: Path to the directory containing the filtering output files.
 * `feature`: Column to track (`asv_id`, `asv`, `sample`, or `replicate`).
-* `value`: The specific value of the feature you want to follow.
+* `values`: The specific value of the feature you want to follow.
 
 
 **Examples**
@@ -2366,30 +2365,33 @@ start with a number).
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
 filter_dir <- file.path(outdir, "4_filter")
-tmp_ASV_27 <- history_by(dir=filter_dir, 
+tmp_ASV <- history_by(dir=filter_dir, 
                         feature="asv_id", 
-                        value="27")
+                        values=c(4, 27)
+)
 
-knitr::kable(head(tmp_ASV_27), format = "markdown")
+knitr::kable(head(tmp_ASV), format = "markdown")
 ```
 
 *Get the history of a sequence of the ASV  (`feature`).*
 ```{r}
-tmp_replicate_1 <- history_by(
+tmp_ASV <- history_by(
   dir=filter_dir, 
   feature="asv",
-  value="ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC")
+  values="ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC"
+  )
 
-knitr::kable(tmp_replicate_1, format = "markdown")
+knitr::kable(tmp_ASV, format = "markdown")
 ```
 
 *Get the history of the sample (`feature`) tpos1 (`value`).*
 ```{r}
-tmp_sample_tpos1 <- history_by(dir=filter_dir, 
+tmp_sample <- history_by(dir=filter_dir, 
                               feature="sample", 
-                              value="tpos1")
+                              value=c("tpos1", "tnegtag")
+                         )
 
-knitr::kable(head(tmp_sample_tpos1), format = "markdown")
+knitr::kable(head(tmp_sample), format = "markdown")
 ```
 
 ## `summarize_by` {#summarize_by}
@@ -2562,6 +2564,27 @@ df <- count_reads_in_dir(
   pattern="_fw.fastq.gz", 
   file_type="fastq"
   )
+```
+
+## `concatenate_files` {#concatenate_files}
+
+The `concatenate_files` function 
+reads files from multiple directories and concatenates the contents of files
+sharing the same filename into a single output file.
+
+It is helpful for example to pool fastq files of samples that have been sequenced twice.
+
+concatenate_files <- function(dirs, outdir, pattern = "\\.")
+
+* `dirs`: Vector of input directory names containing the files to be concatenated
+* `pattern`: Regular expression; only file names matching this pattern in their name are processed
+
+```{r, eval=FALSE}
+concatenate_files(
+   dirs = c("run1", "run2", "run3"),
+   outdir = "pooled",
+   pattern = ".fastq$"
+)
 ```
  
 # I/O Files and Data Frames
@@ -2797,7 +2820,29 @@ in multiple runs, for example if one sequencing run was of lower quality or if
 technical replication was performed. Pooling can be done before filtering
 to create a unified dataset.
 
-### 1. Process each run separately up to dereplication
+### Option 1
+
+The simplest approach is to concatenate the corresponding input files (FASTQ or FASTA).
+
+The `concatenate_files` function reads files from multiple directories 
+and concatenates the contents of files with the same filename into a single output file.
+
+**Important**: Before using this function, make sure that the sequence IDs in 
+the files to be concatenated are unique. Duplicate IDs can cause issues in downstream analyses.
+
+```{r, eval=FALSE}
+concatenate_files(
+   dirs = c("run1", "run2", "run3"),
+   outdir = "pooled",
+   pattern = ".fastq$"
+)
+```
+
+### Option 2
+
+Safer but a bit more complicated option.
+
+#### 1. Process each run separately up to dereplication
 
 For each sequencing run, perform the following steps:
 
@@ -2809,7 +2854,7 @@ Follow the steps in [from-fastq-to-df](from-fastq-to-df.html), adapting to
 your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed 
 FASTA files in a separate directory for each run.
 
-### 2. Dereplicate each run independently, while keeping a shared ASV list
+#### 2. Dereplicate each run independently, while keeping a shared ASV list
 
 Dereplicate each run separately, but ensure that ASV identifiers (`asv_id`) 
 remain consistent across runs by:
@@ -2854,7 +2899,7 @@ read_count_df3 <- dereplicate(
 )
 ```
 
-### 3. Pool the dereplicated datasets
+#### 3. Pool the dereplicated datasets
 
 After dereplication and harmonization of ASV identifiers, the resulting 
 `read_count_df` objects can be combined.

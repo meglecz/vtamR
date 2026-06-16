@@ -11,7 +11,8 @@ filter_pcr_error(
   num_threads = 0,
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
-  by_sample = T,
+  by_sample = TRUE,
+  min_read_count = 10,
   sample_prop = 0.8,
   sep = ",",
   quiet = TRUE
@@ -38,6 +39,9 @@ ASVs at or below this threshold are flagged as PCR errors.}
 
 \item{by_sample}{Logical. If \code{TRUE}, PCR error detection is performed separately
 within each sample.}
+
+\item{min_read_count}{Positive integer specifying the minimum read count threshold;
+occurrences below this value are ignored, to spead up the analyses.}
 
 \item{sample_prop}{Numeric value between 0 and 1 specifying the minimum proportion
 of samples in which an ASV must be flagged as a PCR error (when \code{by_sample = TRUE})

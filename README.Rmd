@@ -53,6 +53,7 @@ on how to construct a full metabarcoding pipeline is avalibale online.
 
 # Installation
 
+
 ## Implementation
 
 The heavy lifting of sequence analyses are done by the following third party 
@@ -66,8 +67,10 @@ programs. They should be installed on your computer:
 
 `vtamR` has been tested using the above mentioned versions, 
 but it should work with later versions.
+
 `vtamR` was tested on **Windows** and **Linux**, and should work in all 
 operating systems.
+
 
 ## Install vtamR
 
@@ -83,10 +86,10 @@ if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("meglecz/vtamR", dependencies = TRUE)
 ```
 
-You also need to install Bioconductor packages manually
-if you intend to use `TaxAssignRDP` function.
+Install Bioconductor packages manually
+if you intend to use `assign_taxonomy_rdp` function.
 ```{r install_bioc, eval=FALSE}
-# Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)
+# Install Bioconductor suggested packages manually if needed (only for assign_taxonomy_ltg)
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 if (!requireNamespace("rRDP", quietly = TRUE)) BiocManager::install("rRDP")
 if (!requireNamespace("rRDPData", quietly = TRUE)) BiocManager::install("rRDPData")
@@ -107,10 +110,15 @@ on how to construct a full metabarcoding pipeline.
 * `PIGZ` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
-**Add the executables to your PATH** so you don’t need to type their full location each time.
-If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
+**Add the executables to your PATH** 
 
-You can add a directory to your PATH so that R and RStudio can find the executables you want to use.
+This step is optional. If third-party executables are included in your `PATH`, 
+you won’t need to manually specify their locations when running functions that use them.
+
+If you prefer **not** to modify your `PATH`, be sure to provide the 
+full path to each program using the corresponding `vtamR` function argument 
+(e.g., `vsearch_path`).
+
 
 1. Edit (or create) your `~/.Renviron` file
 
@@ -143,7 +151,7 @@ system("pigz --version")
 
 ### Windows
 
-Download binaries and save the to a convenient place on your computer 
+Download binaries and save them to a convenient place on your computer 
 (path without space, e.g. `C:/Users/Public/`)
 
 **VSEARCH**
@@ -175,7 +183,7 @@ so you won’t need to specify its location when using it.
 * The executables will be installed in:
 `C:\Program Files\NCBI\blast-x.xx.x+\bin`
 
-**PIGZ** (Optional)
+**VSEARCH** (Optional)
 
 * Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
 * Decompress the zip file
@@ -239,18 +247,18 @@ C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
 
 ## TaxAssign reference data base
 
-### TaxAssignLTG
+### assign_taxonomy_ltg
 
-For `TaxAssignLTG` (BLAST based Lowest Common Ancestor method),
-a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
+For `assign_taxonomy_ltg` (BLAST based Lowest Common Ancestor method),
+a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/),
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 Download and extract using:
 ```{r, dowload-coinr, eval=FALSE}
 library(vtamR)
 
-download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
-    url = "https://osf.io/download/jyhz6/",
+download_osf(filename = "COInr_for_vtam_2026_05_03_dbV5.tar.gz",
+    url = "https://osf.io/download/yhjvm/",
     dest_dir = "COInr_db",
     untar = TRUE,
     quiet = FALSE
@@ -261,7 +269,9 @@ To check for newer versions:
 
 - Go to: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
 - In **Files** open the the **dbV5** folder.
-- Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.
+- Open the latest file in the browser (click the file name, not just the folder).
+- Look at the URL, it will look like: https://osf.io/yhjvm/ (yhjvm = file ID)
+- Build the download link like this: https://osf.io/download/yhjvm/
 
 
 Alternatively, you can also create a custom version from the **TSV format** database available at
@@ -270,17 +280,18 @@ Alternatively, you can also create a custom version from the **TSV format** data
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 
-**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments), 
+**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg), 
 containing taxIDs and a 
-[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments).
-If all sequences are extracted from NCBI-nt. The taxonomy file provided in 
+[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
+If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
 
-### TaxAssignRDP
+### assign_taxonomy_rdp
 
-`TaxAssignRDP` function uses de RDP algorithm to assign bacterial 16S sequences.
+`assign_taxonomy_rdp` function uses de RDP algorithm to assign bacterial 16S sequences.
 The database is provided in the `rRDPData` R data package.
 
-It is also possible to provide to provide a trained classifier object created 
+It is also possible to provide a trained classifier object created 
 with `trainRDP()`.
+

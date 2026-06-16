@@ -1,11 +1,33 @@
 # Ideas for vtamR
 
+## write demultiplex_fastq so it can compy to SRA expectations
+-demultiplex_fastq and trim
+-merge
+
+## write function for quality filtering fastq
+
+## modify subsample to be able to take fastq files as well 
+=> possible to reequilibrate replicates before any other mege or demultiplex
+
 ## check download_osf on both systems
 ## allow sortedinfo WO sample_type and habitat.
 
+## make function report_mime that extrac minimum necessary information
+from the outout
+take the a series of input files and extract info present in the checklist
+of MIME. If some of the input file is not given return NA for the values that depend
+ont it. Make an output table similar to the checklist.
+
+## improve concatenate files
+- check sequences ID
+- pool any files with any names listed in a df (outfile, infile columns); indir, outdir options
+
+## concatenate_file is slow and uses a lot of memory
+
+
 ## Expliquer 4 FP
 
-## add explanation sto tuto:
+## add explanation to tuto:
 - Dezip fichier (clique droit, extraire ici)
 - Completer l'ajout de chemin dans cmd
 - Install => expliquer 
@@ -17,13 +39,6 @@
 
 ## revise install in readme.
 
-
-## stage
-- Install vtamR
-- faire tourner le demo
-- lire et corriger le tuto
-- verifier tout les liens
-
 ## pool_datasets rearrange columns in output
 
 ## Add read-count info for mock_composition_template_to_check.csv
@@ -33,7 +48,7 @@
 ## OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
           reads during this filtering step. "
 
-## SortReads with check_reverse in windows islong.
+## SortReads with check_reverse in windows is long.
 
 
 Revise file stucture of the tutriel. outdir/marker/...
@@ -652,7 +667,7 @@ suggest_filter_parameters_pcr_error => suggest_pcr_error_cutoff
 suggest_filter_parameters_readcount_variant => suggest_variant_readcount_cutoffs
 suggest_filter_parameters_sample => suggest_sample_cutoff
 
-## 2026/04/22
+## 2026/04/22 v.1.0.3
 
 Glossaire 
 - Renkonen distance and add link when appropriate
@@ -675,12 +690,34 @@ Make dir, outdir obligatory
 Define optional file names as NULL by default
 
 
-###
+### 2026/05/01
 
-add patter to history_by and summarize_by
+add pattern to history_by and summarize_by
 
 filter_asv_global =< cutoff instead of < cutoff
 
+###
+Update Readme.Rmd
+Update download OSF with 2026 COinr version
+
+###
+Deactivate check_file_info in merge_fastq_pairs
+
+###
+Modify history_by to accept a vector of values, not just a singe value; adjust tuto
+
+###
+Add pool_fastas go through 2 or more directory:
+Make a list of all filenames
+If a filename is in more than one dir, pool the content and write a file into the output
+directory. Otherwise copy the fie to outdir.
+Adjust tuto
+
+###
+modify filter_pcr_error
+Add min_read_count argument => if less than this read in the sample/run, the variant is not checked
+
+################ install on bombyx
 
 
 

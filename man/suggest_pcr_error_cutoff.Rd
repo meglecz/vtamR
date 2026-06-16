@@ -12,7 +12,7 @@ suggest_pcr_error_cutoff(
   sep = ",",
   outfile = NULL,
   max_mismatch = 1,
-  min_read_count = 5,
+  min_read_count = 10,
   quiet = TRUE
 )
 }

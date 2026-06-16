@@ -4,7 +4,7 @@
 \alias{history_by}
 \title{Filter processing history by feature}
 \usage{
-history_by(dir, pattern = "^\\\\d", feature, value, sep = ",")
+history_by(dir, pattern = "^\\\\d", feature, values, sep = ",")
 }
 \arguments{
 \item{dir}{Character string specifying the directory containing intermediate
@@ -16,7 +16,7 @@ filtering output files.}
 Must be one of \code{"asv_id"}, \code{"asv"}, \code{"sample"}, \code{"replicate"}, or
 \code{"read_count"}.}
 
-\item{value}{Character or numeric value to match in the selected feature.
+\item{values}{Numerical or Character vector with values to match in the selected feature.
 Only rows containing this value are retained.}
 
 \item{sep}{Field separator character used in input and output CSV files.}
@@ -32,8 +32,8 @@ a specified value.
 }
 \details{
 This function scans all output files from intermediate filtering steps in a
-directory and extracts rows where the selected feature matches the given
-value.
+specified directory and extracts rows where the selected feature matches
+any of the values provided in a vector.
 
 By default, input filenames must start by a number (e.g. \verb{5_filter_occurrence_sample.csv}).
 See \code{pattern} to change this behavior.

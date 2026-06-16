@@ -179,7 +179,7 @@ read_count_df <- dereplicate(
 ```
 
 
-# Case 2 - One Aample per Fastq - Primer - No Tag
+# Case 2 - One Sample per Fastq - Primer - No Tag
 
 This is one of the most frequent case. 
 Each pair of fasta files correspond to a sample (or

@@ -447,7 +447,7 @@ merge_fastq_pairs <- function(fastqinfo,
   }else{
     fastqinfo_df <- fastqinfo
   }
-  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
+#  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
   
   # get unique list of fastq file pairs
   tmp <- fastqinfo_df %>%
@@ -3005,6 +3005,8 @@ flag_pcr_error <- function(unique_asv_df,
 #' @param sample_prop Numeric value between 0 and 1 specifying the minimum proportion 
 #'   of samples in which an ASV must be flagged as a PCR error (when `by_sample = TRUE`) 
 #'   to be removed.
+#' @param min_read_count Positive integer specifying the minimum read count threshold; 
+#'   occurrences below this value are ignored, to spead up the analyses.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
 #' @param vsearch_path Character string specifying the path to the `vsearch` executable.
@@ -3045,7 +3047,8 @@ filter_pcr_error <- function(read_count,
                            num_threads=0,
                            pcr_error_var_prop=0.1,
                            max_mismatch=1, 
-                           by_sample=T, 
+                           by_sample=TRUE, 
+                           min_read_count=10,
                            sample_prop=0.8, 
                            sep=",",
                            quiet=TRUE
@@ -3073,6 +3076,7 @@ filter_pcr_error <- function(read_count,
   unique_asv_df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count = sum(read_count)) %>%
+    filter(read_count >= min_read_count) %>%
     arrange(desc(read_count)) %>%
     ungroup()
   
@@ -3085,6 +3089,7 @@ filter_pcr_error <- function(read_count,
         filter(sample == sample_loc) %>%
         group_by(asv)%>%
         summarize(read_count = sum(read_count))%>%
+        filter(read_count >= min_read_count) %>%
         arrange(desc(read_count)) %>%
         ungroup()
       
@@ -3121,7 +3126,7 @@ filter_pcr_error <- function(read_count,
   unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
   unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
   # keep only ASVs, 
-  # that are not flagged in sample_prop proportion of the samples where they are present  
+  # that are flagged in sample_prop proportion of the samples where they are present  
   unique_asv_df <- unique_asv_df %>%
     filter(yes/(yes+no) >= sample_prop)
   
@@ -4812,7 +4817,7 @@ suggest_pcr_error_cutoff <- function(read_count,
                              sep=",", 
                              outfile=NULL, 
                              max_mismatch=1, 
-                             min_read_count=5,
+                             min_read_count=10,
                              quiet=TRUE
                              ){
   
@@ -6042,8 +6047,8 @@ pool_markers <- function(files,
 #' a specified value.
 #' 
 #' This function scans all output files from intermediate filtering steps in a
-#' directory and extracts rows where the selected feature matches the given
-#' value.
+#' specified directory and extracts rows where the selected feature matches
+#' any of the values provided in a vector.
 #' 
 #' By default, input filenames must start by a number (e.g. `5_filter_occurrence_sample.csv`).
 #' See `pattern` to change this behavior.
@@ -6054,7 +6059,7 @@ pool_markers <- function(files,
 #' @param feature Character string specifying the feature to filter by.
 #' Must be one of `"asv_id"`, `"asv"`, `"sample"`, `"replicate"`, or
 #' `"read_count"`.
-#' @param value Character or numeric value to match in the selected feature.
+#' @param values Numerical or Character vector with values to match in the selected feature.
 #' Only rows containing this value are retained.
 #' @param sep Field separator character used in input and output CSV files.
 #' @return An invisible data frame containing all rows matching the selected
@@ -6066,17 +6071,21 @@ pool_markers <- function(files,
 #' }
 #' @export
 #
-history_by <- function(dir, pattern="^\\d", feature, value, sep=","){
+history_by <- function(dir, pattern="^\\d", feature, values, sep=","){
 
   check_dir(dir)
   files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to df and arrange the according to the number at the beginning of the filename
-  df <- data.frame("files"= files)
-  df$order <- gsub("_.*$", "", df$files)
-  df$order <- as.numeric(df$order)
-  df <- df %>%
-    arrange(order)
+  df <- data.frame("files"= files) %>%
+    arrange(files)
+  
+  df$order <- gsub("[^0-9].*$", "", df$files)
+  if(!any(df$order == "")){
+    df$order <- as.numeric(df$order)
+    df <- df %>%
+      arrange(order, files)
+  }
   
   selected_lines <- data.frame(
     file= as.character(), 
@@ -6101,7 +6110,8 @@ history_by <- function(dir, pattern="^\\d", feature, value, sep=","){
     # check if the feature is in among the columns names of the data frame
     if(feature %in% colnames(data)){
       tmp <- data %>%
-        filter(!!sym(feature)==value) %>% # filter using a symbol from feature
+#        filter(!!sym(feature)==value) %>% # filter using a symbol from feature
+        filter(!!sym(feature) %in% values) %>% # filter using a symbol from feature
         select(file, asv_id, sample, replicate, read_count, asv)
       
       selected_lines <- rbind(selected_lines, tmp)
@@ -6443,7 +6453,7 @@ count_reads_in_dir<- function(dir,
                          quiet=T
                          ){
   
-  check_dir(dir)
+  check_dir(dir, is_file=FALSE)
   files <- list.files(path = dir, pattern=pattern)
   df <- data.frame(
     "filename"=files,
@@ -6675,7 +6685,7 @@ check_file_info <- function(file, dir, file_type="fastqinfo", sep=",", quiet=FAL
       summarize("n"=n(), .groups="drop_last") %>%
       filter(n>1)
     if(nrow(tmp) > 0){
-      msg <- paste("Sample-replicate combinations must be unique:", 
+      msg <- paste("Sample-replicate combinations should be unique:", 
                    paste(tmp$sample, collapse = ", "))
       tryCatch(stop(msg), error = function(e) message(msg))
     }else if(!quiet){
@@ -7574,4 +7584,97 @@ subsample_fasta <- function(fastainfo,
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
   return(fastainfo_df)
 }
+
+
+#' Concatenate contents of files with identical names
+#'
+#' Reads files from multiple directories and concatenates the contents of files
+#' sharing the same filename into a single output file.
+#'
+#' For each unique filename matching `pattern`, all corresponding files found in
+#' `dirs` are read in order and merged into a file of the same name in `outdir`.
+#' 
+#' This function works both on uncompressed and gz compressed files.
+#'
+#' @param dirs A character vector of input directories to search for files.
+#' @param outdir A character string specifying the output directory where pooled
+#'   files will be written.
+#' @param pattern A regular expression used to select filenames within the input
+#'   directories.
+#' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
+#'
+#' @return Invisibly data frame of files and directories 
+#'
+#' @examples
+#' \dontrun{
+#' concatenate_files(
+#'   dirs = c("run1", "run2", "run3"),
+#'   outdir = "pooled",
+#'   pattern = "\\.fastq$"
+#' )
+#' }
+#'
+#' @export
+concatenate_files <- function(dirs, outdir, pattern = "\\.", quiet=TRUE) {
+  
+  check_dir(outdir, is_file=FALSE)
+  
+  df <- data.frame(
+    file = character(),
+    dir = character(),
+    stringsAsFactors = FALSE
+  )
+  
+  # make df with filenames and dir names as columns
+  for (dir in dirs) {
+    
+    files <- list.files(
+      path = dir,
+      pattern = pattern
+    )
+    
+    tmp <- data.frame(
+      file = files,
+      dir = dir,
+      stringsAsFactors = FALSE
+    )
+    
+    df <- rbind(df, tmp)
+  }
+  
+  # loop over unique filenames
+  for (f in unique(df$file)) {
+    if(!quiet){
+      print(f)
+    }
+    sub_df <- df %>%
+      filter(file == f)
+    
+    out <- file.path(outdir, f)
+    
+    gz <- grepl("\\.gz$", f)
+    if (gz) {
+      con_out <- gzfile(out, open = "wt")
+    } else {
+      con_out <- file(out, open = "w")
+    }
+    
+    for (i in 1:nrow(sub_df)) {
+      
+      path <- file.path(sub_df$dir[i], sub_df$file[i])
+      
+      if (gz) {
+        con_in <- gzfile(path, open = "rt")
+      } else {
+        con_in <- file(path, open = "r")
+      }
+      lines <- readLines(con_in)
+      writeLines(lines, con_out)
+      close(con_in)
+    }
+    close(con_out)
+  }
+  invisible(df)
+}
+
 
