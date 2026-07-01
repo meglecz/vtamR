@@ -35,7 +35,7 @@ This function works both on uncompressed and gz compressed files.
 concatenate_files(
   dirs = c("run1", "run2", "run3"),
   outdir = "pooled",
-  pattern = "\\\\\\\\.fastq$"
+  pattern = "\\\\.fastq$"
 )
 }
 

@@ -15,6 +15,17 @@ knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 
 
 ```{r}
+library("devtools")
+library("roxygen2")
+setwd("/home/meglecz/vtamR")
+setwd("C:\\Users\\emese\\vtamR")
+load_all(".")
+roxygenise()
+usethis::use_roxygen_md()
+```
+
+
+```{r}
 ### Developer
 # Creating a package
 install.packages(c("devtools", "roxygen2", "usethis", "testthat"))

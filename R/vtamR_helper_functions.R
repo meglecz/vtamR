@@ -105,7 +105,7 @@ download_osf <- function(
   destfile <- file.path(dest_dir, filename)
   
   if (!quiet) message("Downloading ", filename, " to ", dest_dir)
-  utils::download.file(url, destfile)
+  utils::download.file(url, destfile, method="auto", mode = "wb")
   
   if (!quiet) message("Extracting archive...")
   utils::untar(destfile, exdir = dest_dir)
