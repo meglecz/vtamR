@@ -1,15 +1,12 @@
 # Ideas for vtamR
 
-## write demultiplex_fastq so it can compy to SRA expectations
--demultiplex_fastq and trim
--merge
+
 
 ## write function for quality filtering fastq
 
 ## modify subsample to be able to take fastq files as well 
 => possible to reequilibrate replicates before any other mege or demultiplex
 
-## check download_osf on both systems
 ## allow sortedinfo WO sample_type and habitat.
 
 ## make function report_mime that extrac minimum necessary information
@@ -719,8 +716,23 @@ Add min_read_count argument => if less than this read in the sample/run, the var
 
 ################ install on bombyx
 
+### 2026/07/01
 
+download_osf works both of windows and linux commit: download_osf win
 
+### 2026/07/03 commit demultiplex_fastq_pairs
+
+###
+write demultiplex_fastq_pairs so it can comply to SRA expectations
+-demultiplex_fastq and trim 
+	- --revcomp for paired end read is supported from cutadapt v4.6 => 
+	this is not (yet) available as a easy single file insallation on windows => 
+	running both orientation seperatelly and pool the output
+-merge is adapted to name output files by sample-replicate.fasta is run on
+	demultiplexed files, use the fw fasts filenale otherwise.
+- count_reads => bug when using bash commasds => corrected
+- check_dir => delete slash at the end of dir and return invisible path; 
+	corrected when calling the function
 
 
 

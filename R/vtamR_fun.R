@@ -93,12 +93,14 @@ check_dir <- function(path, is_file=FALSE){
   if(is_file){
     dir_to_create <- dirname(path)
   }else{
+    path <- sub("[/\\\\]+$", "", path) # remove / or \ at the end of dir name
     dir_to_create <- path
   }
   
   if(!dir.exists(dir_to_create)){
       dir.create(dir_to_create, recursive =TRUE)
-    }
+  }
+  return(invisible(path))
 }
 
 
@@ -435,8 +437,8 @@ merge_fastq_pairs <- function(fastqinfo,
                   compress=FALSE, 
                   quiet=T){
   
-  check_dir(fastq_dir)
-  check_dir(outdir)
+  fastq_dir = check_dir(fastq_dir)
+  outdir = check_dir(outdir)
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
@@ -447,24 +449,36 @@ merge_fastq_pairs <- function(fastqinfo,
   }else{
     fastqinfo_df <- fastqinfo
   }
-#  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
+  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
   
-  # get unique list of fastq file pairs
+  #  get unique list of fw_rv filenames and outfile names
   tmp <- fastqinfo_df %>%
-    select(fastq_fw, fastq_rv)
-  tmp <- unique(tmp)
-  tmp$fasta <- NA
-  tmp$read_count <- NA
+    # only one sample-replicate combination per fw-rv file combination. Use sample-replicate.fasta as outfile
+    mutate(fasta = paste(sample, "-", replicate, ".fasta", sep=""),
+           read_count = NA) %>% 
+    select(fasta, fastq_fw, fastq_rv)
+  
+  nb_sample_repl = length(unique(tmp$fasta))
+  nb_fw_rv = nrow(tmp %>%
+                    select(fastq_fw, fastq_rv)%>%
+                    distinct()
+  )
+  if(nb_sample_repl != nb_fw_rv){# Same fw_rv file combination, have more than one sample-replicate
+    # it should be demultiplexed latter. Use the fw filename for output
+    tmp <- tmp %>%
+      mutate(fasta = sub("\\..*$", ".fasta", fastq_fw)) %>%
+      distinct()
+  } 
   
   for(i in 1:nrow(tmp)){# for each file pairs
     
     # use the name of the fw fastq file and replace extension by fasta (uncompressed)
-    outfile <- sub("\\..*", ".fasta", tmp[i,1])
-    tmp$fasta[i] <- outfile
-    outfile <- file.path(outdir, outfile)
+#    outfile <- sub("\\..*", ".fasta", tmp[i,1])
+#    tmp$fasta[i] <- outfile
+    outfile <- file.path(outdir, tmp[i,"fasta"])
     # add path to input filenames
-    fw_fastq <- file.path(fastq_dir, tmp[i,1])
-    rv_fastq <- file.path(fastq_dir, tmp[i,2])
+    fw_fastq <- file.path(fastq_dir, tmp[i,"fastq_fw"])
+    rv_fastq <- file.path(fastq_dir, tmp[i,"fastq_rv"])
     
     #Decompress input files, since they are cannot be treated directly by vsearch on the OS
     if(!is_linux() && endsWith(fw_fastq, ".gz")){
@@ -534,13 +548,18 @@ merge_fastq_pairs <- function(fastqinfo,
         }
       }
       
-    original_fw_fastq <- file.path(fastq_dir, tmp[i,1])
+    original_fw_fastq <- file.path(fastq_dir, tmp[i,"fastq_fw"])
     if( original_fw_fastq != fw_fastq){# the input fastq has been unzipped for vsearch => rm unzipped file to free space
       file.remove(fw_fastq)
       file.remove(rv_fastq)
     }
   } # end loop over files
   # make fastainfo file
+  # rename read_count if present in input fastqinfo
+  if("read_count" %in% colnames(fastqinfo_df)){
+    fastqinfo_df <- fastqinfo_df %>%
+      rename(read_count_input = read_count)
+  }
   fastainfo_df <- left_join(fastqinfo_df, tmp, by=c("fastq_fw", "fastq_rv")) %>%
     select(-fastq_fw, -fastq_rv)
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
@@ -913,8 +932,8 @@ trim_primers <- function(fastainfo,
                        quiet=T
                        ){
   
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -932,8 +951,8 @@ trim_primers <- function(fastainfo,
   fastainfo_df$filename <- NA
   
   # check dirs
-  check_dir(outdir)
-  check_dir(fasta_dir)
+  outdir = check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
   
   for(i in 1:nrow(fastainfo_df)){ # for each input fasta
     
@@ -1067,8 +1086,8 @@ demultiplex_and_trim <- function(fastainfo,
                       quiet=T
                       ){
   
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
@@ -1131,10 +1150,10 @@ demultiplex_and_trim <- function(fastainfo,
              fasta
              )
     # make temp dir 
-    check_dir(outdir)
+    outdir = check_dir(outdir)
     rc_dir <- paste('rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- file.path(tempdir(), rc_dir)
-    check_dir(rc_dir)
+    rc_dir = check_dir(rc_dir)
     # run demultiplex_and_trim on for reverse strand
     sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df_tmp, 
                                           fasta_dir=fasta_dir, 
@@ -1332,8 +1351,8 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -1518,7 +1537,7 @@ write_cutadapt_adapter_fasta <- function(fastainfo_df, fasta_file, outdir, tag_t
   tags$tag_rvl <- lapply(tags$tag_rv, nchar)
   
   # Specify the file path
-  check_dir(outdir)
+  outdir = check_dir(outdir)
   tag_file <- file.path(outdir, "tags.fasta")
   # initialize the content of the tag_file
   text <- c()
@@ -1649,7 +1668,7 @@ dereplicate <- function(sampleinfo,
   
   # read all fasta files in sampleinfo to a read_count_df
   if(nchar(dir)>0){
-    check_dir(dir)
+    dir = check_dir(dir)
   }
   # define empty read_count_df to pool the results of variables
   read_count_df <- data.frame(asv=character(),
@@ -2902,7 +2921,7 @@ flag_pcr_error <- function(unique_asv_df,
   # create a tmp directory for temporary files using time and a random number
   outdir_tmp <- paste('tmp_PCRerror_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir_tmp <- file.path(tempdir(), outdir_tmp)
-  check_dir(outdir_tmp)
+  outdir_tmp = check_dir(outdir_tmp)
   
   # make fasta file with unique reads; use sequences as ids
   fas <- file.path(outdir_tmp, 'unique.fas')
@@ -3194,7 +3213,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
                       sep=''
                       )
   outdir_tmp <- file.path(tempdir(), outdir_tmp)
-  check_dir(outdir_tmp)
+  outdir_tmp = check_dir(outdir_tmp)
   
   # make fasta file with unique reads; use sequences as ids
   fas <- file.path(outdir_tmp, 'unique.fas')
@@ -3855,7 +3874,7 @@ outdir_tmp <- paste('tmp_TaxAssign_',
                     sep=''
                     )
 outdir_tmp <- file.path(tempdir(), outdir_tmp)
-check_dir(outdir_tmp)
+outdir_tmp = check_dir(outdir_tmp)
 
 ### run blast and clean/complete results
 # run blast and read read results to data frame 
@@ -3996,7 +4015,7 @@ run_blast <- function(df,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  check_dir(outdir)
+  outdir = check_dir(outdir)
   
   # make fasta file with unique reads; use numbers as ids  
 #  seqs <- unique(df$asv)
@@ -4901,7 +4920,7 @@ suggest_pcr_error_cutoff <- function(read_count,
                         sep=''
                         )
     outdir_tmp <- file.path(tempdir(), outdir_tmp)
-    check_dir(outdir_tmp)
+    outdir_tmp = check_dir(outdir_tmp)
     # get the list of keep ASV in the given mock sample from mock_composition
     tmp_mock <- mock_composition_df %>%
       filter(sample==mock) %>%
@@ -6073,7 +6092,7 @@ pool_markers <- function(files,
 #
 history_by <- function(dir, pattern="^\\d", feature, values, sep=","){
 
-  check_dir(dir)
+  dir = check_dir(dir)
   files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to df and arrange the according to the number at the beginning of the filename
@@ -6157,7 +6176,7 @@ history_by <- function(dir, pattern="^\\d", feature, values, sep=","){
 summarize_by <- function(dir, pattern = "^\\d", feature, grouped_by, outfile=NULL, sep=","){
   
   # read file names in dir
-  check_dir(dir)
+  dir = check_dir(dir)
   files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to file_df and arrange the according to the number 
@@ -6361,33 +6380,34 @@ count_reads <- function(file, file_type="fastq"){
     if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
       if(file_type == "fastq"){
         cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+#        seq_count <- as.integer(system(cmd, intern=TRUE))
         seq_count <- seq_count/4
       }else if(file_type == "fasta"){
         cmd <- paste("zcat ", file, "| grep '^>' -P | wc -l", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }else{
         msg <- paste(file_type, "is neither fasta nor fastq. 
                      The number of liens in file will be returned for", file)
         print(msg)
         cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }
     }else{
       #uncompressed files
       if(file_type == "fastq"){
-        cmd <- paste("wc -l", line, sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
         seq_count <- seq_count/4
       }else if(file_type == "fasta"){
         cmd <- paste("grep '^>' -P", file, "| wc -l", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }else{
         msg <- paste(file_type, "is neither fasta nor fastq. 
                      The number of lines in file will be returned for", file)
         print(msg)
-        cmd <- paste("wc -l", line, sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }
     }
     return(seq_count)
@@ -6453,7 +6473,7 @@ count_reads_in_dir<- function(dir,
                          quiet=T
                          ){
   
-  check_dir(dir, is_file=FALSE)
+  dir = check_dir(dir, is_file=FALSE)
   files <- list.files(path = dir, pattern=pattern)
   df <- data.frame(
     "filename"=files,
@@ -6505,7 +6525,7 @@ count_reads_in_dir<- function(dir,
 #'   `"known_occurrences"`, `"read_count"`, `"read_count_sample"`, `"asv_list"`.
 #' @param sep Field separator character used in CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
-#' @return Throws an error and stops execution if inconsistencies are detected.
+#' @return Return an error message and stops execution if inconsistencies are detected.
 #' @examples
 #' \dontrun{
 #' check_file_info(file = "input/sampleinfo.csv", dir = "fasta", file_type = "sampleinfo")
@@ -6862,7 +6882,7 @@ check_file_info <- function(file, dir, file_type="fastqinfo", sep=",", quiet=FAL
 #' 
 check_file_exists <- function(file_list, dir){
   
-  check_dir(dir)
+  dir = check_dir(dir)
   missing <- c()
   for(i in file_list){
     file_p <- file.path(dir, i)
@@ -7531,8 +7551,8 @@ subsample_fasta <- function(fastainfo,
     fastainfo_df <- fastainfo
   }
   
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   
   unique_fasta <- unique(fastainfo_df$fasta)
   
@@ -7617,7 +7637,7 @@ subsample_fasta <- function(fastainfo,
 #' @export
 concatenate_files <- function(dirs, outdir, pattern = "\\.", quiet=TRUE) {
   
-  check_dir(outdir, is_file=FALSE)
+  outdir = check_dir(outdir, is_file=FALSE)
   
   df <- data.frame(
     file = character(),
@@ -7677,4 +7697,623 @@ concatenate_files <- function(dirs, outdir, pattern = "\\.", quiet=TRUE) {
   invisible(df)
 }
 
+#' Demultiplex fastq file pairs and trim tags and primers (reverse strand not checked)
+#' 
+#' Same as `demultiplex_fastq_pairs`, but without checking the reverse-complement 
+#' of the sequences.
+#'  
+#' FASTQ file pairs are first demultiplexed by requiring a perfect match between
+#' the tag sequence and the 5' end of the read. The resulting files are then
+#' trimmed to remove primer sequences using less stringent matching parameters
+#' (controlled by `cutadapt_error_rate`). A match between the primer and the 5'
+#' end of the read is required for the read to be trimmed and retained. Matching
+#' of the 3' primer is optional
+#'  
+#' Input files can be compressed or uncompressed. Output compression is 
+#' controlled by `compress`.
+#'  
+#' @param fastqinfo Data frame or path to a CSV file with the following columns: 
+#'   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, 
+#'   `sample`, `sample_type` (mock/negative/real), 
+#'   `habitat` (optional), `replicate`, `fastq_fw`, 
+#'   `fastq_rv`
+#' @param fastq_dir Character string specifying the directory containing input 
+#'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
+#' @param cutadapt_path Character string specifying the path to the 
+#'   `cutadapt` executable.
+#' @param num_threads Positive integer specifying the number of CPU threads to 
+#'   use. If `0`, all available CPUs are used.
+#' @param outdir Character string specifying the output directory.
+#' @param tag_to_end Logical. If `TRUE`, tags are assumed to be located at the 
+#'   extremities of reads (starting at the first base).
+#' @param primer_to_end Logical. If `TRUE`, primers are assumed to follow 
+#'   directly after tags (i.e., no heterogeneity spacer).
+#' @param cutadapt_error_rate Numeric value between 0 and 1 specifying the 
+#'   maximum allowed error rate between primers and reads (exact match is 
+#'   required for tags).
+#' @param sep Character string specifying the field separator used in input and 
+#'   output CSV files.
+#' @param compress Logical. If `TRUE`, compress output files using gzip.
+#' @param quiet Logical. If `TRUE`, suppress informational messages and 
+#'   only display warnings or errors.
+#' 
+#' @return Data frame similar to the input `fastqinfo` file, 
+#'   but contains the output fastq file names and read counts.
+#' 
+#' @examples
+#' \dontrun{
+#' fastqinfo_df <- demultiplex_fastq_pairs_strand_plus(
+#'   fastqinfo = fastqinfo_df,
+#'   fastq_dir = "data/fastq",
+#'   outdir = "data/fastq_demultiplexed",
+#'   tag_to_end = TRUE,
+#'   primer_to_end = TRUE,
+#'   sep = ","
+#' )
+#' }
+#' 
+#' @export
+#' 
 
+demultiplex_fastq_pairs_strand_plus <- function(fastqinfo, 
+                                                fastq_dir, 
+                                                outdir, 
+                                                cutadapt_path="cutadapt", 
+                                                num_threads=0,
+                                                tag_to_end=T, 
+                                                primer_to_end=T, 
+                                                cutadapt_error_rate=0.1,
+                                                sep=",",  
+                                                compress=F, 
+                                                quiet=T
+){
+  
+  # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  fastq_dir = check_dir(fastq_dir)
+  outdir = check_dir(outdir)
+  
+  # can accept df or file as an input
+  if(is.character(fastqinfo)){
+    # read known occurrences
+    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+  }else{
+    fastqinfo_df <- fastqinfo
+  }
+  
+  check_file_info(fastqinfo_df, fastq_dir, file_type="fastqinfo", sep=",", quiet=TRUE)
+  
+  # upper case for all primers and tags
+  fastqinfo_df$tag_fw <- toupper(fastqinfo_df$tag_fw)
+  fastqinfo_df$tag_rv <- toupper(fastqinfo_df$tag_rv)
+  fastqinfo_df$primer_fw <- toupper(fastqinfo_df$primer_fw)
+  fastqinfo_df$primer_rv <- toupper(fastqinfo_df$primer_rv)
+  # make columns for output filenames
+  fastqinfo_df$fastq_fw_demultiplexed <- NA
+  fastqinfo_df$fastq_rv_demultiplexed <- NA
+  
+  # get unique list of input fastq file pairs
+  fastqs <- fastqinfo_df %>%
+    select(fastq_fw, fastq_rv) %>%
+    distinct()
+  
+  for(i in 1:nrow(fastqs)){ # for each input fastq pair
+    # select lines in fastqinfo_df that corresponds to a given input fasta file
+    fastq_fw_local <- fastqs$fastq_fw[i]
+    fastq_rv_local <- fastqs$fastq_rv[i]
+    df <- fastqinfo_df %>%
+      filter(fastq_fw==fastq_fw_local & fastq_rv==fastq_rv_local)
+    
+    # Make a tmp_dir_fastq in tempdir specific to a fastq file pair. It will contain the tagtrimmed files.
+    # This can be deleted at the end and avoid reusing tagtrimmed files created for a previous fastq files
+    tmp_fastq <- paste(fastq_fw_local, "_", trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    tmp_dir_fastq <- file.path(tempdir(), tmp_fastq)
+    
+    # Delete tmp_dir_fastq if exists (previous run crushed before deleting it) 
+    if (dir.exists(tmp_dir_fastq)) {
+      unlink(tmp_dir_fastq, recursive = TRUE)
+    }
+    # Create it 
+    dir.create(tmp_dir_fastq)
+    
+    # make a tag_fw.fasta and tag_rv.fasta files with all tag of the fastq pairs to be demultiplexed
+    tag_files <- write_cutadapt_adapter_fastq(fastqinfo_df, 
+                                              fastq_file=fastq_fw_local, 
+                                              tag_to_end=tag_to_end, 
+                                              outdir=tmp_dir_fastq
+    )
+    
+    # add path
+    fastq_fw_local <- file.path(fastq_dir, fastq_fw_local)
+    fastq_rv_local <- file.path(fastq_dir, fastq_rv_local)
+    
+    ##### run demultiplexing
+    g <- paste("file:", tag_files[1], sep="")
+    G <- paste("file:", tag_files[2], sep="")
+    out_fw <- file.path(tmp_dir_fastq, "tagtrimmed-{name1}-{name2}_fw.fastq") 
+    out_rv <- file.path(tmp_dir_fastq, "tagtrimmed-{name1}-{name2}_rv.fastq") 
+    args <- c(
+      "-e", "0",
+      "--no-indels",
+      "--trimmed-only",
+      "-g",  shQuote(g),
+      "-G",  shQuote(G),
+      "-o",  shQuote(out_fw),
+      "-p",  shQuote(out_rv),
+      fastq_fw_local, fastq_rv_local
+    )
+    if(num_threads > 0){
+      args <- append(args, c("--cores", num_threads), after=2)
+    }
+    if(quiet){
+      args <- append(args, c("--quiet"), after=2)
+    }
+    run_system2(cutadapt_path, args, quiet=quiet)
+    
+    ############ primer trimming with less stingent conditions
+    # for a given marker, there is only one primer combination
+    primer_fwl <- df[1,"primer_fw"]
+    primer_rvl <- df[1,"primer_rv"]
+    
+    for(f in 1:nrow(df)){# go through each de-multiplexed, tag-trimmed file and trim primers
+      outfile_fw <- paste(df[f,"sample"], "-", df[f,"replicate"], "_fw", sep="")
+      outfile_rv <- paste(df[f,"sample"],  "-", df[f,"replicate"], "_rv", sep="")
+      outfile_fw <- paste(outfile_fw, ".fastq", sep="")
+      outfile_rv <- paste(outfile_rv, ".fastq", sep="")
+      if(compress){
+        outfile_fw <- paste(outfile_fw, ".gz", sep="") # cutadapt detects from filename, if outfiles should be compressed
+        outfile_rv <- paste(outfile_rv, ".gz", sep="")
+      }
+      # complete fastqinfo_df with output fastq names
+      fastqinfo_df$fastq_fw_demultiplexed[
+        which(fastqinfo_df$sample==df[f,"sample"] & 
+                fastqinfo_df$replicate==df[f,"replicate"])
+      ]<- outfile_fw
+      fastqinfo_df$fastq_rv_demultiplexed[
+        which(fastqinfo_df$sample==df[f,"sample"] & 
+                fastqinfo_df$replicate==df[f,"replicate"])
+      ]<- outfile_rv
+      
+      # add path to output file
+      primer_trimmed_fw <- file.path(outdir, outfile_fw)
+      primer_trimmed_rv <- file.path(outdir, outfile_rv)
+      tag_trimmed_fw <- paste("tagtrimmed-", 
+                              df[f,"tag_fw"], "-", 
+                              df[f,"tag_rv"], 
+                              "_fw.fastq", 
+                              sep="")
+      tag_trimmed_rv <- paste("tagtrimmed-", 
+                              df[f,"tag_fw"], "-", 
+                              df[f,"tag_rv"], 
+                              "_rv.fastq", 
+                              sep="")
+      tag_trimmed_fw <- file.path(tmp_dir_fastq, tag_trimmed_fw)
+      tag_trimmed_rv <- file.path(tmp_dir_fastq, tag_trimmed_rv)
+      
+      primer_rvl_rc <- reverse_complement(primer_rvl)
+      primer_fwl_rc <- reverse_complement(primer_fwl)
+      
+      ##### run primer trimming
+      if(primer_to_end){
+#        g <- paste("^", primer_fwl, sep="")
+#        G <- paste("^", primer_rvl, sep="")
+        a <- paste("^", primer_fwl, "...", primer_rvl_rc, sep="")
+        A <- paste("^", primer_rvl, "...", primer_fwl_rc, sep="")
+      }
+      else{
+#        g <- paste(primer_fwl, ";min_overlap=", nchar(primer_fwl), sep="")
+#        G <- paste(primer_rvl, ";min_overlap=", nchar(primer_rvl), sep="")
+        a <- paste(primer_fwl, ";required;min_overlap=", nchar(primer_fwl), "...",  primer_rvl_rc, sep="")
+        A <- paste(primer_rvl, ";required;min_overlap=", nchar(primer_rvl), "...",  primer_fwl_rc, sep="")
+      }
+      args <- c(
+        "-e", cutadapt_error_rate,
+        "--no-indels",
+        "--trimmed-only",
+#        "-g",  shQuote(g),
+#        "-G",  shQuote(G),
+        "-a",  shQuote(a),
+        "-A",  shQuote(A),
+        "-o",  primer_trimmed_fw,
+        "-p",  primer_trimmed_rv,
+        tag_trimmed_fw, tag_trimmed_rv
+      )
+      if(num_threads > 0){
+        args <- append(args, c("--cores", num_threads), after=2)
+      }
+      if(quiet){
+        args <- append(args, c("--quiet"), after=2)
+      }
+      run_system2(cutadapt_path, args, quiet=quiet)
+      
+    } # end tag-trimmed 
+    # delete the tmp dir with the tag-trimmed files
+    unlink(tmp_dir_fastq, recursive = TRUE)
+  }# end fastq
+  
+  # make sampleinfo file
+  fastqinfo_df <- fastqinfo_df %>%
+    select(-fastq_fw, -fastq_rv) %>%
+    rename(fastq_fw = fastq_fw_demultiplexed, fastq_rv = fastq_rv_demultiplexed)
+  
+  return(fastqinfo_df)
+  
+}
+
+#' Make a FASTA file with forward or reverse adapters
+#' 
+#' Create two FASTA files containing forward or reverse tags
+#' formatted for `cutadapt`. 
+#' This file is used by `demultiplex_and_trim_fastq` to demultiplex input FASTQ files pairs.
+#' 
+#' @param fastqinfo_df Data frame with columns: `tag_fw`, `tag_rv`, `fastq_fw` and `fastq_rv`.
+#' @param fastq Character string specifying the `fastq_fw` file to be demultiplexed 
+#'   (must be present in the `fastq_fw` column of `fastqinfo_df`).
+#' @param outdir Character string specifying the output directory.
+#' @param tag_to_end Logical. If `TRUE`, tags are assumed to be located at the 
+#'   extremities of reads.
+#' 
+#' @return Vector with the output fasta files, or `NA` if all tags 
+#'   are `NA` in `fastqinfo_df` for the given `fastq` file.
+#' 
+#' @examples 
+#' \dontrun{
+#' write_cutadapt_adapter_fastq(
+#'   fastqinfo_df = fastqinfo_df, 
+#'   fastq_file = "fastq_file", 
+#'   tag_to_end = FALSE, 
+#'   outdir = "data/out"
+#' )
+#' }
+#' 
+#' @export
+
+write_cutadapt_adapter_fastq <- function(
+  fastqinfo_df, 
+  fastq_file, 
+  outdir, 
+  tag_to_end=TRUE
+){
+  
+  # select all tags for the fastq file
+  tags <- fastqinfo_df %>%
+    filter(fastq_fw==fastq_file) %>%
+    select(tag_fw, tag_rv)
+  
+  
+  tags_fw <- unique(toupper(tags$tag_fw))
+  tags_rv <- unique(toupper(tags$tag_rv))
+  
+  # return NA if all tags are NA
+  if(length(tags_fw) == 1){ # only one tag
+    if(is.na(tags_fw[1])){ # no tags
+      return(NA)
+    }
+  }
+  if(length(tags_rv) == 1){ # only one tag
+    if(is.na(tags_rv[1])){ # no tags
+      return(NA)
+    }
+  }
+  
+  # Specify the file path
+  outdir = check_dir(outdir)
+  tag_file_fw <- file.path(outdir, "tags_fw.fasta")
+  if (tag_to_end) {
+    text <- as.vector(rbind(
+      paste0(">", tags_fw),
+      paste0("^", tags_fw)
+    ))
+  } else {
+    text <- as.vector(rbind(
+      paste0(">", tags_fw),
+      paste0(tags_fw, ";min_overlap=", nchar(tags_fw))
+    ))
+  }
+  writeLines(text, tag_file_fw)
+  
+  tag_file_rv <- file.path(outdir, "tags_rv.fasta")
+  
+  if (tag_to_end) {
+    text <- as.vector(rbind(
+      paste0(">", tags_rv),
+      paste0("^", tags_rv)
+    ))
+  } else {
+    text <- as.vector(rbind(
+      paste0(">", tags_rv),
+      paste0(tags_rv, ";min_overlap=", nchar(tags_rv))
+    ))
+  }
+  writeLines(text, tag_file_rv)
+  
+  files <- c(tag_file_fw, tag_file_rv)
+  return(files)
+}
+
+#' Demultiplex FASTQ file pairs and trim tags and primers
+#'
+#' FASTQ file pairs are first demultiplexed by requiring a perfect match between
+#' the tag sequence and the 5' end of the read. The resulting files are then
+#' trimmed to remove primer sequences using less stringent matching parameters
+#' (controlled by `cutadapt_error_rate`). A match between the primer and the 5'
+#' end of the read is required for the read to be trimmed and retained. Matching
+#' of the 3' primer is optional.
+#'  
+#' If `check_reverse = TRUE`, forward and reverse reads are swapped, demultiplexed 
+#' again, and trimmed for 5' primers.
+#' 
+#' When the same set of tags is used at both ends of the reads, demultiplexing 
+#' both the original and swapped orientations may produce incorrect assignments.
+#' These incorrectly assigned reads are subsequently removed during primer trimming.
+#'
+#' Input files can be compressed or uncompressed. Output compression is 
+#' controlled by `compress`.
+#'  
+#' @param fastqinfo Data frame or path to a CSV file with the following columns: 
+#'   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, 
+#'   `sample`, `sample_type` (mock/negative/real), 
+#'   `habitat` (optional), `replicate`, `fastq_fw`, 
+#'   `fastq_rv`
+#' @param fastq_dir Character string specifying the directory containing input 
+#'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
+#' @param cutadapt_path Character string specifying the path to the 
+#'   `cutadapt` executable. 
+#' @param compress Logical. If `TRUE`, compress output files using gzip.
+#' @param num_threads Positive integer specifying the number of CPU threads to 
+#'   use. If `0`, all available CPUs are used.
+#' @param outdir Character string specifying the output directory.
+#' @param check_reverse Logical. If `TRUE`, also check reverse-complemented 
+#'   sequences from the input FASTA files.
+#' @param tag_to_end Logical. If `TRUE`, tags are expected to be located 
+#'   at the extremities of reads (starting at the first base).
+#' @param primer_to_end Logical. If `TRUE`, primers are assumed to follow 
+#'   directly after tags (i.e., no heterogeneity spacer).
+#' @param cutadapt_error_rate Numeric value between 0 and 1 specifying the 
+#'   maximum allowed error rate between primers and reads (exact match is 
+#'   required for tags).
+#' @param sep Character string specifying the field separator used in input and 
+#'   output CSV files.
+#' @param quiet Logical. If `TRUE`, suppress informational messages and 
+#'   only display warnings or errors.
+#' 
+#' @return Data frame similar to the input `fastqinfo` file, 
+#'   but contains the output fastq file names and read counts.
+#' 
+#' @examples
+#' \dontrun{
+#' fastqinfo_df <- demultiplex_fastq_pairs(
+#'   fastqinfo = fastqinfo_df,
+#'   fastq_dir = "data/fastq",
+#'   outdir = "data/fastq_demultiplexed",
+#'   tag_to_end = TRUE,
+#'   primer_to_end = TRUE,
+#'   sep = ","
+#' )
+#' }
+#' 
+#' @export
+
+demultiplex_fastq_pairs <- function(
+  fastqinfo, 
+  fastq_dir, 
+  outdir, 
+  cutadapt_path="cutadapt",
+  check_reverse=FALSE, 
+  num_threads=0,
+  tag_to_end=TRUE, 
+  primer_to_end=TRUE, 
+  cutadapt_error_rate=0.1,
+  sep=",",
+  compress=FALSE,
+  quiet=T
+  ){
+  
+  fastq_dir <- check_dir(fastq_dir)
+  outdir <- check_dir(outdir)
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  # can accept df or file as an input
+  if(is.character(fastqinfo)){
+    # read known occurrences
+    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+  }else{
+    fastqinfo_df <- fastqinfo
+  }
+  
+  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
+  
+  #########
+  # demultiplex_fastq_pairs_strand_plus does the whole demultilexing, trimming and compress on the + strand
+  # If sequences are not oriented, the -strand should be checked => 
+  # swap fw and reverse input files and run again demultiplex_fastq_pairs_strand_plus
+  # pool the output
+  
+  
+  # run demultiplex_and_trim_strand_plus of plus strand and on - strand after 
+  # swapping fw and rev tags and primers,
+  # take the reverse complement of the -strand results (vsearch)
+  # pool the results of the 2 strands
+  # compress if necessary
+  
+  # run on strand +
+  if(check_reverse){
+    
+    # make temp dirs
+    fw_tmp_dir <- paste('fw_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    fw_tmp_dir <- file.path(tempdir(), fw_tmp_dir)
+    check_dir(fw_tmp_dir)
+    rv_tmp_dir <- paste('rv_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    rv_tmp_dir <- file.path(tempdir(), rv_tmp_dir)
+    check_dir(rv_tmp_dir)
+    
+    #### use +strand, output to sorted_dir, uncompressed
+    fastqinfo_demultiplexed_fw <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df, 
+                                                                      fastq_dir=fastq_dir, 
+                                                                      outdir=fw_tmp_dir, 
+                                                                      cutadapt_path=cutadapt_path, 
+                                                                      num_threads=num_threads,
+                                                                      tag_to_end=tag_to_end, 
+                                                                      primer_to_end=primer_to_end, 
+                                                                      cutadapt_error_rate=cutadapt_error_rate, 
+                                                                      sep=sep, 
+                                                                      compress=compress,
+                                                                      quiet=quiet
+    )
+    
+    #### use - strand
+    # swap fw and rv tags and primers
+    fastqinfo_df_tmp <- fastqinfo_df %>%
+      rename(fastq_fw = fastq_rv, fastq_rv = fastq_fw)
+    
+    
+    # run demultiplex_and_trim on for reverse strand
+    fastqinfo_demultiplexed_rv <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df_tmp, 
+                                                                      fastq_dir=fastq_dir, 
+                                                                      outdir=rv_tmp_dir, 
+                                                                      cutadapt_path=cutadapt_path, 
+                                                                      num_threads = num_threads,
+                                                                      tag_to_end=tag_to_end, 
+                                                                      primer_to_end=primer_to_end, 
+                                                                      cutadapt_error_rate=cutadapt_error_rate, 
+                                                                      sep=sep,
+                                                                      compress=compress, 
+                                                                      quiet=quiet
+    )
+    
+    # concatenate files
+    for(i in 1:nrow(fastqinfo_demultiplexed_fw)){
+      
+      # fw reads from original and swapped demultiplexing
+      filename_base <- fastqinfo_demultiplexed_fw$fastq_fw[i]
+      fw_in <- file.path(fw_tmp_dir, filename_base)
+      rv_in <- file.path(rv_tmp_dir, filename_base)
+      out <- file.path(outdir, filename_base)
+      concat_files(files= c(fw_in, rv_in), outfile=out)
+      
+      filename_base <- fastqinfo_demultiplexed_fw$fastq_rv[i]
+      # rv reads from original and swapped demultiplexing
+      fw_in <- file.path(fw_tmp_dir, filename_base)
+      rv_in <- file.path(rv_tmp_dir, filename_base)
+      out <- file.path(outdir, filename_base)
+      concat_files(files= c(fw_in, rv_in), outfile=out)
+    }
+    # fastqinfo_demultiplexed_fw and fastqinfo_demultiplexed_rv are identical
+    fastqinfo_demultiplexed <- fastqinfo_demultiplexed_fw
+    
+    
+    # delete temporary dirs
+    unlink(fw_tmp_dir, recursive = TRUE)
+    unlink(rv_tmp_dir, recursive = TRUE)
+    
+  }
+  else{
+    # check only + strand
+    fastqinfo_demultiplexed <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df, 
+                                                                   fastq_dir=fastq_dir,
+                                                                   outdir=outdir, 
+                                                                   cutadapt_path=cutadapt_path, 
+                                                                   num_threads = num_threads,
+                                                                   tag_to_end=tag_to_end, 
+                                                                   primer_to_end=primer_to_end, 
+                                                                   cutadapt_error_rate=cutadapt_error_rate, 
+                                                                   sep=sep, 
+                                                                   compress=compress, 
+                                                                   quiet=quiet
+    )
+  }
+  
+  #fastqinfo_demultiplexed <- add_read_counts(fastqinfo_demultiplexed, dir=outdir)
+  
+  read_count <- count_reads_in_dir(
+    dir=outdir, 
+    pattern="_fw.fastq", 
+    file_type="fastq"
+  )
+  fastqinfo_demultiplexed <- fastqinfo_demultiplexed %>%
+    left_join(read_count, by=c("fastq_fw" = "filename"))
+  
+  write.table(fastqinfo_demultiplexed, file = file.path(outdir, "fastqinfo.csv"),  row.names = F, sep=sep)
+  
+  return(fastqinfo_demultiplexed)
+}
+
+
+
+#' Concatenate files in a portable, streaming way
+#'
+#' This function concatenates multiple files by copying their raw bytes
+#' sequentially into a single output file. It works for both plain text
+#' files and gzip-compressed files (`.gz`), and is fully cross-platform
+#' (Windows, macOS, Linux) without relying on system commands.
+#'
+#' For gzip files, concatenation produces a valid gzip stream because the
+#' format supports concatenated members.
+#'
+#' @param files Character vector of input file paths.
+#' @param outfile Character string specifying the output file path.
+#' @param chunk_size Integer. Number of bytes to read per iteration.
+#'   Larger values are faster but use more memory. Default is 1 MB.
+#'
+#' @return The output file path (invisibly).
+#'
+#' @details
+#' The function performs binary-safe streaming using `readBin` and
+#' `writeBin`. It does not decompress or interpret file contents.
+#'
+#' All input files must exist. The function stops otherwise.
+#'
+#' Mixing compressed and uncompressed files is technically possible but
+#' generally not meaningful.
+#'
+#' @examples
+#' \dontrun{
+#' concat_files(c("a.txt", "b.txt"), "out.txt")
+#'
+#' concat_files(c("sample1.fastq.gz", "sample2.fastq.gz"),
+#'              "merged.fastq.gz")
+#' }
+#'
+#' @export
+concat_files <- function(files, outfile, chunk_size = 1024^2) {
+  
+  # Basic input validation
+  stopifnot(is.character(files), length(files) > 0)
+  stopifnot(is.character(outfile), length(outfile) == 1)
+  stopifnot(all(file.exists(files)))
+  
+  # Open output connection in binary write mode
+  out <- file(outfile, open = "wb")
+  on.exit(close(out), add = TRUE)
+  
+  # Loop over input files
+  for (f in files) {
+    
+    # Open input file in binary read mode
+    in_con <- file(f, open = "rb")
+    
+    # Stream file content in chunks
+    repeat {
+      
+      # Read a block of raw bytes
+      chunk <- readBin(in_con, what = "raw", n = chunk_size)
+      
+      # Stop when end-of-file is reached
+      if (!length(chunk)) break
+      
+      # Write bytes to output
+      writeBin(chunk, out)
+    }
+    
+    # Close input connection for this file
+    close(in_con)
+  }
+  
+  # Return output path invisibly
+  invisible(normalizePath(outfile, mustWork = FALSE))
+  
+  
+}

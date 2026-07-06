@@ -363,6 +363,7 @@ fastainfo_df <- merge_fastq_pairs(
   outdir=merged_dir, # directory of output fasta files
   fastq_maxee=1, # Maximum Expected Error for each read
   fastq_maxns=0, # no Ns in output
+  compress=FALSE,
   fastq_allowmergestagger=T # reads might be longer than the marker
   )
 ```

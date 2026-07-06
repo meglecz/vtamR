@@ -21,7 +21,7 @@ or \code{fasta} columns.}
 \item{quiet}{Logical: if TRUE, suppress informational messages and show only warnings or errors.}
 }
 \value{
-Throws an error and stops execution if inconsistencies are detected.
+Return an error message and stops execution if inconsistencies are detected.
 }
 \description{
 Performs a series of checks on input files or data frames to ensure format validity
