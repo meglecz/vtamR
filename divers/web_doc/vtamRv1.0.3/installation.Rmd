@@ -1,5 +1,5 @@
 ---
-title: "Install vtamR and Third Party Programs - v1.0.4"
+title: "Install vtamR and Third Party Programs - v1.0.3"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.0.4}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.0.3}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -252,15 +252,15 @@ C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
 ### assign_taxonomy_ltg
 
 For `assign_taxonomy_ltg` (BLAST based Lowest Common Ancestor method),
-a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/),
+a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/), 
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 Download and extract using:
 ```{r, dowload-coinr, eval=FALSE}
 library(vtamR)
 
-download_osf(filename = "COInr_for_vtam_2026_05_03_dbV5.tar.gz",
-    url = "https://osf.io/download/yhjvm/",
+download_osf(filename = "COInr_for_vtam_2025_05_23_dbV5.tar.gz",
+    url = "https://osf.io/download/jyhz6/",
     dest_dir = "COInr_db",
     untar = TRUE,
     quiet = FALSE
@@ -271,9 +271,7 @@ To check for newer versions:
 
 - Go to: [https://osf.io/vrfwz/files/osfstorage](https://osf.io/vrfwz/files/osfstorage)
 - In **Files** open the the **dbV5** folder.
-- Open the latest file in the browser (click the file name, not just the folder).
-- Look at the URL, it will look like: https://osf.io/yhjvm/ (yhjvm = file ID)
-- Build the download link like this: https://osf.io/download/yhjvm/
+- Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.
 
 
 Alternatively, you can also create a custom version from the **TSV format** database available at

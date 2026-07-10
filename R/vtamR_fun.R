@@ -663,7 +663,7 @@ count_seq <- function(file) {
 
 #' Trim primers
 #' 
-#' Trim primer sequences from an input FASTA file.
+#' Trim primer sequences from an input FASTA file from both 5' and 3'
 #'  
 #' The input FASTA file can be uncompressed or gzip-compressed; other 
 #' compression formats are not supported. The compression of the output file 

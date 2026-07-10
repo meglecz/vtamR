@@ -1,5 +1,5 @@
 ---
-title: "Short Tutorial vtamR - v1.0.3"
+title: "Short Tutorial vtamR - v1.0.4"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.3}
+  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.4}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

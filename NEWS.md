@@ -1,3 +1,18 @@
+# vtamR 1.0.4 (prerelease) 2026/07/10
+
+- Add pattern argument to history_by and summarize_by
+- Modify history_by to accept a vector of values, not just a singe value
+- Correct filter_asv_global =< cutoff instead of < cutoff
+- Add concatenate_files function: Reads files from multiple directories 
+  and concatenates the contents of files sharing the same filename
+- Modify filter_pcr_error: Add min_read_count argument. If less than min_read_count
+  in the sample/run, the variant is not checked.
+- Correct download_osf to work both of windows and linux
+- Add demultiplex_fastq_pairs
+- Correct count_reads when using bash commands
+- Modify check_dir: delete slash at the end of dir and return invisible path
+
+
 # vtamR 1.0.3 (prerelease) 2026/04/16
 
 - Short tutoriel added

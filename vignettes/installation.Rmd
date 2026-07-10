@@ -1,5 +1,5 @@
 ---
-title: "Install vtamR and Third Party Programs - v1.0.3"
+title: "Install vtamR and Third Party Programs - v1.0.4"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output: 
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.0.3}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.0.4}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

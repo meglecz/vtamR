@@ -9,7 +9,7 @@
 
 ## allow sortedinfo WO sample_type and habitat.
 
-## make function report_mime that extrac minimum necessary information
+## make function report_mime that extract minimum necessary information
 from the outout
 take the a series of input files and extract info present in the checklist
 of MIME. If some of the input file is not given return NA for the values that depend
@@ -722,7 +722,6 @@ download_osf works both of windows and linux commit: download_osf win
 
 ### 2026/07/03 commit demultiplex_fastq_pairs
 
-###
 write demultiplex_fastq_pairs so it can comply to SRA expectations
 -demultiplex_fastq and trim 
 	- --revcomp for paired end read is supported from cutadapt v4.6 => 

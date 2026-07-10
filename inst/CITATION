@@ -5,7 +5,7 @@ citEntry(
   title = "vtamR: Tools for Metabarcoding Data Analysis",
   author = person("Emese", "Meglecz"),
   year = 2026,
-  note = "R package version 1.0.3",
+  note = "R package version 1.0.4",
   url = "https://github.com/meglecz/vtamR",
-  textVersion = "Meglecz E. (2025). vtamR: Tools for Metabarcoding Data Analysis. R package version 0.3.1. https://github.com/meglecz/vtamR"
+  textVersion = "Meglecz E. (2026). vtamR: Tools for Metabarcoding Data Analysis. R package version 1.0.4. https://github.com/meglecz/vtamR"
 )
