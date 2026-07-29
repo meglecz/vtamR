@@ -732,6 +732,21 @@ write demultiplex_fastq_pairs so it can comply to SRA expectations
 - count_reads => bug when using bash commasds => corrected
 - check_dir => delete slash at the end of dir and return invisible path; 
 	corrected when calling the function
+	
+### 2026/07/10 commit v1.0.4
+
+### 2026/07/28 commit pcr_error,chimera
+
+Modify filter_pcr_error:
+	- add argument filter_occurrence, to be able to filter out some occurrences of an ASV but not 
+	necessarily in all samples.
+	- min_read_count applies to the total number of reads of an if by_sample == FALSE, 
+	to the numer of reads of the ASv in the sample if by_sample == TRUE
+	
+Modify filter_chimera
+	- add argument filter_occurrence, to be able to filter out some occurrences of an ASV but not 
+	necessarily in all samples.
+
 
 
 

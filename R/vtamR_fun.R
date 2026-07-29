@@ -2998,19 +2998,31 @@ flag_pcr_error <- function(unique_asv_df,
   return(unique_asv_df)
 }
 
+
 #' Filter PCR errors
-#' 
-#' Remove ASVs flagged as potential PCR errors based on sequence similarity 
+#'
+#' Remove ASVs flagged as potential PCR errors based on sequence similarity
 #' (`max_mismatch`) and relative abundance (`pcr_error_var_prop`).
-#'  
-#' ASVs are considered PCR errors when they are highly similar to a more abundant 
-#' ASV and their abundance ratio is below or equal to `pcr_error_var_prop`.
-#'  
-#' The analysis can be performed across the full dataset (`by_sample = FALSE`) 
+#'
+#' An ASV is considered a PCR error when it is highly similar to a more abundant
+#' ASV and its abundance ratio is less than or equal to `pcr_error_var_prop`.
+#'
+#' The analysis can be performed across the full dataset (`by_sample = FALSE`)
 #' or independently within each sample (`by_sample = TRUE`).
-#'  
-#' When `by_sample = TRUE`, an ASV is removed only if it is flagged as a PCR error 
-#' in at least a proportion `sample_prop` of samples.
+#'
+#' When the analysis is performed across the full dataset (`by_sample = FALSE`),
+#' ASVs classified as PCR errors are removed entirely from the dataset.
+#'
+#' When the analysis is performed sample by sample (`by_sample = TRUE`),
+#' `filter_occurrence` determines whether the entire ASV is removed
+#' (`filter_occurrence = FALSE`) or only the occurrence is removed
+#' (`filter_occurrence = TRUE`).
+#'
+#' When `filter_occurrence = FALSE`, an ASV is removed only if it is flagged as
+#' a PCR error in at least the proportion of samples specified by `sample_prop`.
+#'
+#' When `filter_occurrence = TRUE`, the ASV is removed only from the samples in
+#' which it is flagged as a PCR error and may remain present in other samples.
 #'  
 #' @param read_count Data frame or path to a CSV file with the following columns:  
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
@@ -3021,11 +3033,18 @@ flag_pcr_error <- function(unique_asv_df,
 #'   (including gaps) used to define sequence similarity.
 #' @param by_sample Logical. If `TRUE`, PCR error detection is performed separately 
 #'   within each sample.
+#' @param filter_occurrence Logical. If TRUE, an ASV is removed only from the
+#'   samples in which it is flagged as a PCR error and may remain present in other
+#'   samples. If FALSE, an ASV is removed entirely if it is flagged as a PCR
+#'   error in at least the proportion of samples specified by sample_prop.
+#'   Otherwise, none of its occurrences are removed.
 #' @param sample_prop Numeric value between 0 and 1 specifying the minimum proportion 
 #'   of samples in which an ASV must be flagged as a PCR error (when `by_sample = TRUE`) 
 #'   to be removed.
-#' @param min_read_count Positive integer specifying the minimum read count threshold; 
-#'   occurrences below this value are ignored, to spead up the analyses.
+#' @param min_read_count Positive integer specifying the minimum read count threshold.
+#'   When `by_sample` is `FALSE`, ASVs with a total read count below this threshold
+#'   are ignored. When `by_sample` is `TRUE`, ASVs with a read count below this
+#'   threshold in an individual sample are ignored.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
 #' @param vsearch_path Character string specifying the path to the `vsearch` executable.
@@ -3046,6 +3065,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   pcr_error_var_prop = 0.2,
 #'   max_mismatch = 2,
 #'   by_sample = TRUE,
+#'   filter_occurrence = TRUE,
 #'   sample_prop = 0.8
 #' )
 #' 
@@ -3053,6 +3073,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   read_count_df,
 #'   vsearch_path = vsearch_path,
 #'   pcr_error_var_prop = 0.2,
+#'   filtaer_occurrences = FALSE,
 #'   max_mismatch = 2,
 #'   by_sample = FALSE
 #' )
@@ -3060,18 +3081,20 @@ flag_pcr_error <- function(unique_asv_df,
 #' 
 #' @export
 #' 
+
 filter_pcr_error <- function(read_count,
-                           outfile=NULL, 
-                           vsearch_path="vsearch", 
-                           num_threads=0,
-                           pcr_error_var_prop=0.1,
-                           max_mismatch=1, 
-                           by_sample=TRUE, 
-                           min_read_count=10,
-                           sample_prop=0.8, 
-                           sep=",",
-                           quiet=TRUE
-                           ){
+                                 outfile=NULL, 
+                                 vsearch_path="vsearch", 
+                                 num_threads=0,
+                                 pcr_error_var_prop=0.1,
+                                 max_mismatch=1, 
+                                 by_sample=TRUE, 
+                                 filter_occurrence=TRUE,
+                                 min_read_count=10,
+                                 sample_prop=0.8, 
+                                 sep=",",
+                                 quiet=TRUE
+){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
@@ -3083,6 +3106,10 @@ filter_pcr_error <- function(read_count,
   if(pcr_error_var_prop > 0.5){
     warning("pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
   }
+  if(filter_occurrence & by_sample==FALSE){
+    warning("When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+            even is filter_occurrence is TRUE")
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -3091,68 +3118,119 @@ filter_pcr_error <- function(read_count,
   }else{
     read_count_df <- read_count
   }
-  # get unique list of ASVs with their total read_count in the run
+  
+  
   unique_asv_df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count = sum(read_count)) %>%
-    filter(read_count >= min_read_count) %>%
-    arrange(desc(read_count)) %>%
     ungroup()
   
-  if(by_sample){ # sample by sample
+  if(by_sample){
+    
     sample_list <- unique(read_count_df$sample)
-    # loop over samples
-    for(sample_loc in sample_list){
-      # get unique list of ASVs with their total read_count in the sample
-      unique_asv_df_sample <- read_count_df %>%
-        filter(sample == sample_loc) %>%
-        group_by(asv)%>%
-        summarize(read_count = sum(read_count))%>%
-        filter(read_count >= min_read_count) %>%
-        arrange(desc(read_count)) %>%
-        ungroup()
+    unique_asv_sample <- read_count_df %>%
+      #      filter(asv %in% unique_asv_df$asv) %>% # use only asv with >= read_count
+      group_by(asv, sample) %>%
+      summarize(read_count = sum(read_count), .groups="drop")%>%
+      filter(read_count >= min_read_count) %>%
+      ungroup()
+    
+    if(filter_occurrence){ # by_sample=TRUE, filter_occurrence = TRUE
       
-      # flag PCR errors; 
-      # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
-      # 0 otherwise
-      unique_asv_df_sample <- flag_pcr_error(unique_asv_df_sample, 
-                                                   vsearch_path=vsearch_path, 
-                                                   num_threads=num_threads,
-                                                   pcr_error_var_prop=pcr_error_var_prop, 
-                                                   max_mismatch=max_mismatch,
-                                                   quiet=quiet
-                                                   )
+      pcr_flags <- data.frame(
+        asv = character(),
+        sample = character(),
+        PCRerror = numeric()
+      )
       
-      # remove read_count column
-      unique_asv_df_sample$read_count <- NULL
-      # add a column for for each sample to unique_asv_df, 
-      # with 1 if ASV is flagged in the sample, 0 otherwise
-      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
-    }
-  }
-  else{ # whole dataset
-    # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) 
+        
+        # flag PCR errors; 
+        # add one column to sample_df for each sample with 1 if ASV is flagged in the sample, 
+        # 0 otherwise
+        sample_df <- flag_pcr_error(sample_df, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch,
+                                    quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, sample, PCRerror)
+        pcr_flags <- rbind(pcr_flags, sample_df)
+      }
+      # delete occurrences flagged as PCRerror
+      read_count_df <- left_join(read_count_df, pcr_flags, by=c("sample", "asv")) %>%
+        filter(PCRerror == 0 | is.na(PCRerror)) %>%
+        select(-PCRerror)
+      
+    }else { # by_sample=TRUE, filter_occurrence = FALSE
+      
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) 
+        
+        # flag PCR errors; 
+        # add one column to sample_df with 1 if ASV is flagged as a PCR error in the sample, 
+        # 0 otherwise
+        sample_df <- flag_pcr_error(sample_df, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch,
+                                    quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, PCRerror)
+        
+        # add a column for for each sample to unique_asv_df, 
+        # with 1 if ASV is flagged in the sample, 0 otherwise
+        unique_asv_df <- left_join(unique_asv_df, sample_df, by = "asv")
+      }
+      
+      # count the number of times each ASV has been flagged and when it has not. 
+      # Ignore NA, when the ASV is not present in the sample
+      unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
+      unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
+      # keep only ASVs, 
+      # that are flagged in sample_prop proportion of the samples where they are present  
+      unique_asv_df <- unique_asv_df %>%
+        filter(yes/(yes+no) >= sample_prop)
+      
+      # eliminate potential PCRerrors from read_count_df
+      read_count_df <- read_count_df %>%
+        filter(!asv %in% unique_asv_df$asv)
+    } # end by_sample=TRUE, filter_occurrence ==FALSE
+  } else { # end by_sample, Filter the all at once
+    
+    # get unique list of ASV and only ASV with the total read count >=  min_read_count
+    unique_asv_df <- read_count_df %>%
+      group_by(asv) %>%
+      summarize(read_count = sum(read_count)) %>%
+      filter(read_count >= min_read_count) %>%
+      ungroup()
+    
     unique_asv_df <- flag_pcr_error(unique_asv_df, 
-                                          vsearch_path=vsearch_path, 
-                                          num_threads=num_threads,
-                                          pcr_error_var_prop=pcr_error_var_prop, 
-                                          max_mismatch=max_mismatch
-                                          )
-  }
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch)
+    
+    
+    unique_asv_df <- unique_asv_df %>%
+      filter(PCRerror == 1)
+    # eliminate potential PCRerrors from read_count_df
+    read_count_df <- read_count_df %>%
+      filter(!asv %in% unique_asv_df$asv)
+  } # end by_sample = FALSE
   
-  # count the number of times each ASV has been flagged and when it has not. 
-  # Ignore NA, when the ASV is not present in the sample
-  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
-  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
-  # keep only ASVs, 
-  # that are flagged in sample_prop proportion of the samples where they are present  
-  unique_asv_df <- unique_asv_df %>%
-    filter(yes/(yes+no) >= sample_prop)
-  
-  # eliminate potential PCRerrors from read_count_df
-  read_count_df <- read_count_df %>%
-    filter(!asv %in% unique_asv_df$asv)
-  
+  ###### Print output
   if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
@@ -3266,7 +3344,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
   return(unique_asv_df)
 }
 
-#' Filter chimeric sequences
+#' Filter chimera
 #' 
 #' Remove ASVs identified as chimeras based on abundance- and similarity-based 
 #' detection using `vsearch`.
@@ -3277,8 +3355,16 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' Detection can be performed across the full dataset (`by_sample = FALSE`) or 
 #' independently within each sample (`by_sample = TRUE`).
 #'  
-#' When `by_sample = TRUE`, an ASV is removed if it is flagged as a chimera in 
-#' at least a proportion `sample_prop` of the samples in which it is present.
+#' When the analysis is performed sample by sample (`by_sample = TRUE`),
+#' `filter_occurrence` determines whether the entire ASV is removed
+#' (`filter_occurrence = FALSE`) or only the occurrence is removed
+#' (`filter_occurrence = TRUE`).
+#'
+#' When `filter_occurrence = FALSE`, an ASV is removed only if it is flagged as
+#' a PCR error in at least the proportion of samples specified by `sample_prop`.
+#'
+#' When `filter_occurrence = TRUE`, the ASV is removed only from the samples in
+#' which it is flagged as a PCR error and may remain present in other samples.
 #'  
 #' @param read_count Data frame or path to a CSV file with the following columns: 
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
@@ -3286,6 +3372,11 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   identify chimeric sequences.
 #' @param by_sample Logical. If `TRUE`, chimera detection is performed separately 
 #'   within each sample.
+#' @param filter_occurrence Logical. If TRUE, an ASV is removed only from the
+#'   samples in which it is flagged as a chimera and may remain present in other
+#'   samples. If FALSE, an ASV is removed entirely if it is flagged as a chimera
+#'   in at least the proportion of samples specified by sample_prop.
+#'   Otherwise, none of its occurrences are removed.
 #' @param sample_prop Numeric value between 0 and 1 specifying the minimum proportion 
 #'   of samples in which an ASV must be flagged as a chimera (when `by_sample = TRUE`) 
 #'   to be removed.
@@ -3321,20 +3412,28 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' 
 #' @export
 #' 
-filter_chimera <- function(read_count, 
-                          outfile=NULL, 
-                          vsearch_path="vsearch",
-                          num_threads=0,
-                          by_sample=T, 
-                          sample_prop=0.8, 
-                          abskew=2, 
-                          sep=",",
-                          quiet=TRUE
-                          ){
+
+filter_chimera <- function(
+  read_count, 
+  outfile=NULL, 
+  vsearch_path="vsearch",
+  num_threads=0,
+  by_sample=TRUE, 
+  filter_occurrence=FALSE,
+  sample_prop=0.8, 
+  abskew=2, 
+  sep=",",
+  quiet=TRUE
+){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  if(filter_occurrence & by_sample==FALSE){
+    warning("When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+            even if filter_occurrence is TRUE")
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3342,6 +3441,8 @@ filter_chimera <- function(read_count,
   }else{
     read_count_df <- read_count
   }
+  
+  
   # get unique list of ASVs with their total read_count in the run
   unique_asv_df <- read_count_df %>%
     group_by(asv) %>%
@@ -3349,56 +3450,105 @@ filter_chimera <- function(read_count,
     arrange(desc(read_count)) %>%
     ungroup()
   
-  if(by_sample){ # sample by sample
+  if(by_sample){
+    
     sample_list <- unique(read_count_df$sample)
-    # loop over samples
-    for(sample_loc in sample_list){
-      # get unique list of ASVs with their total read_count in the sample
-      unique_asv_df_sample <- read_count_df %>%
-        filter(sample == sample_loc) %>%
-        group_by(asv)%>%
-        summarize(read_count = sum(read_count))%>%
-        arrange(desc(read_count)) %>%
-        ungroup()
+    unique_asv_sample <- read_count_df %>%
+      group_by(asv, sample) %>%
+      summarize(read_count = sum(read_count), .groups="drop")%>%
+      ungroup()
+    
+    if(filter_occurrence){ # by_sample=TRUE, filter_occurrence = TRUE
       
-      # flag chimeras; 
-      # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
-      # 0 otherwise
-      unique_asv_df_sample <- flag_chimera(unique_asv_df_sample, 
-                                          vsearch_path=vsearch_path,
-                                          num_threads = num_threads,  
-                                          abskew=abskew,
-                                          quiet=quiet
-                                          )
+      chimera_flags <- data.frame(
+        asv = character(),
+        sample = character(),
+        chimera = numeric()
+      )
       
-      # remove read_count column
-      unique_asv_df_sample <- select(unique_asv_df_sample, -c("read_count"))
-      # add a column for each sample to unique_asv_df, with 1 if ASV is flagged in the sample,
-      # 0 otherwise
-      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
-    }
-  }else{ # whole dataset
-    # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-    unique_asv_df <- flag_chimera(unique_asv_df, 
-                                 vsearch_path=vsearch_path, 
-                                 num_threads = num_threads,  
-                                 abskew=abskew,
-                                 quiet=quiet)
-  }
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) %>%
+          arrange(desc(read_count))
+        
+        # flag chimeras; 
+        # add one column to sample_df with 1 if ASV is flagged in the sample, 
+        # 0 otherwise
+        sample_df <- flag_chimera(sample_df, 
+                                  vsearch_path=vsearch_path,
+                                  num_threads = num_threads,  
+                                  abskew=abskew,
+                                  quiet=quiet
+        )
+        
+        sample_df <- sample_df %>%
+          select(asv, sample, chimera)
+        chimera_flags <- rbind(chimera_flags, sample_df)
+      }
+      # delete occurrences flagged as chimera
+      read_count_df <- left_join(read_count_df, chimera_flags, by=c("sample", "asv")) %>%
+        filter(chimera == 0 | is.na(chimera)) %>%
+        select(-chimera)
+      
+    }else { # by_sample=TRUE, filter_occurrence = FALSE
+      
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc)  %>%
+          arrange(desc(read_count))
+        
+        # flag chimeras; 
+        # add one column to sample_df with 1 if ASV is flagged as chimera in the sample, 
+        # 0 otherwise
+        sample_df <- flag_chimera(sample_df, 
+                                  vsearch_path=vsearch_path,
+                                  num_threads = num_threads,  
+                                  abskew=abskew,
+                                  quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, chimera)
+        
+        # add a column for for each sample to unique_asv_df, 
+        # with 1 if ASV is flagged in the sample, 0 otherwise
+        unique_asv_df <- left_join(unique_asv_df, sample_df, by = "asv")
+      }
+      
+      # count the number of times each ASV has been flagged and when it has not. 
+      # Ignore NA, when the ASV is not present in the sample
+      unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
+      unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
+      # keep only ASVs, 
+      # that are flagged in sample_prop proportion of the samples where they are present  
+      unique_asv_df <- unique_asv_df %>%
+        filter(yes/(yes+no) >= sample_prop)
+      
+      # eliminate potential chimeras from read_count_df
+      read_count_df <- read_count_df %>%
+        filter(!asv %in% unique_asv_df$asv)
+    } # end by_sample=TRUE, filter_occurrence ==FALSE
+  } else { # end by_sample, Filter the all at once
+    
+    unique_asv_df  <- flag_chimera(unique_asv_df, 
+                                   vsearch_path=vsearch_path,
+                                   num_threads = num_threads,  
+                                   abskew=abskew,
+                                   quiet=quiet
+    )
+    
+    
+    unique_asv_df <- unique_asv_df %>%
+      filter(chimera == 1)
+    # eliminate potential chimeras from read_count_df
+    read_count_df <- read_count_df %>%
+      filter(!asv %in% unique_asv_df$asv)
+  } # end by_sample = FALSE
   
-  # count the number of times each ASV has been flagged and when it has not. 
-  # Ignore NA, when the ASV is not present in the sample
-  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
-  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
-  # keep only ASVs, that are flagged in sample_prop proportion 
-  # of the samples where they are present  
-  unique_asv_df <- unique_asv_df %>%
-    filter(yes/(yes+no) >= sample_prop)
-  
-  # eliminate potential Chimeras from read_count_df
-  read_count_df <- read_count_df %>%
-    filter(!asv %in% unique_asv_df$asv)
-  
+  ###### Print output
   if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)

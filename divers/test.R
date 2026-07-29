@@ -46,7 +46,7 @@ taxonomy_COInr <- "/home/meglecz/mkCOInr/COInr/COInr_for_vtam_2025_05_23_dbV5/CO
 
 ### Merge
 merged_dir_uncompress <- file.path(outdir, "merged_uncompress")
-fastainfo_df_uncompress <- Merge(fastqinfo, 
+fastainfo_df_uncompress <- merge_fastq_pairs(fastqinfo, 
                       fastq_dir=fastq_dir, 
                       compress_method="pigz",
                       pigz_path = pigz_path,

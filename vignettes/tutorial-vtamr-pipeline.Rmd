@@ -1253,6 +1253,8 @@ write.csv(stat_df, file = file.path(outdir, "summary.csv"))
 The `assign_taxonomy_ltg` function uses a **BLAST-based Last Common Ancestor (LCA) approach**.
 For a short description of how the algorithm works, see `?assign_taxonomy_ltg`.
 
+**Note**: For 16S datasets checkout the [`assign_taxonomy_rdp`](#assign_taxonomy_rdp) function.
+
 For details on the required formats of the `taxonomy` and `blast_db` inputs, refer to the
 [Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg) section.
 
