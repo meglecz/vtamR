@@ -13,7 +13,8 @@ match_variants_to_mock_species(
   blast_path = "blastn",
   num_threads = 0,
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ A COInr taxonomy file can be used.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages and show only warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame with columns: \code{sample}, \code{action}, \code{asv}, \code{taxon}, \code{asv_id}.

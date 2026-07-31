@@ -1,5 +1,16 @@
 # Ideas for vtamR
 
+## make fulction to
+	- simplfy log (one line per function)
+	- extract all path used => check version of the TPP (if both default and specified pathn ude the path)
+	- add R, and R packades versions
+
+## make full R script for from fastq till filtered ASV, Try to find a good place 
+so people can easily access (vignettes? the idea is to provide Rmd or R as a template)
+Add link to the main tuto xxxx
+ - mfzr_plate1 
+ - mfzr_plate2
+ - zfzr_plate1
 
 
 ## write function for quality filtering fastq
@@ -29,10 +40,6 @@ ont it. Make an output table similar to the checklist.
 - Completer l'ajout de chemin dans cmd
 - Install => expliquer 
 
-## make full R script for from fastq till filtered ASV
- - mfzr_plate1 
- - mfzr_plate2
- - zfzr_plate1
 
 ## revise install in readme.
 
@@ -746,6 +753,48 @@ Modify filter_pcr_error:
 Modify filter_chimera
 	- add argument filter_occurrence, to be able to filter out some occurrences of an ASV but not 
 	necessarily in all samples.
+
+
+### 2026/07/31 commit make_log
+
+## write log file with the function called from the script, all their parametres
+start_time and run time. 
+
+- collect_log is called at the beginging of the function, and gets name, parametres and start 
+time, and returne a data frame. It can deal with functions that have ... input.
+- write_log is calles at the end of the function and addte end_time and runtime.
+It appendre the df to a logfile.
+
+- In principle, we can collect only arguments that are explicitly set by the 
+user, or all arguments, including the ones with default values. This second
+option, is a bit more cmplicated, but provides a complete log, that can be helpful
+et the moment of publication. It is also better to prepare a file, with all 
+packages and third party programs with their version.
+- The name of the logfile can be specified by a package option. In that case 
+it is not necessary to specify the log file name, when calling the function.
+However it has two drawbacks
+	- the same logfile is valid within the R session. Therefoe, if user set it 
+	in one script, but do not cheng it in subsequent, the same file fille be automaticelly 
+	completed, which is probably not how the users want it.
+	- in case of logged funcetions called from other functions, the log file
+	became unncessarily complicate. It is enough to have the log of the 
+	major function, directly called by the user. 
+This lead to a idea of explicitelly setting the log_file name in the script, and 
+explcitelly calling them from the functions. Gives more control to the users 
+and more responsability.
+
+- tuto updated
+
+
+
+
+
+
+
+
+
+
+
 
 
 

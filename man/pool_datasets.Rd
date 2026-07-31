@@ -4,7 +4,14 @@
 \alias{pool_datasets}
 \title{Pool multiple datasets}
 \usage{
-pool_datasets(files, outfile = NULL, method = "mean", sep = ",", quiet = T)
+pool_datasets(
+  files,
+  outfile = NULL,
+  method = "mean",
+  sep = ",",
+  quiet = T,
+  log_file = NULL
+)
 }
 \arguments{
 \item{files}{Character vector of file paths to the datasets to pool.
@@ -23,6 +30,9 @@ and output CSV files.}
 
 \item{quiet}{Logical; if TRUE, suppress informational messages and show only
 warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame with columns \code{asv_id}, \code{sample}, \code{replicate}

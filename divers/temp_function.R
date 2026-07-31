@@ -1,136 +1,72 @@
+setwd("~/vtamR")
+
+library(vtamR)
+library(dplyr)
+
+outdir <- "vtamR_demo_out/zfzr_plate1"
+#set_log_file(file.path(outdir, "vtamR_log.csv"))
+#set_log_file(NULL)
+
+
 
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
-fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
-outdir <- "/home/meglecz/vtamR/tmp"
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-swarm_path <- "swarm" # swarm is in the PATH
-pigz_path <- "pigz"   # optional; pigz is in the PATH
-check_reverse=TRUE
-compress_method="R"
-num_threads=0
-tag_to_end=TRUE
-primer_to_end=TRUE
-cutadapt_error_rate=0.1
-sep=","
-compress=FALSE
-quiet=TRUE
+fastqinfo <- system.file("extdata/demo/fastqinfo_zfzr_plate1.csv", package = "vtamR")
+mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
+asv_list <- system.file("extdata/demo/ASV_list_with_IDs.csv", package = "vtamR") # all ASV of MFZR
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+blast_db <- system.file("extdata/db_test", package = "vtamR")
+blast_db <- file.path(blast_db, "COInr_reduced")
 
-fastqinfo_delultiplexed <- demultiplex_fastq_pairs(fastqinfo, 
-                                    fastq_dir, 
-                                    outdir, 
-                                    cutadapt_path="cutadapt",
-                                    check_reverse=TRUE, 
-                                    num_threads=0,
-                                    tag_to_end=FALSE, 
-                                    primer_to_end=FALSE, 
-                                    cutadapt_error_rate=0.1,
-                                    sep=",",
-                                    compress=FALSE,
-                                    quiet=T)
 
-fastqinfo <- file.path(outdir, "fastqinfo.csv")
-merged_dir <- "/home/meglecz/vtamR/merged"
-sample_info <- merge_fastq_pairs(
-  fastqinfo = fastqinfo,
-  fastq_dir = outdir,
-  outdir = merged_dir,
-  vsearch_path = "vsearch",
-  compress_method = "R",
-  pigz_path = "pigz",
-  num_threads = 0,
-  fastq_ascii = 33,
-  fastq_maxdiffs = 10,
-  fastq_maxee = 1,
-  fastq_minlen = 50,
-  fastq_maxlen = 500,
-  fastq_minmergelen = 50,
-  fastq_maxmergelen = 1000,
-  fastq_maxns = 0,
-  fastq_truncqual = 10,
-  fastq_minovlen = 50,
-  fastq_allowmergestagger = TRUE,
-  sep = ",",
-  compress = FALSE,
-  quiet = T
+merged_dir <- file.path(outdir, "1_merged")
+
+fastainfo_df <- merge_fastq_pairs(
+  fastqinfo=fastqinfo,
+  fastq_dir=fastq_dir,
+  outdir=merged_dir,
+  fastq_maxee=1,
+  fastq_maxns=0,
+  fastq_allowmergestagger=T
+)
+
+
+demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
+
+sampleinfo_df <- demultiplex_and_trim(
+  fastainfo=fastainfo_df,
+  fasta_dir=merged_dir,
+  outdir=demultiplexed_dir,
+  check_reverse=TRUE,
+  cutadapt_minimum_length = 150,
+  cutadapt_maximum_length = 165
 )
 
 
 
+# get function name, all arguments and stat time
+log <- collect_log()
 
-headers <- data.frame(
-  header = as.character(),
-  file = as.character()
-)
+# add end_time and runtime, print
+write_log(log)
 
-for(i in 1:nrow(fastqinfo_delultiplexed)){
+@param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+,
+log_file = NULL
+
+log <- collect_log()
+
+write_log(log, file=log_file)
+
+
+compute_renkonen_distances(
+  read_count_df ==> correcte to read_count
   
-  filename <- fastqinfo_delultiplexed$fastq_fw[i]
-  filename <- file.path(outdir, filename)
-  file_connection <- file(filename, "r")
-  # read file to a vector. Each element is a line
-  file_contents <- readLines(file_connection, warn = FALSE)
-  close(file_connection)
-  
-  # Identify lines starting with '>'
-  header_indices <- grepl("^@", file_contents)
-  
-  fastq_headers <- as.data.frame(file_contents[header_indices])
-  colnames(fastq_headers) <- c("header")
-  
-  fastq_headers <- fastq_headers %>%
-    mutate(header = sub(" .*$", "", header)) %>%
-    mutate(file = filename)
-  
-  headers <- rbind(headers, fastq_headers)
-}
+  filter_replicate
+  Error in data.frame(function_name = rep(fun_name, length(args)), argument_name = names(args), : arguments imply differing number of rows: 4, 5
+                      
+suggest_sample_cutoff
+rror in UseMethod("mutate") : pas de méthode pour 'mutate' applicable pour un objet de classe "function"
 
-nrow(headers)
-headers <- headers %>%
-  group_by(header) %>%
-  summarize(count = n())
-
-
-
-read_count_input <- count_reads_in_dir(
-  dir=fastq_dir, 
-  pattern="_fw.fastq", 
-  file_type="fastq"
-)
-
-read_count_input <- read_count_input %>%
-  filter(startsWith(filename, "mfzr"))
-
-sum(read_count_input$read_count)
-sum(fastqinfo_delultiplexed$read_count)
-
-
-read_count_fw <- count_reads_in_dir(
-  dir="/tmp/RtmpZdJIT1/fw_178306060884", 
-  pattern="_fw.fastq", 
-  file_type="fastq"
-)
-
-read_count_rv <- count_reads_in_dir(
-  dir="/tmp/RtmpZdJIT1/rv_178306060859", 
-  pattern="_fw.fastq", 
-  file_type="fastq"
-)
-
-tmp <- left_join(fastqinfo_delultiplexed, read_count_fw, by=c("fastq_fw" = "filename"))
-tmp <- left_join(tmp, read_count_rv, by=c("fastq_fw" = "filename"))
-
-tmp <- tmp %>%
-  mutate(diff = read_count.x - read_count.y - read_count)
-
-fasta_df <- read_fasta_to_df("/home/meglecz/vtamR/tmp/14ben01-1_fw.fastq")
-
-
-
-case_3a <- read.csv("/home/meglecz/vtamR/vignettes/vtamR_demo_case3a/1_before_filter.csv")
-
-case_3b <- read.csv("/home/meglecz/vtamR/vignettes/vtamR_demo_case3b/1_before_filter.csv")
-
-nrow(case_3a)
-nrow(case_3b)
+pool_filters
+plot_cluster_classification

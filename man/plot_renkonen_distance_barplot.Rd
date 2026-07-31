@@ -9,7 +9,8 @@ plot_renkonen_distance_barplot(
   sampleinfo = NULL,
   sep = ",",
   x_axis_label_size = 6,
-  plotfile = ""
+  plotfile = "",
+  log_file = NULL
 )
 }
 \arguments{
@@ -26,6 +27,9 @@ This output can be generated using \code{make_renkonen_distance_matrix()}.}
 
 \item{plotfile}{Character string: name of the output PNG file. If empty,
 no file is written.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A bar plot object.

@@ -4,7 +4,13 @@
 \alias{suggest_sample_cutoff}
 \title{Suggest cutoff for \code{filter_occurrence_sample}}
 \usage{
-suggest_sample_cutoff(read_count, mock_composition, sep = ",", outfile = NULL)
+suggest_sample_cutoff(
+  read_count,
+  mock_composition,
+  sep = ",",
+  outfile = NULL,
+  log_file = NULL
+)
 }
 \arguments{
 \item{read_count}{Data frame or CSV file with the following variables:
@@ -17,6 +23,9 @@ suggest_sample_cutoff(read_count, mock_composition, sep = ",", outfile = NULL)
 
 \item{outfile}{Character string specifying the output CSV file. If NULL,
 no file is written.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame with the following columns: \code{sample}, \code{replicate}, \code{action},

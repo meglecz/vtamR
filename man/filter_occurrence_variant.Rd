@@ -12,7 +12,8 @@ filter_occurrence_variant(
   lost_asv_file = NULL,
   by_replicate = FALSE,
   sep = ",",
-  min_read_count_prop = 0.7
+  min_read_count_prop = 0.7,
+  log_file = NULL
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ output CSV files.}
 \item{min_read_count_prop}{Numeric value specifying the minimum proportion of
 total reads that must be retained per ASV after filtering. ASVs below this
 threshold trigger a warning.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame.

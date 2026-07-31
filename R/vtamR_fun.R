@@ -323,6 +323,248 @@ get_stat <- function(read_count, stat_df=NULL, stage="", params=NA, outfile=NULL
   return(stat_df)
 }
 
+#' Collect function call information
+#'
+#' Collects the name of the calling function, the names and values of all its
+#' arguments (including default values), and the time at which the function was
+#' called. The information is returned as a data frame and can subsequently be
+#' written to a log file with `complete_log()`.
+#'
+#' @return A data frame containing the calling function name, argument names,
+#'   argument values, and the timestamp. Returned invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' my_function <- function(a, b = 10, method = "mean") {
+#'     if(!is.null(log_file)){
+#'     log <- collect_log()
+#'     }
+#'   ## rest of the function
+#' }
+#' }
+#'
+#' @export
+#' 
+collect_log <- function() {
+  
+  ## Name of calling function
+  fun_name <- as.character(sys.call(-1)[[1]])
+  
+  ## Calling environment
+  env <- parent.frame()
+  
+  ## Function definition and call
+  fun <- sys.function(-1)
+  call <- match.call(
+    definition = fun,
+    call = sys.call(-1),
+    expand.dots = FALSE
+  )
+  
+  ## Formal arguments
+  fmls <- names(formals(fun))
+  
+  ## Get argument values (except ...)
+  arg_names <- setdiff(fmls, "...")
+  log_values <- mget(arg_names, envir = env, inherits = FALSE)
+  
+  ## Default names
+  log_names <- arg_names
+  
+  ## Replace explicitly supplied arguments by their expressions
+  call_args <- as.list(call)[-1]
+  
+  for (x in intersect(names(call_args), arg_names)) {
+    log_names[log_names == x] <- deparse1(call_args[[x]])
+  }
+  
+  
+  ## Deal with ...
+  if ("..." %in% fmls && "..." %in% names(call_args)) {
+    
+    dot_values <- eval(
+      quote(list(...)),
+      envir = env
+    )
+    
+    dot_exprs <- call_args[["..."]]
+    
+    if (length(dot_values) > 0) {
+      
+      log_values <- c(log_values, dot_values)
+      
+      log_names <- c(
+        log_names,
+        vapply(dot_exprs, deparse1, character(1))
+      )
+    }
+  }
+  
+  
+  time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  
+  
+  to_string <- function(x, obj_name) {
+    
+    if (is.null(x)) {
+      "NULL"
+      
+    } else if (length(x) == 0) {
+      "<empty>"
+      
+    } else if (is.atomic(x)) {
+      paste(as.character(x), collapse = ", ")
+      
+    } else {
+      sprintf("%s <%s>", obj_name, class(x)[1])
+    }
+  }
+  
+  
+  ## Safety check
+  stopifnot(
+    length(log_values) == length(log_names)
+  )
+  
+  
+  data.frame(
+    function_name = rep(fun_name, length(log_values)),
+    argument_name = names(log_values),
+    value = mapply(
+      to_string,
+      log_values,
+      log_names,
+      SIMPLIFY = TRUE
+    ),
+    start_time = rep(time, length(log_values)),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+
+
+collect_log_original <- function() {
+  
+  ## Name of the calling function
+  fun_name <- as.character(sys.call(-1)[[1]])
+  ## Environment of the calling function
+  env <- parent.frame()
+  ## Function arguments (including defaults)
+  fmls <- names(formals(sys.function(-1)))
+  args <- mget(fmls, envir = env, inherits = FALSE)
+
+  
+  ## Function call (contains only explicitly supplied arguments)
+  call <- sys.call(-1)
+  call_args <- as.list(call)[-1]
+  
+  ## One object name for every argument
+  ## Defaults: use the argument name itself
+  object_names <- names(args)
+  names(object_names) <- names(args)
+#  print(object_names)
+  
+  ## Replace by the object/expression supplied by the caller
+  object_names[names(call_args)] <-
+    vapply(call_args, deparse1, character(1))
+#  print(object_names)
+  
+  time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  
+  to_string <- function(x, obj_name, arg_name) {
+    
+    if (is.null(x)) {
+      "NULL"
+      
+    } else if (length(x) == 0) {
+      "<empty>"
+      
+    } else if (is.atomic(x)) {
+      paste(as.character(x), collapse = ", ")
+      
+    } else if (identical(obj_name, arg_name)) {
+      ## Default argument: no object name was supplied
+      sprintf("<%s>", class(x)[1])
+      
+    } else {
+      ## User supplied an object
+      sprintf("%s <%s>", obj_name, class(x)[1])
+    }
+  }
+  
+  log <- data.frame(
+    function_name = rep(fun_name, length(args)),
+    argument_name = names(args),
+    value = mapply(
+      to_string,
+      args,
+      object_names,
+      names(args),
+      USE.NAMES = FALSE
+    ),
+    start_time = rep(time, length(args)),
+    stringsAsFactors = FALSE
+  )
+  
+  invisible(log)
+}
+
+
+#' Complete the log and write it to a CSV file
+#'
+#' Completes the log data frame returned by `collect_log()` by adding the end
+#' time and execution time, then appends the log to a CSV file.
+#'
+#' @param log A data frame returned by `collect_log()`, containing the calling
+#'   function name, argument names, argument values, and the start time.
+#' @param file Character string specifying the path to the CSV log file. If
+#'   `NULL`, no log file is written.
+#'
+#' @return The completed log data frame, returned invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' my_function <- function(a, b = 10, method = "mean", file=NULL) {
+#'
+#'   log <- if(!is.null(log_file)){
+#'     log <- collect_log()
+#'   }
+#'   
+#'
+#'   ## rest of the function
+#'
+#'   complete_log(log, file=log_file)
+#' }
+#' }
+#'
+#' @export
+write_log <- function(log, file = NULL) {
+  
+  if (is.null(file)) {
+    return(invisible(log))
+  }
+  
+  check_dir(file, is_file=TRUE)
+  
+  end_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  
+  log <- log %>%
+    mutate(end_time = end_time) %>%
+    mutate(runtime = as.numeric(difftime(end_time, start_time, units = "secs")))
+  
+  write.table(
+    log,
+    file = file,
+    append = file.exists(file),
+    sep = ",",
+    row.names = FALSE,
+    col.names = !file.exists(file),
+    quote = TRUE
+    )
+  
+  invisible(log)
+}
 #' Merge forward and reverse reads
 #' 
 #' Merge paired-end FASTQ reads (forward and reverse) and convert the resulting 
@@ -382,6 +624,8 @@ get_stat <- function(read_count, stat_df=NULL, stage="", params=NA, outfile=NULL
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame corresponding to the generated `fastainfo.csv` file.
 #' 
@@ -435,13 +679,21 @@ merge_fastq_pairs <- function(fastqinfo,
                   fastq_allowmergestagger=FALSE, 
                   sep=",", 
                   compress=FALSE, 
-                  quiet=T){
+                  quiet=T,
+                  log_file=NULL){
   
+
   fastq_dir = check_dir(fastq_dir)
   outdir = check_dir(outdir)
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+    }
+  
   # can accept df or file as an input
   if(is.character(fastqinfo)){
     # read known occurrences
@@ -564,6 +816,8 @@ merge_fastq_pairs <- function(fastqinfo,
     select(-fastq_fw, -fastq_rv)
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(fastainfo_df)
   
 }
@@ -745,6 +999,7 @@ trim_primers_file <- function(fasta,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
   if(fasta == outfile){
     msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
     stop(msg)
@@ -893,6 +1148,8 @@ trim_primers_file <- function(fasta,
 #'   available in the system PATH.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame. The updated `fastainfo` data frame with modified 
 #'   file names and sequence counts.
@@ -929,11 +1186,17 @@ trim_primers <- function(fastainfo,
                        cutadapt_minimum_length=50, 
                        cutadapt_maximum_length=500, 
                        sep = ",",
-                       quiet=T
+                       quiet=T,
+                       log_file=NULL
                        ){
   
   fasta_dir = check_dir(fasta_dir)
   outdir = check_dir(outdir)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -992,6 +1255,9 @@ trim_primers <- function(fastainfo,
               row.names = F, 
               sep=sep
               )
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(fastainfo_df)
 }
 
@@ -1045,6 +1311,8 @@ trim_primers <- function(fastainfo,
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame corresponding to the output `sampleinfo.csv` file 
 #'   and one FASTA file per tag combination for each input FASTA file, 
@@ -1083,7 +1351,8 @@ demultiplex_and_trim <- function(fastainfo,
                       cutadapt_maximum_length=500,
                       sep=",",
                       compress=FALSE,
-                      quiet=T
+                      quiet=T,
+                      log_file=NULL
                       ){
   
   fasta_dir = check_dir(fasta_dir)
@@ -1091,6 +1360,11 @@ demultiplex_and_trim <- function(fastainfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -1239,6 +1513,7 @@ demultiplex_and_trim <- function(fastainfo,
   sampleinfo_df <- add_read_counts(sampleinfo_df, dir=outdir)
   write.table(sampleinfo_df, file = file.path(outdir, "sampleinfo.csv"),  row.names = F, sep=sep)
   
+  write_log(log, file=log_file)
   return(sampleinfo_df)
 }
 
@@ -1633,6 +1908,8 @@ reverse_complement <- function(sequence){
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `asv_id`, `sample`, `replicate`, 
 #'   `read_count`, `asv`.
@@ -1650,8 +1927,15 @@ dereplicate <- function(sampleinfo,
                         input_asv_list=NULL, 
                         output_asv_list=NULL, 
                         sep=",", 
-                        quiet=T
+                        quiet=T,
+                        log_file=NULL
                         ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(sampleinfo)){
     # read known occurrences
@@ -1708,6 +1992,10 @@ dereplicate <- function(sampleinfo,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -1921,6 +2209,8 @@ check_one_to_one <- function(df){
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' @param return_df Logical. If `TRUE`, the function returns a data frame.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame or CSV file containing all unique `asv_id`–`asv` pairs 
 #'   from the inputs. If any conflict is detected within or between inputs, the 
@@ -1937,7 +2227,17 @@ check_one_to_one <- function(df){
 #' 
 #' @export
 #' 
-update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALSE){
+update_asv_list <- function(asv_list1, 
+                            asv_list2, 
+                            outfile, 
+                            sep=",", 
+                            return_df=FALSE,
+                            log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   if(is.character(asv_list1)){
     df1 <- read.csv(asv_list1, header=T, sep=sep)
@@ -1971,6 +2271,10 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
     check_dir(outfile, is_file=TRUE)
     write.table(df1, file=outfile, row.names = FALSE, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   if(return_df){
     return(df1)
   }
@@ -1991,6 +2295,8 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #'   contaminant ASVs. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame with contaminant ASVs removed.
 #' 
@@ -2001,8 +2307,17 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #' 
 #' @export
 #' 
-filter_contaminant <- function (read_count, sampleinfo, outfile=NULL, 
-                                       conta_file=NULL,sep=",") {
+filter_contaminant <- function (read_count, 
+                                sampleinfo, 
+                                outfile=NULL, 
+                                conta_file=NULL,
+                                sep=",",
+                                log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -2052,6 +2367,9 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2067,6 +2385,8 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2077,7 +2397,17 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
 #' 
 #' @export
 #' 
-filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
+filter_asv_global <- function (read_count, 
+                               cutoff=10, 
+                               outfile=NULL, 
+                               sep=",",
+                               log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2097,6 +2427,10 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -2114,6 +2448,8 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2124,7 +2460,17 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
 #' 
 #' @export
 #' 
-filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
+filter_occurrence_read_count <- function (read_count, 
+                                          cutoff=10, 
+                                          outfile=NULL, 
+                                          sep=",",
+                                          log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2138,6 +2484,9 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2158,6 +2507,8 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2168,7 +2519,17 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
 #' 
 #' @export
 #' 
-filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, sep=",") {
+filter_occurrence_sample <- function (read_count, 
+                                      cutoff=0.001, 
+                                      outfile=NULL, 
+                                      sep=",",
+                                      log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2192,6 +2553,8 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, se
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2227,6 +2590,8 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, se
 #' @param outfile Character string specifying the output file. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `asv_id`, `replicate` (if `by_replicate = TRUE`), `cutoff`.  
 #' Only ASVs with known false-positive occurrences are included.
@@ -2249,7 +2614,13 @@ compute_asv_specific_cutoff <- function(read_count,
                               habitat_proportion=0.5,
                               by_replicate=FALSE, 
                               outfile=NULL, 
-                              sep=",")  {
+                              sep=",",
+                              log_file=NULL)  {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -2321,7 +2692,8 @@ compute_asv_specific_cutoff <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(asv_spec_cutoff_df, file=outfile, row.names = F, sep=sep)
   }
-  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(asv_spec_cutoff_df)
 }
 
@@ -2365,6 +2737,8 @@ compute_asv_specific_cutoff <- function(read_count,
 #' @param min_read_count_prop Numeric value specifying the minimum proportion of 
 #'   total reads that must be retained per ASV after filtering. ASVs below this 
 #'   threshold trigger a warning.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2387,7 +2761,13 @@ filter_occurrence_variant <- function(read_count,
                        lost_asv_file =NULL,
                        by_replicate=FALSE, 
                        sep=",", 
-                       min_read_count_prop=0.7){
+                       min_read_count_prop=0.7,
+                       log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   #### get read_count_df
   if(is.character(read_count)){
@@ -2524,6 +2904,9 @@ filter_occurrence_variant <- function(read_count,
     write.table(asvs, file = lost_asv_file,  row.names = F, sep=sep)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -2539,6 +2922,8 @@ filter_occurrence_variant <- function(read_count,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count_df` data frame containing only shared occurrences.
 #' 
@@ -2549,7 +2934,15 @@ filter_occurrence_variant <- function(read_count,
 #' 
 #' @export
 #' 
-pool_filters <- function(... , outfile=NULL, sep=","){
+#' 
+#' 
+#' 
+pool_filters <- function(... , outfile=NULL, sep=",", log_file=NULL){
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+    }
+  
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
@@ -2560,6 +2953,7 @@ pool_filters <- function(... , outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(merged, file = outfile,  row.names = F, sep=sep)
   }
+  write_log(log, file=log_file)
   return(merged)
 }
 
@@ -2576,7 +2970,9 @@ pool_filters <- function(... , outfile=NULL, sep=","){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2586,7 +2982,17 @@ pool_filters <- function(... , outfile=NULL, sep=","){
 #' 
 #' @export
 #'
-filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
+filter_min_replicate <- function(read_count, 
+                                 cutoff=2, 
+                                 outfile=NULL, 
+                                 sep=",",
+                                 log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2611,6 +3017,9 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2626,7 +3035,9 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2636,7 +3047,16 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
 #' 
 #' @export
 #' 
-filter_indel <- function(read_count, outfile=NULL, sep=","){
+filter_indel <- function(read_count, 
+                         outfile=NULL, 
+                         sep=",",
+                         log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2668,6 +3088,9 @@ filter_indel <- function(read_count, outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2692,6 +3115,8 @@ filter_indel <- function(read_count, outfile=NULL, sep=","){
 #' @export
 #' 
 get_stop_codons <- function(genetic_code=5){
+
+  
   if(genetic_code == 1){
     return(c("TAA","TAG","TGA"))
   }
@@ -2741,7 +3166,9 @@ get_stop_codons <- function(genetic_code=5){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2751,7 +3178,17 @@ get_stop_codons <- function(genetic_code=5){
 #' 
 #' @export
 #' 
-filter_stop_codon <- function(read_count, outfile=NULL, genetic_code=5, sep=","){
+filter_stop_codon <- function(read_count, 
+                              outfile=NULL, 
+                              genetic_code=5, 
+                              sep=",",
+                              log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2814,6 +3251,9 @@ filter_stop_codon <- function(read_count, outfile=NULL, genetic_code=5, sep=",")
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -3054,7 +3494,9 @@ flag_pcr_error <- function(unique_asv_df,
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with PCR error ASVs removed.
 #' 
 #' @examples
@@ -3093,21 +3535,27 @@ filter_pcr_error <- function(read_count,
                                  min_read_count=10,
                                  sample_prop=0.8, 
                                  sep=",",
-                                 quiet=TRUE
-){
+                                 quiet=TRUE,
+                             log_file=NULL
+                             ){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
+  }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
   }
   
   if(pcr_error_var_prop >= 1){
     stop("pcr_error_var_prop must be between 0-1.")
   }
   if(pcr_error_var_prop > 0.5){
-    warning("pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
+    warning("WARNING: pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
   }
   if(filter_occurrence & by_sample==FALSE){
-    warning("When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+    warning("WARNING: When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
             even is filter_occurrence is TRUE")
   }
   
@@ -3235,6 +3683,10 @@ filter_pcr_error <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -3389,7 +3841,9 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with chimeric ASVs removed.
 #' 
 #' @examples
@@ -3423,14 +3877,21 @@ filter_chimera <- function(
   sample_prop=0.8, 
   abskew=2, 
   sep=",",
-  quiet=TRUE
+  quiet=TRUE,
+  log_file=NULL
 ){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   if(filter_occurrence & by_sample==FALSE){
-    warning("When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+    warning("WARNING: When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
             even if filter_occurrence is TRUE")
   }
   
@@ -3553,6 +4014,9 @@ filter_chimera <- function(
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -3614,13 +4078,15 @@ renkonen_dist <- function(df1, df2){
 #' (`compare_all = TRUE`) or only between replicates within the same sample 
 #' (`compare_all = FALSE`).
 #' 
-#' @param read_count_df Data frame with `asv`, `sample`, `replicate`, and 
+#' @param read_count Data frame or csv file with `asv`, `sample`, `replicate`, and 
 #'   `read_count` columns.
 #' @param compare_all Logical. If `TRUE`, compute Renkonen distances for all 
 #'   pairs of sample-replicates. If `FALSE`, compute distances only between 
 #'   replicates of the same sample.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `sample1`, `sample2`, `replicate1`, 
 #'   `replicate2`, `renkonen_d`, `sample_comp` (indicating `"within"` if 
@@ -3633,9 +4099,22 @@ renkonen_dist <- function(df1, df2){
 #' 
 #' @export
 #' 
-compute_renkonen_distances <- function(read_count_df, 
+compute_renkonen_distances <- function(read_count, 
                                   compare_all=FALSE,
-                                  outfile=NULL){
+                                  outfile=NULL,
+                                  log_file = NULL){
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
   
   df <- read_count_df %>%
     select(asv, sample, replicate, read_count)
@@ -3697,6 +4176,7 @@ compute_renkonen_distances <- function(read_count_df,
     check_dir(outfile, is_file=TRUE)
     write.table(renkonen_df, file = outfile,  row.names = F, sep=sep)
   }
+  write_log(log, file=log_file)
   return(renkonen_df)
 }
 
@@ -3719,7 +4199,9 @@ compute_renkonen_distances <- function(read_count_df,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with inconsistent replicates removed.
 #' 
 #' @examples
@@ -3737,8 +4219,14 @@ filter_replicate <- function(read_count,
                            outfile=NULL,
                            cutoff = NA, 
                            renkonen_distance_quantile=0.9,
-                           sep=","
+                           sep=",",
+                           log_file=NULL
                            ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -3749,7 +4237,7 @@ filter_replicate <- function(read_count,
   }
   
   # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- compute_renkonen_distances(read_count_df, compare_all=FALSE) %>%
+  renkonen_df <- compute_renkonen_distances(read_count = read_count_df, compare_all=FALSE) %>%
     select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
     arrange(renkonen_d)
   
@@ -3798,6 +4286,10 @@ filter_replicate <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)  
 }
 
@@ -3817,7 +4309,9 @@ filter_replicate <- function(read_count,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: `asv`, `sample`, `read_count` (aggregated 
 #'   across replicates), and optional `cluster_id`.
 #' 
@@ -3828,7 +4322,18 @@ filter_replicate <- function(read_count,
 #' 
 #' @export
 #'
-pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, sep=","){
+pool_replicates <- function(read_count, 
+                            method="mean", 
+                            digits=0, 
+                            outfile=NULL, 
+                            sep=",",
+                            log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3879,6 +4384,9 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, s
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_samples_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_samples_df)
 }
 
@@ -3920,7 +4428,9 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, s
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: 
 #' `asv_id`, `ltg_taxid`, `ltg_name`, `ltg_rank`, `ltg_rank_index`,
 #' `domain_taxid`, `domain`, `kingdom_taxid`, `kingdom`,
@@ -3951,12 +4461,19 @@ assign_taxonomy_ltg <- function(
     num_threads=0, 
     tax_sep="\t", 
     sep=",",
-    quiet=TRUE
+    quiet=TRUE,
+    log_file=NULL
     ){
 
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
 taxonomy <- path.expand(taxonomy)
 blast_db <- path.expand(blast_db)
 
@@ -4114,6 +4631,8 @@ if(!is.null(outfile)){
   write.table(taxres_df, file = outfile,  row.names = FALSE, sep=sep)
 }
 
+# add end_time and runtime, print
+write_log(log, file=log_file)
 return(taxres_df)
 }
 
@@ -4700,7 +5219,9 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #' @param mock_composition Data frame or CSV file with columns: `sample`, `action`, `asv`. 
 #'   `action` can be `keep` or `tolerate`. Required if `add_expected_asv = TRUE`.
 #' @param sep Field separator character used in input and output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Invisible data frame corresponding to the ASV table. Columns represent samples, 
 #'   rows represent ASVs, and cells contain read counts, optionally extended with 
 #'   taxonomic and summary information.
@@ -4733,9 +5254,14 @@ write_asv_table <- function(read_count,
                           add_sums_by_asv=FALSE, 
                           add_expected_asv=FALSE,
                           mock_composition=NULL, 
-                          sep=","
+                          sep=",",
+                          log_file=NULL
                           ){
   
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   if(is.character(read_count)){
     read_count_samples_df <- read.csv(read_count, header=T, sep=sep)
@@ -4935,6 +5461,10 @@ write_asv_table <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(invisible(wide_read_count_df))
 }
 
@@ -4963,6 +5493,9 @@ write_asv_table <- function(read_count,
 #'   occurrences below this value are ignored.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only 
 #'   show warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with the following columns: `sample`, `expected_read_count`,
 #'   `unexpected_read_count`, `pcr_error_var_prop`, `expected_asv_id`, 
 #'   `unexpected_asv_id`, `expected_asv`, `unexpected_asv`.
@@ -4987,11 +5520,17 @@ suggest_pcr_error_cutoff <- function(read_count,
                              outfile=NULL, 
                              max_mismatch=1, 
                              min_read_count=10,
-                             quiet=TRUE
+                             quiet=TRUE,
+                             log_file=NULL
                              ){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
+  }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
   }
   
   # can accept df or file as an input
@@ -5035,7 +5574,7 @@ suggest_pcr_error_cutoff <- function(read_count,
   # If any ASVs are missing, issue a warning (not an error)
   if (nrow(missing) > 0) {
     warning(
-      "The following expected ASVs are not present in the read_count dataframe:\n",
+      "WARNING: The following expected ASVs are not present in the read_count dataframe:\n",
       paste(missing$asv, collapse = ", "),
       "\nPlease check whether these sequences are correct."
     )
@@ -5204,6 +5743,9 @@ suggest_pcr_error_cutoff <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(asv_pairs, file=outfile, sep=sep, row.names = F)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(asv_pairs)
 }
 
@@ -5223,6 +5765,9 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param outfile Character string specifying the output CSV file. If NULL, 
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with the following columns: `sample`, `replicate`, `action`, 
 #'   `asv_id`, `read_count`, `read_count_sample_replicate`, `sample_cutoff`, `asv`.
 #' @examples
@@ -5235,7 +5780,16 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' 
 #' @export
 #'
-suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile=NULL){
+suggest_sample_cutoff <- function(read_count, 
+                                  mock_composition, 
+                                  sep=",", 
+                                  outfile=NULL,
+                                  log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5272,7 +5826,7 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
   # If any ASVs are missing, issue a warning (not an error)
   if (nrow(missing) > 0) {
     warning(
-      "The following expected ASVs are not present in the read_count dataframe:\n",
+      "WARNING: The following expected ASVs are not present in the read_count dataframe:\n",
       paste(missing$asv, collapse = ", "),
       "\nPlease check whether these sequences are correct."
     )
@@ -5354,6 +5908,10 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
     check_dir(outfile, is_file=TRUE)
     write.table(asv_keep_df, file=outfile, sep=sep, row.names = F)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(asv_keep_df)
 }
 
@@ -5382,7 +5940,9 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
 #'   within a habitat is below this threshold, it is considered an artifact in all samples 
 #'   of that habitat.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return A list containing:
 #'   * `known_occurrences_df`: sample, action, asv_id, asv
 #'   * `false_negatives_df`: sample, action, asv, asv_id
@@ -5412,7 +5972,13 @@ classify_control_occurrences <- function(read_count,
                                  false_negatives=NULL, 
                                  performance_metrics=NULL, 
                                  habitat_proportion=0.5,
-                                 quiet=TRUE){
+                                 quiet=TRUE,
+                                 log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5517,6 +6083,9 @@ classify_control_occurrences <- function(read_count,
     write.table(count_df, file=performance_metrics, row.names = F, sep=sep)
   }
   df_list <- list(occurrence_df, missing_occurrence_df, count_df)
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_list)
 }
 
@@ -5714,7 +6283,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
     missing_asv_text <- paste(capture.output(print(df)), collapse = "\n")
     warning(
       paste0(
-        "\n  Some expected ASVs are missing from the mock samples.\n",
+        "\n  WARNING: Some expected ASVs are missing from the mock samples.\n",
         "----------------------------------------------------------\n",
         missing_asv_text,
         "\n----------------------------------------------------------\n"
@@ -5781,6 +6350,9 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
 #'   replicates for `filter_min_replicate()`.
 #' @param quiet logical; if TRUE, suppress informational messages and show only
 #'   warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns `read_count_cutoff`, `variant_cutoff`,
 #'   `FN`, `TP`, and `FP`.
 #' @examples
@@ -5813,8 +6385,14 @@ suggest_variant_readcount_cutoffs <- function(read_count,
                                            increment_variant_cutoff=0.001, 
                                            by_replicate=FALSE, 
                                            min_replicate_number=1, 
-                                           quiet=T
+                                           quiet=T,
+                                           log_file=NULL
 ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
 
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5833,7 +6411,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
     performance_metrics <- file.path(outdir, "performance_metrics.csv")
     
     results <- classify_control_occurrences(
-      read_count_df,
+      read_count = read_count_df,
       sampleinfo = sampleinfo,
       mock_composition = mock_composition,
       known_occurrences = known_occurrences,
@@ -5849,7 +6427,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
     if(nrow(false_negatives_df)>0){
       warning(
         paste0(
-          "\n  Some expected ASVs are missing from the mock samples.\n",
+          "\n  WARNING: Some expected ASVs are missing from the mock samples.\n",
           "  Check the ", false_negatives, " file! \n"
         ),
         call. = FALSE
@@ -5892,14 +6470,14 @@ suggest_variant_readcount_cutoffs <- function(read_count,
   for(rc_cutoff in rc_cutoff_list){
     df_tmp <- read_count_df
     #filter_occurrence_read_count
-    df_tmp <- filter_occurrence_read_count(df_tmp, rc_cutoff)
+    df_tmp <- filter_occurrence_read_count(read_count = df_tmp, cutoff = rc_cutoff)
     for(var_cutoff in var_cutoff_list){
       # filter_occurrence_variant
-      df_tmp <- filter_occurrence_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      df_tmp <- filter_occurrence_variant(read_count =df_tmp, cutoff = var_cutoff, by_replicate=by_replicate)
       # filter_min_replicate
-      df_tmp <- filter_min_replicate(df_tmp, min_replicate_number)
+      df_tmp <- filter_min_replicate(read_count = df_tmp, cutoff = min_replicate_number)
       # pool_replicates
-      df_tmp_sample <- pool_replicates(df_tmp, method="max",digits=0) # the method does really not matter here
+      df_tmp_sample <- pool_replicates(read_count = df_tmp, method="max", digits=0) # the method does really not matter here
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
@@ -5944,6 +6522,8 @@ suggest_variant_readcount_cutoffs <- function(read_count,
   check_dir(outfile, is_file=TRUE)
   write.table(out_df, file=outfile, sep=sep, row.names = F)
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(out_df)
 }
 
@@ -5975,6 +6555,9 @@ suggest_variant_readcount_cutoffs <- function(read_count,
 #' and output CSV files.
 #' @param quiet Logical; if TRUE, suppress informational messages and show only
 #' warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return A data frame with columns `asv_id`, `sample`, `replicate`
 #' (optional), `read_count`, and `asv`.
 #' @examples
@@ -5989,8 +6572,14 @@ pool_datasets <- function(files,
                          outfile=NULL, 
                          method="mean",
                          sep=",", 
-                         quiet=T
+                         quiet=T,
+                         log_file=NULL
                          ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # method
   method <- match.arg(method, c("mean", "max", "sum", "min"))
@@ -6042,7 +6631,9 @@ pool_datasets <- function(files,
     check_dir(outfile, is_file=TRUE)
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
-
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_pool)
 }
 
@@ -6084,6 +6675,8 @@ pool_datasets <- function(files,
 #' and output CSV files.
 #' @param quiet Logical; if TRUE, suppress informational messages and show only
 #' warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return A data frame with columns `asv_id`, `sample`, `read_count`,
 #' `asv`, and optional `replicate`, where ASVs belonging to the same group
@@ -6109,7 +6702,13 @@ pool_markers <- function(files,
                          vsearch_path="vsearch", 
                          num_threads=0,
                          sep=",", 
-                         quiet=T){
+                         quiet=T,
+                         log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # method
   method <- match.arg(method, c("mean", "max", "sum", "min"))
@@ -6205,6 +6804,8 @@ pool_markers <- function(files,
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_pool)
 }
 
@@ -7198,6 +7799,9 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: `sample`, `action`, `asv`, `taxon`, `asv_id`.
 #' @examples
 #' \dontrun{
@@ -7220,10 +7824,16 @@ match_variants_to_mock_species <- function(
     blast_path = "blastn",
     num_threads=0,
     sep=",",
-    quiet=TRUE
+    quiet=TRUE,
+    log_file=NULL
 ){
   
   ##### Make blast db from mock fasta
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   ## make TSV with seqID and taxID
   taxids <- file.path(tempdir(), "taxid.tsv" )
@@ -7326,6 +7936,8 @@ match_variants_to_mock_species <- function(
     write.table(mock_composition_template, file=out, row.names = FALSE, sep=sep)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(mock_composition_template)
 }
 
@@ -7418,7 +8030,7 @@ random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TR
   
   # --- Check if n >= total
   if (n >= total) {
-    txt <- sprintf("%s contains %d sequences.\nThe input file is copied to output.",
+    txt <- sprintf("WARNING: %s contains %d sequences.\nThe input file is copied to output.",
                    fasta, total)
     warning(txt, call. = FALSE)
     
@@ -7564,7 +8176,7 @@ random_sample_linux <- function(fasta,
   
   # --- Check if n >= total
   if (n >= total) {
-    txt <- paste(fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
+    txt <- paste("WARNING: ", fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
     warning(txt)
     
     # copy input to outfile, and compress/uncompress if necessary
@@ -7662,6 +8274,9 @@ random_sample_linux <- function(fasta,
 #'   is used and not available in the system PATH.
 #' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
 #' @param sep Character string: field separator used in input and output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Updated input data frame with adjusted file names (if needed) and updated read counts.
 #' @examples
 #' \dontrun{
@@ -7691,7 +8306,16 @@ subsample_fasta <- function(fastainfo,
                        num_threads=0,
                        compress=FALSE, 
                        sep=",",
-                       quiet=TRUE){
+                       quiet=TRUE,
+                       log_file=NULL){
+  
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -7700,9 +8324,6 @@ subsample_fasta <- function(fastainfo,
   }else{
     fastainfo_df <- fastainfo
   }
-  
-  fasta_dir = check_dir(fasta_dir)
-  outdir = check_dir(outdir)
   
   unique_fasta <- unique(fastainfo_df$fasta)
   
@@ -7723,7 +8344,7 @@ subsample_fasta <- function(fastainfo,
     
     ##### Change algo if windows and use_vsearch=FALSE to avoid stopping the run 
     if(!is_linux() && use_vsearch){
-      warning("The fastx_subsample commande in VSEARCH is not available for Windows\n
+      warning("WARNING: The fastx_subsample commande in VSEARCH is not available for Windows\n
               A slower, but cross-platform function (random_sample_r)\n
               will be used for random sampling sequences (random_sample_r).")
       use_vsearch <- FALSE
@@ -7752,6 +8373,8 @@ subsample_fasta <- function(fastainfo,
     fastainfo_df$read_count[which(fastainfo_df$fasta == outfile)] <- seqn
   } # end for
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
+  
+  write_log(log, file=log_file)
   return(fastainfo_df)
 }
 
@@ -7772,7 +8395,9 @@ subsample_fasta <- function(fastainfo,
 #' @param pattern A regular expression used to select filenames within the input
 #'   directories.
 #' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
-#'
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Invisibly data frame of files and directories 
 #'
 #' @examples
@@ -7785,9 +8410,18 @@ subsample_fasta <- function(fastainfo,
 #' }
 #'
 #' @export
-concatenate_files <- function(dirs, outdir, pattern = "\\.", quiet=TRUE) {
+concatenate_files <- function(dirs, 
+                              outdir, 
+                              pattern = "\\.", 
+                              quiet=TRUE,
+                              log_file=NULL) {
   
   outdir = check_dir(outdir, is_file=FALSE)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   df <- data.frame(
     file = character(),
@@ -7844,6 +8478,8 @@ concatenate_files <- function(dirs, outdir, pattern = "\\.", quiet=TRUE) {
     }
     close(con_out)
   }
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   invisible(df)
 }
 
@@ -7922,6 +8558,7 @@ demultiplex_fastq_pairs_strand_plus <- function(fastqinfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+
   fastq_dir = check_dir(fastq_dir)
   outdir = check_dir(outdir)
   
@@ -8228,7 +8865,9 @@ write_cutadapt_adapter_fastq <- function(
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame similar to the input `fastqinfo` file, 
 #'   but contains the output fastq file names and read counts.
 #' 
@@ -8258,7 +8897,8 @@ demultiplex_fastq_pairs <- function(
   cutadapt_error_rate=0.1,
   sep=",",
   compress=FALSE,
-  quiet=T
+  quiet=T,
+  log_file=NULL
   ){
   
   fastq_dir <- check_dir(fastq_dir)
@@ -8266,6 +8906,11 @@ demultiplex_fastq_pairs <- function(
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(fastqinfo)){
     # read known occurrences
@@ -8388,6 +9033,8 @@ demultiplex_fastq_pairs <- function(
   
   write.table(fastqinfo_demultiplexed, file = file.path(outdir, "fastqinfo.csv"),  row.names = F, sep=sep)
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(fastqinfo_demultiplexed)
 }
 

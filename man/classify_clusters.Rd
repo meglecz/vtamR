@@ -10,7 +10,8 @@ classify_clusters(
   outfile = "",
   sep = ",",
   quiet = TRUE,
-  taxlevels = c("domain", "phylum", "class", "order", "family", "genus", "species")
+  taxlevels = c("domain", "phylum", "class", "order", "family", "genus", "species"),
+  log_file = NULL
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ resolution is unavailable.}
 
 \item{taxlevels}{Character vector specifying the taxonomic levels to evaluate
 (e.g. \code{"species"}, \code{"genus"}, \code{"family"}).}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame with columns:

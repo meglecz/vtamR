@@ -19,7 +19,8 @@ trim_primers(
   cutadapt_minimum_length = 50,
   cutadapt_maximum_length = 500,
   sep = ",",
-  quiet = T
+  quiet = T,
+  log_file = NULL
 )
 }
 \arguments{
@@ -75,6 +76,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
 only display warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame. The updated \code{fastainfo} data frame with modified

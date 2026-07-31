@@ -25,7 +25,8 @@ merge_fastq_pairs(
   fastq_allowmergestagger = FALSE,
   sep = ",",
   compress = FALSE,
-  quiet = T
+  quiet = T,
+  log_file = NULL
 )
 }
 \arguments{
@@ -100,6 +101,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
 only display warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame corresponding to the generated \code{fastainfo.csv} file.

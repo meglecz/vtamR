@@ -16,7 +16,8 @@ filter_pcr_error(
   min_read_count = 10,
   sample_prop = 0.8,
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -61,6 +62,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
 warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame with PCR error ASVs removed.

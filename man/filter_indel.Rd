@@ -4,7 +4,7 @@
 \alias{filter_indel}
 \title{Filter ASVs by frame consistency (indel detection)}
 \usage{
-filter_indel(read_count, outfile = NULL, sep = ",")
+filter_indel(read_count, outfile = NULL, sep = ",", log_file = NULL)
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -15,6 +15,9 @@ data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame.

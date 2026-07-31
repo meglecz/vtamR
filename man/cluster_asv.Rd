@@ -16,7 +16,8 @@ cluster_asv(
   identity = 0.97,
   outfile = "",
   sep = ",",
-  quiet = T
+  quiet = T,
+  log_file = NULL
 )
 }
 \arguments{
@@ -48,6 +49,9 @@ VSEARCH \code{cluster_size} clustering.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame. If \code{group = TRUE}, ASVs are merged by cluster;

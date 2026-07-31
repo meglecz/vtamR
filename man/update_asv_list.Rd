@@ -4,7 +4,14 @@
 \alias{update_asv_list}
 \title{Update ASV list}
 \usage{
-update_asv_list(asv_list1, asv_list2, outfile, sep = ",", return_df = FALSE)
+update_asv_list(
+  asv_list1,
+  asv_list2,
+  outfile,
+  sep = ",",
+  return_df = FALSE,
+  log_file = NULL
+)
 }
 \arguments{
 \item{asv_list1}{Data frame or path to a CSV file with columns \code{asv_id}, \code{asv};
@@ -18,6 +25,9 @@ same format as \code{asv_list2}.}
 output CSV files.}
 
 \item{return_df}{Logical. If \code{TRUE}, the function returns a data frame.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame or CSV file containing all unique \code{asv_id}–\code{asv} pairs

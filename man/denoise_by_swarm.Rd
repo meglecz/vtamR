@@ -16,7 +16,8 @@ denoise_by_swarm(
   fastidious = TRUE,
   outfile = "",
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ pass to reduce the number of small clusters.}
 \item{sep}{Field separator character for input and output CSV files.}
 
 \item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings/errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame with the same structure as the input, where ASVs

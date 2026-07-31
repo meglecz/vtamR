@@ -20,7 +20,8 @@ suggest_variant_readcount_cutoffs(
   increment_variant_cutoff = 0.001,
   by_replicate = FALSE,
   min_replicate_number = 1,
-  quiet = T
+  quiet = T,
+  log_file = NULL
 )
 }
 \arguments{
@@ -68,6 +69,9 @@ step size between tested variant cutoff values.}
 
 \item{quiet}{logical; if TRUE, suppress informational messages and show only
 warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 
 \item{`min_replicate_number()`}{Positive integer specifying the minimum number of
 replicates for \code{filter_min_replicate()}.}

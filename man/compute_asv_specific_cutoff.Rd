@@ -11,7 +11,8 @@ compute_asv_specific_cutoff(
   habitat_proportion = 0.5,
   by_replicate = FALSE,
   outfile = NULL,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ a false positive in all samples of that habitat.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame with columns: \code{asv_id}, \code{replicate} (if \code{by_replicate = TRUE}), \code{cutoff}.

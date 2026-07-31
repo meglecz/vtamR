@@ -4,7 +4,13 @@
 \alias{concatenate_files}
 \title{Concatenate contents of files with identical names}
 \usage{
-concatenate_files(dirs, outdir, pattern = "\\\\.", quiet = TRUE)
+concatenate_files(
+  dirs,
+  outdir,
+  pattern = "\\\\.",
+  quiet = TRUE,
+  log_file = NULL
+)
 }
 \arguments{
 \item{dirs}{A character vector of input directories to search for files.}
@@ -16,6 +22,9 @@ files will be written.}
 directories.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Invisibly data frame of files and directories

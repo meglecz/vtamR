@@ -4,7 +4,13 @@
 \alias{filter_min_replicate}
 \title{Filter occurrences by minimum number of replicates per sample}
 \usage{
-filter_min_replicate(read_count, cutoff = 2, outfile = NULL, sep = ",")
+filter_min_replicate(
+  read_count,
+  cutoff = 2,
+  outfile = NULL,
+  sep = ",",
+  log_file = NULL
+)
 }
 \arguments{
 \item{read_count}{Data frame or path to a CSV file with the following columns:
@@ -18,6 +24,9 @@ data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame.

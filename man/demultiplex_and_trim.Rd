@@ -21,7 +21,8 @@ demultiplex_and_trim(
   cutadapt_maximum_length = 500,
   sep = ",",
   compress = FALSE,
-  quiet = T
+  quiet = T,
+  log_file = NULL
 )
 }
 \arguments{
@@ -83,6 +84,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and
 only display warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame corresponding to the output \code{sampleinfo.csv} file

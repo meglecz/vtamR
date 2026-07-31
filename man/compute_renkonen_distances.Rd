@@ -4,10 +4,15 @@
 \alias{compute_renkonen_distances}
 \title{Compute Renkonen distances}
 \usage{
-compute_renkonen_distances(read_count_df, compare_all = FALSE, outfile = NULL)
+compute_renkonen_distances(
+  read_count,
+  compare_all = FALSE,
+  outfile = NULL,
+  log_file = NULL
+)
 }
 \arguments{
-\item{read_count_df}{Data frame with \code{asv}, \code{sample}, \code{replicate}, and
+\item{read_count}{Data frame or csv file with \code{asv}, \code{sample}, \code{replicate}, and
 \code{read_count} columns.}
 
 \item{compare_all}{Logical. If \code{TRUE}, compute Renkonen distances for all
@@ -16,6 +21,9 @@ replicates of the same sample.}
 
 \item{outfile}{Character string specifying the CSV file to write the output
 data frame. If NULL, no file is written.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame with columns: \code{sample1}, \code{sample2}, \code{replicate1},

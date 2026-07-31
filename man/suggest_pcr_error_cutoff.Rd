@@ -13,7 +13,8 @@ suggest_pcr_error_cutoff(
   outfile = NULL,
   max_mismatch = 1,
   min_read_count = 10,
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ occurrences below this value are ignored.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only
 show warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Data frame with the following columns: \code{sample}, \code{expected_read_count},
