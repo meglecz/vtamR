@@ -151,7 +151,8 @@ and run the tutorial examples exactly as written.
 
 ```{r set_path, eval=TRUE}
 # All executables are in the PATH
-cutadapt_path <- "cutadapt"
+#cutadapt_path <- "cutadapt"
+cutadapt_path <- "~/miniconda3/envs/vtam_benchmark/bin/cutadapt"
 vsearch_path <- "vsearch"
 blast_path <- "blastn"
 swarm_path <- "swarm"
@@ -1562,6 +1563,24 @@ asv_table_df <- write_asv_table(
   add_expected_asv=TRUE, 
   mock_composition=mock_composition,
   log_file = log_file)
+```
+
+
+## Record R and package versions
+
+The log file records all functions called during the analysis and the parameters
+used for each function. However, one important piece of information is still
+missing: the software environment in which the analysis was performed.
+
+To ensure reproducibility, it is important to record the R version and the
+versions of all packages used. The information can be saved as a CSV file,
+which can be archived together with your results and will be useful when
+sharing or publishing your work.
+
+```{r versions}
+package_versions <- file.path(outdir, "R_package_versions.csv")
+
+collect_package_info(package_versions)
 ```
 
 ## Multiple Datasets

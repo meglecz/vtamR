@@ -1,9 +1,24 @@
 # Ideas for vtamR
 
-## make fulction to
-	- simplfy log (one line per function)
-	- extract all path used => check version of the TPP (if both default and specified pathn ude the path)
-	- add R, and R packades versions
+
+## MIEM programmes and versions
+ - take the log file completed by versions
+ - exrtact function used for
+	-demultiplexing
+	-primer and trag trimming
+	-quality filtering
+	-chimera
+	...
+	
+## MIEM results
+ - extact info from output files (use log file)
+ 
+## wrapper
+	use a file like the log_file, that contains also the name of the output
+	write a script that corresponds to the file and excute it if specified
+	
+## make a phyloseq object
+ 
 
 ## make full R script for from fastq till filtered ASV, Try to find a good place 
 so people can easily access (vignettes? the idea is to provide Rmd or R as a template)
@@ -785,9 +800,10 @@ and more responsability.
 
 - tuto updated
 
+### 2026/08/01 commit collect_package_info
 
-
-
+- collect_log is updated, it includes the version of the programs, where the argument name ends with "_path"
+- collect_package_info to get all loaded / attached packages
 
 
 
