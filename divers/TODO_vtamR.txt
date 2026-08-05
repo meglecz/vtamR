@@ -800,11 +800,15 @@ and more responsability.
 
 - tuto updated
 
-### 2026/08/01 commit collect_package_info
+### 2026/08/01 commit collect_package_info install bombyx
 
 - collect_log is updated, it includes the version of the programs, where the argument name ends with "_path"
 - collect_package_info to get all loaded / attached packages
 
+### 2026/08/05 commit miem_bioinformatics
+
+miem_bioinformatics function to fill as much as possible the bioinformatics part
+of the MIEM checklist. The input it a log file and the R_version file
 
 
 

@@ -44,6 +44,7 @@
 "Merge",,"user","Preprocess",,"MergeFastqPairs","merge_fastq_pairs"," Merges forward/reverse FASTQ reads into FASTA; can compress output; generates `fastainfo.csv`. "
 "RandomSeq",,"user","Preprocess",,"SubsampleFasta","subsample_fasta"," Randomly subsamples sequences from FASTA files to standardize read counts across libraries. "
 "TrimPrimer",,"user","Preprocess",,"TrimPrimers","trim_primers"," Trims primers from FASTA files "
+,,,"Preprocess",,,"demultiplex_fastq_pairs"," Demultiplex paired FASTQ files and trim primers and tags. The output consists of paired FASTQ files."
 "TaxAssignLTG",,"user","Taxonomic assignment",,"AssignTaxonomyLTG","assign_taxonomy_ltg"," Assigns taxonomy to ASVs using BLAST-based Lowest Taxonomic Group (LTG) method. "
 "TaxAssignRDP",,"user","Taxonomic assignment",,"AssignTaxonomyRDP","assign_taxonomy_rdp"," Assigns taxonomy to 16S sequences using the RDP classifier. "
 "add_ids",,"intern",,,"AddIds","add_ids","Add ids to ASVs"

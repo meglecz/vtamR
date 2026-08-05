@@ -50,7 +50,7 @@ knitr::opts_chunk$set(
   warning = TRUE,
   echo=TRUE,
   eval=TRUE,
-  cache=TRUE,
+  cache=FALSE,
   fig.width = 6,
   out.width = '100%',
   comment = "#>"
@@ -566,9 +566,23 @@ asv_table_df <- write_asv_table(
 ```
 
 
-## Record R and package versions
+## Document your workflow
+
+### Record R and package versions 
 ```{r versions}
 package_versions <- file.path(outdir, "R_package_versions.csv")
-
 collect_package_info(package_versions)
 ```
+
+### MIEM 
+
+**MIEM bioinformatics**
+```{r miem_bioinformatics}
+miem_bioinfo_csv <- file.path(outdir, "MIEM_bioinfo.csv")
+tmp <- miem_bioinformatics(
+  log = log_file,
+  r_versions = package_versions,
+  outfile = miem_bioinfo_csv
+  )
+```
+

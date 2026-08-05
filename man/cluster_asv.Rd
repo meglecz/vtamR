@@ -12,7 +12,7 @@ cluster_asv(
   path = "",
   num_threads = 0,
   swarm_d = 1,
-  fastidious = T,
+  fastidious = FALSE,
   identity = 0.97,
   outfile = "",
   sep = ",",

@@ -1565,8 +1565,9 @@ asv_table_df <- write_asv_table(
   log_file = log_file)
 ```
 
+## Document your workflow
 
-## Record R and package versions
+### Record R and package versions
 
 The log file records all functions called during the analysis and the parameters
 used for each function. However, one important piece of information is still
@@ -1579,8 +1580,40 @@ sharing or publishing your work.
 
 ```{r versions}
 package_versions <- file.path(outdir, "R_package_versions.csv")
-
 collect_package_info(package_versions)
+```
+
+### MIEM
+
+Transparent and reproducible reporting is an essential part of environmental
+metabarcoding studies. The 
+**Minimum Information for reporting of environmental metabarcoding data (MIEM)** 
+guidelines ([Klymus et al. 2023](https://mbmg.pensoft.net/article/128689/))
+provide recommendations for documenting the methods, data processing steps, and
+results required for a complete and reproducible study.
+
+The **vtamR** package helps you compile most of the information required by the
+MIEM guidelines directly from your analysis workflow. The `miem_bioinformatics()`
+function collects information about the bioinformatics pipeline, including the
+different analysis steps, software used, versions, and parameters, based on your
+`log_file` and `package_versions` files.
+
+The `miem_results()` function extracts key summary information from your results,
+such as the number of reads, ASVs, samples, and other relevant metrics.
+
+The generated MIEM tables are designed to be almost ready for publication.
+Before submission, you should carefully review the output files and complete or
+adjust the sections that cannot be automatically retrieved by **vtamR**, such as
+study-specific descriptions or methodological details that require expert input.
+
+**MIEM bioinformatics**
+```{r miem_bioinformatics}
+miem_bioinfo_csv <- file.path(outdir, "MIEM_bioinfo.csv")
+miem_bioinformatics(
+  log = log_file,
+  r_versions = package_versions,
+  outfile = miem_bioinfo_csv
+  )
 ```
 
 ## Multiple Datasets

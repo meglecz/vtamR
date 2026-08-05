@@ -100,24 +100,27 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
   # Taxonomic assignment parameters (and thresholds)
   
 # LTG --------------------------------------------------
+  
   tmp <- log_df %>%
-    filter(function_name == "assign_taxonomy_ltg")
+    filter(function_name == "assign_taxonomy_ltg") %>%
+    select(function_name, argument_name, value) %>%
+    distinct()
+    
   if(nrow(tmp) > 0){
-    db <- tmp %>%
-      filter(argument_name == "blast_db") 
-    db_local <- basename(db[1, "value"])
     
-    tax <- tmp %>%
-      filter(argument_name == "taxonomy") 
-    tax_local <-  basename(tax[1, "value"])
+    if(nrow(tmp) != length(unique(tmp$argument_name))){
+      tmp <- tmp %>%
+        group_by(argument_name) %>%
+        summarize(function_name = last(function_name), value = last(value))
+      msg <- "WARNING: The assign_taxonomy_ltg function was run more than once. Only the last one will be reported in the MIEM file."
+      warning(msg)
+    }
     
-    blast <- tmp %>%
-      filter(argument_name == "blast_path") 
-    blast_version <- blast[1, "version"]
+    rownames(tmp) <- tmp$argument_name
     
-    ltg_par <- tmp %>%
-      filter(argument_name == "ltg_params") 
-    ltg_pars <- ltg_par[1, "value"]
+    db <- basename(tmp["blast_db", "value"])
+    tax <- basename(tmp["taxonomy", "value"])
+    ltg_par <- tmp["ltg_params", "value"]
     
     # Taxonomic assignment method
     msg <- paste0("The LTG method implemented in vtamR R package (v", vtamR_version, ") was used to assign sequences to taxa [Meglécz, 2023](https://link.springer.com/article/10.1007/s42977-024-00201-x).
@@ -125,7 +128,7 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
     miem["Taxonomic assignment method", "Information"] <- msg
     
     # Taxonomic assignment parameters (and thresholds)
-    if(ltg_pars == "NULL"){
+    if(ltg_par == "NULL"){
       msg <- paste0("Default values of the vtamR package (v", vtamR_version, ") assign_taxonomy_ltg function were used.")
     }else{
       msg <- paste0("TO BE COMPLETED: Report the custom ltg_params used")
@@ -133,7 +136,7 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
     miem["Taxonomic assignment parameters (and thresholds)", "Information"] <- msg
     
     # Database creation: Source of sequences and steps to identify locus of interest
-    msg <- paste0("The ", db_local, " database was used with the ", tax_local, " taxonomy file.  
+    msg <- paste0("The ", db, " database was used with the ", tax, " taxonomy file.  
     TO BE COMPLETED!!! If you have used the COInr database: 
     COInr includes sequences of COI from ncbi_nt and BOLD databases [Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)")
     miem["Database creation: Source of sequences and steps to identify locus of interest", "Information"] <- msg
@@ -141,7 +144,7 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
     # Database creation: Link to database or repository
     msg <- paste0("TO BE COMPLETED!!! 
     If you have used the COInr database, refer to https://zenodo.org/records/20020232 (UPDATE to the version you have used) 
-    downloaded by the download_osf function of vtamR")
+    downloaded by the download_osf function of vtamR (v", vtamR_version,").")
     miem["Database creation: Link to database or repository", "Information"] <- msg
     
     # Database creation: Method for sequence curation
@@ -152,34 +155,41 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
   }
     
 # RDP --------------------------------------------------
-    tmp <- log_df %>%
-      filter(function_name == "assign_taxonomy_rdp")
+  tmp <- log_df %>%
+    filter(function_name == "assign_taxonomy_rdp") %>%
+    select(function_name, argument_name, value) %>%
+    distinct()
+  
     if(nrow(tmp) > 0){
-      db <- tmp %>%
-        filter(argument_name == "dir") 
-      db_local <- db[1, "value"]
       
-      confidence <- tmp %>%
-        filter(argument_name == "confidence") 
-      confidence_local <-  confidence[1, "value"]
+      if(nrow(tmp) != length(unique(tmp$argument_name))){
+        tmp <- tmp %>%
+          group_by(argument_name) %>%
+          summarize(function_name = last(function_name), value = last(value))
+        msg <- "WARNING: The assign_taxonomy_rdp function was run more than once. Only the last one will be reported in the MIEM file."
+        warning(msg)
+      }
       
-      chloroplast <- tmp %>%
-        filter(argument_name == "rm_chloroplast") 
-      chloroplast_local <- chloroplast[1, "value"]
+      rownames(tmp) <- tmp$argument_name
+      
+      db <- tmp["dir", "value"]
+      confidence <- tmp["confidence", "value"]
+      chloroplast <- tmp["rm_chloroplast", "value"]
+    
       
       # Taxonomic assignment method
       msg <- paste0("The RDP classifier implemented in rRDP package (v", rRDP_version, ";https://bioconductor.org/packages/3.21/bioc/html/rRDP.html) was used to assign sequences to taxa.")
       miem["Taxonomic assignment method", "Information"] <- msg
       
       # Taxonomic assignment parameters (and thresholds)
-      msg <- paste0("Default parameters of the rRDP package were used, accepting only assignement with greater or equal then ", confidence_local, " bootstrap values.")
-      if(chloroplast_local){
+      msg <- paste0("Default parameters of the rRDP package were used, accepting only assignement with greater or equal then ", confidence, " bootstrap values.")
+      if(chloroplast){
         msg <-paste0(msg, "Taxonomic assignments are set to NA when the class was Chloroplast.")
       }
       miem["Taxonomic assignment parameters (and thresholds)", "Information"] <- msg
       
       # Database creation: Source of sequences and steps to identify locus of interest
-      if(db_local == "NULL"){
+      if(db == "NULL"){
         msg <- paste0("The rRDPData (v",  rRDPData_version, ";https://bioconductor.org/packages/3.21/data/experiment/html/rRDPData.html) package was used as a database.")
       }else{
         msg <- paste0("TO BE COMPLETED!!!")
@@ -187,7 +197,7 @@ miem_bioinformatics <- function(log, r_versions, outfile = "", sep = ","){
       miem["Database creation: Source of sequences and steps to identify locus of interest", "Information"] <- msg
       
       # Database creation: Link to database or repository
-      if(db_local == "NULL"){
+      if(db == "NULL"){
         msg <- paste0("The rRDPData v",  rRDPData_version, "; https://bioconductor.org/packages/3.21/data/experiment/html/rRDPData.html)")
       }else{
         msg <- paste0("TO BE COMPLETED!!!")

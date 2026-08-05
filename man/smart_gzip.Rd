@@ -60,3 +60,4 @@ smart_gzip("data.fastq", compress = TRUE)
 }
 
 }
+\keyword{internal}
