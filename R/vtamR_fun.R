@@ -768,7 +768,7 @@ trim_primers <- function(fastainfo,
 #' 
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- demultiplex_and_trim(
+#' fastainfo_df <- demultiplex_and_trim_fasta(
 #'   fastainfo = fastainfo_df,
 #'   fasta_dir = "data/fasta",
 #'   outdir = "data/sorted",
@@ -783,7 +783,7 @@ trim_primers <- function(fastainfo,
 #' 
 #' @export
 #' 
-demultiplex_and_trim <- function(fastainfo, 
+demultiplex_and_trim_fasta <- function(fastainfo, 
                       fasta_dir, 
                       outdir, 
                       cutadapt_path="cutadapt",
@@ -876,7 +876,7 @@ demultiplex_and_trim <- function(fastainfo,
     rc_dir <- paste('rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- file.path(tempdir(), rc_dir)
     rc_dir = check_dir(rc_dir)
-    # run demultiplex_and_trim on for reverse strand
+    # run demultiplex_and_trim_fasta on for reverse strand
     sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df_tmp, 
                                           fasta_dir=fasta_dir, 
                                           outdir=rc_dir, 
@@ -998,7 +998,7 @@ return(df)
 
 #' Demultiplex and trim tags and primers (no reverse strand check)
 #' 
-#' Same as `demultiplex_and_trim`, but without checking the reverse-complement 
+#' Same as `demultiplex_and_trim_fasta`, but without checking the reverse-complement 
 #' of the sequences. Demultiplex each input FASTA file using tag combinations 
 #' located at the extremities of merged reads, then trim primer sequences.
 #'
@@ -1212,7 +1212,7 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
 #' Make a FASTA file with adapters
 #' 
 #' Create a FASTA file containing tag combinations formatted for `cutadapt`. 
-#' This file is used by `demultiplex_and_trim` to demultiplex input FASTA files.
+#' This file is used by `demultiplex_and_trim_fasta` to demultiplex input FASTA files.
 #' 
 #' @param fastainfo_df Data frame with columns: `tag_fw`, `tag_rv`, `fasta`.
 #' @param fasta_file Character string specifying the FASTA file to be demultiplexed 
@@ -7693,8 +7693,8 @@ random_sample_linux <- function(fasta,
 #' listed in the `fastainfo` data frame.
 #' This function is useful for standardizing sequencing depth across libraries.
 #'
-#' It can be applied before or after demultiplexing (`demultiplex_and_trim`),
-#' but is recommended after `merge_fastq_pairs` and before `demultiplex_and_trim`.
+#' It can be applied before or after demultiplexing (`demultiplex_and_trim_fasta`),
+#' but is recommended after `merge_fastq_pairs` and before `demultiplex_and_trim_fasta`.
 #'
 #' Two implementations are available:
 #'   - VSEARCH-based (`use_vsearch = TRUE`): fast, but only available on Linux-like systems.
@@ -7933,7 +7933,7 @@ concatenate_files <- function(dirs,
 
 #' Demultiplex fastq file pairs and trim tags and primers (reverse strand not checked)
 #' 
-#' Same as `demultiplex_fastq_pairs`, but without checking the reverse-complement 
+#' Same as `demultiplex_and_trim_fastq`, but without checking the reverse-complement 
 #' of the sequences.
 #'  
 #' FASTQ file pairs are first demultiplexed by requiring a perfect match between
@@ -8321,7 +8321,7 @@ write_cutadapt_adapter_fastq <- function(
 #' 
 #' @examples
 #' \dontrun{
-#' fastqinfo_df <- demultiplex_fastq_pairs(
+#' fastqinfo_df <- demultiplex_and_trim_fastq(
 #'   fastqinfo = fastqinfo_df,
 #'   fastq_dir = "data/fastq",
 #'   outdir = "data/fastq_demultiplexed",
@@ -8333,7 +8333,7 @@ write_cutadapt_adapter_fastq <- function(
 #' 
 #' @export
 
-demultiplex_fastq_pairs <- function(
+demultiplex_and_trim_fastq <- function(
   fastqinfo, 
   fastq_dir, 
   outdir, 

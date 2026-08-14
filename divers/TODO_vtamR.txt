@@ -1,17 +1,24 @@
 # Ideas for vtamR
 
+## path
+define by (look for path in this order)
+- package variable
+- direct setting by xxx_path argument
+- use prg in path
 
-## MIEM programmes and versions
- - take the log file completed by versions
- - exrtact function used for
-	-demultiplexing
-	-primer and trag trimming
-	-quality filtering
-	-chimera
-	...
-	
-## MIEM results
- - extact info from output files (use log file)
+## simplify benchmarking (is is possile since now filter gives the same results for vtam and vtamR)
+- filter
+- taxassign (default)
+- pool
+- optimize on filtered data => test simply if same results, do  ot try to alternate fiter and optimze
+
+# rethink the use of log, since it became central for getting miem info
+- it can be obligatory and if no filname provided, in the current dir
+ (possibility of having all the output from all the tests) OR package wide definition and deactivate actively ???
+ 
+# function to make a test data set => sample a proportion, or number of the reads from each fasta os fastq files
+
+
  
 ## wrapper
 	use a file like the log_file, that contains also the name of the output
@@ -809,6 +816,21 @@ and more responsability.
 
 miem_bioinformatics function to fill as much as possible the bioinformatics part
 of the MIEM checklist. The input it a log file and the R_version file
+
+
+## 2026/08/04 
+
+rename functions
+demultiplex_and_trim => demultiplex_and_trim_fasta 
+demultiplex_fastq_pairs => demultiplex_and_trim_fastq
+
+MIEM results
+ - extact info from output files (use log file)
+ 
+ ## 2026/08/14
+ 
+miem_results
+ 
 
 
 

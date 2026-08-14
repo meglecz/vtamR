@@ -59,7 +59,7 @@ Data frame similar to the input \code{fastqinfo} file,
 but contains the output fastq file names and read counts.
 }
 \description{
-Same as \code{demultiplex_fastq_pairs}, but without checking the reverse-complement
+Same as \code{demultiplex_and_trim_fastq}, but without checking the reverse-complement
 of the sequences.
 
 FASTQ file pairs are first demultiplexed by requiring a perfect match between

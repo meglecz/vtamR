@@ -352,7 +352,7 @@ So, we’ll need to:
 - **Merge and quality-check** the read pairs using `merge_fastq_pairs`.
 - **Subsample** each library to ensure all replicates have 
 similar coverage with `subsample_fasta`.
-- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim`.
+- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim_fasta`.
 
 See the [From fastq to data frame](from-fastq-to-df.html) on
 how to deal with other experimental designs.
@@ -441,11 +441,11 @@ reads than the other files — this is expected and not a cause for concern.
 
 ### Demultiplex and Trim {#demultiplex}
 
-The `demultiplex_and_trim` function is used to both **[demultiplex](#glossary)** your 
+The `demultiplex_and_trim_fasta` function is used to both **[demultiplex](#glossary)** your 
 FASTA files (i.e. separate reads based on their tag combinations) 
 and **[trim](#glossary)** [tag](#glossary) and primer sequences from those reads.
 
-You can check the help page (`?demultiplex_and_trim`) to choose the 
+You can check the help page (`?demultiplex_and_trim_fasta`) to choose the 
 right settings for your data.
 
 * If `check_reverse = TRUE`, the function will also look for matches 
@@ -457,7 +457,7 @@ used as input for the `dereplicate` step.
 ```{r demultiplex}
 demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
 
-sampleinfo_df <- demultiplex_and_trim(
+sampleinfo_df <- demultiplex_and_trim_fasta(
   fastainfo=fastainfo_df,  # input df (output of subsample_fasta)
   fasta_dir=randomseq_dir, # input directory with fasta files
   outdir=demultiplexed_dir,  # output directory
@@ -505,7 +505,7 @@ outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo=sampleinfo_df, # input df (output of demultiplex_and_trim)
+  sampleinfo=sampleinfo_df, # input df (output of demultiplex_and_trim_fasta)
   dir=demultiplexed_dir, # directory with input fasta files
   outfile=outfile, # write the output data frame to this file
   input_asv_list=asv_list, 
@@ -855,7 +855,7 @@ colors to represent **sample types** (real, mock, or negative).
 but any data frame with these columns will work.
 * If `sampleinfo_df` is not in your environment, you can use the 
 **sampleinfo.csv** instead of the data frame. This 
-files was produced by `demultiplex_and_trim` in this pipeline and found in the **vtamR_demo_out/mfzr_plate1/3_demultiplexed** folder.
+files was produced by `demultiplex_and_trim_fasta` in this pipeline and found in the **vtamR_demo_out/mfzr_plate1/3_demultiplexed** folder.
 * This is a **very small test data set**, so your own data will likely produce 
 a **different-looking graph**.
 
@@ -1592,14 +1592,18 @@ guidelines ([Klymus et al. 2023](https://mbmg.pensoft.net/article/128689/))
 provide recommendations for documenting the methods, data processing steps, and
 results required for a complete and reproducible study.
 
-The **vtamR** package helps you compile most of the information required by the
+The **vtamR** package helps you compile most of the information of the 
+**Methods - Bioinformatics and Reference Database** and  
+**Results - Sequencing Summary Statistics** sections required by the
 MIEM guidelines directly from your analysis workflow. The `miem_bioinformatics()`
 function collects information about the bioinformatics pipeline, including the
 different analysis steps, software used, versions, and parameters, based on your
-`log_file` and `package_versions` files.
+`log_file` and `package_versions` files. The output can be used to easily fill the 
+**Methods - Bioinformatics and Reference Database** section on the MIEM checlist.
 
 The `miem_results()` function extracts key summary information from your results,
-such as the number of reads, ASVs, samples, and other relevant metrics.
+such as the number of reads, ASVs, samples, and other relevant metrics and the 
+output can be used to fill the **Results - Sequencing Summary Statistics** section.
 
 The generated MIEM tables are designed to be almost ready for publication.
 Before submission, you should carefully review the output files and complete or
@@ -1608,11 +1612,72 @@ study-specific descriptions or methodological details that require expert input.
 
 **MIEM bioinformatics**
 ```{r miem_bioinformatics}
-miem_bioinfo_csv <- file.path(outdir, "MIEM_bioinfo.csv")
+miem_dir <- file.path(outdir, "MIEM")
 miem_bioinformatics(
   log = log_file,
   r_versions = package_versions,
-  outfile = miem_bioinfo_csv
+  outfile =  file.path(miem_dir, "MIEM_bioinfo.csv")
+  )
+```
+
+**MIEM Sequencing Summary**
+
+`info_files`: A vector containing the filenames of the information files generated 
+during the different preprocessing steps of vtamR. 
+These can be fastqinfo, fastainfo, or sampleinfo files.
+
+The files are used to:
+
+- calculate the total number of reads remaining after the different preprocessing steps;
+- retrieve sample_type information from the final information file.
+
+The last file in info_files is therefore particularly important, as it is used to determine the sample information.
+
+`fastq_dir`: The directory containing the input FASTQ files. This parameter tells 
+the function where to find the FASTQ files associated with the analysis.
+
+`read_count_files`: A vector containing the read-count files generated during the 
+vtamR pipeline. These files are used to summarize the number of reads retained at 
+different filtering steps.
+
+You can provide a read-count file from any filtering step. 
+However, the two most informative files are usually:
+
+- The first file, typically produced by dereplicate. It provides the number of reads and 
+ASVs remaining after the main preprocessing steps, such as merging, 
+demultiplexing, and quality filtering.
+- The last file, corresponding to the final filtering step. 
+It provides the number of reads and ASVs remaining after `vtamR` filtering, 
+such as chimera removal and filtering of low-frequency or frequency-noise sequences.
+
+The last file in read_count_files is also used to:
+
+- count the number of ASVs or mOTUs assigned to each taxonomic rank;
+- identify false-positive and false-negative taxonomic assignments.
+
+
+```{r miem_results}
+info_files = c(
+  fastqinfo,
+  "vtamR_demo_out/mfzr_plate1/1_merged/fastainfo.csv",
+  "vtamR_demo_out/mfzr_plate1/2_random_seq/fastainfo.csv",
+  "vtamR_demo_out/mfzr_plate1/3_demultiplexed/sampleinfo.csv"
+)
+read_count_files = c(
+  "vtamR_demo_out/mfzr_plate1/4_filter/1_before_filter.csv",
+  "vtamR_demo_out/mfzr_plate1/4_filter/2_swarm_denoise.csv",
+  "vtamR_demo_out/mfzr_plate1/4_filter/14_filter_min_replicate.csv",
+  "vtamR_demo_out/mfzr_plate1/4_filter/15_pool_replicates.csv",
+  "vtamR_demo_out/mfzr_plate1/5_cluster/16_mOTU_vsearch.csv"
+)
+taxa = "vtamR_demo_out/mfzr_plate1/4_filter/assign_taxonomy_ltg.csv"
+miem_results(
+  info_files = info_files, 
+  fastq_dir = fastq_dir, 
+  read_count_files = read_count_files, 
+  taxa = taxa, 
+  outdir = miem_dir, 
+  mock_composition = mock_composition,
   )
 ```
 
@@ -1880,7 +1945,7 @@ Saving outputs as CSV is a good practice for long workflows. It allows you to:
 ## To Compress or Not to Compress
 
 During the first steps of the workflow 
-(`merge_fastq_pairs`, `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`), 
+(`merge_fastq_pairs`, `subsample_fasta`, `trim_primers`, `demultiplex_and_trim_fasta`), 
 many intermediate files are generated. Some of these files can be very large, 
 especially before dereplication (`dereplicate`).
 
@@ -1894,7 +1959,7 @@ Remember to delete intermediate files once your analysis is complete.
 See [Files to Keep](#files-to-keep) for guidance on which files to retain.
 
 If storage is limited, you can enable file compression by setting `compress = TRUE` 
-in relevant functions (e.g., `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`). 
+in relevant functions (e.g., `subsample_fasta`, `trim_primers`, `demultiplex_and_trim_fasta`). 
 This produces **gzip-compressed output files**.
 
 ### Compression Methods
@@ -2133,7 +2198,7 @@ Here’s a practical guide on what to keep, delete, or compress:
   * Compress the FASTA files.
   * Keep them to ensure reproducibility in case of re-analysis.
 
-* `demultiplex_and_trim`:
+* `demultiplex_and_trim_fasta`:
 
   * Delete the output FASTA files.
   * Keep `sampleinfo.csv` for read count information after trimming.
@@ -2220,10 +2285,10 @@ suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
 The `subsample_fasta` function randomly selects `n` sequences (without replacement) 
 from each input FASTA file listed in the `fastainfo` data frame.
 
-This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (`demultiplex_and_trim`).
+This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (`demultiplex_and_trim_fasta`).
 
 > **Note:** If your workflow includes `filter_occurrence_variant` or `filter_occurrence_read_count`, which rely on total reads in negative controls, standardizing read numbers across samples is **not recommended**.
-> Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim` to ensure all replicate series have the same number of reads.
+> Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim_fasta` to ensure all replicate series have the same number of reads.
 
 **Available Algorithms**
 
@@ -2323,10 +2388,10 @@ false positives, and false negatives.
 * `read_count_df`: Data frame containing ASV read counts for each sample.
 * `sampleinfo_df`: Must include columns:
   `sample`, `sample_type`, `replicate`, and `habitat`.
-  Any data frame with these columns is acceptable. The easiest is the output of `demultiplex_and_trim`
+  Any data frame with these columns is acceptable. The easiest is the output of `demultiplex_and_trim_fasta`
 
 > **Tip:**
-> If you restarted the analysis after `demultiplex_and_trim` and `sampleinfo_df` 
+> If you restarted the analysis after `demultiplex_and_trim_fasta` and `sampleinfo_df` 
 is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplexed`.
 
 **Notes**
@@ -2689,7 +2754,7 @@ but `.zip` files are not supported.
 
 In most cases, you do not need to use this function during a standard workflow.
 The [fastainfo](#fastainfo) and [sampleinfo](#sampleinfo) files already 
-include read counts after `merge_fastq_pairs` and `demultiplex_and_trim`.
+include read counts after `merge_fastq_pairs` and `demultiplex_and_trim_fasta`.
 
 However, this function can be useful if you want to check the number of 
 reads in your raw input FASTQ files before starting the analysis.
@@ -3105,9 +3170,9 @@ If your amplicon is shorter than the reads, enable staggered merging by setting
 Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:
 
 
-## No or Few Sequences Passing `demultiplex_and_trim`
+## No or Few Sequences Passing `demultiplex_and_trim_fasta`
 
-By default, the `demultiplex_and_trim` function searches for tags and primers 
+By default, the `demultiplex_and_trim_fasta` function searches for tags and primers 
 only at the very ends of the reads (`tag_to_end = TRUE`, `primer_to_end = TRUE`). 
 This setting is both efficient and appropriate for most use cases.
 
@@ -3116,6 +3181,6 @@ a few nucleotides away from the ends of your sequences. In such cases,
 you need to adjust these settings to ensure the function searches for 
 tags and primers in the correct positions.
 
-For more details, refer to the function documentation: `?demultiplex_and_trim`.
+For more details, refer to the function documentation: `?demultiplex_and_trim_fasta`.
 
 

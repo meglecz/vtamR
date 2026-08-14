@@ -1024,3 +1024,762 @@ filter_chimera <- function(read_count,
   }
   return(read_count_df)
 }
+
+
+#' Summarize results for a MIEM checklist
+#' 
+#' Depending on the functions used and their order during the data analysis with vtamR,
+#' the information that can or should be reported in the MIEM file may vary.
+#' This function provides a comprehensive summary of the analysis by using
+#' the information recorded in the log file.
+#'
+#' In particular, the function identifies the preprocessing and filtering
+#' functions used during the analysis and extracts the number of reads and
+#' ASVs present in the output of each step. It also summarizes read counts
+#' by sample type, taxonomic assignments, and control classification
+#' results when the corresponding information is available.
+#'
+#' The resulting files provide users with the information needed to complete
+#' the MIEM checklist. Users can select and report the values that are most
+#' appropriate for their MIEM checklist based on the functions and analyses
+#' performed.
+#'
+#' @param log Character string giving the path to the MIEM log file.
+#' @param outdir Character string giving the directory in which result
+#'   summary files will be written. The directory is created if necessary.
+#' @param sampleinfo Character string giving the path to the sample
+#'   information file containing `sample` and `sample_type` columns. 
+#'   If `NULL`, the function attempts to identify the
+#'   most recently recorded `sampleinfo`, `fastqinfo`, or `fastainfo` file
+#'   from the log, that usually contains this infromation.
+#' @param taxa Character string giving the path to the taxonomic assignment
+#'   file. If `NULL`, the function attempts to identify the taxonomic
+#'   assignment output from the log.
+#' @param asv Character string giving the path to an ASV read-count file.
+#'   If `NULL`, the function attempts to identify the output of the last
+#'   filtering step (excluding `cluster_asv`).
+#' @param motu Character string giving the path to the mOTU file produced
+#'   by `cluster_asv`. This argument is only required when clustering has
+#'   been performed and the mOTU output cannot be identified from the log.
+#' @param sep Character string used to separate fields in the input and
+#'   output files. Defaults to `","`.
+#'
+#' @return The function writes summary files to `outdir`. It does not return a data frame.
+#'
+#' @details
+#' The function performs the following analyses:
+#'
+#' \enumerate{
+#'   \item Counts reads in the raw FASTQ input files when the corresponding
+#'   information is recorded in the log.
+#'   \item Counts reads after preprocessing steps.
+#'   \item Counts reads and ASVs after each filtering step.
+#'   \item Summarizes read counts by sample type for the input and final
+#'     ASV datasets.
+#'   \item Counts ASVs or mOTUs assigned to each major taxonomic rank.
+#'   \item Extracts false-positive and false-negative occurrences from
+#'   control classification results.
+#' }
+#'
+#' When possible, input files are automatically identified from the log.
+#' Explicitly providing `sampleinfo`, `taxa`, `asv`, or `motu` allows the
+#' user to override this automatic detection.
+#'
+#' The following output files are written to `outdir`:
+#'
+#' \itemize{
+#'   \item `Read_ASV_count_by_step.csv`: read and ASV counts after each
+#'   processing step.
+#'   \item `Read_count_by_sample.csv`: read-count summary statistics by
+#'   sample type and dataset (before the first filtering and after the last filtering 
+#'   step)
+#'   \item `ASV_count_by_taxonomomic_rank.csv`: number of ASVs assigned to
+#'   each taxonomic rank, when applicable.
+#'   \item `mOTU_count_by_taxonomomic_rank.csv`: number of mOTUs assigned
+#'   to each taxonomic rank when clustering has been performed.
+#'   \item `false_positives_and_nevatives.csv`: false-positive and
+#'   false-negative occurrences identified from control classification
+#'   results.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' miem_results(
+#'   log = "path/to/miem_log.csv",
+#'   outdir = "path/to/results"
+#' )
+#'
+#' # Provide specific input files when they cannot be identified
+#' # automatically from the log.
+#' miem_results(
+#'   log = "path/to/miem_log.csv",
+#'   outdir = "path/to/results",
+#'   sampleinfo = "path/to/sampleinfo.csv",
+#'   taxa = "path/to/taxonomy.csv",
+#'   asv = "path/to/asv.csv",
+#'   motu = "path/to/motu.csv"
+#' )
+#' }
+#'
+#' @export
+miem_results <- function(log, outdir, sampleinfo = NULL, taxa = NULL, asv = NULL, motu = NULL, sep = ","){
+  
+  read_count_steps <- data.frame(
+    function_name = as.character(),
+    read_count = as.numeric(),
+    asv_count = as.numeric()
+  )
+  outdir <- check_dir(outdir)
+  
+  # read input 
+  log_df <- read_input(log, sep = sep)
+  
+  ## Number of raw input reads #########################
+  read_count_steps <- count_input_read_count(log_df, read_count_steps)
+  
+  ## Preprocessing steps #########################
+  read_count_steps <- count_preprocessing_read_count(log_df, read_count_steps)
+  
+  ## Filtering steps #########################
+  results <- count_filtering_read_count(log_df, read_count_steps)
+  read_count_steps <- results[[1]]
+  filter_df <- results[[2]]
+  
+  outfile <- file.path(outdir, "Read_ASV_count_by_step.csv")
+  write.table(read_count_steps, file = outfile, sep = sep, row.names = FALSE)
+  
+  ######## Read count by sample and by sample type
+  ## if sampleinfo = NULL get the last sampleinfo or fastainfo or fastqinfo used which is a file and not a df
+  # get the sample type from sample info
+  # get the input and output of filter_dfing, separate samples by type
+  # get the minimum, maximum, mean, median, for each sample_type and dataset
+  # columns:
+  # input_real, input_mock, input_negative, filtered_real, filtered_mock, filtered_negative
+  # rows: min, max, mean, median, number of samples
+  
+  # get sampleinfo if not provided by the user
+  if(is.null(sampleinfo)){
+    arguments <- c(
+      "sampleinfo",
+      "fastqinfo",
+      "fastainfo"
+    )
+    sampleinfo <- log_df %>%
+      filter(argument_name %in% arguments) %>%
+      select(value) %>%
+      filter(!grepl("<data.frame>", value)) %>% # get line, with filename and not data frame
+      last() %>%
+      pull()
+    if(is.na(sampleinfo)){
+      msg <- paste0("Sampleinfo file is not recorded in the log file. Please provide the filename using sampleinfo argument")
+      stop(msg)
+    }
+  } 
+  
+  
+  # select the data file which is the input of filtering and output of filtering (sample, ...)
+  input_data_file <- filter_df$value[1]
+  # get read count ... by sample for the input of filtering steps
+  read_count_sample = extract_sample_read_count(read_count = input_data_file, sampleinfo = sampleinfo, dataset = "input_filter", sep = ",")
+  
+  # if user defines the output of any of the filtering steps (typically the last), get the same counts for that data set
+  if(!is.null(asv)){ 
+    tmp = extract_sample_read_count(read_count = asv, sampleinfo = sampleinfo, dataset = "user_defined_asv", sep = ",")
+    read_count_sample <- rbind(read_count_sample, tmp)
+  }else{ # guess the last asv filter
+    tmp <- filter_df %>%
+      filter(function_name != "cluster_asv")
+    asv <- filter_df$value[nrow(tmp)]
+    
+    last_filter_name <-  filter_df$function_name[nrow(tmp)]
+    last_filter_name <- paste0("output_", last_filter_name)
+    tmp = extract_sample_read_count(read_count = asv, sampleinfo = sampleinfo, dataset = last_filter_name, sep = ",")
+    read_count_sample <- rbind(read_count_sample, tmp)
+    
+  }
+  
+  outfile <- file.path(outdir, "Read_count_by_sample.csv")
+  write.table(read_count_sample, file = outfile, sep = sep, row.names = FALSE)
+  
+  ######## get the results of taxassign
+  # If taxassign before clustering, count assigned ASV by ASV, else only for mOTUs
+  # Count the number of mOUTs/ ASV mOTU assigned to taxa at each major taxonomic level
+  
+  if(is.null(taxa)){ # user did not provide taxa
+    functions <- c("assign_taxonomy_ltg",
+                   "assign_taxonomy_rdp")
+    arguments <- c("outfile")
+    
+    taxa <- get_log_entries(
+      log_df,
+      functions = functions,
+      arguments = arguments,
+      remove_duplicates = TRUE) %>%
+      filter(!grepl("<data.frame>", value)) %>%
+      first() %>%
+      pull()
+    
+    if(is.na(taxa)){
+      msg <- paste0("Taxonomic assignment file is not recorded in the log file. Please provide the filename using the taxa argument\n")
+      stop(msg)
+    }
+  }
+  
+  # read taxa and make columns asv_id, rank_index, taxonomic_level
+  taxa_df <- format_taxa(taxa, sep)
+  
+  # get the order of the functions
+  tmp <- log_df %>%
+    select(function_name, start_time) %>%
+    distinct() %>%
+    select(function_name) %>%
+    mutate(order = rownames(.))
+  
+  taxassign_index <- tmp %>%
+    filter(function_name %in% c("assign_taxonomy_ltg", "assign_taxonomy_rdp")) %>%
+    first() %>%
+    pull()
+  
+  cluster_index <- tmp %>%
+    filter(function_name == "cluster_asv") %>%
+    last() %>%
+    pull()
+  
+  if(is.na(cluster_index) || cluster_index == "NA"){ # no clustering, work only with ASV
+    asv_by_rank <- count_taxassing_by_rank(asv, taxa_df, sep = ",")
+    outfile <- file.path(outdir, "ASV_count_by_taxonomomic_rank.csv")
+    write.table(asv_by_rank, file = outfile, sep = sep, row.names = FALSE)
+  } else if (!is.null(motu)){ # motu file was defined by the user, even if cluster_asv is not in log
+    motu_by_rank <- count_taxassing_by_rank(motu, taxa_df, sep = ",")
+    outfile <- file.path(outdir, "mOTU_count_by_taxonomomic_rank.csv")
+    write.table(motu_by_rank, file = outfile, sep = sep, row.names = FALSE)
+  } else { # clustering has been done and motu not defined by the user
+    ##### get motu filename
+    motu <- get_log_entries(
+      log_df,
+      functions = "cluster_asv",
+      arguments = "outfile",
+      remove_duplicates = TRUE) %>%
+      select(value) %>%
+      last() %>%
+      pull()
+    
+    if(is.na(motu)){ # data frame instead of file
+      msg <- paste0("The mOTU file is not recorded in the log file. Please provide the filename using the motu argument\n")
+      warning(msg)
+    }else{ 
+      motu_by_rank <- count_taxassing_by_rank(motu, taxa_df, sep = ",")
+      outfile <- file.path(outdir, "mOTU_count_by_taxonomomic_rank.csv")
+      write.table(motu_by_rank, file = outfile, sep = sep, row.names = FALSE)
+      
+      if(cluster_index > taxassign_index){ # taxassing before clustering, use ASVs can be classified
+        asv_by_rank <- count_taxassing_by_rank(asv, taxa_df, sep = ",")
+        outfile <- file.path(outdir, "ASV_count_by_taxonomomic_rank.csv")
+        write.table(asv_by_rank, file = outfile, sep = sep, row.names = FALSE)
+      }
+    }
+  }
+  
+  outfile <- file.path(outdir, "ASV_count_by_taxonomomic_rank.csv")
+  write.table(asv_by_rank, file = outfile, sep = sep, row.names = FALSE)
+  
+  ####### get the number of FP, FN TP 
+  
+  known_occurrences <- get_log_entries(
+    log_df,
+    functions = "classify_control_occurrences",
+    arguments = "known_occurrences",
+    remove_duplicates = TRUE) %>%
+    select(value) %>% last() %>%  pull()
+  
+  false_negatives <- get_log_entries(
+    log_df,
+    functions = "classify_control_occurrences",
+    arguments = "false_negatives",
+    remove_duplicates = TRUE) %>%
+    select(value) %>% last() %>%  pull()
+  
+  performance_metrics <- get_log_entries(
+    log_df,
+    functions = "classify_control_occurrences",
+    arguments = "performance_metrics",
+    remove_duplicates = TRUE) %>%
+    select(value) %>% last() %>%  pull()
+  
+  fp <- read_input(known_occurrences, sep = sep) %>%
+    filter(action == "delete") %>%
+    mutate(occurrence_type = "FP") %>%
+    select(occurrence_type, sample, asv_id, asv)
+  
+  fn <- read_input(false_negatives, sep = sep) 
+  if(!"asv_id" %in% colnames(fn)){
+    mutate(asv_id = NA)
+  }
+  fn <- fn %>%
+    mutate(occurrence_type = "FN") %>%
+    select(occurrence_type, sample, asv_id, asv)
+  
+  tmp <- rbind(fp, fn)
+  
+  performance_metrics_df <- read_input(performance_metrics, sep = sep)
+  outfile <- file.path(outdir, "false_positives_and_nevatives.csv")
+  write.table(tmp, file = outfile, sep = sep, row.names = FALSE)
+  
+}
+
+
+
+
+
+
+
+#' Count reads in raw FASTQ input files
+#'
+#' Identifies the raw FASTQ input files recorded in the log and calculates
+#' the total number of reads across all input files. The function searches
+#' the log for preprocessing functions that can start directly from raw
+#' FASTQ files and uses the corresponding `fastqinfo` and `fastq_dir`
+#' arguments to locate the input files.
+#'
+#' @param log_df A data frame containing the parsed log information. It must
+#'   contain the function names, argument names, and values required by
+#'   [get_log_entries()].
+#' @param read_count_steps A data frame containing read-count results from
+#'   previous processing steps. It must contain `function_name`,
+#'   `read_count`, and `asv_count` columns.
+#' @param sep Character string used to separate fields in the `fastqinfo`
+#'   input file. Defaults to `","`.
+#'
+#' @return A data frame containing the read-count results with an additional
+#'   row named `"RAW INPUT FASTQ"` when raw FASTQ input information is found
+#'   in the log. The row contains the total number of reads across all raw
+#'   FASTQ files and `NA` for the ASV count.
+#'
+#' @details
+#' The function searches for the `fastqinfo` and `fastq_dir` arguments
+#' associated with the `demultiplex_and_trim_fastq` and
+#' `merge_fastq_pairs` functions.
+#'
+#' The `fastqinfo` file is expected to contain a `fastq_fw` column listing
+#' the forward FASTQ files. Each file is located relative to `fastq_dir`,
+#' and the number of reads is calculated using [count_reads()] with
+#' `file_type = "fastq"`.
+#'
+#' If the log does not contain information about a function starting from
+#' raw FASTQ files, a warning is issued and `read_count_steps` is returned
+#' unchanged.
+#'
+#' @keywords internal
+count_input_read_count <- function(log_df, read_count_steps, sep = ","){
+  
+  ## Number of reads in the input #########################
+  # These are the functions that can start for the raw fastq files
+  preprocess_functs <- c("demultiplex_and_trim_fastq", "merge_fastq_pairs") 
+  args <- c("fastqinfo", "fastq_dir")
+  
+  tmp <- get_log_entries(
+    log_df,
+    functions = preprocess_functs,
+    arguments = args,
+    remove_duplicates = TRUE) %>% 
+    group_by(argument_name) %>% # get first fastq_dir and fastqinfo
+    summarize(value = first(value), .groups = "drop")
+  
+  if(nrow(tmp) > 0){
+    
+    fastq_dir <- tmp %>%
+      filter(argument_name == "fastq_dir") %>%
+      pull(value)
+    if(is.na(fastq_dir) || is.null(fastq_dir) || fastq_dir == "NULL"){
+      fastq_dir = "."
+    }
+    
+    fastqinfo <- tmp %>%
+      filter(argument_name == "fastqinfo") %>%
+      pull(value)
+    
+    if(is.na(fastqinfo) || is.null(fastqinfo) || fastqinfo == "NULL" || grepl("<data.frame>", fastqinfo)){
+      f <- paste0(preprocess_functs, collapse = ", ")
+      msg <- paste0( "The log file does not contain information about functions starting from ", 
+                     "raw FASTQ files (", f, ") or their info file. ", 
+                     "You can use the count_reads_in_dir() function to count the number of reads ", 
+                     "in the input file." )
+      warning(msg)
+    } else{
+      
+      fastq_files <- read.table(fastqinfo, header = TRUE, sep = sep) %>%
+        select(fastq_fw) %>%
+        distinct()
+      
+      total_read_count_input = 0
+      for(i in 1:length(fastq_files$fastq_fw) ){
+        file <- file.path(fastq_dir, fastq_files$fastq_fw[i])
+        n <- count_reads(file, file_type="fastq")
+        total_read_count_input = total_read_count_input + n
+      }
+      
+      read_count_steps <- read_count_steps %>%
+        add_row(function_name = "RAW INPUT FASTQ", read_count = total_read_count_input, asv_count = NA)
+    }
+    
+  } else {
+    f <- paste0(preprocess_functs, collapse = ", ")
+    msg <- paste0( "The log file does not contain information about functions starting from ", 
+                   "raw FASTQ files (", f, "). ", 
+                   "You can use the count_reads_in_dir() function to count the number of reads ", 
+                   "in the input file." )
+    warning(msg)
+  }
+  return(read_count_steps)
+}
+
+
+#' Count reads after preprocessing steps
+#'
+#' Extracts preprocessing steps recorded in the log and calculates the total
+#' number of reads remaining after each preprocessing step. The function
+#' identifies preprocessing output directories from the `outdir` arguments
+#' recorded in the log and retrieves read counts from the corresponding
+#' `info.csv` files.
+#'
+#' @param log_df A data frame containing the parsed log information. It must
+#'   contain the function names, argument names, and values required by
+#'   [get_log_entries()].
+#' @param read_count_steps A data frame containing read-count results from
+#'   previous processing steps. It must contain `function_name`,
+#'   `read_count`, and `asv_count` columns.
+#' @param sep Character string used to separate fields in the preprocessing
+#'   output files. Defaults to `","`.
+#'
+#' @return A data frame containing the read counts for the preprocessing
+#'   steps, appended to the input `read_count_steps` data frame. The returned
+#'   data frame contains the columns `function_name`, `read_count`, and
+#'   `asv_count`.
+#'
+#' @details
+#' The function searches the log for the following preprocessing functions:
+#' `demultiplex_and_trim_fastq`, `demultiplex_and_trim_fasta`,
+#' `merge_fastq_pairs`, `subsample_fasta`, and `trim_primers`.
+#'
+#' For each preprocessing step, the output directory is obtained from the
+#' `outdir` argument recorded in the log. The function then identifies the
+#' corresponding `info.csv` file and sums its `read_count` column.
+#'
+#' If no preprocessing functions are found in the log, a warning is issued
+#' and the input `read_count_steps` data frame is returned unchanged.
+#'
+#' @keywords internal
+count_preprocessing_read_count<- function(log_df, read_count_steps, sep = ","){
+  
+  # all preprocess functions
+  functions <- c("demultiplex_and_trim_fastq", # outdir, fastqinfo.csv
+                 "demultiplex_and_trim_fasta", # outdir, sampleinfo.csv
+                 "merge_fastq_pairs", # outdir, fastainfo.csv
+                 "subsample_fasta", # outdir, fastainfo.csv
+                 "trim_primers") # outdir, sampleinfo.csv
+  arguments <- c("outdir") # fastqinfo, fatsainfo, sorterinfo are in th outdir
+  
+  preprocess <- get_log_entries(
+    log_df,
+    functions = functions,
+    arguments = arguments,
+    remove_duplicates = TRUE) %>%
+    mutate("read_count" = NA,
+           "asv_count" = NA)
+  
+  if(nrow(preprocess) == 0){
+    f <- paste0(functions, collapse = ", ")
+    msg <- paste0( "The log file does not contain information about preprocessing functions ", 
+                   "raw FASTQ files (", f, "). ", 
+                   "You can use the count_reads_in_dir() function to count the number of reads." )
+    warning(msg)
+    return(read_count_steps)
+  } else {
+    
+    for(i in 1: nrow(preprocess)){
+      
+      dir <- preprocess$value[i]
+      files <- list.files(dir, pattern = "info\\.csv$") # get the name of the info file
+      if(!is.null(files[1])){
+        
+        info_file <- file.path(dir, files[1])
+        info_df <- read.table(file = info_file, sep = sep, header = TRUE) 
+        
+        info_df <- info_df %>%
+          select((ncol(.) - 1):ncol(.)) %>% # keep the last filename column and the read_count
+          distinct() # get unique list
+        
+        read_count <- sum(info_df$read_count)
+        preprocess[i,"read_count"] <- read_count
+      }
+    }
+    
+    preprocess <- preprocess %>%
+      select(function_name, read_count, asv_count)
+    
+    read_count_steps <- rbind(read_count_steps, preprocess)
+    return(read_count_steps)
+  }
+}
+
+
+#' Count reads and ASVs after filtering steps
+#'
+#' Extracts filtering steps recorded in the log and calculates the total
+#' number of reads and ASVs remaining after each filtering step. The
+#' filtering output files are identified from the `outfile` arguments
+#' recorded in the log.
+#'
+#' @param log_df A data frame containing the parsed log information. It must
+#'   contain the function names, argument names, and corresponding values
+#'   required by [get_log_entries()].
+#' @param read_count_steps A data frame containing read-count results from
+#'   previous processing steps. It must contain `function_name`,
+#'   `read_count`, and `asv_count` columns.
+#' @param sep Character string used to separate fields in the filtering
+#'   output files. Defaults to `","`.
+#'
+#' @return A list with two elements:
+#' \describe{
+#'   \item{read_count_steps}{A data frame containing the number of reads and
+#'   ASVs remaining at each processing step.}
+#'   \item{filter}{A data frame containing the filtering steps extracted
+#'   from the log, together with their corresponding read and ASV counts.}
+#' }
+#'
+#' @details
+#' The function searches the log for known filtering functions and their
+#' `outfile` arguments. For each filtering output file, reads are summed
+#' across ASVs and the number of distinct ASVs is counted.
+#'
+#' If no filtering functions are found in the log, a warning is issued and
+#' the input `read_count_steps` is returned without being completed .
+#'
+#' @keywords internal
+
+count_filtering_read_count <- function(log_df, read_count_steps, sep = ","){
+  
+  # all filtering functions
+  functions <- c("dereplicate",
+                 "denoise_by_swarm",
+                 "denoise_by_swarm",
+                 "filter_asv_global",
+                 "filter_contaminant",
+                 "filter_chimera",
+                 "filter_stop_codon",
+                 "filter_contaminant",
+                 "filter_indel",
+                 "filter_pcr_error",
+                 "filter_min_replicate",
+                 "filter_occurrence_read_count",
+                 "filter_occurrence_sample",
+                 "filter_occurrence_variant",
+                 "filter_pcr_error",
+                 "pool_filters",
+                 "filter_replicate",
+                 "cluster_asv"
+  )
+  
+  arguments <- c("outfile")
+  
+  filter_df <- get_log_entries(
+    log_df,
+    functions = functions,
+    arguments = arguments,
+    remove_duplicates = TRUE) %>%
+    mutate("read_count" = NA,
+           "asv_count" = NA)
+  
+  
+  if(nrow(filter_df) == 0){
+    f <- paste0(functions, collapse = ", ")
+    msg <- paste0( "The log file does not contain information about filtering functions (", 
+                   f, "). ")
+    warning(msg)
+    l <- list(read_count_steps, filter_df)
+    return(l)
+  }
+  
+  for(i in 1: nrow(filter_df)){
+    file <- filter_df$value[i]
+    print(file)
+    if(!is.null(file) && file != "NULL"){
+      info_df <- read.table(file, sep = sep, header = TRUE) %>%
+        group_by(asv) %>%
+        summarize(read_count = sum(read_count), .groups = "drop")
+      
+      filter_df[i,"read_count"] <- sum(info_df$read_count)
+      filter_df[i,"asv_count"] <- nrow(info_df)
+    }
+  }
+  
+  tmp <- filter_df %>%
+    select(function_name, read_count, asv_count)
+  
+  read_count_steps <- rbind(read_count_steps, tmp)
+  
+  l <- list(read_count_steps, filter_df)
+  
+  return(l)
+  
+}
+
+
+#' Summarize read counts by sample type
+#'
+#' Calculates summary statistics for read counts across samples, grouped by
+#' sample type. Read counts are first summed for each sample and then
+#' summarized within each sample type (read, negative, mock).
+#'
+#' @param read_count Character string giving the path to the input read-count
+#'   file. The file must contain at least `sample` and `read_count` columns.
+#' @param sampleinfo Character string giving the path to the sample information
+#'   file. The file must contain `sample` and `sample_type` columns.
+#' @param dataset Character string identifying the dataset represented by the
+#'   read counts. Defaults to `"input_to_filtering"`.
+#' @param sep Character string used to separate fields in the input files.
+#'   Defaults to `","`.
+#'
+#' @return A data frame containing read-count summary statistics for each
+#'   sample type. The returned data frame includes the dataset name,
+#'   minimum and maximum read counts, mean and median read counts, and
+#'   number of samples.
+#'
+#' @keywords internal
+
+extract_sample_read_count <- function(read_count, sampleinfo, dataset = "input_to_filtering", sep = ","){
+  
+  
+  if(!is.null(sampleinfo) && !is.na(sampleinfo) && sampleinfo != "NULL" && !is.null(read_count) && !is.na(read_count) && read_count != "NULL"){
+    sampleinfo_df <- read_input(sampleinfo, sep = sep) %>%
+      select(sample, sample_type) %>%
+      distinct()
+    
+    read_count_sample <- read_input(read_count, sep = sep) %>%
+      group_by(sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop") %>%
+      left_join(sampleinfo_df, by = "sample") %>%
+      group_by(sample_type) %>%
+      summarize(
+        minimum_read_count = min(read_count),
+        maximum_read_count = max(read_count),
+        mean_read_count = round(mean(read_count), digits = 0),
+        median_read_count = round(median(read_count), digits = 0),
+        number_of_samples = n()
+      ) %>%
+      mutate(dataset = dataset) %>%
+      select(dataset, everything())
+  }else{
+    read_count_sample <- data.frame(
+      minimum_read_count = numeric(),
+      maximum_read_count = numeric(),
+      mean_read_count = numeric(),
+      median_read_count = numeric(),
+      number_of_samples = numeric(),
+      dataset = character()
+    )
+  }
+  
+  return(read_count_sample)
+}
+
+
+#' Format taxonomic assignment results
+#'
+#' Reads and formats a taxonomic assignment file into a standardized data
+#' frame containing ASV identifiers, taxonomic rank indices, and taxonomic
+#' levels. Supports taxonomic assignments generated using either LTG
+#' (`ltg_rank_index`) or standard taxonomic rank columns (`domain` through
+#' `species`).
+#'
+#' @param taxa Character string giving the path to the taxonomic assignment
+#'   file.
+#' @param sep Character string used to separate fields in the input file.
+#'   Defaults to `","`.
+#'
+#' @return A data frame containing the ASV identifier (`asv_id`), the
+#'   corresponding taxonomic rank index (`rank_index`), and the taxonomic
+#'   level (`taxonomic_level`). For LTG assignments, the rank index is
+#'   derived from `ltg_rank_index`. For standard taxonomic assignments,
+#'   the rank index is determined from the highest available taxonomic
+#'   level.
+#'
+#' @keywords internal
+#' 
+format_taxa <- function(taxa, sep=","){
+  
+  taxa_df <- read_input(taxa, sep = sep)
+  
+  ########### Read and format taxonomy results tog get asv_id
+  tax_ind <- data.frame(
+    rank_index = c(1,2,3,4,5,6,7,8),
+    taxonomic_level = c("root","domain","phylum","class","order","family","genus","species")
+  )
+  ### LTG
+  if("ltg_rank_index" %in% colnames(taxa_df)){
+    
+    taxa_df <- read_input(taxa, sep = sep) %>%
+      select(asv_id, "rank_index" = ltg_rank_index) %>%
+      mutate(rank_index = if_else(is.na(rank_index), 1, floor(rank_index))) %>%
+      left_join(tax_ind, by="rank_index")
+    
+  } else {
+    
+    taxa_df <- read_input(taxa, sep = sep) %>%
+      select(-asv) %>%
+      mutate(rank_index = 8- rowSums(is.na(select(., domain:species)))) %>%
+      left_join(tax_ind, by="rank_index") %>%
+      select(asv_id, rank_index, taxonomic_level)
+  }
+  return(taxa_df)
+}
+
+#####################################################################
+
+#' Count ASVs or mOTUs by taxonomic rank
+#'
+#' Counts the number of distinct ASVs or mOTUs assigned to each taxonomic
+#' level. If the input data contains a `cluster_id` column, it is used as
+#' the identifier for mOTUs instead of `asv_id`.
+#'
+#' @param read_count Character string giving the path to the read-count
+#'   file containing ASV or mOTU identifiers.
+#' @param taxa_df A data frame containing `asv_id`, `rank_index`, and 
+#' `taxonomic_level` columns.
+#' @param sep Character string used to separate fields in the input files.
+#'   Defaults to `","`.
+#'
+#' @return A data frame containing the number of ASVs or mOTUs assigned to
+#'   each taxonomic level, ordered from the highest to the lowest rank.
+#'
+#' @keywords internal
+
+count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
+  
+  asv_by_rank <- data.frame(
+    "taxonomic_level" = character(),
+    "ASV_or_mOTU_number" = numeric()
+  )
+  
+  if( !is.na(read_count) && !is.null(read_count) && read_count != "NULL" && read_count != "" && !grepl("<data.frame>", read_count)){
+    
+    read_count_df <- read_input(read_count, sep = sep)
+    
+    # if output of cluster is not grouped, replace asv_id column by cluster_id
+    if("cluster_id" %in% colnames(read_count_df)){
+      read_count_df <- read_count_df %>%
+        select(-asv_id) %>%
+        rename(asv_id = cluster_id)
+    }
+    
+    asv_by_rank <- read_count_df %>%
+      select(asv_id) %>%
+      distinct() %>%
+      left_join(taxa_df, by="asv_id") %>%
+      group_by(taxonomic_level) %>%
+      summarize(ASV_or_mOTU_number = n(), rank_index = first(rank_index)) %>%
+      arrange(desc(rank_index)) %>%
+      select(-rank_index)
+  }
+  return(asv_by_rank)
+}

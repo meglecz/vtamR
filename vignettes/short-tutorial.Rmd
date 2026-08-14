@@ -140,7 +140,7 @@ fastainfo_df <- subsample_fasta(
 ```{r}
 demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
 
-sampleinfo_df <- demultiplex_and_trim(
+sampleinfo_df <- demultiplex_and_trim_fasta(
   fastainfo=fastainfo_df,
   fasta_dir=randomseq_dir,
   outdir=demultiplexed_dir,
@@ -422,6 +422,8 @@ read_count_df_variant <- filter_occurrence_variant(
   outfile=outfile,
   log_file = log_file
   )
+param <- paste("variant_cutoff:", variant_cutoff)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_variant", params=param)
 ```
 
 **Filter occurrences by read count**
@@ -436,6 +438,8 @@ read_count_df_rc <- filter_occurrence_read_count(
   outfile=outfile,
   log_file = log_file
   )
+param <- paste("read_count_cutoff:", read_count_cutoff)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_read_count", params=param)
 ```
 
 **Pool results**
@@ -451,6 +455,8 @@ read_count_df <- pool_filters(
 
 rm(read_count_df_rc)
 rm(read_count_df_variant)
+
+stat_df <- get_stat(read_count_df, stat_df, stage="pool_filters", params=NA)
 ```
 
 
@@ -468,6 +474,8 @@ read_count_df <- filter_min_replicate(
   outfile=outfile,
   log_file = log_file
   )
+param <- paste("min_replicate_number:", min_replicate_number)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
 ```
 
 ## Final steps
@@ -531,6 +539,7 @@ asv_tax <- assign_taxonomy_ltg(
   asv=read_count_sample_df,
   taxonomy=taxonomy,
   blast_db=blast_db,
+  outfile=outfile,
   log_file = log_file
 )
 ```
@@ -586,3 +595,28 @@ tmp <- miem_bioinformatics(
   )
 ```
 
+**MIEM Sequencing Summary**
+```{r miem_results}
+info_files = c(
+  fastqinfo,
+  "vtamR_demo_out/zfzr_plate1/1_merged/fastainfo.csv",
+  "vtamR_demo_out/zfzr_plate1/2_random_seq/fastainfo.csv",
+  "vtamR_demo_out/zfzr_plate1/3_demultiplexed/sampleinfo.csv"
+)
+read_count_files = c(
+  "vtamR_demo_out/zfzr_plate1/4_filter/1_before_filter.csv",
+  "vtamR_demo_out/zfzr_plate1/4_filter/2_swarm_denoise.csv",
+  "vtamR_demo_out/zfzr_plate1/4_filter/14_filter_min_replicate.csv",
+  "vtamR_demo_out/zfzr_plate1/4_filter/15_pool_replicates.csv",
+  "vtamR_demo_out/zfzr_plate1/5_cluster/16_mOTU_vsearch.csv"
+)
+taxa = "vtamR_demo_out/zfzr_plate1/4_filter/assign_taxonomy_ltg.csv"
+miem_results(
+  info_files = info_files, 
+  fastq_dir = fastq_dir, 
+  read_count_files = read_count_files, 
+  taxa = taxa, 
+  outdir = miem_dir, 
+  mock_composition = mock_composition,
+  )
+```

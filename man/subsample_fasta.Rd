@@ -71,8 +71,8 @@ listed in the \code{fastainfo} data frame.
 This function is useful for standardizing sequencing depth across libraries.
 }
 \details{
-It can be applied before or after demultiplexing (\code{demultiplex_and_trim}),
-but is recommended after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim}.
+It can be applied before or after demultiplexing (\code{demultiplex_and_trim_fasta}),
+but is recommended after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim_fasta}.
 
 Two implementations are available:
 \itemize{

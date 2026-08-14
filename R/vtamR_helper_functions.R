@@ -3,6 +3,7 @@
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange last
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
+#' @importFrom dplyr add_row
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
 #' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
@@ -997,8 +998,8 @@ miem_bioinformatics <- function(
   
   # Primer removal (trimming): program, version, parameters #############################################
   trim_functions <- c("trim_primers", 
-                      "demultiplex_and_trim",
-                      "demultiplex_fastq_pairs")
+                      "demultiplex_and_trim_fasta",
+                      "demultiplex_and_trim_fastq")
   params <- c("check_reverse",
               "primer_to_end",
               "cutadapt_error_rate",
@@ -1431,7 +1432,6 @@ extract_versions <- function(log_df, r_df) {
 #'   `function_name`, `argument_name`, and `value`.
 #'
 #' @keywords internal
-#' @noRd
 
 get_log_entries <- function(
   log_df,
@@ -1466,5 +1466,494 @@ get_log_entries <- function(
   
   return(x)
 }
+
+#' Generate summary files for the MIEM sequencing summary statistics
+#'
+#' Generates summary statistics and quality-control metrics from the
+#' intermediate and final outputs of the vtmaR pipeline. The resulting
+#' files can be used to complete the "Results - Sequencing Summary
+#' Statistics" section of the MIEM checklist.
+#'
+#' Depending on the input files provided, the function summarizes
+#' sequencing read counts, read counts per sample and sample type,
+#' taxonomic assignments, and results from mock-community controls.
+#' All generated results are written to files in `outdir`.
+#'
+#' @param info_files Character vector of information files
+#'   (`fastqinfo`, `fastainfo`, or `sampleinfo`) containing information
+#'   such as FASTQ/FASTA file names, sample names, and sample types
+#'   (`real`, `mock`, or `negative`). These files are generated at
+#'   different preprocessing steps. In this function they are used to 
+#'   calculate the total number of reads after the preprocessing steps of vtamR.
+#'   The last one is also used to determine sample information.
+#' @param fastq_dir Character string specifying the directory containing
+#'   FASTQ files. Used to calculate read counts when they are not already
+#'   available in `info_files`.
+#' @param read_count_files Character vector of read-count files generated
+#'   during the pipeline. Each file contains `asv_id`, `sample`,
+#'   `read_count`, and optionally `replicate` and `cluster_id`.
+#'   These files are used to summarize the number of reads retained
+#'   during preprocessing and filtering.
+#'
+#'   A read-count file from any filtering step can be provided. The two
+#'   most informative files are usually the first file (typically the
+#'   output of `dereplicate`) and the last file, as they provide the
+#'   number of reads and ASVs after the preprocessing (merge, demultiplex and quality
+#'   filter) and after vtamR filtering (e.g. chimera, low, frequency noise), respectively.
+#'
+#'   The last file in the vector is also used to count the number of
+#'   ASVs or mOTUs assigned to each taxonomic rank and to identify
+#'   false-positive and false-negative assignments.
+#'
+#'   If the last file is the output of `cluster_asv` and contains a
+#'   `cluster_id` column, the number of mOTUs rather than ASVs is used
+#'   for the taxonomic summaries.
+#' @param taxa Data frame containing taxonomic assignments. It must contain
+#'   `asv_id` (or `cluster_id`) as well as the taxonomic ranks 
+#'   `domain`, `phylum`, `class`, `order`,
+#'   `family`, `genus`, and `species` and may contain `ltg_rank_index`.
+#'   It is used to summarize the number
+#'   of ASVs or mOTUs assigned at each taxonomic rank.
+#' @param outdir Character string specifying the directory where result
+#'   files will be written. The directory is created if necessary.
+#'   Defaults to the current working directory.
+#' @param mock_composition Mock-community composition used to evaluate
+#'   control samples and identify false-positive and false-negative
+#'   assignments.
+#' @param sep Character string used as the field separator for input
+#'   and output files. Defaults to `","`.
+#'
+#' @details
+#' The function generates different result files depending on the
+#' arguments supplied.
+#'
+#' If `info_files` is provided, the total number of reads associated
+#' with each information file is calculated using
+#' [count_reads_from_info()]. Existing read counts are used when
+#' available; otherwise, reads are counted directly from the FASTQ files.
+#' The results are written to `preprocess_read_count.csv`.
+#'
+#' If both `info_files` and `read_count_files` are provided, read counts
+#' are summarized for each read-count file and separately for real, mock,
+#' and negative samples. The results are
+#' written to `read_count_by_sample.csv`.
+#'
+#' If both `taxa` and `read_count_files` are provided, the number of ASVs
+#' or mOTUs assigned at each major taxonomic rank is calculated using
+#' [count_taxassing_by_rank()] from the last file in `read_count_files`. 
+#' The results are written to
+#' `ASV_or_mOTU_count_by_taxonomic_rank.csv`.
+#'
+#' If `info_files`, `read_count_files` and `mock_composition` are
+#' provided, mock-community control results are evaluated using
+#' [classify_control_occurrences()] from the last read_count_files. 
+#' False-positive and false-negative
+#' occurrences are combined and written to
+#' `false_positives_and_negatives.csv`.
+#'
+#' @return Invisibly returns `NULL`. Results are written as output files
+#'   to `outdir`.
+#'
+#' @examples
+#' \dontrun{
+#' miem_results(
+#'   info_files = info_files,
+#'   fastq_dir = "fastq",
+#'   read_count_files = read_count_files,
+#'   taxa = taxa,
+#'   outdir = "miem",
+#'   mock_composition = mock_composition
+#' )
+#' }
+#'
+#' @export
+
+miem_results <- function(
+  info_files = NULL, 
+  fastq_dir = ".", 
+  read_count_files = NULL, 
+  taxa = NULL, 
+  outdir = ".", 
+  mock_composition = NULL, 
+  sep=","){
+  
+  outdir <- check_dir(outdir)
+  
+  ##########################################################
+  ### Total number of raw sequence reads produced
+  ### Total number of reads assigned to indices
+  ### Total number of reads that made it through bioinformatic filtering
+  
+  # for each info_files add the read_count if exists, otherwise count reads in fasta/fatsq files
+  # There should be only one info file where the read_count in not already present (the first fastq used in the pipeline). For this file
+  # use de fastq_dir to access the fastq files liste in the info_file
+  
+  if(!is.null(info_files)){
+    count_reads_from_info(info_files = info_files, fastq_dir = fastq_dir, outdir = outdir, sep = sep)
+  }
+  
+  ##########################################################
+  ### Total number of reads used for final/ subsequent analyses
+  ### Average number of reads per sample
+  ### Minimum and maximum number of reads per sample
+  # for each read_count_files count the 
+  # - Total number of reads
+  # - for each sample_type (real/mock/negative)
+  #    - Min, max, mean, median, number of samples
+  # use the last info file to get sample_types
+  
+  if(!is.null(info_files) && !is.null(read_count_files)){
+    read_count_by_saple(info_files = info_files, read_count_files = read_count_files, outdir = outdir, sep = sep)
+  }
+  
+  ### Total number of OTUs or ASVs assigned to taxa (and to what level of taxonomy)
+  ### Number of OTUs or ASVs unassigned
+  # from taxa, final_read_count, count the number of ASV assigned to each major taxonomic level
+  
+  if(!is.null(taxa) && !is.null(read_count_files)){
+    
+    final_read_count <- read_count_files[length(read_count_files)]
+    
+    taxa_df <- format_taxa(taxa, sep=sep)
+    count_by_taxrank <- count_taxassing_by_rank(final_read_count, taxa_df, sep = sep)
+    
+    outfile = file.path(outdir, "ASV_or_mOTU_count_by_taxonomomic_rank.csv")
+    write.table(count_by_taxrank, file = outfile, row.names= FALSE, sep = sep)
+  }
+  
+  ### Results from Controls
+  # Results are in performance_metrics.csv, and details in known_occurrences.csv and false_negatives.csv
+  # if mock_composition is given, run classify_control_occurrences using final_read_count as read_count 
+  # and last info file to get sample_types (sampleinfo)
+  
+  if(!is.null(info_files) && !is.null(read_count_files) && !is.null(mock_composition)){
+    
+    final_read_count <- read_count_files[length(read_count_files)]
+    
+    sampleinfo <- read_input(info_files[length(info_files)], sep = sep)
+    results <- classify_control_occurrences(
+      read_count = final_read_count, 
+      sampleinfo = sampleinfo, 
+      mock_composition = mock_composition, 
+      sep = sep)
+    known_occurrences <- results[[1]]
+    false_neagtives <- results[[2]]
+    performance <- results[[3]]
+    
+    fp <- known_occurrences %>%
+      filter(action == "delete") %>%
+      mutate(occurrence_type = "FP") %>%
+      select(occurrence_type, sample, asv_id, asv)
+    
+    if(!"asv_id" %in% colnames(false_neagtives)){
+      false_neagtives <- false_neagtives %>%
+        mutate(asv_id = NA)
+    }
+    false_neagtives <- false_neagtives %>%
+      mutate(occurrence_type = "FN") %>%
+      select(occurrence_type, sample, asv_id, asv)
+    
+    tmp <- rbind(fp, false_neagtives)
+    
+    outfile <- file.path(outdir, "false_positives_and_nevatives.csv")
+    write.table(tmp, file = outfile, sep = sep, row.names = FALSE)
+  }
+  
+  
+}
+
+#' Summarize read counts by sample type
+#'
+#' Computes per-file read-count and ASV-count summaries, including
+#' minimum, maximum, mean, and median reads per sample for real, mock,
+#' and negative-control samples.
+#'
+#' The sample type information is taken from the last file in
+#' `info_files`. Results are written to `read_count_by_sample.csv`
+#' in `outdir`.
+#'
+#' @param read_count_files Character vector of read-count files to summarize.
+#' @param info_files Character vector of sample information files.
+#'   The last file is used to determine sample types, thus it should contain
+#'   `sample` and `sample_type` (real/mock/negative) columns.
+#' @param outdir Character string specifying the output directory.
+#'   Defaults to the current working directory.
+#' @param sep Character string used as the field separator for input
+#'   and output files. Defaults to `","`.
+#'
+#' @return A data frame containing read-count and ASV-count summaries
+#'   for each input read-count file, and minimum, maximum, mean, median of the
+#'   number of reads per sample for each sample type. 
+#'    The same data are written to `read_count_by_sample.csv` in `outdir`.
+#'
+#' @details
+#' For each read-count file, reads are first summed across ASVs for
+#' each sample. These per-sample read counts are then summarized
+#' separately for real, mock, and negative samples.
+#'
+#' The output also contains the total number of reads and the total
+#' number of unique ASVs in each read-count file.
+#'
+#' @keywords internal
+read_count_by_saple  <- function(read_count_files, info_files, outdir = ".", sep = ","){
+  
+  sampleinfo <- info_files[length(info_files)]
+  sampleinfo_df <- read_input(sampleinfo, sep = sep) %>%
+    select(sample_type, sample) %>%
+    distinct()
+  
+  read_count_sample <- data.frame(
+    read_count_file = as.character(),
+    total_read_count = numeric(),
+    total_asv_count = numeric(),
+    # real
+    min_reads_per_sample_real = numeric(),
+    max_reads_per_sample_real = numeric(),
+    mean_reads_per_sample_real = numeric(),
+    median_reads_per_sample_real = numeric(),
+    n_samples_real = numeric(),
+    # mock
+    min_reads_per_sample_mock = numeric(),
+    max_reads_per_sample_mock = numeric(),
+    mean_reads_per_sample_mock = numeric(),
+    median_reads_per_sample_mock = numeric(),
+    n_samples_mock = numeric(),
+    # negative
+    min_reads_per_sample_negative = numeric(),
+    max_reads_per_sample_negative = numeric(),
+    mean_reads_per_sample_negative = numeric(),
+    median_reads_per_sample_negative = numeric(),
+    n_samples_negative = numeric()
+  )
+  
+  for(file in read_count_files){
+    read_count_df <- read_input(file, sep = sep)
+    total = sum(read_count_df$read_count)
+    asv_count = length(unique(read_count_df$asv))
+    
+    read_count_df <- read_count_df %>%
+      group_by(sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop") %>%
+      left_join(sampleinfo_df, by = "sample") %>%
+      group_by(sample_type) %>%
+      summarize(
+        min_reads_per_sample = min(read_count),
+        max_reads_per_sample = max(read_count),
+        mean_reads_per_sample = round(mean(read_count), digits = 0),
+        median_reads_per_sample = round(median(read_count), digits = 0),
+        n_samples = n()
+      )
+    if(!"mock" %in% read_count_df$sample_type){
+      read_count_df <- read_count_df %>%
+        add_row(sample_type = "mock", min_reads_per_sample = NA, max_reads_per_sample=NA, mean_reads_per_sample=NA, median_reads_per_sample=NA,  n_samples = 0)
+    }
+    if(!"negative" %in% read_count_df$sample_type){
+      read_count_df <- read_count_df %>%
+        add_row(sample_type = "negative", min_reads_per_sample = NA, max_reads_per_sample=NA, mean_reads_per_sample=NA, median_reads_per_sample=NA,  n_samples = 0)
+    }
+    if(!"real" %in% read_count_df$sample_type){
+      read_count_df <- read_count_df %>%
+        add_row(sample_type = "real", min_reads_per_sample = NA, max_reads_per_sample=NA, mean_reads_per_sample=NA, median_reads_per_sample=NA,  n_samples = 0)
+    }
+    read_count_sample <- read_count_sample %>%
+      add_row(
+        read_count_file = file,
+        total_read_count = total,
+        total_asv_count = asv_count,
+        min_reads_per_sample_real = read_count_df$min_reads_per_sample[read_count_df$sample_type == "real"],
+        max_reads_per_sample_real = read_count_df$max_reads_per_sample[read_count_df$sample_type == "real"],
+        mean_reads_per_sample_real = read_count_df$mean_reads_per_sample[read_count_df$sample_type == "real"],
+        median_reads_per_sample_real = read_count_df$median_reads_per_sample[read_count_df$sample_type == "real"],
+        n_samples_real = read_count_df$n_samples[read_count_df$sample_type == "real"],
+        # mock
+        min_reads_per_sample_mock = read_count_df$min_reads_per_sample[read_count_df$sample_type == "mock"],
+        max_reads_per_sample_mock = read_count_df$max_reads_per_sample[read_count_df$sample_type == "mock"],
+        mean_reads_per_sample_mock = read_count_df$mean_reads_per_sample[read_count_df$sample_type == "mock"],
+        median_reads_per_sample_mock = read_count_df$median_reads_per_sample[read_count_df$sample_type == "mock"],
+        n_samples_mock = read_count_df$n_samples[read_count_df$sample_type == "mock"],
+        # negative
+        min_reads_per_sample_negative = read_count_df$min_reads_per_sample[read_count_df$sample_type == "negative"],
+        max_reads_per_sample_negative = read_count_df$max_reads_per_sample[read_count_df$sample_type == "negative"],
+        mean_reads_per_sample_negative = read_count_df$mean_reads_per_sample[read_count_df$sample_type == "negative"],
+        median_reads_per_sample_negative = read_count_df$median_reads_per_sample[read_count_df$sample_type == "negative"],
+        n_samples_negative = read_count_df$n_samples[read_count_df$sample_type == "negative"]
+      )
+  }
+  
+  outfile = file.path(outdir, "read_count_by_sample.csv")
+  write.table(read_count_sample, file = outfile, row.names= FALSE, sep = sep)
+  invisible(read_count_sample)
+}
+
+#' Count reads from sample information files
+#'
+#' Calculates the total number of reads associated with each sample
+#' information file. If an input file already contains a `read_count`
+#' column, the existing counts are summed. Otherwise, reads are counted
+#' directly from the FASTQ files listed in the `fastq_fw` column.
+#'
+#' The resulting read counts are written to
+#' `preprocess_read_count.csv` in `outdir`.
+#'
+#' @param info_files Character vector of sample information files.
+#' @param fastq_dir Character string specifying the directory containing
+#'   FASTQ files. Defaults to the current working directory.
+#' @param outdir Character string specifying the output directory.
+#'   Defaults to the current working directory.
+#' @param sep Character string used as the field separator when reading
+#'   and writing files. Defaults to `","`.
+#'
+#' @return A data frame with one row per information file and two columns:
+#'   `info_filename`, containing the input file name, and `read_count`,
+#'   containing the total number of reads. The same data frame is written
+#'   to `preprocess_read_count.csv` in `outdir`.
+#'
+#' @details
+#' For information files containing a `read_count` column, the function
+#' retains the last two columns, removes duplicate rows, and sums the
+#' read counts.
+#'
+#' For information files without a `read_count` column, the function
+#' extracts unique FASTQ file names from the `fastq_fw` column and counts
+#' the reads in each FASTQ file using [count_reads()].
+#'
+#' @keywords internal
+
+count_reads_from_info <- function(info_files = NULL, fastq_dir = ".", outdir = ".", sep = ","){
+  preprocess_read_count_df = data.frame(
+    info_filename = character(),
+    read_count = numeric()
+  )
+  for(file in info_files){
+    info_df <- read_input(file, sep = sep)
+    if("read_count" %in% colnames(info_df)){
+      info_df <- info_df %>%
+        select((ncol(.) - 1):ncol(.)) %>% # keep the last filename column and the read_count
+        distinct() # get unique list
+      
+      total_read_count <- sum(info_df$read_count)
+      preprocess_read_count_df <- preprocess_read_count_df %>%
+        add_row(info_filename = file, read_count = total_read_count)
+    }else{ # reads_ should be counted from fastq files
+      
+      fastq_files <- read_input(file, sep = sep) %>%
+        select(fastq_fw) %>%
+        distinct()
+      
+      total_read_count = 0
+      for (fastq in fastq_files$fastq_fw) {
+        n <- count_reads(
+          file.path(fastq_dir, fastq),
+          file_type = "fastq"
+        )
+        total_read_count <- total_read_count + n
+      }
+      preprocess_read_count_df <- preprocess_read_count_df %>%
+        add_row(info_filename = file, read_count = total_read_count)
+    }
+  }
+  outfile = file.path(outdir, "preprocess_read_count.csv")
+  write.table(preprocess_read_count_df, file = outfile, row.names= FALSE, sep = sep)
+  invisible(preprocess_read_count_df)
+}
+
+
+#' Format taxonomic assignment results
+#'
+#' Reads and formats a taxonomic assignment file into a standardized data
+#' frame containing ASV identifiers, taxonomic rank indices, and taxonomic
+#' levels. Supports taxonomic assignments generated using either LTG
+#' (`ltg_rank_index`) or standard taxonomic rank columns (`domain` through
+#' `species`).
+#'
+#' @param taxa Character string giving the path to the taxonomic assignment
+#'   file.
+#' @param sep Character string used to separate fields in the input file.
+#'   Defaults to `","`.
+#'
+#' @return A data frame containing the ASV identifier (`asv_id`), the
+#'   corresponding taxonomic rank index (`rank_index`), and the taxonomic
+#'   level (`taxonomic_level`). For LTG assignments, the rank index is
+#'   derived from `ltg_rank_index`. For standard taxonomic assignments,
+#'   the rank index is determined from the highest available taxonomic
+#'   level.
+#'
+#' @keywords internal
+#' 
+format_taxa <- function(taxa, sep=","){
+  
+  taxa_df <- read_input(taxa, sep = sep)
+  
+  ########### Read and format taxonomy results tog get asv_id
+  tax_ind <- data.frame(
+    rank_index = c(1,2,3,4,5,6,7,8),
+    taxonomic_level = c("root","domain","phylum","class","order","family","genus","species")
+  )
+  ### LTG
+  if("ltg_rank_index" %in% colnames(taxa_df)){
+    
+    taxa_df <- read_input(taxa, sep = sep) %>%
+      select(asv_id, "rank_index" = ltg_rank_index) %>%
+      mutate(rank_index = if_else(is.na(rank_index), 1, floor(rank_index))) %>%
+      left_join(tax_ind, by="rank_index")
+    
+  } else {
+    
+    taxa_df <- read_input(taxa, sep = sep) %>%
+      select(-asv) %>%
+      mutate(rank_index = 8- rowSums(is.na(select(., domain:species)))) %>%
+      left_join(tax_ind, by="rank_index") %>%
+      select(asv_id, rank_index, taxonomic_level)
+  }
+  return(taxa_df)
+}
+
+#####################################################################
+
+#' Count ASVs or mOTUs by taxonomic rank
+#'
+#' Counts the number of distinct ASVs or mOTUs assigned to each taxonomic
+#' level. If the input data contains a `cluster_id` column, it is used as
+#' the identifier for mOTUs instead of `asv_id`.
+#'
+#' @param read_count Character string giving the path to the read-count
+#'   file containing ASV or mOTU identifiers.
+#' @param taxa_df A data frame containing `asv_id`, `rank_index`, and 
+#' `taxonomic_level` columns.
+#' @param sep Character string used to separate fields in the input files.
+#'   Defaults to `","`.
+#'
+#' @return A data frame containing the number of ASVs or mOTUs assigned to
+#'   each taxonomic level, ordered from the highest to the lowest rank.
+#'
+#' @keywords internal
+
+count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
+  
+  asv_by_rank <- data.frame(
+    "taxonomic_level" = character(),
+    "ASV_or_mOTU_number" = numeric()
+  )
+  
+  read_count_df <- read_input(read_count, sep = sep)
+  
+  # if output of cluster is not grouped, replace asv_id column by cluster_id
+  if("cluster_id" %in% colnames(read_count_df)){
+    read_count_df <- read_count_df %>%
+      select(-asv_id) %>%
+      rename(asv_id = cluster_id)
+  }
+  
+  asv_by_rank <- read_count_df %>%
+    select(asv_id) %>%
+    distinct() %>%
+    left_join(taxa_df, by="asv_id") %>%
+    group_by(taxonomic_level) %>%
+    summarize(ASV_or_mOTU_number = n(), rank_index = first(rank_index)) %>%
+    arrange(desc(rank_index)) %>%
+    select(-rank_index)
+  return(asv_by_rank)
+}
+
 
 
