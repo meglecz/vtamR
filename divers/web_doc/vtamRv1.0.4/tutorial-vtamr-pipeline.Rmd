@@ -1,13 +1,13 @@
 ---
-title: "Tutorial - vtamR pipeline - v1.1.0"
+title: "Tutorial - vtamR pipeline - v1.0.4"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette:
+output:
+  html_document:
     toc: true
-    toc_depth: 3
+    toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.1.0}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.0.4}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -119,7 +119,6 @@ For impatient users, see the [Short tutorial](short-tutorial.html).
 library(vtamR)
 ```
 
-
 ### Set Path to Third-Party Programs {#set-path}
 
 If the third-party programs are **not** in your `PATH` 
@@ -151,8 +150,7 @@ and run the tutorial examples exactly as written.
 
 ```{r set_path, eval=TRUE}
 # All executables are in the PATH
-#cutadapt_path <- "cutadapt"
-cutadapt_path <- "~/miniconda3/envs/vtam_benchmark/bin/cutadapt"
+cutadapt_path <- "cutadapt"
 vsearch_path <- "vsearch"
 blast_path <- "blastn"
 swarm_path <- "swarm"
@@ -239,8 +237,9 @@ then demonstrate how to **pool results** from different plates and markers.
 Let’s begin by setting the **output directory** for **plate 1 of MFZR**.
 
 ```{r general-parameters}
-outdir <- file.path("vtamR_demo_out", "mfzr_plate1")
+outdir <- "vtamR_demo_out/mfzr_plate1"
 ```
+
 
 **Loading Data**
 
@@ -307,36 +306,6 @@ check_file_info(file=asv_list, file_type="asv_list")
 > This section highlights key features and options of `vtamR`, 
 helping you run the functions more effectively.
 
-## Set the log file
-
-vtamR can generate a log file that records every major function called during an analysis. For each function, the log includes:
-
-* all arguments and their values, including default values that were not explicitly specified;
-* the start and end times of the function call; and
-* the function runtime.
-
-This log is extremely valuable for ensuring reproducibility. It allows you to 
-reconstruct exactly how an analysis was performed, even years later, even if the 
-original script has been lost or modified. The log therefore serves as a complete 
-record of the analysis workflow.
-
-First, define the path to the log file:
-
-```{r set-log-file}
-log_file <- file.path(outdir, "vtamR_log_mfzr.csv")
-```
-
-Whenever the `log_file` argument is provided when calling a vtamR function, 
-the details of that function call are appended to the log file.
-
-Using a log file comes with only two minor requirements, which are well worth 
-the benefit of fully reproducible analyses:
-
-* Specify the `log_file` argument in every major vtamR function call.
-* Explicitly name every argument when calling a function (for example, 
-use `my_function(input = my_file)` rather than relying on positional arguments
-(`my_function(my_file)`).
-
 ## Pre-process reads
 
 Your FASTQ files can vary depending on your lab and sequencing setup. 
@@ -352,7 +321,7 @@ So, we’ll need to:
 - **Merge and quality-check** the read pairs using `merge_fastq_pairs`.
 - **Subsample** each library to ensure all replicates have 
 similar coverage with `subsample_fasta`.
-- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim_fasta`.
+- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim`.
 
 See the [From fastq to data frame](from-fastq-to-df.html) on
 how to deal with other experimental designs.
@@ -395,8 +364,7 @@ fastainfo_df <- merge_fastq_pairs(
   fastq_maxee=1, # Maximum Expected Error for each read
   fastq_maxns=0, # no Ns in output
   compress=FALSE,
-  fastq_allowmergestagger=T, # reads might be longer than the marker
-  log_file = log_file
+  fastq_allowmergestagger=T # reads might be longer than the marker
   )
 ```
 
@@ -428,8 +396,7 @@ fastainfo_df <- subsample_fasta(
   outdir = randomseq_dir,  # directory of output fasta files.
   use_vsearch  = FALSE, # use cross-platform version
   n = 40000, # select n sequences from each file
-  randseed=123, #  A given non-zero seed produces always the same result.
-  log_file = log_file
+  randseed=123 #  A given non-zero seed produces always the same result.
   ) 
 
 ```
@@ -441,11 +408,11 @@ reads than the other files — this is expected and not a cause for concern.
 
 ### Demultiplex and Trim {#demultiplex}
 
-The `demultiplex_and_trim_fasta` function is used to both **[demultiplex](#glossary)** your 
+The `demultiplex_and_trim` function is used to both **[demultiplex](#glossary)** your 
 FASTA files (i.e. separate reads based on their tag combinations) 
 and **[trim](#glossary)** [tag](#glossary) and primer sequences from those reads.
 
-You can check the help page (`?demultiplex_and_trim_fasta`) to choose the 
+You can check the help page (`?demultiplex_and_trim`) to choose the 
 right settings for your data.
 
 * If `check_reverse = TRUE`, the function will also look for matches 
@@ -457,7 +424,7 @@ used as input for the `dereplicate` step.
 ```{r demultiplex}
 demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
 
-sampleinfo_df <- demultiplex_and_trim_fasta(
+sampleinfo_df <- demultiplex_and_trim(
   fastainfo=fastainfo_df,  # input df (output of subsample_fasta)
   fasta_dir=randomseq_dir, # input directory with fasta files
   outdir=demultiplexed_dir,  # output directory
@@ -465,8 +432,7 @@ sampleinfo_df <- demultiplex_and_trim_fasta(
   cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
   vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
   cutadapt_minimum_length = 170,
-  cutadapt_maximum_length = 185,
-  log_file = log_file
+  cutadapt_maximum_length = 185
   )
 ```
 
@@ -505,12 +471,11 @@ outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo=sampleinfo_df, # input df (output of demultiplex_and_trim_fasta)
+  sampleinfo_df, # input df (output of demultiplex_and_trim)
   dir=demultiplexed_dir, # directory with input fasta files
   outfile=outfile, # write the output data frame to this file
   input_asv_list=asv_list, 
-  output_asv_list=updated_asv_list,
-  log_file = log_file
+  output_asv_list=updated_asv_list
   )
 ```
 
@@ -649,13 +614,12 @@ by_sample <- TRUE
 
 outfile <- file.path(outdir, "4_filter", "2_swarm_denoise.csv")
 read_count_df <- denoise_by_swarm(
-  read_count = read_count_df,
+  read_count_df,
   outfile=outfile,
   by_sample=by_sample,
   split_clusters=split_clusters,
   swarm_path=swarm_path,
-  quiet=TRUE,
-  log_file = log_file
+  quiet=TRUE
   )
 
 param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters, sep=" ")
@@ -686,10 +650,9 @@ global_read_count_cutoff = 2
 outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
 
 read_count_df <- filter_asv_global(
-  read_count = read_count_df, 
+  read_count_df, 
   outfile=outfile,
-  cutoff=global_read_count_cutoff,
-  log_file = log_file
+  cutoff=global_read_count_cutoff
   )
 
 param <- paste("global_read_count_cutoff:", global_read_count_cutoff, sep=" ")
@@ -711,9 +674,8 @@ erroneous sequence or a pseudogene.
 outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
 
 read_count_df <- filter_indel(
-  read_count = read_count_df,
-  outfile=outfile,
-  log_file = log_file
+  read_count_df,
+  outfile=outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
@@ -739,10 +701,9 @@ outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
 
 genetic_code = 5
 read_count_df <- filter_stop_codon(
-  read_count = read_count_df, 
+  read_count_df, 
   genetic_code=genetic_code,
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 param <- paste("genetic_code:", genetic_code, sep=" ")
@@ -769,11 +730,10 @@ outfile <- file.path(outdir, "4_filter", "6_filter_contaminant.csv")
 conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
 
 read_count_df <- filter_contaminant(
-  read_count = read_count_df, 
+  read_count_df, 
   sampleinfo=sampleinfo_df,
   conta_file=conta_file,
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
@@ -802,13 +762,12 @@ by_sample = TRUE
 sample_prop = 0.8
 
 read_count_df <- filter_chimera(
-  read_count = read_count_df, 
+  read_count_df, 
   vsearch_path=vsearch_path, 
   outfile=outfile,
   by_sample=by_sample, 
   sample_prop=sample_prop, 
-  abskew=abskew,
-  log_file = log_file
+  abskew=abskew
   )
 
 param <- paste("by_sample:", by_sample, "sample_prop:", sample_prop, "abskew:", abskew, sep=" ")
@@ -827,10 +786,7 @@ To do this, we calculate the [Renkonen distances](#glossary) between all pairs o
 replicates within each sample and identify those that deviate significantly from the others.
 
 ```{r renkonen-dist}
-renkonen_within_df <- compute_renkonen_distances(
-  read_count = read_count_df, 
-  compare_all=FALSE,
-  log_file = log_file)
+renkonen_within_df <- compute_renkonen_distances(read_count_df, compare_all=FALSE)
 ```
 
 #### Visualize Renkonen Distances
@@ -842,9 +798,7 @@ similar replicates are within each sample.
 so your own data will likely produce a **different-looking graph**.
 
 ```{r renkonen-dist-density-plot}
-plot_renkonen_distance_density(
-  df = renkonen_within_df,
-  log_file = log_file)
+plot_renkonen_distance_density(renkonen_within_df)
 ```
 We can also create a **barplot of the Renkonen distances**, using different 
 colors to represent **sample types** (real, mock, or negative).
@@ -855,16 +809,15 @@ colors to represent **sample types** (real, mock, or negative).
 but any data frame with these columns will work.
 * If `sampleinfo_df` is not in your environment, you can use the 
 **sampleinfo.csv** instead of the data frame. This 
-files was produced by `demultiplex_and_trim_fasta` in this pipeline and found in the **vtamR_demo_out/mfzr_plate1/3_demultiplexed** folder.
+files was produced by `demultiplex_and_trim` in this pipeline and found in the **vtamR_demo_out/mfzr_plate1/3_demultiplexed** folder.
 * This is a **very small test data set**, so your own data will likely produce 
 a **different-looking graph**.
 
 ```{r renkonen-dist-barplot}
 plot_renkonen_distance_barplot(
-  df = renkonen_within_df, 
+  renkonen_within_df, 
   sampleinfo=sampleinfo_df, 
-  x_axis_label_size=6,
-  log_file = log_file
+  x_axis_label_size=6
   )
 ```
 
@@ -896,10 +849,9 @@ outfile <- file.path(outdir, "4_filter", "8_filter_replicate.csv")
 renkonen_distance_quantile <- 0.9
 
 read_count_df <- filter_replicate(
-  read_count = read_count_df, 
-  outfile = outfile,
+  read_count_df, 
   renkonen_distance_quantile = renkonen_distance_quantile,
-  log_file = log_file
+  outfile = outfile
   )
 
 param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile, sep=" ")
@@ -928,13 +880,12 @@ Here’s a quick example of how to create it. After generating the file, check *
 outdir_mock <- file.path(outdir, "mock_composition")
 
 mock_template <- match_variants_to_mock_species(
-  read_count = read_count_df,
+  read_count=read_count_df,
   fas=mock_ncbi_fasta, # fasta with reference sequences on the mock or closely related species
   taxonomy=taxonomy,
   sampleinfo = sampleinfo_df,
   outdir= outdir_mock,
-  blast_path=blast_path,
-  log_file = log_file
+  blast_path=blast_path
   )
 mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
 mock_composition_df <- read.csv(mock_composition)
@@ -965,10 +916,9 @@ see [How to make a mock_composition file](make-mock-composition-file.html) for g
 outfile = file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
 
 suggest_sample_cutoff_df <- suggest_sample_cutoff(
-  read_count = read_count_df,
-  mock_composition = mock_composition,
-  outfile = outfile,
-  log_file = log_file
+  read_count=read_count_df,
+  mock_composition=mock_composition,
+  outfile=outfile
   )
 
 knitr::kable(head(suggest_sample_cutoff_df), format = "markdown")
@@ -1008,10 +958,9 @@ sample_cutoff <- 0.004
 outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
   
 read_count_df <- filter_occurrence_sample(
-  read_count = read_count_df, 
+  read_count_df, 
   cutoff=sample_cutoff, 
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 param <- paste("cutoff:", sample_cutoff, sep=" ")
@@ -1030,10 +979,9 @@ min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
   
 read_count_df <- filter_min_replicate(
-  read_count = read_count_df, 
+  read_count_df, 
   cutoff=min_replicate_number, 
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")
@@ -1126,12 +1074,11 @@ This is equivalent to applying the `filter_min_replicate` filter.
 outdir_suggest = file.path(outdir, "4_filter", "suggest_parameters")
 
 suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
-  read_count = read_count_df,
+  read_count_df,
   mock_composition = mock_composition,
   sampleinfo = sampleinfo_df,
-  outdir = outdir_suggest, 
-  min_replicate_number = 2,
-  log_file = log_file
+  outdir= outdir_suggest, 
+  min_replicate_number=2
   )
 
 knitr::kable(head(suggest_variant_readcount_cutoffs_df), format = "markdown")
@@ -1162,10 +1109,9 @@ outfile <- file.path(outdir, "4_filter", "11_filter_occurrence_variant.csv")
 variant_cutoff = 0.001
               
 read_count_df_variant <- filter_occurrence_variant(
-  read_count = read_count_df, 
-  cutoff = variant_cutoff, 
-  outfile = outfile,
-  log_file = log_file
+  read_count_df, 
+  cutoff=variant_cutoff, 
+  outfile=outfile
   )
 
 param <- paste("cutoff:", variant_cutoff, sep=" ")         
@@ -1178,10 +1124,9 @@ read_count_cutoff <- 10
 outfile <- file.path(outdir, "4_filter", "12_filter_occurrence_read_count.csv")
               
 read_count_df_rc <- filter_occurrence_read_count(
-  read_count = read_count_df, 
-  cutoff = read_count_cutoff, 
-  outfile = outfile,
-  log_file = log_file
+  read_count_df, 
+  cutoff=read_count_cutoff, 
+  outfile=outfile
   )
 
 param <- paste("cutoff:", read_count_cutoff, sep=" ")        
@@ -1194,10 +1139,8 @@ Combine results of filter_occurrence_variant and filter_occurrence_read_count
 outfile <- file.path(outdir, "4_filter", "13_pool_filters.csv")
 
 read_count_df <- pool_filters(
-  read_count_df_rc, 
-  read_count_df_variant,    
-  outfile=outfile,
-  log_file = log_file
+  read_count_df_rc, read_count_df_variant,    
+  outfile=outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="pool_filters", params=NA)
@@ -1219,10 +1162,9 @@ min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
 
 read_count_df <- filter_min_replicate(
-  read_count = read_count_df, 
+  read_count_df, 
   cutoff=min_replicate_number, 
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")  
@@ -1250,10 +1192,9 @@ represents a mean or another type of aggregated value across replicates.
 outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
 
 read_count_sample_df <- pool_replicates(
-  read_count = read_count_df,
+  read_count_df,
   method = "mean",   # Aggregate replicates using the mean read count
-  outfile = outfile,
-  log_file = log_file
+  outfile = outfile
 )
 ```
 
@@ -1281,14 +1222,12 @@ false_negatives <- file.path(outdir, "4_filter", "false_negatives.csv")
 performance_metrics <- file.path(outdir, "4_filter", "performance_metrics.csv")
 known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
 
-results <- classify_control_occurrences(
-  read_count = read_count_sample_df, 
-  sampleinfo=sampleinfo_df, 
-  mock_composition=mock_composition, 
-  known_occurrences=known_occurrences, 
-  false_negatives=false_negatives,
-  performance_metrics=performance_metrics,
-  log_file = log_file)
+results <- classify_control_occurrences(read_count_sample_df, 
+                                sampleinfo=sampleinfo_df, 
+                                mock_composition=mock_composition, 
+                                known_occurrences=known_occurrences, 
+                                false_negatives=false_negatives,
+                                performance_metrics=performance_metrics)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
@@ -1314,8 +1253,6 @@ write.csv(stat_df, file = file.path(outdir, "summary.csv"))
 The `assign_taxonomy_ltg` function uses a **BLAST-based Last Common Ancestor (LCA) approach**.
 For a short description of how the algorithm works, see `?assign_taxonomy_ltg`.
 
-**Note**: For 16S datasets checkout the [`assign_taxonomy_rdp`](#assign_taxonomy_rdp) function.
-
 For details on the required formats of the `taxonomy` and `blast_db` inputs, refer to the
 [Reference database for taxonomic assignments](#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg) section.
 
@@ -1325,13 +1262,11 @@ You can also download a **ready-to-use COI reference database** (see [Installati
 ```{r taxassign}
 outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
 
-asv_tax <- assign_taxonomy_ltg(
-  asv=read_count_sample_df, 
-  taxonomy=taxonomy, 
-  blast_db=blast_db, 
-  blast_path=blast_path, # can be omitted if BLAST is in the PATH
-  outfile=outfile,
-  log_file = log_file)
+asv_tax <- assign_taxonomy_ltg(asv=read_count_sample_df, 
+                     taxonomy=taxonomy, 
+                     blast_db=blast_db, 
+                     blast_path=blast_path, # can be omitted if BLAST is in the PATH
+                     outfile=outfile)
 ```
 
 ## Clustering (mOTUs) {#cluster_asv}
@@ -1383,15 +1318,14 @@ outfile <- file.path(outdir, "5_cluster", "pairwise_identities_vsearch.csv")
 plotfile <- file.path(outdir, "5_cluster", "plot_pairwise_identity_vsearch.png")
 
 plot_vsearch <- plot_pairwise_identity_vsearch(
-  read_count = read_count_sample_df,
-  identity_min=0.9,
-  identity_max=0.99,
-  identity_increment=0.01,
-  min_id = 0.8, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH 
-  outfile=outfile, 
-  plotfile=plotfile,
-  log_file = log_file)
+                read_count_sample_df,
+                identity_min=0.9,
+                identity_max=0.99,
+                identity_increment=0.01,
+                min_id = 0.8, 
+                vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH 
+                outfile=outfile, 
+                plotfile=plotfile)
 
 print(plot_vsearch)
                                           
@@ -1434,15 +1368,14 @@ outfile <- file.path(outdir, "5_cluster", "classification_vsearch.csv")
 plotfile <- file.path(outdir, "5_cluster", "plot_cluster_classification_vsearch.png")
 
 scatterplot_vsearch <- plot_cluster_classification(
-  read_count = read_count_sample_df,
-  taxa = asv_tax,
-  clustering_method = "vsearch",
-  cluster_params = c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
-  vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
-  taxlevels = c("species", "genus"),
-  outfile = outfile,
-  plotfile = plotfile,
-  log_file = log_file)
+                        read_count=read_count_sample_df,
+                        taxa=asv_tax,
+                        clustering_method="vsearch",
+                        cluster_params=c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
+                        vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+                        taxlevels= c("species", "genus"),
+                        outfile=outfile,
+                        plotfile=plotfile)
 
 print(scatterplot_vsearch)
 ```
@@ -1508,14 +1441,13 @@ In this tutorial, we cluster the data using VSEARCH with an identity threshold o
 outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
 identity <- 0.97 
 read_count_samples_df_ClusterSize <- cluster_asv(
-  read_count = read_count_sample_df,
-  method = "vsearch",
-  identity = 0.97,
-  group = TRUE,
-  by_sample=FALSE,
-  path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outfile=outfile,
-  log_file = log_file)
+      read_count_sample_df,
+      method = "vsearch",
+      identity = 0.97,
+      group = TRUE,
+      by_sample=FALSE,
+      path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+      outfile=outfile)
 
 stat_df <- get_stat(read_count_samples_df_ClusterSize, 
                    stat_df, 
@@ -1552,133 +1484,15 @@ For more details, see `?write_asv_table`.
 ```{r write-asv-table}
 outfile=file.path(outdir, "motu_table_taxa.csv")
 
-asv_table_df <- write_asv_table(
-  read_count = read_count_sample_df, 
-  outfile=outfile, 
-  asv_tax=asv_tax, 
-  sampleinfo=sampleinfo_df, 
-  add_empty_samples=FALSE, 
-  add_sums_by_sample=TRUE, 
-  add_sums_by_asv=TRUE, 
-  add_expected_asv=TRUE, 
-  mock_composition=mock_composition,
-  log_file = log_file)
-```
-
-## Document your workflow
-
-### Record R and package versions
-
-The log file records all functions called during the analysis and the parameters
-used for each function. However, one important piece of information is still
-missing: the software environment in which the analysis was performed.
-
-To ensure reproducibility, it is important to record the R version and the
-versions of all packages used. The information can be saved as a CSV file,
-which can be archived together with your results and will be useful when
-sharing or publishing your work.
-
-```{r versions}
-package_versions <- file.path(outdir, "R_package_versions.csv")
-collect_package_info(package_versions)
-```
-
-### MIEM
-
-Transparent and reproducible reporting is an essential part of environmental
-metabarcoding studies. The 
-**Minimum Information for reporting of environmental metabarcoding data (MIEM)** 
-guidelines ([Klymus et al. 2023](https://mbmg.pensoft.net/article/128689/))
-provide recommendations for documenting the methods, data processing steps, and
-results required for a complete and reproducible study.
-
-The **vtamR** package helps you compile most of the information of the 
-**Methods - Bioinformatics and Reference Database** and  
-**Results - Sequencing Summary Statistics** sections required by the
-MIEM guidelines directly from your analysis workflow. The `miem_bioinformatics()`
-function collects information about the bioinformatics pipeline, including the
-different analysis steps, software used, versions, and parameters, based on your
-`log_file` and `package_versions` files. The output can be used to easily fill the 
-**Methods - Bioinformatics and Reference Database** section on the MIEM checlist.
-
-The `miem_results()` function extracts key summary information from your results,
-such as the number of reads, ASVs, samples, and other relevant metrics and the 
-output can be used to fill the **Results - Sequencing Summary Statistics** section.
-
-The generated MIEM tables are designed to be almost ready for publication.
-Before submission, you should carefully review the output files and complete or
-adjust the sections that cannot be automatically retrieved by **vtamR**, such as
-study-specific descriptions or methodological details that require expert input.
-
-**MIEM bioinformatics**
-```{r miem_bioinformatics}
-miem_dir <- file.path(outdir, "MIEM")
-miem_bioinformatics(
-  log = log_file,
-  r_versions = package_versions,
-  outfile =  file.path(miem_dir, "MIEM_bioinfo.csv")
-  )
-```
-
-**MIEM Sequencing Summary**
-
-`info_files`: A vector containing the filenames of the information files generated 
-during the different preprocessing steps of vtamR. 
-These can be fastqinfo, fastainfo, or sampleinfo files.
-
-The files are used to:
-
-- calculate the total number of reads remaining after the different preprocessing steps;
-- retrieve sample_type information from the final information file.
-
-The last file in info_files is therefore particularly important, as it is used to determine the sample information.
-
-`fastq_dir`: The directory containing the input FASTQ files. This parameter tells 
-the function where to find the FASTQ files associated with the analysis.
-
-`read_count_files`: A vector containing the read-count files generated during the 
-vtamR pipeline. These files are used to summarize the number of reads retained at 
-different filtering steps.
-
-You can provide a read-count file from any filtering step. 
-However, the two most informative files are usually:
-
-- The first file, typically produced by dereplicate. It provides the number of reads and 
-ASVs remaining after the main preprocessing steps, such as merging, 
-demultiplexing, and quality filtering.
-- The last file, corresponding to the final filtering step. 
-It provides the number of reads and ASVs remaining after `vtamR` filtering, 
-such as chimera removal and filtering of low-frequency or frequency-noise sequences.
-
-The last file in read_count_files is also used to:
-
-- count the number of ASVs or mOTUs assigned to each taxonomic rank;
-- identify false-positive and false-negative taxonomic assignments.
-
-
-```{r miem_results}
-info_files = c(
-  fastqinfo,
-  "vtamR_demo_out/mfzr_plate1/1_merged/fastainfo.csv",
-  "vtamR_demo_out/mfzr_plate1/2_random_seq/fastainfo.csv",
-  "vtamR_demo_out/mfzr_plate1/3_demultiplexed/sampleinfo.csv"
-)
-read_count_files = c(
-  "vtamR_demo_out/mfzr_plate1/4_filter/1_before_filter.csv",
-  "vtamR_demo_out/mfzr_plate1/4_filter/2_swarm_denoise.csv",
-  "vtamR_demo_out/mfzr_plate1/4_filter/14_filter_min_replicate.csv",
-  "vtamR_demo_out/mfzr_plate1/4_filter/15_pool_replicates.csv",
-  "vtamR_demo_out/mfzr_plate1/5_cluster/16_mOTU_vsearch.csv"
-)
-taxa = "vtamR_demo_out/mfzr_plate1/4_filter/assign_taxonomy_ltg.csv"
-miem_results(
-  info_files = info_files, 
-  fastq_dir = fastq_dir, 
-  read_count_files = read_count_files, 
-  taxa = taxa, 
-  outdir = miem_dir, 
-  mock_composition = mock_composition,
-  )
+asv_table_df <- write_asv_table(read_count_sample_df, 
+                              outfile=outfile, 
+                              asv_tax=asv_tax, 
+                              sampleinfo=sampleinfo_df, 
+                              add_empty_samples=FALSE, 
+                              add_sums_by_sample=TRUE, 
+                              add_sums_by_asv=TRUE, 
+                              add_expected_asv=TRUE, 
+                              mock_composition=mock_composition)
 ```
 
 ## Multiple Datasets
@@ -1696,12 +1510,6 @@ in the `dereplicate` step. This ensures that ASV IDs remain consistent across bo
 
 An R script for analyzing the second MFZR plate is available here: xxxxxxxxxxxxx
 
-Let's define a new output directory and log file.
-```{r, eval=TRUE}
-outdir <- file.path("vtamR_demo_out", "pooled_mfzr_plates") 
-log_file <- file.path(outdir, "vtamR_log_pooled_mfzr_plates.csv") 
-```
-
 **Pool Filtered Datasets**
 
 Filtered datasets can be easily combined using the long format
@@ -1718,7 +1526,7 @@ In this example, we will:
 
 #### Pool Datasets
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 pooled_replicates_mfzr1 <-  system.file(
   "extdata/demo/15_pool_replicates_mfzr_plate1.csv", 
   package = "vtamR"
@@ -1733,29 +1541,27 @@ filtered_files <- c(
   pooled_replicates_mfzr2
   )
 
-outfile <- file.path(outdir, "filtered_asv.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "filtered_asv.csv") 
 pooled_read_count_df <- pool_datasets(
   files = filtered_files, 
   outfile = outfile, 
-  method = "mean",  # If a sample appears in multiple plates, take the mean read count
-  log_file = log_file
+  method = "mean"  # If a sample appears in multiple plates, take the mean read count
 )
 ```
 
 #### Make mOTUs from Pooled Data
 
-```{r, eval=TRUE}
-outfile <- file.path(outdir, "motu.csv")
+```{r, eval=FALSE}
+outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "motu.csv")
 identity <- 0.97 
 
 read_count_motu <- cluster_asv(
-  read_count = pooled_read_count_df,
+  pooled_read_count_df,
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
   path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 ```
 
@@ -1764,31 +1570,29 @@ read_count_motu <- cluster_asv(
 While you could reuse taxonomic assignments from previous runs, 
 it is usually simpler to rerun the assignment on the pooled dataset.
 
-```{r, eval=TRUE}
-outfile <- file.path(outdir, "tax_assign_ltg.csv")
+```{r, eval=FALSE}
+outfile <- file.path("vtamR_demo_out", "pooled_mfzr_plates", "tax_assign_ltg.csv")
 
 asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
   blast_path=blast_path, # can be omitted if BLAST is in the PATH
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 ```
 
 #### Print ASV table
 
-```{r, eval=TRUE}
-outfile=file.path(outdir, "motu_table_taxa.csv")
+```{r, eval=FALSE}
+outfile=file.path("vtamR_demo_out", "pooled_mfzr_plates", "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
-  read_count = read_count_motu, 
+  read_count_motu, 
   outfile=outfile, 
   asv_tax=asv_tax_pooled, 
   add_sums_by_sample=T, 
-  add_sums_by_asv=T,
-  log_file = log_file
+  add_sums_by_asv=T
   )
 ```
 
@@ -1813,7 +1617,7 @@ in the `dereplicate` step. This ensures that
 
 The corresponding results are included in the package:
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 mfzr_filtered <-  system.file(
   "extdata/demo/15_pool_replicates_mfzr_plate1.csv", 
   package = "vtamR"
@@ -1822,13 +1626,6 @@ zfzr_filtered <-  system.file(
   "extdata/demo/15_pool_replicates_zfzr_plate1.csv", 
   package = "vtamR"
   )
-```
-
-
-Let's define a new output directory and log file.
-```{r, eval=TRUE}
-outdir <- file.path("vtamR_demo_out", "pooled_markers") 
-log_file <- file.path(outdir, "vtamR_log_pooled_markers.csv") 
 ```
 
 If you have consistently used the `ASV_list_with_IDs.csv` from previous runs 
@@ -1841,12 +1638,16 @@ for instance, `1` for MFZR and `2` for ZFZR in this example.
 
 These identifiers are appended to the ASV IDs, keeping them unique and preventing confusion between markers.
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 input_files <- c(mfzr_filtered, zfzr_filtered)
 marker_ids <- c(1, 2)
 
-outfile <- file.path(outdir, "filtered_asv.csv") 
-asv_with_centroids <- file.path(outdir, "filtered_asv_with_centroids.csv")
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "filtered_asv.csv") 
+asv_with_centroids <- file.path(
+  "vtamR_demo_out", 
+  "pooled_markers", 
+  "filtered_asv_with_centroids.csv"
+  )
 
 pooled_markers <- pool_markers(
   files = input_files,
@@ -1855,8 +1656,7 @@ pooled_markers <- pool_markers(
   asv_with_centroids = asv_with_centroids,  # same as input, with added centroid_id and centroid
   method = "mean",  # mean read counts across pooled ASVs
   vsearch_path = "vsearch",
-  quiet = TRUE,
-  log_file = log_file
+  quiet = TRUE
 )
 ```
 
@@ -1866,42 +1666,38 @@ As with multiple datasets for a single marker, we will cluster the ASVs
 from the pooled dataset into mOTUs, then assign the sequences to taxa, 
 and finally create an mOTU table.
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 #### Cluster
-outfile <- file.path(outdir, "motu.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "motu.csv") 
 identity <- 0.97 
 read_count_motu <- cluster_asv(
-  read_count = pooled_markers,
+  pooled_markers,
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
   path=vsearch_path, 
-  outfile=outfile,
-  log_file = log_file
-  )
+  outfile=outfile)
 
 #### TaxAssign
-outfile <- file.path(outdir, "assign_taxonomy_ltg.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "assign_taxonomy_ltg.csv") 
 
 asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
   blast_path=blast_path, 
-  outfile=outfile,
-  log_file = log_file
+  outfile=outfile
   )
 
 #### Print mOTU table
-outfile <- file.path(outdir, "motu_table_taxa.csv") 
+outfile <- file.path("vtamR_demo_out", "pooled_markers", "motu_table_taxa.csv") 
 
 asv_table_df <- write_asv_table(
-  read_count = read_count_motu, 
+  read_count_motu, 
   outfile=outfile, 
   asv_tax=asv_tax_pooled, 
   add_sums_by_sample=T, 
-  add_sums_by_asv=T,
-  log_file = log_file
+  add_sums_by_asv=T
   )
 ```
 
@@ -1945,7 +1741,7 @@ Saving outputs as CSV is a good practice for long workflows. It allows you to:
 ## To Compress or Not to Compress
 
 During the first steps of the workflow 
-(`merge_fastq_pairs`, `subsample_fasta`, `trim_primers`, `demultiplex_and_trim_fasta`), 
+(`merge_fastq_pairs`, `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`), 
 many intermediate files are generated. Some of these files can be very large, 
 especially before dereplication (`dereplicate`).
 
@@ -1959,7 +1755,7 @@ Remember to delete intermediate files once your analysis is complete.
 See [Files to Keep](#files-to-keep) for guidance on which files to retain.
 
 If storage is limited, you can enable file compression by setting `compress = TRUE` 
-in relevant functions (e.g., `subsample_fasta`, `trim_primers`, `demultiplex_and_trim_fasta`). 
+in relevant functions (e.g., `subsample_fasta`, `trim_primers`, `demultiplex_and_trim`). 
 This produces **gzip-compressed output files**.
 
 ### Compression Methods
@@ -2123,10 +1919,10 @@ This limits `merge_fastq_pairs` to use **8 CPU threads**:
 ```{r, eval=FALSE}
 fastainfo_df <- merge_fastq_pairs(
   fastqinfo, 
-  fastq_dir = fastq_dir, 
-  vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir = merged_dir,
-  num_threads = 8
+  fastq_dir =fastq_dir, 
+  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
+  outdir =merged_dir,
+  num_threads =8
   )
 ```
 
@@ -2198,7 +1994,7 @@ Here’s a practical guide on what to keep, delete, or compress:
   * Compress the FASTA files.
   * Keep them to ensure reproducibility in case of re-analysis.
 
-* `demultiplex_and_trim_fasta`:
+* `demultiplex_and_trim`:
 
   * Delete the output FASTA files.
   * Keep `sampleinfo.csv` for read count information after trimming.
@@ -2285,10 +2081,10 @@ suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
 The `subsample_fasta` function randomly selects `n` sequences (without replacement) 
 from each input FASTA file listed in the `fastainfo` data frame.
 
-This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (`demultiplex_and_trim_fasta`).
+This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (`demultiplex_and_trim`).
 
 > **Note:** If your workflow includes `filter_occurrence_variant` or `filter_occurrence_read_count`, which rely on total reads in negative controls, standardizing read numbers across samples is **not recommended**.
-> Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim_fasta` to ensure all replicate series have the same number of reads.
+> Typically, `subsample_fasta` is applied after `merge_fastq_pairs` but before `demultiplex_and_trim` to ensure all replicate series have the same number of reads.
 
 **Available Algorithms**
 
@@ -2388,10 +2184,10 @@ false positives, and false negatives.
 * `read_count_df`: Data frame containing ASV read counts for each sample.
 * `sampleinfo_df`: Must include columns:
   `sample`, `sample_type`, `replicate`, and `habitat`.
-  Any data frame with these columns is acceptable. The easiest is the output of `demultiplex_and_trim_fasta`
+  Any data frame with these columns is acceptable. The easiest is the output of `demultiplex_and_trim`
 
 > **Tip:**
-> If you restarted the analysis after `demultiplex_and_trim_fasta` and `sampleinfo_df` 
+> If you restarted the analysis after `demultiplex_and_trim` and `sampleinfo_df` 
 is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplexed`.
 
 **Notes**
@@ -2569,7 +2365,7 @@ start with a number).
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
-filter_dir <- file.path("vtamR_demo_out", "mfzr_plate1", "4_filter")
+filter_dir <- file.path(outdir, "4_filter")
 tmp_ASV <- history_by(dir=filter_dir, 
                         feature="asv_id", 
                         values=c(4, 27)
@@ -2754,7 +2550,7 @@ but `.zip` files are not supported.
 
 In most cases, you do not need to use this function during a standard workflow.
 The [fastainfo](#fastainfo) and [sampleinfo](#sampleinfo) files already 
-include read counts after `merge_fastq_pairs` and `demultiplex_and_trim_fasta`.
+include read counts after `merge_fastq_pairs` and `demultiplex_and_trim`.
 
 However, this function can be useful if you want to check the number of 
 reads in your raw input FASTQ files before starting the analysis.
@@ -3170,9 +2966,9 @@ If your amplicon is shorter than the reads, enable staggered merging by setting
 Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:
 
 
-## No or Few Sequences Passing `demultiplex_and_trim_fasta`
+## No or Few Sequences Passing `demultiplex_and_trim`
 
-By default, the `demultiplex_and_trim_fasta` function searches for tags and primers 
+By default, the `demultiplex_and_trim` function searches for tags and primers 
 only at the very ends of the reads (`tag_to_end = TRUE`, `primer_to_end = TRUE`). 
 This setting is both efficient and appropriate for most use cases.
 
@@ -3181,6 +2977,6 @@ a few nucleotides away from the ends of your sequences. In such cases,
 you need to adjust these settings to ensure the function searches for 
 tags and primers in the correct positions.
 
-For more details, refer to the function documentation: `?demultiplex_and_trim_fasta`.
+For more details, refer to the function documentation: `?demultiplex_and_trim`.
 
 

@@ -278,8 +278,7 @@ run_system2 <- function(path, args, quiet = FALSE) {
 #' check_dir(path = "data")
 #' }
 #' 
-#' @keywords internal
-#' @noRd
+#' @export
 
 check_dir <- function(path, is_file=FALSE){
   

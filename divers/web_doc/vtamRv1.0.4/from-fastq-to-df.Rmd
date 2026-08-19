@@ -1,13 +1,13 @@
 ---
-title: "From fastq to data frame - v1.1.0"
+title: "From fastq to data frame - v1.0.4"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette:
+output:
+  html_document:
     toc: true
-    toc_depth: 3
+    toc_float: true
 vignette: >
-  %\VignetteIndexEntry{From fastq to data frame - v1.1.0}
+  %\VignetteIndexEntry{From fastq to data frame - v1.0.4}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -281,12 +281,12 @@ tags and primers.
 Read pairs should be **quality filtered**, **merged** and written to **fasta format** as 
 in the previous sections.
 
-Then the `demultiplex_and_trim_fasta` function will 
+Then the `demultiplex_and_trim` function will 
 **[demultiplex](tutorial-vtamr-pipeline.html#glossary)** the fasta 
 files according to the **[tag](tutorial-vtamr-pipeline.html#glossary)** combinations and **[trim](tutorial-vtamr-pipeline.html#glossary)** 
 the primers from the reads. 
 
-See the help (`?demultiplex_and_trim_fasta`) for setting the 
+See the help (`?demultiplex_and_trim`) for setting the 
 correct parameters for demultiplexing and primer trimming:
 
 ### Set Input
@@ -297,9 +297,9 @@ The key information for `merge_fastq_pairs` is the list of the fastq file pairs 
 * [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. 
 It is the updated version of `fastqinfo`, where fastq file names have been 
 replaced by fasta file names.
-* `fasta_dir`: Directory containing the input fasta files for `demultiplex_and_trim_fasta`. 
+* `fasta_dir`: Directory containing the input fasta files for `demultiplex_and_trim`. 
 This directory is created by `merge_fastq_pairs`.
-* If `check_reverse` is TRUE, `demultiplex_and_trim_fasta` checks the reverse complementary stand as well.
+* If `check_reverse` is TRUE, `demultiplex_and_trim` checks the reverse complementary stand as well.
 * `sampleinfo_df`: Updated version of `fastainfo`. 
 This data frame and the files listed in it are the input of the `dereplicate`.
 * `outdir`: Name of the output directory. 
@@ -332,7 +332,7 @@ fastainfo_df <- merge_fastq_pairs(
 
 ### Demultiplex, Trim off Tags and Primers**
 ```{r demultiplex3}
-sampleinfo_df <- demultiplex_and_trim_fasta(
+sampleinfo_df <- demultiplex_and_trim(
   fastainfo_df, 
   fasta_dir=merged_dir, 
   outdir=demultiplexed_dir, 
@@ -345,7 +345,7 @@ sampleinfo_df <- demultiplex_and_trim_fasta(
 
 ### Dereplicate
 
-The fasta files produced by `demultiplex_and_trim_fasta` can be read to a data frame and be 
+The fasta files produced by `demultiplex_and_trim` can be read to a data frame and be 
 [dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `Dereplicate` function.
 See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
 more information.
@@ -371,23 +371,23 @@ demultiplexing them, as described in the previous section, the order of these
 steps can be reversed.
 
 FASTQ file pairs can be demultiplexed and trimmed of tags and primers using 
-the `demultiplex_and_trim_fastq` function. This procedure produces FASTQ file pairs 
+the `demultiplex_fastq_pairs` function. This procedure produces FASTQ file pairs 
 that can be submitted directly to the SRA.
 
 The demultiplexed FASTQ files should then be merged and converted to FASTA format 
 before proceeding with the filtering steps.
 
-See the help page (`?demultiplex_and_trim_fastq`) for details on setting the 
+See the help page (`?demultiplex_fastq_pairs`) for details on setting the 
 appropriate parameters for demultiplexing and primer trimming.
 
 ### Input Parameters
 
 * **`fastqinfo`** ([fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo)): 
-Either a CSV file or a data frame. For `demultiplex_and_trim_fastq`, the key 
+Either a CSV file or a data frame. For `demultiplex_fastq_pairs`, the key 
 information includes the list of FASTQ file pairs to be demultiplexed,
 as well as the primer and tag sequences associated with each sample-replicate combination.
 * **`fastq_dir`**: Directory containing the input FASTQ files.
-* If **`check_reverse = TRUE`**, `demultiplex_and_trim_fastq` can check the reverse-complement strand.
+* If **`check_reverse = TRUE`**, `demultiplex_fastq_pairs` can check the reverse-complement strand.
 * **`sampleinfo_df`**: An updated version of `fastqinfo`. This data frame, 
 together with the files listed in it, serves as input for the `dereplicate` step.
 * **`outdir`**: Name of the output directory.
@@ -410,7 +410,7 @@ merged_dir <- file.path(outdir, "merged")
 
 ### Demultiplex, Trim off Tags and Primers and keep fastq format
 ```{r demultiplex4}
-fastqinfo_delultiplexed <- demultiplex_and_trim_fastq(
+fastqinfo_delultiplexed <- demultiplex_fastq_pairs(
   fastqinfo = fastqinfo, 
   fastq_dir = fastq_dir, 
   outdir = demultiplexed_dir, 

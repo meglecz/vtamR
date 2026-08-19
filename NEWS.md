@@ -1,4 +1,16 @@
-# vtamR 1.0.4 (prerelease) 2026/07/10
+# vtamR 1.1.0 - 2026/08/19
+
+- Add filter_occurrence argument to filter_pcr_error() and filter_chimera(). If TRUE, occurrences are filtered, if FALSE ASVs are filtered
+- make_log(): make a detailed log file with steps and their parameters
+- collect_package_info(): to record all loaded / attached packages
+- miem_bioinformatics(): Collect  information to fill the "Methods - Bioinformatics and Reference Database"  of the MIEM checklist.
+- miem_results(): Collect  information to fill the "Results - Sequencing Summary Statistics" of the MIEM checklist.
+- rename demultiplex_and_trim() to demultiplex_and_trim_fasta()
+- rename demultiplex_fastq_pairs() to demultiplex_and_trim_fastq() 
+
+
+
+# vtamR 1.0.4 - 2026/07/10
 
 - Add pattern argument to history_by and summarize_by
 - Modify history_by to accept a vector of values, not just a singe value
@@ -13,27 +25,27 @@
 - Modify check_dir: delete slash at the end of dir and return invisible path
 
 
-# vtamR 1.0.3 (prerelease) 2026/04/16
+# vtamR 1.0.3  - 2026/04/16
 
 - Short tutoriel added
 - Initialize stat_df from get_stat
 - Make dir, outdir obligatory
 
-# vtamR 1.0.2 (prerelease) 2026/04/16
+# vtamR 1.0.2 - 2026/04/16
 
 Documentation updated
 
-# vtamR 1.0.1 (prerelease) 2026/04/13
+# vtamR 1.0.1  - 2026/04/13
 
 Tutorial updated
 
-# vtamR 1.0.0 (prerelease)
+# vtamR 1.0.0 
 
 - Function Names Harmonized: Correspondences between old and new function 
 names can be found in `vtamR/R_divers/vtam_functions_table.csv`.
 
 
-# vtamR 0.3.2 (prerelease)
+# vtamR 0.3.2
 
 - PoolDatasets is split to pool_datasets and pool_markers
 - Add mean, sum, min, max as aggregation methods to pool_datasets, pool_markers
@@ -44,7 +56,7 @@ PoolReplicates, WriteASVtable,
 - Troubleshooting section to pool runs before filtering
 - Correct output file stucture
 
-# vtamR 0.3.1 (prerelease)
+# vtamR 0.3.1 
 
 - Fixed version number in `DESCRIPTION` to match the prerelease tag.
 - Updated package metadata for consistency with GitHub prerelease.
@@ -59,10 +71,10 @@ PoolReplicates, WriteASVtable,
 	- PairwiseIdentityPlotPerSwarmD
 	- PairwiseIdentityPlotPerClusterIdentityThreshold
 	- ClassifyClusters
-	- PlotClusterClasstification	
-- Added functions for taxassign	
+		 PlotClusterClasstification	
+		Added functions for taxassign	
 	- TaxAssigRDP
-	- TaxAssig named to TaxAssigLTG	
+		 TaxAssig named to TaxAssigLTG	
 - Other new functions
 	- MakeMockCompositionLTG
 	- ASVspecificCutoff

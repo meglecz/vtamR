@@ -5921,7 +5921,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
     df_tmp <- filter_occurrence_read_count(read_count = df_tmp, cutoff = rc_cutoff)
     for(var_cutoff in var_cutoff_list){
       # filter_occurrence_variant
-      df_tmp <- filter_occurrence_variant(read_count =df_tmp, cutoff = var_cutoff, by_replicate=by_replicate)
+      df_tmp <- filter_occurrence_variant(read_count =df_tmp, cutoff = var_cutoff, by_replicate=by_replicate, min_read_count_prop=0.01)
       # filter_min_replicate
       df_tmp <- filter_min_replicate(read_count = df_tmp, cutoff = min_replicate_number)
       # pool_replicates
@@ -5974,6 +5974,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
   write_log(log, file=log_file)
   return(out_df)
 }
+
 
 #' Pool multiple datasets
 #' 

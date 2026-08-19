@@ -1,5 +1,8 @@
 # Ideas for vtamR
 
+
+### check min_read_count in suggest_pcr_error
+
 ## path
 define by (look for path in this order)
 - package variable
@@ -815,7 +818,7 @@ and more responsability.
 ### 2026/08/05 commit miem_bioinformatics
 
 miem_bioinformatics function to fill as much as possible the bioinformatics part
-of the MIEM checklist. The input it a log file and the R_version file
+of the MIEM checklist. The input is a log file and the R_version file
 
 
 ## 2026/08/04 
@@ -827,9 +830,15 @@ demultiplex_fastq_pairs => demultiplex_and_trim_fastq
 MIEM results
  - extact info from output files (use log file)
  
- ## 2026/08/14
+## 2026/08/14
  
 miem_results
+
+## 2026/08/19
+
+## deactivate warning in suggest_variant_readcount_cutoffs
+" WARNING: The following expected ASVs are not present in the read_count dataframe:"
+
  
 
 
