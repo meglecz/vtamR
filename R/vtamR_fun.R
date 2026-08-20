@@ -13,314 +13,6 @@
 NULL
 
 
-#' Run a command using system2
-#' 
-#' Execute a system command using `system2`, with optional control over 
-#' the verbosity of the output.
-#'  
-#' @param path Character string specifying the path to the executable.
-#' @param args Character vector of arguments passed to the command.
-#' @param quiet Logical. If `TRUE`, suppress informational messages and 
-#'   only display warnings or errors.
-#' 
-#' @examples 
-#' \dontrun{
-#' run_system2(path = "ls", args = c("-all"), quiet = FALSE)
-#' }
-#' 
-#' @export
-
-run_system2 <- function(path, args, quiet = FALSE) {
-  
-  # system2 cannot use ~ as a home
-  path <- path.expand(path)
-  
-  if (!quiet) {
-    # Show the full command that will be run
-    cat("Running command:\n")
-    cat(path, paste(shQuote(args), collapse = " "), "\n")
-    
-    system2(
-      command = path,
-      args = args,
-      stdout = "",
-      stderr = ""
-    )
-    
-  } else {
-    output <- suppressWarnings(system2(
-      command = path,
-      args = args,
-      stdout = TRUE,
-      stderr = TRUE
-    ))
-    
-    # Extract only error/warning/fail lines
-    errors_only <- grep("error|warning|fail", output, ignore.case = TRUE, value = TRUE)
-    
-    # Remove lines containing "Mean expected error"
-    errors_only <- grep("Mean expected error|Mean observed errors|Pairs that failed|expected error too high|failed merging", 
-                        errors_only, ignore.case = TRUE, value = TRUE, 
-                        invert = TRUE)
-    
-    if (length(errors_only) > 0) {
-      cat(errors_only, sep = "\n")
-    }
-  }
-}
-
-
-#' Check directory
-#' 
-#' Check whether a directory exists and create it if necessary. If a file path 
-#' is provided, the directory portion is extracted and created if needed.
-#'  
-#' @param path Character string specifying a directory or a file path.
-#' @param is_file Logical. If `TRUE`, `path` is treated as a file path; 
-#'   otherwise, it is treated as a directory path.
-#' 
-#' @return `NULL`
-#' 
-#' @examples 
-#' \dontrun{
-#' check_dir(path = "data")
-#' }
-#' 
-#' @export
-
-check_dir <- function(path, is_file=FALSE){
-  
-  if(is_file){
-    dir_to_create <- dirname(path)
-  }else{
-    dir_to_create <- path
-  }
-  
-  if(!dir.exists(dir_to_create)){
-      dir.create(dir_to_create, recursive =TRUE)
-    }
-}
-
-
-#' Compress or uncompress a file
-#'
-#' Compress or uncompress a file using `pigz` (if available, for faster 
-#' performance) or fall back to `R.utils`.
-#'
-#' @param file Character string specifying the input file.
-#' @param outfile Character string specifying the output file. If NULL 
-#'   automatically derived from file.
-#' @param remove Logical. If `TRUE`, remove the input file after a successful 
-#'   operation.
-#' @param method Character. Compression method: `pigz`, `gzip`, or `R`.  
-#'   `pigz` requires `pigz` to be installed and available in the system 
-#'   PATH (or specified via `pigz_path`).  
-#'   `gzip` is available on Linux systems.  
-#'   `R` uses `R.utils`, which is cross-platform but slower.  
-#'   Relative speed: `R.utils` < `gzip` < `pigz`.
-#' @param pigz_path Character string specifying the path to the `pigz`
-#'   executable. Only required if `method = "pigz"` and it is not available 
-#'   in the system PATH.
-#' @param num_threads Positive integer specifying the number of CPU threads to 
-#'   use. If `0`, all available CPUs are used.
-#' @param quiet Logical. If `TRUE`, suppress informational messages.
-#' @param compress Logical. If `TRUE`, compress the file; if 
-#'   `FALSE`, decompress it.
-#'
-#' @return Invisibly returns a character string: the path to the output file.
-#' 
-#' @examples
-#' \dontrun{
-#' # Decompress a .gz file
-#' smart_gzip("data.fastq.gz", compress = FALSE)
-#'
-#' # Compress a file
-#' smart_gzip("data.fastq", compress = TRUE)
-#' }
-#' 
-#' @export
-smart_gzip <- function(file,
-                       outfile = NULL,
-                       remove = FALSE,
-                       pigz_path = "pigz",
-                       method = "R",
-                       num_threads = 0,
-                       quiet = TRUE,
-                       compress = FALSE) {
-  # Check input
-  if (!file.exists(file)) stop("File not found: ", file)
-  
-  # Detect operation type and define flags
-  if (compress) {
-    mode_flag <- "-c"        # compress
-    file_check <- !grepl("\\.gz$", file, ignore.case = TRUE)
-  } else {
-    mode_flag <- "-d"        # decompress
-    file_check <- grepl("\\.gz$", file, ignore.case = TRUE)
-  }
-  
-  if (!file_check)
-    stop("File extension does not match expected mode: ",
-         if (compress) "expected uncompressed input" else "expected .gz input")
-  
-  # Determine output file
-  if (is.null(outfile)) {
-    outfile <- if (compress) paste0(file, ".gz") else sub("\\.gz$", "", file)
-  }else{ # check if output filename is coherent
-    if (compress) {
-      outfile_check <- grepl("\\.gz$", outfile, ignore.case = TRUE)
-    } else {
-      outfile_check <- !grepl("\\.gz$", outfile, ignore.case = TRUE)
-    }
-    if (!outfile_check)
-      stop("File extension does not match expected mode: ",
-           if (compress) "expected compressed (.gz ) output" else "expected uncompessed output")
-  }
-  outfile <- path.expand(outfile)
-  
-  # Detect number of threads
-  if (num_threads == 0){
-    num_threads <- parallel::detectCores()
-  }
-  
-  # Use pigz if provided
-  if (method=="pigz") {
-    if (!quiet) {
-      message("Using pigz for ", if (compress) "compression" else "decompression")
-    }
-    # Build argument list
-    args <- c(mode_flag, "-p", num_threads, "-c", file)
-    
-    # Run pigz with system2 (safe cross-platform)
-    status <- system2(pigz_path, args = args, stdout = outfile)
-    
-    if (status != 0) stop("pigz failed with exit code: ", status)
-    if (remove) unlink(file)
-  } else if (method=="gzip"){
-    if (!quiet) {
-      message("Using gzip for ", if (compress) "compression" else "decompression")    
-      
-      if (compress) {
-        status <- system2("gzip", args = c("-c", file), stdout = outfile)
-        # If gzip ran successfully, remove the input file
-        if (status == 0 && remove) unlink(file)
-        
-      } else {
-        status <- system2("gunzip", args = c("-c", file), stdout = outfile)
-        if (status == 0 && remove) unlink(file)
-      }
-    }
-    
-  } else {
-    if (!quiet) {
-      message("Using R.utils for ", if (compress) "compression" else "decompression")
-    }
-    
-    if (compress) {
-      R.utils::gzip(file, destname = outfile, remove = remove, overwrite = TRUE)
-    } else {
-      R.utils::gunzip(file, destname = outfile, remove = remove, overwrite = TRUE)
-    }
-  }
-  
-  return(invisible(outfile))
-}
-
-
-#' get_stat
-#' 
-#' Compute summary statistics (reads, variants, samples, and replicates) and 
-#' append them to a statistics data frame.
-#'  
-#' @param read_count Data frame or path to a CSV file containing the following 
-#'   variables: `asv_id`, `sample``, `replicate, 
-#'   `read_count`, `asv`.
-#' @param stat_df A data frame containing the following variables:
-#' 
-#'     `parameters` Parameters used for the analysis
-#'     `asv_count` Number of ASVs detected
-#'     `read_count` Total number of reads
-#'     `sample_count` Number of samples analyzed
-#'     `sample_replicate_count` Number of replicates per sample
-#'   If provided, the function appends a new row to `stat_df`. If not provided,
-#'   a new data frame with a single row is initialized and returned.
-#' @param stage Character string specifying the name of the filtering step. It 
-#'   is used as the row name in `stat_df`.
-#' @param params Character string containing concatenated parameter values used 
-#'   for the filtering step.
-#' @param outfile Character string specifying the name of a CSV file to write 
-#'   the updated data frame. If NULL, no file is written.
-#' 
-#' @return Data frame. The updated `stat_df` with an additional row.
-#' 
-#' @examples
-#' \dontrun{
-#' get_stat(
-#'   read_count_df,
-#'   stat_df,
-#'   stage = "filter_occurrence_variant",
-#'   params = "0.002;by_replicate=TRUE"
-#' )
-#' 
-#' get_stat(
-#'   read_count_df,
-#'   stat_df = NULL,
-#'   stage = "filter_indel",
-#'   params = "0.002;by_replicate=TRUE",
-#'   outfile = "out/ReadCount_stat.csv"
-#' )
-#' }
-#' 
-#' @export
-#' 
-get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=NULL){
-  # can accept df or file as an input
-  if(is.character(read_count)){
-    # read known occurrences
-    read_count_df <- read.csv(read_count, header=T, sep=sep)
-  }else{
-    read_count_df <- read_count
-  }
-  
-  if(is.null(stat_df)){
-    stat_df <- data.frame(
-      parameters = character(),
-      asv_count = integer(),
-      read_count = integer(),
-      sample_count = integer(),
-      sample_replicate_count = integer()
-    )
-  }
-  
-  #define a temporary data frame
-  df <- data.frame(parameters=character(),
-                   asv_count=integer(),
-                   read_count=integer(),
-                   sample_count=integer(),
-                   sample_replicate_count=integer())
-  # get 4 different counts and place then into a data frame
-  df[1,"parameters"] <-params
-  df[1,"asv_count"] <-length(unique(read_count_df$asv))
-  df[1,"read_count"] <-  sum(read_count_df$read_count)
-  df[1,"sample_count"] <-length(unique(read_count_df$sample))
-  if("replicate" %in% colnames(read_count_df)){
-    sample_repl <- paste(read_count_df$sample, read_count_df$replicate, sep="-")
-    df[1,"sample_replicate_count"] <-length(unique(sample_repl))
-  }else{
-    df[1,"sample_replicate_count"] <- NA
-  }
-  # add rowname
-  rownames(df) <- c(stage)
-  # add new data to stat_df
-  stat_df <- rbind(stat_df, df)
-  
-  if(!is.null(outfile)){
-    check_dir(outfile, is_file=TRUE)
-    write.table(stat_df, file = outfile,  row.names = F, sep=sep)
-  }
-  return(stat_df)
-}
-
 #' Merge forward and reverse reads
 #' 
 #' Merge paired-end FASTQ reads (forward and reverse) and convert the resulting 
@@ -380,6 +72,8 @@ get_stat <- function(read_count, stat_df, stage="", params=NA, outfile=NULL){
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame corresponding to the generated `fastainfo.csv` file.
 #' 
@@ -433,13 +127,21 @@ merge_fastq_pairs <- function(fastqinfo,
                   fastq_allowmergestagger=FALSE, 
                   sep=",", 
                   compress=FALSE, 
-                  quiet=T){
+                  quiet=T,
+                  log_file=NULL){
   
-  check_dir(fastq_dir)
-  check_dir(outdir)
+
+  fastq_dir = check_dir(fastq_dir)
+  outdir = check_dir(outdir)
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+    }
+  
   # can accept df or file as an input
   if(is.character(fastqinfo)){
     # read known occurrences
@@ -449,22 +151,34 @@ merge_fastq_pairs <- function(fastqinfo,
   }
   check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
   
-  # get unique list of fastq file pairs
+  #  get unique list of fw_rv filenames and outfile names
   tmp <- fastqinfo_df %>%
-    select(fastq_fw, fastq_rv)
-  tmp <- unique(tmp)
-  tmp$fasta <- NA
-  tmp$read_count <- NA
+    # only one sample-replicate combination per fw-rv file combination. Use sample-replicate.fasta as outfile
+    mutate(fasta = paste(sample, "-", replicate, ".fasta", sep=""),
+           read_count = NA) %>% 
+    select(fasta, fastq_fw, fastq_rv)
+  
+  nb_sample_repl = length(unique(tmp$fasta))
+  nb_fw_rv = nrow(tmp %>%
+                    select(fastq_fw, fastq_rv)%>%
+                    distinct()
+  )
+  if(nb_sample_repl != nb_fw_rv){# Same fw_rv file combination, have more than one sample-replicate
+    # it should be demultiplexed latter. Use the fw filename for output
+    tmp <- tmp %>%
+      mutate(fasta = sub("\\..*$", ".fasta", fastq_fw)) %>%
+      distinct()
+  } 
   
   for(i in 1:nrow(tmp)){# for each file pairs
     
     # use the name of the fw fastq file and replace extension by fasta (uncompressed)
-    outfile <- sub("\\..*", ".fasta", tmp[i,1])
-    tmp$fasta[i] <- outfile
-    outfile <- file.path(outdir, outfile)
+#    outfile <- sub("\\..*", ".fasta", tmp[i,1])
+#    tmp$fasta[i] <- outfile
+    outfile <- file.path(outdir, tmp[i,"fasta"])
     # add path to input filenames
-    fw_fastq <- file.path(fastq_dir, tmp[i,1])
-    rv_fastq <- file.path(fastq_dir, tmp[i,2])
+    fw_fastq <- file.path(fastq_dir, tmp[i,"fastq_fw"])
+    rv_fastq <- file.path(fastq_dir, tmp[i,"fastq_rv"])
     
     #Decompress input files, since they are cannot be treated directly by vsearch on the OS
     if(!is_linux() && endsWith(fw_fastq, ".gz")){
@@ -534,17 +248,24 @@ merge_fastq_pairs <- function(fastqinfo,
         }
       }
       
-    original_fw_fastq <- file.path(fastq_dir, tmp[i,1])
+    original_fw_fastq <- file.path(fastq_dir, tmp[i,"fastq_fw"])
     if( original_fw_fastq != fw_fastq){# the input fastq has been unzipped for vsearch => rm unzipped file to free space
       file.remove(fw_fastq)
       file.remove(rv_fastq)
     }
   } # end loop over files
   # make fastainfo file
+  # rename read_count if present in input fastqinfo
+  if("read_count" %in% colnames(fastqinfo_df)){
+    fastqinfo_df <- fastqinfo_df %>%
+      rename(read_count_input = read_count)
+  }
   fastainfo_df <- left_join(fastqinfo_df, tmp, by=c("fastq_fw", "fastq_rv")) %>%
     select(-fastq_fw, -fastq_rv)
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(fastainfo_df)
   
 }
@@ -644,7 +365,7 @@ count_seq <- function(file) {
 
 #' Trim primers
 #' 
-#' Trim primer sequences from an input FASTA file.
+#' Trim primer sequences from an input FASTA file from both 5' and 3'
 #'  
 #' The input FASTA file can be uncompressed or gzip-compressed; other 
 #' compression formats are not supported. The compression of the output file 
@@ -726,6 +447,7 @@ trim_primers_file <- function(fasta,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
   if(fasta == outfile){
     msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
     stop(msg)
@@ -874,6 +596,8 @@ trim_primers_file <- function(fasta,
 #'   available in the system PATH.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame. The updated `fastainfo` data frame with modified 
 #'   file names and sequence counts.
@@ -910,11 +634,17 @@ trim_primers <- function(fastainfo,
                        cutadapt_minimum_length=50, 
                        cutadapt_maximum_length=500, 
                        sep = ",",
-                       quiet=T
+                       quiet=T,
+                       log_file=NULL
                        ){
   
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -932,8 +662,8 @@ trim_primers <- function(fastainfo,
   fastainfo_df$filename <- NA
   
   # check dirs
-  check_dir(outdir)
-  check_dir(fasta_dir)
+  outdir = check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
   
   for(i in 1:nrow(fastainfo_df)){ # for each input fasta
     
@@ -973,6 +703,9 @@ trim_primers <- function(fastainfo,
               row.names = F, 
               sep=sep
               )
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(fastainfo_df)
 }
 
@@ -1026,6 +759,8 @@ trim_primers <- function(fastainfo,
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame corresponding to the output `sampleinfo.csv` file 
 #'   and one FASTA file per tag combination for each input FASTA file, 
@@ -1033,7 +768,7 @@ trim_primers <- function(fastainfo,
 #' 
 #' @examples
 #' \dontrun{
-#' fastainfo_df <- demultiplex_and_trim(
+#' fastainfo_df <- demultiplex_and_trim_fasta(
 #'   fastainfo = fastainfo_df,
 #'   fasta_dir = "data/fasta",
 #'   outdir = "data/sorted",
@@ -1048,7 +783,7 @@ trim_primers <- function(fastainfo,
 #' 
 #' @export
 #' 
-demultiplex_and_trim <- function(fastainfo, 
+demultiplex_and_trim_fasta <- function(fastainfo, 
                       fasta_dir, 
                       outdir, 
                       cutadapt_path="cutadapt",
@@ -1064,14 +799,20 @@ demultiplex_and_trim <- function(fastainfo,
                       cutadapt_maximum_length=500,
                       sep=",",
                       compress=FALSE,
-                      quiet=T
+                      quiet=T,
+                      log_file=NULL
                       ){
   
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(fastainfo)){
     # read known occurrences
@@ -1131,11 +872,11 @@ demultiplex_and_trim <- function(fastainfo,
              fasta
              )
     # make temp dir 
-    check_dir(outdir)
+    outdir = check_dir(outdir)
     rc_dir <- paste('rc_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
     rc_dir <- file.path(tempdir(), rc_dir)
-    check_dir(rc_dir)
-    # run demultiplex_and_trim on for reverse strand
+    rc_dir = check_dir(rc_dir)
+    # run demultiplex_and_trim_fasta on for reverse strand
     sampleinfo_df <- demultiplex_and_trim_strand_plus(fastainfo_df_tmp, 
                                           fasta_dir=fasta_dir, 
                                           outdir=rc_dir, 
@@ -1220,6 +961,7 @@ demultiplex_and_trim <- function(fastainfo,
   sampleinfo_df <- add_read_counts(sampleinfo_df, dir=outdir)
   write.table(sampleinfo_df, file = file.path(outdir, "sampleinfo.csv"),  row.names = F, sep=sep)
   
+  write_log(log, file=log_file)
   return(sampleinfo_df)
 }
 
@@ -1256,7 +998,7 @@ return(df)
 
 #' Demultiplex and trim tags and primers (no reverse strand check)
 #' 
-#' Same as `demultiplex_and_trim`, but without checking the reverse-complement 
+#' Same as `demultiplex_and_trim_fasta`, but without checking the reverse-complement 
 #' of the sequences. Demultiplex each input FASTA file using tag combinations 
 #' located at the extremities of merged reads, then trim primer sequences.
 #'
@@ -1332,8 +1074,8 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  check_dir(fasta_dir)
-  check_dir(outdir)
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -1470,7 +1212,7 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
 #' Make a FASTA file with adapters
 #' 
 #' Create a FASTA file containing tag combinations formatted for `cutadapt`. 
-#' This file is used by `demultiplex_and_trim` to demultiplex input FASTA files.
+#' This file is used by `demultiplex_and_trim_fasta` to demultiplex input FASTA files.
 #' 
 #' @param fastainfo_df Data frame with columns: `tag_fw`, `tag_rv`, `fasta`.
 #' @param fasta_file Character string specifying the FASTA file to be demultiplexed 
@@ -1518,7 +1260,7 @@ write_cutadapt_adapter_fasta <- function(fastainfo_df, fasta_file, outdir, tag_t
   tags$tag_rvl <- lapply(tags$tag_rv, nchar)
   
   # Specify the file path
-  check_dir(outdir)
+  outdir = check_dir(outdir)
   tag_file <- file.path(outdir, "tags.fasta")
   # initialize the content of the tag_file
   text <- c()
@@ -1614,6 +1356,8 @@ reverse_complement <- function(sequence){
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `asv_id`, `sample`, `replicate`, 
 #'   `read_count`, `asv`.
@@ -1631,8 +1375,15 @@ dereplicate <- function(sampleinfo,
                         input_asv_list=NULL, 
                         output_asv_list=NULL, 
                         sep=",", 
-                        quiet=T
+                        quiet=T,
+                        log_file=NULL
                         ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(sampleinfo)){
     # read known occurrences
@@ -1649,7 +1400,7 @@ dereplicate <- function(sampleinfo,
   
   # read all fasta files in sampleinfo to a read_count_df
   if(nchar(dir)>0){
-    check_dir(dir)
+    dir = check_dir(dir)
   }
   # define empty read_count_df to pool the results of variables
   read_count_df <- data.frame(asv=character(),
@@ -1689,6 +1440,10 @@ dereplicate <- function(sampleinfo,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -1902,6 +1657,8 @@ check_one_to_one <- function(df){
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
 #' @param return_df Logical. If `TRUE`, the function returns a data frame.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame or CSV file containing all unique `asv_id`–`asv` pairs 
 #'   from the inputs. If any conflict is detected within or between inputs, the 
@@ -1918,7 +1675,17 @@ check_one_to_one <- function(df){
 #' 
 #' @export
 #' 
-update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FALSE){
+update_asv_list <- function(asv_list1, 
+                            asv_list2, 
+                            outfile, 
+                            sep=",", 
+                            return_df=FALSE,
+                            log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   if(is.character(asv_list1)){
     df1 <- read.csv(asv_list1, header=T, sep=sep)
@@ -1952,6 +1719,10 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
     check_dir(outfile, is_file=TRUE)
     write.table(df1, file=outfile, row.names = FALSE, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   if(return_df){
     return(df1)
   }
@@ -1972,6 +1743,8 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #'   contaminant ASVs. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame with contaminant ASVs removed.
 #' 
@@ -1982,8 +1755,17 @@ update_asv_list <- function(asv_list1, asv_list2, outfile, sep=",", return_df=FA
 #' 
 #' @export
 #' 
-filter_contaminant <- function (read_count, sampleinfo, outfile=NULL, 
-                                       conta_file=NULL,sep=",") {
+filter_contaminant <- function (read_count, 
+                                sampleinfo, 
+                                outfile=NULL, 
+                                conta_file=NULL,
+                                sep=",",
+                                log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -2033,6 +1815,9 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2048,6 +1833,8 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2058,7 +1845,17 @@ filter_contaminant <- function (read_count, sampleinfo, outfile=NULL,
 #' 
 #' @export
 #' 
-filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
+filter_asv_global <- function (read_count, 
+                               cutoff=10, 
+                               outfile=NULL, 
+                               sep=",",
+                               log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2070,7 +1867,7 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
   df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count_all=sum(read_count)) %>%
-    filter(read_count_all > cutoff) %>%
+    filter(read_count_all >= cutoff) %>%
     ungroup()
   read_count_df <- filter(read_count_df, (asv %in% df$asv))
   
@@ -2078,6 +1875,10 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -2095,6 +1896,8 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2105,7 +1908,17 @@ filter_asv_global <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
 #' 
 #' @export
 #' 
-filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, sep=",") {
+filter_occurrence_read_count <- function (read_count, 
+                                          cutoff=10, 
+                                          outfile=NULL, 
+                                          sep=",",
+                                          log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2119,6 +1932,9 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2139,6 +1955,8 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2149,7 +1967,17 @@ filter_occurrence_read_count <- function (read_count, cutoff=10, outfile=NULL, s
 #' 
 #' @export
 #' 
-filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, sep=",") {
+filter_occurrence_sample <- function (read_count, 
+                                      cutoff=0.001, 
+                                      outfile=NULL, 
+                                      sep=",",
+                                      log_file=NULL) {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2173,6 +2001,8 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, se
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2208,6 +2038,8 @@ filter_occurrence_sample <- function (read_count, cutoff=0.001, outfile=NULL, se
 #' @param outfile Character string specifying the output file. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `asv_id`, `replicate` (if `by_replicate = TRUE`), `cutoff`.  
 #' Only ASVs with known false-positive occurrences are included.
@@ -2230,7 +2062,13 @@ compute_asv_specific_cutoff <- function(read_count,
                               habitat_proportion=0.5,
                               by_replicate=FALSE, 
                               outfile=NULL, 
-                              sep=",")  {
+                              sep=",",
+                              log_file=NULL)  {
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -2302,7 +2140,8 @@ compute_asv_specific_cutoff <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(asv_spec_cutoff_df, file=outfile, row.names = F, sep=sep)
   }
-  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(asv_spec_cutoff_df)
 }
 
@@ -2346,6 +2185,8 @@ compute_asv_specific_cutoff <- function(read_count,
 #' @param min_read_count_prop Numeric value specifying the minimum proportion of 
 #'   total reads that must be retained per ASV after filtering. ASVs below this 
 #'   threshold trigger a warning.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count` data frame.
 #' 
@@ -2368,7 +2209,13 @@ filter_occurrence_variant <- function(read_count,
                        lost_asv_file =NULL,
                        by_replicate=FALSE, 
                        sep=",", 
-                       min_read_count_prop=0.7){
+                       min_read_count_prop=0.7,
+                       log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   #### get read_count_df
   if(is.character(read_count)){
@@ -2505,6 +2352,9 @@ filter_occurrence_variant <- function(read_count,
     write.table(asvs, file = lost_asv_file,  row.names = F, sep=sep)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -2520,6 +2370,8 @@ filter_occurrence_variant <- function(read_count,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Filtered `read_count_df` data frame containing only shared occurrences.
 #' 
@@ -2530,7 +2382,15 @@ filter_occurrence_variant <- function(read_count,
 #' 
 #' @export
 #' 
-pool_filters <- function(... , outfile=NULL, sep=","){
+#' 
+#' 
+#' 
+pool_filters <- function(... , outfile=NULL, sep=",", log_file=NULL){
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+    }
+  
   df_list <- list(...)
   merged <-  df_list[[1]]
   for(i in 2:length(df_list)){
@@ -2541,6 +2401,7 @@ pool_filters <- function(... , outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(merged, file = outfile,  row.names = F, sep=sep)
   }
+  write_log(log, file=log_file)
   return(merged)
 }
 
@@ -2557,7 +2418,9 @@ pool_filters <- function(... , outfile=NULL, sep=","){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2567,7 +2430,17 @@ pool_filters <- function(... , outfile=NULL, sep=","){
 #' 
 #' @export
 #'
-filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
+filter_min_replicate <- function(read_count, 
+                                 cutoff=2, 
+                                 outfile=NULL, 
+                                 sep=",",
+                                 log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2592,6 +2465,9 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2607,7 +2483,9 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2617,7 +2495,16 @@ filter_min_replicate <- function(read_count, cutoff=2, outfile=NULL, sep=","){
 #' 
 #' @export
 #' 
-filter_indel <- function(read_count, outfile=NULL, sep=","){
+filter_indel <- function(read_count, 
+                         outfile=NULL, 
+                         sep=",",
+                         log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2649,6 +2536,9 @@ filter_indel <- function(read_count, outfile=NULL, sep=","){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2673,6 +2563,8 @@ filter_indel <- function(read_count, outfile=NULL, sep=","){
 #' @export
 #' 
 get_stop_codons <- function(genetic_code=5){
+
+  
   if(genetic_code == 1){
     return(c("TAA","TAG","TGA"))
   }
@@ -2722,7 +2614,9 @@ get_stop_codons <- function(genetic_code=5){
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame.
 #' 
 #' @examples
@@ -2732,7 +2626,17 @@ get_stop_codons <- function(genetic_code=5){
 #' 
 #' @export
 #' 
-filter_stop_codon <- function(read_count, outfile=NULL, genetic_code=5, sep=","){
+filter_stop_codon <- function(read_count, 
+                              outfile=NULL, 
+                              genetic_code=5, 
+                              sep=",",
+                              log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -2795,6 +2699,9 @@ filter_stop_codon <- function(read_count, outfile=NULL, genetic_code=5, sep=",")
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -2902,7 +2809,7 @@ flag_pcr_error <- function(unique_asv_df,
   # create a tmp directory for temporary files using time and a random number
   outdir_tmp <- paste('tmp_PCRerror_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
   outdir_tmp <- file.path(tempdir(), outdir_tmp)
-  check_dir(outdir_tmp)
+  outdir_tmp = check_dir(outdir_tmp)
   
   # make fasta file with unique reads; use sequences as ids
   fas <- file.path(outdir_tmp, 'unique.fas')
@@ -2979,19 +2886,31 @@ flag_pcr_error <- function(unique_asv_df,
   return(unique_asv_df)
 }
 
+
 #' Filter PCR errors
-#' 
-#' Remove ASVs flagged as potential PCR errors based on sequence similarity 
+#'
+#' Remove ASVs flagged as potential PCR errors based on sequence similarity
 #' (`max_mismatch`) and relative abundance (`pcr_error_var_prop`).
-#'  
-#' ASVs are considered PCR errors when they are highly similar to a more abundant 
-#' ASV and their abundance ratio is below or equal to `pcr_error_var_prop`.
-#'  
-#' The analysis can be performed across the full dataset (`by_sample = FALSE`) 
+#'
+#' An ASV is considered a PCR error when it is highly similar to a more abundant
+#' ASV and its abundance ratio is less than or equal to `pcr_error_var_prop`.
+#'
+#' The analysis can be performed across the full dataset (`by_sample = FALSE`)
 #' or independently within each sample (`by_sample = TRUE`).
-#'  
-#' When `by_sample = TRUE`, an ASV is removed only if it is flagged as a PCR error 
-#' in at least a proportion `sample_prop` of samples.
+#'
+#' When the analysis is performed across the full dataset (`by_sample = FALSE`),
+#' ASVs classified as PCR errors are removed entirely from the dataset.
+#'
+#' When the analysis is performed sample by sample (`by_sample = TRUE`),
+#' `filter_occurrence` determines whether the entire ASV is removed
+#' (`filter_occurrence = FALSE`) or only the occurrence is removed
+#' (`filter_occurrence = TRUE`).
+#'
+#' When `filter_occurrence = FALSE`, an ASV is removed only if it is flagged as
+#' a PCR error in at least the proportion of samples specified by `sample_prop`.
+#'
+#' When `filter_occurrence = TRUE`, the ASV is removed only from the samples in
+#' which it is flagged as a PCR error and may remain present in other samples.
 #'  
 #' @param read_count Data frame or path to a CSV file with the following columns:  
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
@@ -3002,9 +2921,18 @@ flag_pcr_error <- function(unique_asv_df,
 #'   (including gaps) used to define sequence similarity.
 #' @param by_sample Logical. If `TRUE`, PCR error detection is performed separately 
 #'   within each sample.
+#' @param filter_occurrence Logical. If TRUE, an ASV is removed only from the
+#'   samples in which it is flagged as a PCR error and may remain present in other
+#'   samples. If FALSE, an ASV is removed entirely if it is flagged as a PCR
+#'   error in at least the proportion of samples specified by sample_prop.
+#'   Otherwise, none of its occurrences are removed.
 #' @param sample_prop Numeric value between 0 and 1 specifying the minimum proportion 
 #'   of samples in which an ASV must be flagged as a PCR error (when `by_sample = TRUE`) 
 #'   to be removed.
+#' @param min_read_count Positive integer specifying the minimum read count threshold.
+#'   When `by_sample` is `FALSE`, ASVs with a total read count below this threshold
+#'   are ignored. When `by_sample` is `TRUE`, ASVs with a read count below this
+#'   threshold in an individual sample are ignored.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
 #' @param vsearch_path Character string specifying the path to the `vsearch` executable.
@@ -3014,7 +2942,9 @@ flag_pcr_error <- function(unique_asv_df,
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with PCR error ASVs removed.
 #' 
 #' @examples
@@ -3025,6 +2955,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   pcr_error_var_prop = 0.2,
 #'   max_mismatch = 2,
 #'   by_sample = TRUE,
+#'   filter_occurrence = TRUE,
 #'   sample_prop = 0.8
 #' )
 #' 
@@ -3032,6 +2963,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   read_count_df,
 #'   vsearch_path = vsearch_path,
 #'   pcr_error_var_prop = 0.2,
+#'   filtaer_occurrences = FALSE,
 #'   max_mismatch = 2,
 #'   by_sample = FALSE
 #' )
@@ -3039,27 +2971,40 @@ flag_pcr_error <- function(unique_asv_df,
 #' 
 #' @export
 #' 
+
 filter_pcr_error <- function(read_count,
-                           outfile=NULL, 
-                           vsearch_path="vsearch", 
-                           num_threads=0,
-                           pcr_error_var_prop=0.1,
-                           max_mismatch=1, 
-                           by_sample=T, 
-                           sample_prop=0.8, 
-                           sep=",",
-                           quiet=TRUE
-                           ){
+                                 outfile=NULL, 
+                                 vsearch_path="vsearch", 
+                                 num_threads=0,
+                                 pcr_error_var_prop=0.1,
+                                 max_mismatch=1, 
+                                 by_sample=TRUE, 
+                                 filter_occurrence=TRUE,
+                                 min_read_count=10,
+                                 sample_prop=0.8, 
+                                 sep=",",
+                                 quiet=TRUE,
+                             log_file=NULL
+                             ){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
+  }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
   }
   
   if(pcr_error_var_prop >= 1){
     stop("pcr_error_var_prop must be between 0-1.")
   }
   if(pcr_error_var_prop > 0.5){
-    warning("pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
+    warning("WARNING: pcr_error_var_prop above 0.5 is unusually high and may be unrealistic.")
+  }
+  if(filter_occurrence & by_sample==FALSE){
+    warning("WARNING: When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+            even is filter_occurrence is TRUE")
   }
   
   # can accept df or file as an input
@@ -3069,70 +3014,127 @@ filter_pcr_error <- function(read_count,
   }else{
     read_count_df <- read_count
   }
-  # get unique list of ASVs with their total read_count in the run
+  
+  
   unique_asv_df <- read_count_df %>%
     group_by(asv) %>%
     summarize(read_count = sum(read_count)) %>%
-    arrange(desc(read_count)) %>%
     ungroup()
   
-  if(by_sample){ # sample by sample
+  if(by_sample){
+    
     sample_list <- unique(read_count_df$sample)
-    # loop over samples
-    for(sample_loc in sample_list){
-      # get unique list of ASVs with their total read_count in the sample
-      unique_asv_df_sample <- read_count_df %>%
-        filter(sample == sample_loc) %>%
-        group_by(asv)%>%
-        summarize(read_count = sum(read_count))%>%
-        arrange(desc(read_count)) %>%
-        ungroup()
+    unique_asv_sample <- read_count_df %>%
+      #      filter(asv %in% unique_asv_df$asv) %>% # use only asv with >= read_count
+      group_by(asv, sample) %>%
+      summarize(read_count = sum(read_count), .groups="drop")%>%
+      filter(read_count >= min_read_count) %>%
+      ungroup()
+    
+    if(filter_occurrence){ # by_sample=TRUE, filter_occurrence = TRUE
       
-      # flag PCR errors; 
-      # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
-      # 0 otherwise
-      unique_asv_df_sample <- flag_pcr_error(unique_asv_df_sample, 
-                                                   vsearch_path=vsearch_path, 
-                                                   num_threads=num_threads,
-                                                   pcr_error_var_prop=pcr_error_var_prop, 
-                                                   max_mismatch=max_mismatch,
-                                                   quiet=quiet
-                                                   )
+      pcr_flags <- data.frame(
+        asv = character(),
+        sample = character(),
+        PCRerror = numeric()
+      )
       
-      # remove read_count column
-      unique_asv_df_sample$read_count <- NULL
-      # add a column for for each sample to unique_asv_df, 
-      # with 1 if ASV is flagged in the sample, 0 otherwise
-      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
-    }
-  }
-  else{ # whole dataset
-    # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) 
+        
+        # flag PCR errors; 
+        # add one column to sample_df for each sample with 1 if ASV is flagged in the sample, 
+        # 0 otherwise
+        sample_df <- flag_pcr_error(sample_df, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch,
+                                    quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, sample, PCRerror)
+        pcr_flags <- rbind(pcr_flags, sample_df)
+      }
+      # delete occurrences flagged as PCRerror
+      read_count_df <- left_join(read_count_df, pcr_flags, by=c("sample", "asv")) %>%
+        filter(PCRerror == 0 | is.na(PCRerror)) %>%
+        select(-PCRerror)
+      
+    }else { # by_sample=TRUE, filter_occurrence = FALSE
+      
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) 
+        
+        # flag PCR errors; 
+        # add one column to sample_df with 1 if ASV is flagged as a PCR error in the sample, 
+        # 0 otherwise
+        sample_df <- flag_pcr_error(sample_df, 
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch,
+                                    quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, PCRerror)
+        
+        # add a column for for each sample to unique_asv_df, 
+        # with 1 if ASV is flagged in the sample, 0 otherwise
+        unique_asv_df <- left_join(unique_asv_df, sample_df, by = "asv")
+      }
+      
+      # count the number of times each ASV has been flagged and when it has not. 
+      # Ignore NA, when the ASV is not present in the sample
+      unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
+      unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
+      # keep only ASVs, 
+      # that are flagged in sample_prop proportion of the samples where they are present  
+      unique_asv_df <- unique_asv_df %>%
+        filter(yes/(yes+no) >= sample_prop)
+      
+      # eliminate potential PCRerrors from read_count_df
+      read_count_df <- read_count_df %>%
+        filter(!asv %in% unique_asv_df$asv)
+    } # end by_sample=TRUE, filter_occurrence ==FALSE
+  } else { # end by_sample, Filter the all at once
+    
+    # get unique list of ASV and only ASV with the total read count >=  min_read_count
+    unique_asv_df <- read_count_df %>%
+      group_by(asv) %>%
+      summarize(read_count = sum(read_count)) %>%
+      filter(read_count >= min_read_count) %>%
+      ungroup()
+    
     unique_asv_df <- flag_pcr_error(unique_asv_df, 
-                                          vsearch_path=vsearch_path, 
-                                          num_threads=num_threads,
-                                          pcr_error_var_prop=pcr_error_var_prop, 
-                                          max_mismatch=max_mismatch
-                                          )
-  }
+                                    vsearch_path=vsearch_path, 
+                                    num_threads=num_threads,
+                                    pcr_error_var_prop=pcr_error_var_prop, 
+                                    max_mismatch=max_mismatch)
+    
+    
+    unique_asv_df <- unique_asv_df %>%
+      filter(PCRerror == 1)
+    # eliminate potential PCRerrors from read_count_df
+    read_count_df <- read_count_df %>%
+      filter(!asv %in% unique_asv_df$asv)
+  } # end by_sample = FALSE
   
-  # count the number of times each ASV has been flagged and when it has not. 
-  # Ignore NA, when the ASV is not present in the sample
-  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
-  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
-  # keep only ASVs, 
-  # that are not flagged in sample_prop proportion of the samples where they are present  
-  unique_asv_df <- unique_asv_df %>%
-    filter(yes/(yes+no) >= sample_prop)
-  
-  # eliminate potential PCRerrors from read_count_df
-  read_count_df <- read_count_df %>%
-    filter(!asv %in% unique_asv_df$asv)
-  
+  ###### Print output
   if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(read_count_df)
 }
 
@@ -3189,7 +3191,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
                       sep=''
                       )
   outdir_tmp <- file.path(tempdir(), outdir_tmp)
-  check_dir(outdir_tmp)
+  outdir_tmp = check_dir(outdir_tmp)
   
   # make fasta file with unique reads; use sequences as ids
   fas <- file.path(outdir_tmp, 'unique.fas')
@@ -3242,7 +3244,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
   return(unique_asv_df)
 }
 
-#' Filter chimeric sequences
+#' Filter chimera
 #' 
 #' Remove ASVs identified as chimeras based on abundance- and similarity-based 
 #' detection using `vsearch`.
@@ -3253,8 +3255,16 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' Detection can be performed across the full dataset (`by_sample = FALSE`) or 
 #' independently within each sample (`by_sample = TRUE`).
 #'  
-#' When `by_sample = TRUE`, an ASV is removed if it is flagged as a chimera in 
-#' at least a proportion `sample_prop` of the samples in which it is present.
+#' When the analysis is performed sample by sample (`by_sample = TRUE`),
+#' `filter_occurrence` determines whether the entire ASV is removed
+#' (`filter_occurrence = FALSE`) or only the occurrence is removed
+#' (`filter_occurrence = TRUE`).
+#'
+#' When `filter_occurrence = FALSE`, an ASV is removed only if it is flagged as
+#' a PCR error in at least the proportion of samples specified by `sample_prop`.
+#'
+#' When `filter_occurrence = TRUE`, the ASV is removed only from the samples in
+#' which it is flagged as a PCR error and may remain present in other samples.
 #'  
 #' @param read_count Data frame or path to a CSV file with the following columns: 
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
@@ -3262,6 +3272,11 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   identify chimeric sequences.
 #' @param by_sample Logical. If `TRUE`, chimera detection is performed separately 
 #'   within each sample.
+#' @param filter_occurrence Logical. If TRUE, an ASV is removed only from the
+#'   samples in which it is flagged as a chimera and may remain present in other
+#'   samples. If FALSE, an ASV is removed entirely if it is flagged as a chimera
+#'   in at least the proportion of samples specified by sample_prop.
+#'   Otherwise, none of its occurrences are removed.
 #' @param sample_prop Numeric value between 0 and 1 specifying the minimum proportion 
 #'   of samples in which an ASV must be flagged as a chimera (when `by_sample = TRUE`) 
 #'   to be removed.
@@ -3274,7 +3289,9 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with chimeric ASVs removed.
 #' 
 #' @examples
@@ -3297,20 +3314,35 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' 
 #' @export
 #' 
-filter_chimera <- function(read_count, 
-                          outfile=NULL, 
-                          vsearch_path="vsearch",
-                          num_threads=0,
-                          by_sample=T, 
-                          sample_prop=0.8, 
-                          abskew=2, 
-                          sep=",",
-                          quiet=TRUE
-                          ){
+
+filter_chimera <- function(
+  read_count, 
+  outfile=NULL, 
+  vsearch_path="vsearch",
+  num_threads=0,
+  by_sample=TRUE, 
+  filter_occurrence=FALSE,
+  sample_prop=0.8, 
+  abskew=2, 
+  sep=",",
+  quiet=TRUE,
+  log_file=NULL
+){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
+  if(filter_occurrence & by_sample==FALSE){
+    warning("WARNING: When by_sample==FALSE the filtering eliminates entire ASVs and not occurrences, 
+            even if filter_occurrence is TRUE")
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3318,6 +3350,8 @@ filter_chimera <- function(read_count,
   }else{
     read_count_df <- read_count
   }
+  
+  
   # get unique list of ASVs with their total read_count in the run
   unique_asv_df <- read_count_df %>%
     group_by(asv) %>%
@@ -3325,60 +3359,112 @@ filter_chimera <- function(read_count,
     arrange(desc(read_count)) %>%
     ungroup()
   
-  if(by_sample){ # sample by sample
+  if(by_sample){
+    
     sample_list <- unique(read_count_df$sample)
-    # loop over samples
-    for(sample_loc in sample_list){
-      # get unique list of ASVs with their total read_count in the sample
-      unique_asv_df_sample <- read_count_df %>%
-        filter(sample == sample_loc) %>%
-        group_by(asv)%>%
-        summarize(read_count = sum(read_count))%>%
-        arrange(desc(read_count)) %>%
-        ungroup()
+    unique_asv_sample <- read_count_df %>%
+      group_by(asv, sample) %>%
+      summarize(read_count = sum(read_count), .groups="drop")%>%
+      ungroup()
+    
+    if(filter_occurrence){ # by_sample=TRUE, filter_occurrence = TRUE
       
-      # flag chimeras; 
-      # add one column to unique_asv_df for each sample with 1 if ASV is flagged in the sample, 
-      # 0 otherwise
-      unique_asv_df_sample <- flag_chimera(unique_asv_df_sample, 
-                                          vsearch_path=vsearch_path,
-                                          num_threads = num_threads,  
-                                          abskew=abskew,
-                                          quiet=quiet
-                                          )
+      chimera_flags <- data.frame(
+        asv = character(),
+        sample = character(),
+        chimera = numeric()
+      )
       
-      # remove read_count column
-      unique_asv_df_sample <- select(unique_asv_df_sample, -c("read_count"))
-      # add a column for each sample to unique_asv_df, with 1 if ASV is flagged in the sample,
-      # 0 otherwise
-      unique_asv_df <- left_join(unique_asv_df, unique_asv_df_sample, by = "asv")
-    }
-  }else{ # whole dataset
-    # add a column to unique_asv_df, with 1 if ASV is flagged in the sample, 0 otherwise
-    unique_asv_df <- flag_chimera(unique_asv_df, 
-                                 vsearch_path=vsearch_path, 
-                                 num_threads = num_threads,  
-                                 abskew=abskew,
-                                 quiet=quiet)
-  }
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc) %>%
+          arrange(desc(read_count))
+        
+        # flag chimeras; 
+        # add one column to sample_df with 1 if ASV is flagged in the sample, 
+        # 0 otherwise
+        sample_df <- flag_chimera(sample_df, 
+                                  vsearch_path=vsearch_path,
+                                  num_threads = num_threads,  
+                                  abskew=abskew,
+                                  quiet=quiet
+        )
+        
+        sample_df <- sample_df %>%
+          select(asv, sample, chimera)
+        chimera_flags <- rbind(chimera_flags, sample_df)
+      }
+      # delete occurrences flagged as chimera
+      read_count_df <- left_join(read_count_df, chimera_flags, by=c("sample", "asv")) %>%
+        filter(chimera == 0 | is.na(chimera)) %>%
+        select(-chimera)
+      
+    }else { # by_sample=TRUE, filter_occurrence = FALSE
+      
+      # loop over samples
+      for(sample_loc in sample_list){
+        # get unique list of ASVs with their total read_count in the sample
+        sample_df <- unique_asv_sample %>%
+          filter(sample == sample_loc)  %>%
+          arrange(desc(read_count))
+        
+        # flag chimeras; 
+        # add one column to sample_df with 1 if ASV is flagged as chimera in the sample, 
+        # 0 otherwise
+        sample_df <- flag_chimera(sample_df, 
+                                  vsearch_path=vsearch_path,
+                                  num_threads = num_threads,  
+                                  abskew=abskew,
+                                  quiet=quiet
+        )
+        sample_df <- sample_df %>%
+          select(asv, chimera)
+        
+        # add a column for for each sample to unique_asv_df, 
+        # with 1 if ASV is flagged in the sample, 0 otherwise
+        unique_asv_df <- left_join(unique_asv_df, sample_df, by = "asv")
+      }
+      
+      # count the number of times each ASV has been flagged and when it has not. 
+      # Ignore NA, when the ASV is not present in the sample
+      unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
+      unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
+      # keep only ASVs, 
+      # that are flagged in sample_prop proportion of the samples where they are present  
+      unique_asv_df <- unique_asv_df %>%
+        filter(yes/(yes+no) >= sample_prop)
+      
+      # eliminate potential chimeras from read_count_df
+      read_count_df <- read_count_df %>%
+        filter(!asv %in% unique_asv_df$asv)
+    } # end by_sample=TRUE, filter_occurrence ==FALSE
+  } else { # end by_sample, Filter the all at once
+    
+    unique_asv_df  <- flag_chimera(unique_asv_df, 
+                                   vsearch_path=vsearch_path,
+                                   num_threads = num_threads,  
+                                   abskew=abskew,
+                                   quiet=quiet
+    )
+    
+    
+    unique_asv_df <- unique_asv_df %>%
+      filter(chimera == 1)
+    # eliminate potential chimeras from read_count_df
+    read_count_df <- read_count_df %>%
+      filter(!asv %in% unique_asv_df$asv)
+  } # end by_sample = FALSE
   
-  # count the number of times each ASV has been flagged and when it has not. 
-  # Ignore NA, when the ASV is not present in the sample
-  unique_asv_df$yes <- rowSums(unique_asv_df[3:ncol(unique_asv_df)] == 1, na.rm = TRUE)
-  unique_asv_df$no <- rowSums(unique_asv_df[3:(ncol(unique_asv_df)-1)] == 0, na.rm = TRUE)
-  # keep only ASVs, that are flagged in sample_prop proportion 
-  # of the samples where they are present  
-  unique_asv_df <- unique_asv_df %>%
-    filter(yes/(yes+no) >= sample_prop)
-  
-  # eliminate potential Chimeras from read_count_df
-  read_count_df <- read_count_df %>%
-    filter(!asv %in% unique_asv_df$asv)
-  
+  ###### Print output
   if(!is.null(outfile)){
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)
 }
 
@@ -3440,13 +3526,15 @@ renkonen_dist <- function(df1, df2){
 #' (`compare_all = TRUE`) or only between replicates within the same sample 
 #' (`compare_all = FALSE`).
 #' 
-#' @param read_count_df Data frame with `asv`, `sample`, `replicate`, and 
+#' @param read_count Data frame or csv file with `asv`, `sample`, `replicate`, and 
 #'   `read_count` columns.
 #' @param compare_all Logical. If `TRUE`, compute Renkonen distances for all 
 #'   pairs of sample-replicates. If `FALSE`, compute distances only between 
 #'   replicates of the same sample.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return Data frame with columns: `sample1`, `sample2`, `replicate1`, 
 #'   `replicate2`, `renkonen_d`, `sample_comp` (indicating `"within"` if 
@@ -3459,9 +3547,22 @@ renkonen_dist <- function(df1, df2){
 #' 
 #' @export
 #' 
-compute_renkonen_distances <- function(read_count_df, 
+compute_renkonen_distances <- function(read_count, 
                                   compare_all=FALSE,
-                                  outfile=NULL){
+                                  outfile=NULL,
+                                  log_file = NULL){
+  
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
+  # can accept df or file as an input
+  if(is.character(read_count)){
+    # read known occurrences
+    read_count_df <- read.csv(read_count, header=T, sep=sep)
+  }else{
+    read_count_df <- read_count
+  }
   
   df <- read_count_df %>%
     select(asv, sample, replicate, read_count)
@@ -3523,6 +3624,7 @@ compute_renkonen_distances <- function(read_count_df,
     check_dir(outfile, is_file=TRUE)
     write.table(renkonen_df, file = outfile,  row.names = F, sep=sep)
   }
+  write_log(log, file=log_file)
   return(renkonen_df)
 }
 
@@ -3545,7 +3647,9 @@ compute_renkonen_distances <- function(read_count_df,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Filtered `read_count` data frame with inconsistent replicates removed.
 #' 
 #' @examples
@@ -3563,8 +3667,14 @@ filter_replicate <- function(read_count,
                            outfile=NULL,
                            cutoff = NA, 
                            renkonen_distance_quantile=0.9,
-                           sep=","
+                           sep=",",
+                           log_file=NULL
                            ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -3575,7 +3685,7 @@ filter_replicate <- function(read_count,
   }
   
   # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- compute_renkonen_distances(read_count_df, compare_all=FALSE) %>%
+  renkonen_df <- compute_renkonen_distances(read_count = read_count_df, compare_all=FALSE) %>%
     select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
     arrange(renkonen_d)
   
@@ -3624,6 +3734,10 @@ filter_replicate <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_df)  
 }
 
@@ -3643,7 +3757,9 @@ filter_replicate <- function(read_count,
 #'   data frame. If NULL, no file is written.
 #' @param sep Character string specifying the field separator used in input and 
 #'   output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: `asv`, `sample`, `read_count` (aggregated 
 #'   across replicates), and optional `cluster_id`.
 #' 
@@ -3654,7 +3770,18 @@ filter_replicate <- function(read_count,
 #' 
 #' @export
 #'
-pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, sep=","){
+pool_replicates <- function(read_count, 
+                            method="mean", 
+                            digits=0, 
+                            outfile=NULL, 
+                            sep=",",
+                            log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
   # can accept df or file as an input
   if(is.character(read_count)){
     # read known occurrences
@@ -3705,6 +3832,9 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, s
     check_dir(outfile, is_file=TRUE)
     write.table(read_count_samples_df, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(read_count_samples_df)
 }
 
@@ -3746,7 +3876,9 @@ pool_replicates <- function(read_count, method="mean", digits=0, outfile=NULL, s
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: 
 #' `asv_id`, `ltg_taxid`, `ltg_name`, `ltg_rank`, `ltg_rank_index`,
 #' `domain_taxid`, `domain`, `kingdom_taxid`, `kingdom`,
@@ -3777,12 +3909,19 @@ assign_taxonomy_ltg <- function(
     num_threads=0, 
     tax_sep="\t", 
     sep=",",
-    quiet=TRUE
+    quiet=TRUE,
+    log_file=NULL
     ){
 
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
 taxonomy <- path.expand(taxonomy)
 blast_db <- path.expand(blast_db)
 
@@ -3850,7 +3989,7 @@ outdir_tmp <- paste('tmp_TaxAssign_',
                     sep=''
                     )
 outdir_tmp <- file.path(tempdir(), outdir_tmp)
-check_dir(outdir_tmp)
+outdir_tmp = check_dir(outdir_tmp)
 
 ### run blast and clean/complete results
 # run blast and read read results to data frame 
@@ -3940,6 +4079,8 @@ if(!is.null(outfile)){
   write.table(taxres_df, file = outfile,  row.names = FALSE, sep=sep)
 }
 
+# add end_time and runtime, print
+write_log(log, file=log_file)
 return(taxres_df)
 }
 
@@ -3991,7 +4132,7 @@ run_blast <- function(df,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  check_dir(outdir)
+  outdir = check_dir(outdir)
   
   # make fasta file with unique reads; use numbers as ids  
 #  seqs <- unique(df$asv)
@@ -4526,7 +4667,9 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #' @param mock_composition Data frame or CSV file with columns: `sample`, `action`, `asv`. 
 #'   `action` can be `keep` or `tolerate`. Required if `add_expected_asv = TRUE`.
 #' @param sep Field separator character used in input and output CSV files.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Invisible data frame corresponding to the ASV table. Columns represent samples, 
 #'   rows represent ASVs, and cells contain read counts, optionally extended with 
 #'   taxonomic and summary information.
@@ -4559,9 +4702,14 @@ write_asv_table <- function(read_count,
                           add_sums_by_asv=FALSE, 
                           add_expected_asv=FALSE,
                           mock_composition=NULL, 
-                          sep=","
+                          sep=",",
+                          log_file=NULL
                           ){
   
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   if(is.character(read_count)){
     read_count_samples_df <- read.csv(read_count, header=T, sep=sep)
@@ -4761,6 +4909,10 @@ write_asv_table <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(wide_read_count_df, file=outfile, row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(invisible(wide_read_count_df))
 }
 
@@ -4789,6 +4941,9 @@ write_asv_table <- function(read_count,
 #'   occurrences below this value are ignored.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only 
 #'   show warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with the following columns: `sample`, `expected_read_count`,
 #'   `unexpected_read_count`, `pcr_error_var_prop`, `expected_asv_id`, 
 #'   `unexpected_asv_id`, `expected_asv`, `unexpected_asv`.
@@ -4812,12 +4967,18 @@ suggest_pcr_error_cutoff <- function(read_count,
                              sep=",", 
                              outfile=NULL, 
                              max_mismatch=1, 
-                             min_read_count=5,
-                             quiet=TRUE
+                             min_read_count=10,
+                             quiet=TRUE,
+                             log_file=NULL
                              ){
   
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
+  }
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
   }
   
   # can accept df or file as an input
@@ -4861,7 +5022,7 @@ suggest_pcr_error_cutoff <- function(read_count,
   # If any ASVs are missing, issue a warning (not an error)
   if (nrow(missing) > 0) {
     warning(
-      "The following expected ASVs are not present in the read_count dataframe:\n",
+      "WARNING: The following expected ASVs are not present in the read_count dataframe:\n",
       paste(missing$asv, collapse = ", "),
       "\nPlease check whether these sequences are correct."
     )
@@ -4896,7 +5057,7 @@ suggest_pcr_error_cutoff <- function(read_count,
                         sep=''
                         )
     outdir_tmp <- file.path(tempdir(), outdir_tmp)
-    check_dir(outdir_tmp)
+    outdir_tmp = check_dir(outdir_tmp)
     # get the list of keep ASV in the given mock sample from mock_composition
     tmp_mock <- mock_composition_df %>%
       filter(sample==mock) %>%
@@ -5030,6 +5191,9 @@ suggest_pcr_error_cutoff <- function(read_count,
     check_dir(outfile, is_file=TRUE)
     write.table(asv_pairs, file=outfile, sep=sep, row.names = F)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(asv_pairs)
 }
 
@@ -5049,6 +5213,9 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param outfile Character string specifying the output CSV file. If NULL, 
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with the following columns: `sample`, `replicate`, `action`, 
 #'   `asv_id`, `read_count`, `read_count_sample_replicate`, `sample_cutoff`, `asv`.
 #' @examples
@@ -5061,7 +5228,16 @@ suggest_pcr_error_cutoff <- function(read_count,
 #' 
 #' @export
 #'
-suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile=NULL){
+suggest_sample_cutoff <- function(read_count, 
+                                  mock_composition, 
+                                  sep=",", 
+                                  outfile=NULL,
+                                  log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5098,7 +5274,7 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
   # If any ASVs are missing, issue a warning (not an error)
   if (nrow(missing) > 0) {
     warning(
-      "The following expected ASVs are not present in the read_count dataframe:\n",
+      "WARNING: The following expected ASVs are not present in the read_count dataframe:\n",
       paste(missing$asv, collapse = ", "),
       "\nPlease check whether these sequences are correct."
     )
@@ -5180,6 +5356,10 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
     check_dir(outfile, is_file=TRUE)
     write.table(asv_keep_df, file=outfile, sep=sep, row.names = F)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  
   return(asv_keep_df)
 }
 
@@ -5208,7 +5388,9 @@ suggest_sample_cutoff <- function(read_count, mock_composition, sep=",", outfile
 #'   within a habitat is below this threshold, it is considered an artifact in all samples 
 #'   of that habitat.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show warnings or errors.
-#' 
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return A list containing:
 #'   * `known_occurrences_df`: sample, action, asv_id, asv
 #'   * `false_negatives_df`: sample, action, asv, asv_id
@@ -5238,7 +5420,13 @@ classify_control_occurrences <- function(read_count,
                                  false_negatives=NULL, 
                                  performance_metrics=NULL, 
                                  habitat_proportion=0.5,
-                                 quiet=TRUE){
+                                 quiet=TRUE,
+                                 log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5343,6 +5531,9 @@ classify_control_occurrences <- function(read_count,
     write.table(count_df, file=performance_metrics, row.names = F, sep=sep)
   }
   df_list <- list(occurrence_df, missing_occurrence_df, count_df)
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_list)
 }
 
@@ -5540,7 +5731,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
     missing_asv_text <- paste(capture.output(print(df)), collapse = "\n")
     warning(
       paste0(
-        "\n  Some expected ASVs are missing from the mock samples.\n",
+        "\n  WARNING: Some expected ASVs are missing from the mock samples.\n",
         "----------------------------------------------------------\n",
         missing_asv_text,
         "\n----------------------------------------------------------\n"
@@ -5607,6 +5798,9 @@ detect_false_negatives <- function(read_count_samples, mock_composition, sep=","
 #'   replicates for `filter_min_replicate()`.
 #' @param quiet logical; if TRUE, suppress informational messages and show only
 #'   warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns `read_count_cutoff`, `variant_cutoff`,
 #'   `FN`, `TP`, and `FP`.
 #' @examples
@@ -5639,8 +5833,14 @@ suggest_variant_readcount_cutoffs <- function(read_count,
                                            increment_variant_cutoff=0.001, 
                                            by_replicate=FALSE, 
                                            min_replicate_number=1, 
-                                           quiet=T
+                                           quiet=T,
+                                           log_file=NULL
 ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
 
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -5659,7 +5859,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
     performance_metrics <- file.path(outdir, "performance_metrics.csv")
     
     results <- classify_control_occurrences(
-      read_count_df,
+      read_count = read_count_df,
       sampleinfo = sampleinfo,
       mock_composition = mock_composition,
       known_occurrences = known_occurrences,
@@ -5675,7 +5875,7 @@ suggest_variant_readcount_cutoffs <- function(read_count,
     if(nrow(false_negatives_df)>0){
       warning(
         paste0(
-          "\n  Some expected ASVs are missing from the mock samples.\n",
+          "\n  WARNING: Some expected ASVs are missing from the mock samples.\n",
           "  Check the ", false_negatives, " file! \n"
         ),
         call. = FALSE
@@ -5718,14 +5918,14 @@ suggest_variant_readcount_cutoffs <- function(read_count,
   for(rc_cutoff in rc_cutoff_list){
     df_tmp <- read_count_df
     #filter_occurrence_read_count
-    df_tmp <- filter_occurrence_read_count(df_tmp, rc_cutoff)
+    df_tmp <- filter_occurrence_read_count(read_count = df_tmp, cutoff = rc_cutoff)
     for(var_cutoff in var_cutoff_list){
       # filter_occurrence_variant
-      df_tmp <- filter_occurrence_variant(df_tmp, var_cutoff, by_replicate=by_replicate)
+      df_tmp <- filter_occurrence_variant(read_count =df_tmp, cutoff = var_cutoff, by_replicate=by_replicate, min_read_count_prop=0.01)
       # filter_min_replicate
-      df_tmp <- filter_min_replicate(df_tmp, min_replicate_number)
+      df_tmp <- filter_min_replicate(read_count = df_tmp, cutoff = min_replicate_number)
       # pool_replicates
-      df_tmp_sample <- pool_replicates(df_tmp, method="max",digits=0) # the method does really not matter here
+      df_tmp_sample <- pool_replicates(read_count = df_tmp, method="max", digits=0) # the method does really not matter here
       # pool readcount info and known occurrences info
       ko <- full_join(df_tmp_sample, known_occurrences_df, by=c("sample", "asv")) %>%
         filter(!is.na(action)) %>% # keep only lines mentioned in the known occurrences
@@ -5770,8 +5970,11 @@ suggest_variant_readcount_cutoffs <- function(read_count,
   check_dir(outfile, is_file=TRUE)
   write.table(out_df, file=outfile, sep=sep, row.names = F)
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(out_df)
 }
+
 
 #' Pool multiple datasets
 #' 
@@ -5801,6 +6004,9 @@ suggest_variant_readcount_cutoffs <- function(read_count,
 #' and output CSV files.
 #' @param quiet Logical; if TRUE, suppress informational messages and show only
 #' warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return A data frame with columns `asv_id`, `sample`, `replicate`
 #' (optional), `read_count`, and `asv`.
 #' @examples
@@ -5815,8 +6021,14 @@ pool_datasets <- function(files,
                          outfile=NULL, 
                          method="mean",
                          sep=",", 
-                         quiet=T
+                         quiet=T,
+                         log_file=NULL
                          ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # method
   method <- match.arg(method, c("mean", "max", "sum", "min"))
@@ -5868,7 +6080,9 @@ pool_datasets <- function(files,
     check_dir(outfile, is_file=TRUE)
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
-
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_pool)
 }
 
@@ -5910,6 +6124,8 @@ pool_datasets <- function(files,
 #' and output CSV files.
 #' @param quiet Logical; if TRUE, suppress informational messages and show only
 #' warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #' 
 #' @return A data frame with columns `asv_id`, `sample`, `read_count`,
 #' `asv`, and optional `replicate`, where ASVs belonging to the same group
@@ -5935,7 +6151,13 @@ pool_markers <- function(files,
                          vsearch_path="vsearch", 
                          num_threads=0,
                          sep=",", 
-                         quiet=T){
+                         quiet=T,
+                         log_file=NULL){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # method
   method <- match.arg(method, c("mean", "max", "sum", "min"))
@@ -6031,6 +6253,8 @@ pool_markers <- function(files,
     write.table(df_pool, file=outfile, sep=sep, row.names = F)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_pool)
 }
 
@@ -6042,18 +6266,19 @@ pool_markers <- function(files,
 #' a specified value.
 #' 
 #' This function scans all output files from intermediate filtering steps in a
-#' directory and extracts rows where the selected feature matches the given
-#' value.
+#' specified directory and extracts rows where the selected feature matches
+#' any of the values provided in a vector.
 #' 
-#' Input files must be named with a numeric prefix followed by an underscore
-#' (e.g. `5_filter_occurrence_sample.csv`).
+#' By default, input filenames must start by a number (e.g. `5_filter_occurrence_sample.csv`).
+#' See `pattern` to change this behavior.
 #' 
 #' @param dir Character string specifying the directory containing intermediate
 #' filtering output files.
+#' @param pattern A regular expression used to select filenames to be scanned.
 #' @param feature Character string specifying the feature to filter by.
 #' Must be one of `"asv_id"`, `"asv"`, `"sample"`, `"replicate"`, or
 #' `"read_count"`.
-#' @param value Character or numeric value to match in the selected feature.
+#' @param values Numerical or Character vector with values to match in the selected feature.
 #' Only rows containing this value are retained.
 #' @param sep Field separator character used in input and output CSV files.
 #' @return An invisible data frame containing all rows matching the selected
@@ -6064,18 +6289,22 @@ pool_markers <- function(files,
 #' history_by(dir = "out", feature = "sample", value = "tpos1")
 #' }
 #' @export
-#'
-history_by <- function(dir, feature, value, sep=","){
+#
+history_by <- function(dir, pattern="^\\d", feature, values, sep=","){
 
-  check_dir(dir)
-  files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
+  dir = check_dir(dir)
+  files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to df and arrange the according to the number at the beginning of the filename
-  df <- data.frame("files"= files)
-  df$order <- gsub("_.*$", "", df$files)
-  df$order <- as.numeric(df$order)
-  df <- df %>%
-    arrange(order)
+  df <- data.frame("files"= files) %>%
+    arrange(files)
+  
+  df$order <- gsub("[^0-9].*$", "", df$files)
+  if(!any(df$order == "")){
+    df$order <- as.numeric(df$order)
+    df <- df %>%
+      arrange(order, files)
+  }
   
   selected_lines <- data.frame(
     file= as.character(), 
@@ -6100,7 +6329,8 @@ history_by <- function(dir, feature, value, sep=","){
     # check if the feature is in among the columns names of the data frame
     if(feature %in% colnames(data)){
       tmp <- data %>%
-        filter(!!sym(feature)==value) %>% # filter using a symbol from feature
+#        filter(!!sym(feature)==value) %>% # filter using a symbol from feature
+        filter(!!sym(feature) %in% values) %>% # filter using a symbol from feature
         select(file, asv_id, sample, replicate, read_count, asv)
       
       selected_lines <- rbind(selected_lines, tmp)
@@ -6114,7 +6344,9 @@ history_by <- function(dir, feature, value, sep=","){
 #' Summarize intermediate filtering steps by feature
 #' 
 #' Summarize the outputs of intermediate filtering steps across all files in a
-#' directory. Only files whose names begin with a numeric prefix are included.
+#' directory.
+#' By default, input filenames must start by a number (e.g. `5_filter_occurrence_sample.csv`).
+#' See `pattern` to change this behavior.
 #' 
 #' For each file, rows are grouped by `grouped_by`, and either:
 #' - the number of distinct values of `feature` is computed, or
@@ -6123,6 +6355,7 @@ history_by <- function(dir, feature, value, sep=","){
 #' @param dir Character string specifying the directory containing intermediate
 #' filtering output files. Files must start with a numeric prefix followed by
 #' an underscore (e.g. `5_filter_occurrence_sample.csv`).
+#' @param pattern A regular expression used to select filenames to be scanned.
 #' @param feature Character string specifying the feature to summarize. Must be
 #' one of `"asv_id"`, `"asv"`, `"sample"`, `"replicate"`, or `"read_count"`.
 #' @param grouped_by Character string specifying the grouping variable. Must be
@@ -6140,11 +6373,11 @@ history_by <- function(dir, feature, value, sep=","){
 #' }
 #' @export
 #'
-summarize_by <- function(dir, feature, grouped_by, outfile=NULL, sep=","){
+summarize_by <- function(dir, pattern = "^\\d", feature, grouped_by, outfile=NULL, sep=","){
   
   # read file names in dir
-  check_dir(dir)
-  files <- list.files(path=dir, pattern="^[0-9]+", full.names=FALSE)
+  dir = check_dir(dir)
+  files <- list.files(path=dir, pattern=pattern, full.names=FALSE)
   
   # get filenames to file_df and arrange the according to the number 
   # at the beginning of the file name
@@ -6347,33 +6580,34 @@ count_reads <- function(file, file_type="fastq"){
     if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
       if(file_type == "fastq"){
         cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+#        seq_count <- as.integer(system(cmd, intern=TRUE))
         seq_count <- seq_count/4
       }else if(file_type == "fasta"){
         cmd <- paste("zcat ", file, "| grep '^>' -P | wc -l", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }else{
         msg <- paste(file_type, "is neither fasta nor fastq. 
                      The number of liens in file will be returned for", file)
         print(msg)
         cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }
     }else{
       #uncompressed files
       if(file_type == "fastq"){
-        cmd <- paste("wc -l", line, sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
         seq_count <- seq_count/4
       }else if(file_type == "fasta"){
         cmd <- paste("grep '^>' -P", file, "| wc -l", sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }else{
         msg <- paste(file_type, "is neither fasta nor fastq. 
                      The number of lines in file will be returned for", file)
         print(msg)
-        cmd <- paste("wc -l", line, sep=" ")
-        seq_count <- as.integer(system(cmd, intern=TRUE))
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
       }
     }
     return(seq_count)
@@ -6439,7 +6673,7 @@ count_reads_in_dir<- function(dir,
                          quiet=T
                          ){
   
-  check_dir(dir)
+  dir = check_dir(dir, is_file=FALSE)
   files <- list.files(path = dir, pattern=pattern)
   df <- data.frame(
     "filename"=files,
@@ -6491,7 +6725,7 @@ count_reads_in_dir<- function(dir,
 #'   `"known_occurrences"`, `"read_count"`, `"read_count_sample"`, `"asv_list"`.
 #' @param sep Field separator character used in CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
-#' @return Throws an error and stops execution if inconsistencies are detected.
+#' @return Return an error message and stops execution if inconsistencies are detected.
 #' @examples
 #' \dontrun{
 #' check_file_info(file = "input/sampleinfo.csv", dir = "fasta", file_type = "sampleinfo")
@@ -6671,7 +6905,7 @@ check_file_info <- function(file, dir, file_type="fastqinfo", sep=",", quiet=FAL
       summarize("n"=n(), .groups="drop_last") %>%
       filter(n>1)
     if(nrow(tmp) > 0){
-      msg <- paste("Sample-replicate combinations must be unique:", 
+      msg <- paste("Sample-replicate combinations should be unique:", 
                    paste(tmp$sample, collapse = ", "))
       tryCatch(stop(msg), error = function(e) message(msg))
     }else if(!quiet){
@@ -6848,7 +7082,7 @@ check_file_info <- function(file, dir, file_type="fastqinfo", sep=",", quiet=FAL
 #' 
 check_file_exists <- function(file_list, dir){
   
-  check_dir(dir)
+  dir = check_dir(dir)
   missing <- c()
   for(i in file_list){
     file_p <- file.path(dir, i)
@@ -7014,6 +7248,9 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Data frame with columns: `sample`, `action`, `asv`, `taxon`, `asv_id`.
 #' @examples
 #' \dontrun{
@@ -7036,10 +7273,16 @@ match_variants_to_mock_species <- function(
     blast_path = "blastn",
     num_threads=0,
     sep=",",
-    quiet=TRUE
+    quiet=TRUE,
+    log_file=NULL
 ){
   
   ##### Make blast db from mock fasta
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   ## make TSV with seqID and taxID
   taxids <- file.path(tempdir(), "taxid.tsv" )
@@ -7142,6 +7385,8 @@ match_variants_to_mock_species <- function(
     write.table(mock_composition_template, file=out, row.names = FALSE, sep=sep)
   }
   
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(mock_composition_template)
 }
 
@@ -7234,7 +7479,7 @@ random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TR
   
   # --- Check if n >= total
   if (n >= total) {
-    txt <- sprintf("%s contains %d sequences.\nThe input file is copied to output.",
+    txt <- sprintf("WARNING: %s contains %d sequences.\nThe input file is copied to output.",
                    fasta, total)
     warning(txt, call. = FALSE)
     
@@ -7380,7 +7625,7 @@ random_sample_linux <- function(fasta,
   
   # --- Check if n >= total
   if (n >= total) {
-    txt <- paste(fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
+    txt <- paste("WARNING: ", fasta, "contains", total, "sequences.\n", "The input file is copied to output\n")
     warning(txt)
     
     # copy input to outfile, and compress/uncompress if necessary
@@ -7449,8 +7694,8 @@ random_sample_linux <- function(fasta,
 #' listed in the `fastainfo` data frame.
 #' This function is useful for standardizing sequencing depth across libraries.
 #'
-#' It can be applied before or after demultiplexing (`demultiplex_and_trim`),
-#' but is recommended after `merge_fastq_pairs` and before `demultiplex_and_trim`.
+#' It can be applied before or after demultiplexing (`demultiplex_and_trim_fasta`),
+#' but is recommended after `merge_fastq_pairs` and before `demultiplex_and_trim_fasta`.
 #'
 #' Two implementations are available:
 #'   - VSEARCH-based (`use_vsearch = TRUE`): fast, but only available on Linux-like systems.
@@ -7478,6 +7723,9 @@ random_sample_linux <- function(fasta,
 #'   is used and not available in the system PATH.
 #' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
 #' @param sep Character string: field separator used in input and output CSV files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
 #' @return Updated input data frame with adjusted file names (if needed) and updated read counts.
 #' @examples
 #' \dontrun{
@@ -7507,7 +7755,16 @@ subsample_fasta <- function(fastainfo,
                        num_threads=0,
                        compress=FALSE, 
                        sep=",",
-                       quiet=TRUE){
+                       quiet=TRUE,
+                       log_file=NULL){
+  
+  fasta_dir = check_dir(fasta_dir)
+  outdir = check_dir(outdir)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(fastainfo)){
@@ -7516,9 +7773,6 @@ subsample_fasta <- function(fastainfo,
   }else{
     fastainfo_df <- fastainfo
   }
-  
-  check_dir(fasta_dir)
-  check_dir(outdir)
   
   unique_fasta <- unique(fastainfo_df$fasta)
   
@@ -7539,7 +7793,7 @@ subsample_fasta <- function(fastainfo,
     
     ##### Change algo if windows and use_vsearch=FALSE to avoid stopping the run 
     if(!is_linux() && use_vsearch){
-      warning("The fastx_subsample commande in VSEARCH is not available for Windows\n
+      warning("WARNING: The fastx_subsample commande in VSEARCH is not available for Windows\n
               A slower, but cross-platform function (random_sample_r)\n
               will be used for random sampling sequences (random_sample_r).")
       use_vsearch <- FALSE
@@ -7568,6 +7822,744 @@ subsample_fasta <- function(fastainfo,
     fastainfo_df$read_count[which(fastainfo_df$fasta == outfile)] <- seqn
   } # end for
   write.table(fastainfo_df, file = file.path(outdir, "fastainfo.csv"),  row.names = F, sep=sep)
+  
+  write_log(log, file=log_file)
   return(fastainfo_df)
 }
 
+
+#' Concatenate contents of files with identical names
+#'
+#' Reads files from multiple directories and concatenates the contents of files
+#' sharing the same filename into a single output file.
+#'
+#' For each unique filename matching `pattern`, all corresponding files found in
+#' `dirs` are read in order and merged into a file of the same name in `outdir`.
+#' 
+#' This function works both on uncompressed and gz compressed files.
+#'
+#' @param dirs A character vector of input directories to search for files.
+#' @param outdir A character string specifying the output directory where pooled
+#'   files will be written.
+#' @param pattern A regular expression used to select filenames within the input
+#'   directories.
+#' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
+#' @return Invisibly data frame of files and directories 
+#'
+#' @examples
+#' \dontrun{
+#' concatenate_files(
+#'   dirs = c("run1", "run2", "run3"),
+#'   outdir = "pooled",
+#'   pattern = "\\.fastq$"
+#' )
+#' }
+#'
+#' @export
+concatenate_files <- function(dirs, 
+                              outdir, 
+                              pattern = "\\.", 
+                              quiet=TRUE,
+                              log_file=NULL) {
+  
+  outdir = check_dir(outdir, is_file=FALSE)
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
+  df <- data.frame(
+    file = character(),
+    dir = character(),
+    stringsAsFactors = FALSE
+  )
+  
+  # make df with filenames and dir names as columns
+  for (dir in dirs) {
+    
+    files <- list.files(
+      path = dir,
+      pattern = pattern
+    )
+    
+    tmp <- data.frame(
+      file = files,
+      dir = dir,
+      stringsAsFactors = FALSE
+    )
+    
+    df <- rbind(df, tmp)
+  }
+  
+  # loop over unique filenames
+  for (f in unique(df$file)) {
+    if(!quiet){
+      print(f)
+    }
+    sub_df <- df %>%
+      filter(file == f)
+    
+    out <- file.path(outdir, f)
+    
+    gz <- grepl("\\.gz$", f)
+    if (gz) {
+      con_out <- gzfile(out, open = "wt")
+    } else {
+      con_out <- file(out, open = "w")
+    }
+    
+    for (i in 1:nrow(sub_df)) {
+      
+      path <- file.path(sub_df$dir[i], sub_df$file[i])
+      
+      if (gz) {
+        con_in <- gzfile(path, open = "rt")
+      } else {
+        con_in <- file(path, open = "r")
+      }
+      lines <- readLines(con_in)
+      writeLines(lines, con_out)
+      close(con_in)
+    }
+    close(con_out)
+  }
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  invisible(df)
+}
+
+#' Demultiplex fastq file pairs and trim tags and primers (reverse strand not checked)
+#' 
+#' Same as `demultiplex_and_trim_fastq`, but without checking the reverse-complement 
+#' of the sequences.
+#'  
+#' FASTQ file pairs are first demultiplexed by requiring a perfect match between
+#' the tag sequence and the 5' end of the read. The resulting files are then
+#' trimmed to remove primer sequences using less stringent matching parameters
+#' (controlled by `cutadapt_error_rate`). A match between the primer and the 5'
+#' end of the read is required for the read to be trimmed and retained. Matching
+#' of the 3' primer is optional
+#'  
+#' Input files can be compressed or uncompressed. Output compression is 
+#' controlled by `compress`.
+#'  
+#' @param fastqinfo Data frame or path to a CSV file with the following columns: 
+#'   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, 
+#'   `sample`, `sample_type` (mock/negative/real), 
+#'   `habitat` (optional), `replicate`, `fastq_fw`, 
+#'   `fastq_rv`
+#' @param fastq_dir Character string specifying the directory containing input 
+#'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
+#' @param cutadapt_path Character string specifying the path to the 
+#'   `cutadapt` executable.
+#' @param num_threads Positive integer specifying the number of CPU threads to 
+#'   use. If `0`, all available CPUs are used.
+#' @param outdir Character string specifying the output directory.
+#' @param tag_to_end Logical. If `TRUE`, tags are assumed to be located at the 
+#'   extremities of reads (starting at the first base).
+#' @param primer_to_end Logical. If `TRUE`, primers are assumed to follow 
+#'   directly after tags (i.e., no heterogeneity spacer).
+#' @param cutadapt_error_rate Numeric value between 0 and 1 specifying the 
+#'   maximum allowed error rate between primers and reads (exact match is 
+#'   required for tags).
+#' @param sep Character string specifying the field separator used in input and 
+#'   output CSV files.
+#' @param compress Logical. If `TRUE`, compress output files using gzip.
+#' @param quiet Logical. If `TRUE`, suppress informational messages and 
+#'   only display warnings or errors.
+#' 
+#' @return Data frame similar to the input `fastqinfo` file, 
+#'   but contains the output fastq file names and read counts.
+#' 
+#' @examples
+#' \dontrun{
+#' fastqinfo_df <- demultiplex_fastq_pairs_strand_plus(
+#'   fastqinfo = fastqinfo_df,
+#'   fastq_dir = "data/fastq",
+#'   outdir = "data/fastq_demultiplexed",
+#'   tag_to_end = TRUE,
+#'   primer_to_end = TRUE,
+#'   sep = ","
+#' )
+#' }
+#' 
+#' @export
+#' 
+
+demultiplex_fastq_pairs_strand_plus <- function(fastqinfo, 
+                                                fastq_dir, 
+                                                outdir, 
+                                                cutadapt_path="cutadapt", 
+                                                num_threads=0,
+                                                tag_to_end=T, 
+                                                primer_to_end=T, 
+                                                cutadapt_error_rate=0.1,
+                                                sep=",",  
+                                                compress=F, 
+                                                quiet=T
+){
+  
+  # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+
+  fastq_dir = check_dir(fastq_dir)
+  outdir = check_dir(outdir)
+  
+  # can accept df or file as an input
+  if(is.character(fastqinfo)){
+    # read known occurrences
+    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+  }else{
+    fastqinfo_df <- fastqinfo
+  }
+  
+  check_file_info(fastqinfo_df, fastq_dir, file_type="fastqinfo", sep=",", quiet=TRUE)
+  
+  # upper case for all primers and tags
+  fastqinfo_df$tag_fw <- toupper(fastqinfo_df$tag_fw)
+  fastqinfo_df$tag_rv <- toupper(fastqinfo_df$tag_rv)
+  fastqinfo_df$primer_fw <- toupper(fastqinfo_df$primer_fw)
+  fastqinfo_df$primer_rv <- toupper(fastqinfo_df$primer_rv)
+  # make columns for output filenames
+  fastqinfo_df$fastq_fw_demultiplexed <- NA
+  fastqinfo_df$fastq_rv_demultiplexed <- NA
+  
+  # get unique list of input fastq file pairs
+  fastqs <- fastqinfo_df %>%
+    select(fastq_fw, fastq_rv) %>%
+    distinct()
+  
+  for(i in 1:nrow(fastqs)){ # for each input fastq pair
+    # select lines in fastqinfo_df that corresponds to a given input fasta file
+    fastq_fw_local <- fastqs$fastq_fw[i]
+    fastq_rv_local <- fastqs$fastq_rv[i]
+    df <- fastqinfo_df %>%
+      filter(fastq_fw==fastq_fw_local & fastq_rv==fastq_rv_local)
+    
+    # Make a tmp_dir_fastq in tempdir specific to a fastq file pair. It will contain the tagtrimmed files.
+    # This can be deleted at the end and avoid reusing tagtrimmed files created for a previous fastq files
+    tmp_fastq <- paste(fastq_fw_local, "_", trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    tmp_dir_fastq <- file.path(tempdir(), tmp_fastq)
+    
+    # Delete tmp_dir_fastq if exists (previous run crushed before deleting it) 
+    if (dir.exists(tmp_dir_fastq)) {
+      unlink(tmp_dir_fastq, recursive = TRUE)
+    }
+    # Create it 
+    dir.create(tmp_dir_fastq)
+    
+    # make a tag_fw.fasta and tag_rv.fasta files with all tag of the fastq pairs to be demultiplexed
+    tag_files <- write_cutadapt_adapter_fastq(fastqinfo_df, 
+                                              fastq_file=fastq_fw_local, 
+                                              tag_to_end=tag_to_end, 
+                                              outdir=tmp_dir_fastq
+    )
+    
+    # add path
+    fastq_fw_local <- file.path(fastq_dir, fastq_fw_local)
+    fastq_rv_local <- file.path(fastq_dir, fastq_rv_local)
+    
+    ##### run demultiplexing
+    g <- paste("file:", tag_files[1], sep="")
+    G <- paste("file:", tag_files[2], sep="")
+    out_fw <- file.path(tmp_dir_fastq, "tagtrimmed-{name1}-{name2}_fw.fastq") 
+    out_rv <- file.path(tmp_dir_fastq, "tagtrimmed-{name1}-{name2}_rv.fastq") 
+    args <- c(
+      "-e", "0",
+      "--no-indels",
+      "--trimmed-only",
+      "-g",  shQuote(g),
+      "-G",  shQuote(G),
+      "-o",  shQuote(out_fw),
+      "-p",  shQuote(out_rv),
+      fastq_fw_local, fastq_rv_local
+    )
+    if(num_threads > 0){
+      args <- append(args, c("--cores", num_threads), after=2)
+    }
+    if(quiet){
+      args <- append(args, c("--quiet"), after=2)
+    }
+    run_system2(cutadapt_path, args, quiet=quiet)
+    
+    ############ primer trimming with less stingent conditions
+    # for a given marker, there is only one primer combination
+    primer_fwl <- df[1,"primer_fw"]
+    primer_rvl <- df[1,"primer_rv"]
+    
+    for(f in 1:nrow(df)){# go through each de-multiplexed, tag-trimmed file and trim primers
+      outfile_fw <- paste(df[f,"sample"], "-", df[f,"replicate"], "_fw", sep="")
+      outfile_rv <- paste(df[f,"sample"],  "-", df[f,"replicate"], "_rv", sep="")
+      outfile_fw <- paste(outfile_fw, ".fastq", sep="")
+      outfile_rv <- paste(outfile_rv, ".fastq", sep="")
+      if(compress){
+        outfile_fw <- paste(outfile_fw, ".gz", sep="") # cutadapt detects from filename, if outfiles should be compressed
+        outfile_rv <- paste(outfile_rv, ".gz", sep="")
+      }
+      # complete fastqinfo_df with output fastq names
+      fastqinfo_df$fastq_fw_demultiplexed[
+        which(fastqinfo_df$sample==df[f,"sample"] & 
+                fastqinfo_df$replicate==df[f,"replicate"])
+      ]<- outfile_fw
+      fastqinfo_df$fastq_rv_demultiplexed[
+        which(fastqinfo_df$sample==df[f,"sample"] & 
+                fastqinfo_df$replicate==df[f,"replicate"])
+      ]<- outfile_rv
+      
+      # add path to output file
+      primer_trimmed_fw <- file.path(outdir, outfile_fw)
+      primer_trimmed_rv <- file.path(outdir, outfile_rv)
+      tag_trimmed_fw <- paste("tagtrimmed-", 
+                              df[f,"tag_fw"], "-", 
+                              df[f,"tag_rv"], 
+                              "_fw.fastq", 
+                              sep="")
+      tag_trimmed_rv <- paste("tagtrimmed-", 
+                              df[f,"tag_fw"], "-", 
+                              df[f,"tag_rv"], 
+                              "_rv.fastq", 
+                              sep="")
+      tag_trimmed_fw <- file.path(tmp_dir_fastq, tag_trimmed_fw)
+      tag_trimmed_rv <- file.path(tmp_dir_fastq, tag_trimmed_rv)
+      
+      primer_rvl_rc <- reverse_complement(primer_rvl)
+      primer_fwl_rc <- reverse_complement(primer_fwl)
+      
+      ##### run primer trimming
+      if(primer_to_end){
+#        g <- paste("^", primer_fwl, sep="")
+#        G <- paste("^", primer_rvl, sep="")
+        a <- paste("^", primer_fwl, "...", primer_rvl_rc, sep="")
+        A <- paste("^", primer_rvl, "...", primer_fwl_rc, sep="")
+      }
+      else{
+#        g <- paste(primer_fwl, ";min_overlap=", nchar(primer_fwl), sep="")
+#        G <- paste(primer_rvl, ";min_overlap=", nchar(primer_rvl), sep="")
+        a <- paste(primer_fwl, ";required;min_overlap=", nchar(primer_fwl), "...",  primer_rvl_rc, sep="")
+        A <- paste(primer_rvl, ";required;min_overlap=", nchar(primer_rvl), "...",  primer_fwl_rc, sep="")
+      }
+      args <- c(
+        "-e", cutadapt_error_rate,
+        "--no-indels",
+        "--trimmed-only",
+#        "-g",  shQuote(g),
+#        "-G",  shQuote(G),
+        "-a",  shQuote(a),
+        "-A",  shQuote(A),
+        "-o",  primer_trimmed_fw,
+        "-p",  primer_trimmed_rv,
+        tag_trimmed_fw, tag_trimmed_rv
+      )
+      if(num_threads > 0){
+        args <- append(args, c("--cores", num_threads), after=2)
+      }
+      if(quiet){
+        args <- append(args, c("--quiet"), after=2)
+      }
+      run_system2(cutadapt_path, args, quiet=quiet)
+      
+    } # end tag-trimmed 
+    # delete the tmp dir with the tag-trimmed files
+    unlink(tmp_dir_fastq, recursive = TRUE)
+  }# end fastq
+  
+  # make sampleinfo file
+  fastqinfo_df <- fastqinfo_df %>%
+    select(-fastq_fw, -fastq_rv) %>%
+    rename(fastq_fw = fastq_fw_demultiplexed, fastq_rv = fastq_rv_demultiplexed)
+  
+  return(fastqinfo_df)
+  
+}
+
+#' Make a FASTA file with forward or reverse adapters
+#' 
+#' Create two FASTA files containing forward or reverse tags
+#' formatted for `cutadapt`. 
+#' This file is used by `demultiplex_and_trim_fastq` to demultiplex input FASTQ files pairs.
+#' 
+#' @param fastqinfo_df Data frame with columns: `tag_fw`, `tag_rv`, `fastq_fw` and `fastq_rv`.
+#' @param fastq Character string specifying the `fastq_fw` file to be demultiplexed 
+#'   (must be present in the `fastq_fw` column of `fastqinfo_df`).
+#' @param outdir Character string specifying the output directory.
+#' @param tag_to_end Logical. If `TRUE`, tags are assumed to be located at the 
+#'   extremities of reads.
+#' 
+#' @return Vector with the output fasta files, or `NA` if all tags 
+#'   are `NA` in `fastqinfo_df` for the given `fastq` file.
+#' 
+#' @examples 
+#' \dontrun{
+#' write_cutadapt_adapter_fastq(
+#'   fastqinfo_df = fastqinfo_df, 
+#'   fastq_file = "fastq_file", 
+#'   tag_to_end = FALSE, 
+#'   outdir = "data/out"
+#' )
+#' }
+#' 
+#' @export
+
+write_cutadapt_adapter_fastq <- function(
+  fastqinfo_df, 
+  fastq_file, 
+  outdir, 
+  tag_to_end=TRUE
+){
+  
+  # select all tags for the fastq file
+  tags <- fastqinfo_df %>%
+    filter(fastq_fw==fastq_file) %>%
+    select(tag_fw, tag_rv)
+  
+  
+  tags_fw <- unique(toupper(tags$tag_fw))
+  tags_rv <- unique(toupper(tags$tag_rv))
+  
+  # return NA if all tags are NA
+  if(length(tags_fw) == 1){ # only one tag
+    if(is.na(tags_fw[1])){ # no tags
+      return(NA)
+    }
+  }
+  if(length(tags_rv) == 1){ # only one tag
+    if(is.na(tags_rv[1])){ # no tags
+      return(NA)
+    }
+  }
+  
+  # Specify the file path
+  outdir = check_dir(outdir)
+  tag_file_fw <- file.path(outdir, "tags_fw.fasta")
+  if (tag_to_end) {
+    text <- as.vector(rbind(
+      paste0(">", tags_fw),
+      paste0("^", tags_fw)
+    ))
+  } else {
+    text <- as.vector(rbind(
+      paste0(">", tags_fw),
+      paste0(tags_fw, ";min_overlap=", nchar(tags_fw))
+    ))
+  }
+  writeLines(text, tag_file_fw)
+  
+  tag_file_rv <- file.path(outdir, "tags_rv.fasta")
+  
+  if (tag_to_end) {
+    text <- as.vector(rbind(
+      paste0(">", tags_rv),
+      paste0("^", tags_rv)
+    ))
+  } else {
+    text <- as.vector(rbind(
+      paste0(">", tags_rv),
+      paste0(tags_rv, ";min_overlap=", nchar(tags_rv))
+    ))
+  }
+  writeLines(text, tag_file_rv)
+  
+  files <- c(tag_file_fw, tag_file_rv)
+  return(files)
+}
+
+#' Demultiplex FASTQ file pairs and trim tags and primers
+#'
+#' FASTQ file pairs are first demultiplexed by requiring a perfect match between
+#' the tag sequence and the 5' end of the read. The resulting files are then
+#' trimmed to remove primer sequences using less stringent matching parameters
+#' (controlled by `cutadapt_error_rate`). A match between the primer and the 5'
+#' end of the read is required for the read to be trimmed and retained. Matching
+#' of the 3' primer is optional.
+#'  
+#' If `check_reverse = TRUE`, forward and reverse reads are swapped, demultiplexed 
+#' again, and trimmed for 5' primers.
+#' 
+#' When the same set of tags is used at both ends of the reads, demultiplexing 
+#' both the original and swapped orientations may produce incorrect assignments.
+#' These incorrectly assigned reads are subsequently removed during primer trimming.
+#'
+#' Input files can be compressed or uncompressed. Output compression is 
+#' controlled by `compress`.
+#'  
+#' @param fastqinfo Data frame or path to a CSV file with the following columns: 
+#'   `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv`, 
+#'   `sample`, `sample_type` (mock/negative/real), 
+#'   `habitat` (optional), `replicate`, `fastq_fw`, 
+#'   `fastq_rv`
+#' @param fastq_dir Character string specifying the directory containing input 
+#'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
+#' @param cutadapt_path Character string specifying the path to the 
+#'   `cutadapt` executable. 
+#' @param compress Logical. If `TRUE`, compress output files using gzip.
+#' @param num_threads Positive integer specifying the number of CPU threads to 
+#'   use. If `0`, all available CPUs are used.
+#' @param outdir Character string specifying the output directory.
+#' @param check_reverse Logical. If `TRUE`, also check reverse-complemented 
+#'   sequences from the input FASTA files.
+#' @param tag_to_end Logical. If `TRUE`, tags are expected to be located 
+#'   at the extremities of reads (starting at the first base).
+#' @param primer_to_end Logical. If `TRUE`, primers are assumed to follow 
+#'   directly after tags (i.e., no heterogeneity spacer).
+#' @param cutadapt_error_rate Numeric value between 0 and 1 specifying the 
+#'   maximum allowed error rate between primers and reads (exact match is 
+#'   required for tags).
+#' @param sep Character string specifying the field separator used in input and 
+#'   output CSV files.
+#' @param quiet Logical. If `TRUE`, suppress informational messages and 
+#'   only display warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
+#'   
+#' @return Data frame similar to the input `fastqinfo` file, 
+#'   but contains the output fastq file names and read counts.
+#' 
+#' @examples
+#' \dontrun{
+#' fastqinfo_df <- demultiplex_and_trim_fastq(
+#'   fastqinfo = fastqinfo_df,
+#'   fastq_dir = "data/fastq",
+#'   outdir = "data/fastq_demultiplexed",
+#'   tag_to_end = TRUE,
+#'   primer_to_end = TRUE,
+#'   sep = ","
+#' )
+#' }
+#' 
+#' @export
+
+demultiplex_and_trim_fastq <- function(
+  fastqinfo, 
+  fastq_dir, 
+  outdir, 
+  cutadapt_path="cutadapt",
+  check_reverse=FALSE, 
+  num_threads=0,
+  tag_to_end=TRUE, 
+  primer_to_end=TRUE, 
+  cutadapt_error_rate=0.1,
+  sep=",",
+  compress=FALSE,
+  quiet=T,
+  log_file=NULL
+  ){
+  
+  fastq_dir <- check_dir(fastq_dir)
+  outdir <- check_dir(outdir)
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
+  
+  # can accept df or file as an input
+  if(is.character(fastqinfo)){
+    # read known occurrences
+    fastqinfo_df <- read.csv(fastqinfo, header=T, sep=sep)
+  }else{
+    fastqinfo_df <- fastqinfo
+  }
+  
+  check_file_info(file=fastqinfo_df, dir=fastq_dir, file_type="fastqinfo", sep=sep, quiet=TRUE)
+  
+  #########
+  # demultiplex_fastq_pairs_strand_plus does the whole demultilexing, trimming and compress on the + strand
+  # If sequences are not oriented, the -strand should be checked => 
+  # swap fw and reverse input files and run again demultiplex_fastq_pairs_strand_plus
+  # pool the output
+  
+  
+  # run demultiplex_and_trim_strand_plus of plus strand and on - strand after 
+  # swapping fw and rev tags and primers,
+  # take the reverse complement of the -strand results (vsearch)
+  # pool the results of the 2 strands
+  # compress if necessary
+  
+  # run on strand +
+  if(check_reverse){
+    
+    # make temp dirs
+    fw_tmp_dir <- paste('fw_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    fw_tmp_dir <- file.path(tempdir(), fw_tmp_dir)
+    check_dir(fw_tmp_dir)
+    rv_tmp_dir <- paste('rv_', trunc(as.numeric(Sys.time())), sample(1:100, 1), sep='')
+    rv_tmp_dir <- file.path(tempdir(), rv_tmp_dir)
+    check_dir(rv_tmp_dir)
+    
+    #### use +strand, output to sorted_dir, uncompressed
+    fastqinfo_demultiplexed_fw <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df, 
+                                                                      fastq_dir=fastq_dir, 
+                                                                      outdir=fw_tmp_dir, 
+                                                                      cutadapt_path=cutadapt_path, 
+                                                                      num_threads=num_threads,
+                                                                      tag_to_end=tag_to_end, 
+                                                                      primer_to_end=primer_to_end, 
+                                                                      cutadapt_error_rate=cutadapt_error_rate, 
+                                                                      sep=sep, 
+                                                                      compress=compress,
+                                                                      quiet=quiet
+    )
+    
+    #### use - strand
+    # swap fw and rv tags and primers
+    fastqinfo_df_tmp <- fastqinfo_df %>%
+      rename(fastq_fw = fastq_rv, fastq_rv = fastq_fw)
+    
+    
+    # run demultiplex_and_trim on for reverse strand
+    fastqinfo_demultiplexed_rv <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df_tmp, 
+                                                                      fastq_dir=fastq_dir, 
+                                                                      outdir=rv_tmp_dir, 
+                                                                      cutadapt_path=cutadapt_path, 
+                                                                      num_threads = num_threads,
+                                                                      tag_to_end=tag_to_end, 
+                                                                      primer_to_end=primer_to_end, 
+                                                                      cutadapt_error_rate=cutadapt_error_rate, 
+                                                                      sep=sep,
+                                                                      compress=compress, 
+                                                                      quiet=quiet
+    )
+    
+    # concatenate files
+    for(i in 1:nrow(fastqinfo_demultiplexed_fw)){
+      
+      # fw reads from original and swapped demultiplexing
+      filename_base <- fastqinfo_demultiplexed_fw$fastq_fw[i]
+      fw_in <- file.path(fw_tmp_dir, filename_base)
+      rv_in <- file.path(rv_tmp_dir, filename_base)
+      out <- file.path(outdir, filename_base)
+      concat_files(files= c(fw_in, rv_in), outfile=out)
+      
+      filename_base <- fastqinfo_demultiplexed_fw$fastq_rv[i]
+      # rv reads from original and swapped demultiplexing
+      fw_in <- file.path(fw_tmp_dir, filename_base)
+      rv_in <- file.path(rv_tmp_dir, filename_base)
+      out <- file.path(outdir, filename_base)
+      concat_files(files= c(fw_in, rv_in), outfile=out)
+    }
+    # fastqinfo_demultiplexed_fw and fastqinfo_demultiplexed_rv are identical
+    fastqinfo_demultiplexed <- fastqinfo_demultiplexed_fw
+    
+    
+    # delete temporary dirs
+    unlink(fw_tmp_dir, recursive = TRUE)
+    unlink(rv_tmp_dir, recursive = TRUE)
+    
+  }
+  else{
+    # check only + strand
+    fastqinfo_demultiplexed <- demultiplex_fastq_pairs_strand_plus(fastqinfo_df, 
+                                                                   fastq_dir=fastq_dir,
+                                                                   outdir=outdir, 
+                                                                   cutadapt_path=cutadapt_path, 
+                                                                   num_threads = num_threads,
+                                                                   tag_to_end=tag_to_end, 
+                                                                   primer_to_end=primer_to_end, 
+                                                                   cutadapt_error_rate=cutadapt_error_rate, 
+                                                                   sep=sep, 
+                                                                   compress=compress, 
+                                                                   quiet=quiet
+    )
+  }
+  
+  #fastqinfo_demultiplexed <- add_read_counts(fastqinfo_demultiplexed, dir=outdir)
+  
+  read_count <- count_reads_in_dir(
+    dir=outdir, 
+    pattern="_fw.fastq", 
+    file_type="fastq"
+  )
+  fastqinfo_demultiplexed <- fastqinfo_demultiplexed %>%
+    left_join(read_count, by=c("fastq_fw" = "filename"))
+  
+  write.table(fastqinfo_demultiplexed, file = file.path(outdir, "fastqinfo.csv"),  row.names = F, sep=sep)
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  return(fastqinfo_demultiplexed)
+}
+
+
+
+#' Concatenate files in a portable, streaming way
+#'
+#' This function concatenates multiple files by copying their raw bytes
+#' sequentially into a single output file. It works for both plain text
+#' files and gzip-compressed files (`.gz`), and is fully cross-platform
+#' (Windows, macOS, Linux) without relying on system commands.
+#'
+#' For gzip files, concatenation produces a valid gzip stream because the
+#' format supports concatenated members.
+#'
+#' @param files Character vector of input file paths.
+#' @param outfile Character string specifying the output file path.
+#' @param chunk_size Integer. Number of bytes to read per iteration.
+#'   Larger values are faster but use more memory. Default is 1 MB.
+#'
+#' @return The output file path (invisibly).
+#'
+#' @details
+#' The function performs binary-safe streaming using `readBin` and
+#' `writeBin`. It does not decompress or interpret file contents.
+#'
+#' All input files must exist. The function stops otherwise.
+#'
+#' Mixing compressed and uncompressed files is technically possible but
+#' generally not meaningful.
+#'
+#' @examples
+#' \dontrun{
+#' concat_files(c("a.txt", "b.txt"), "out.txt")
+#'
+#' concat_files(c("sample1.fastq.gz", "sample2.fastq.gz"),
+#'              "merged.fastq.gz")
+#' }
+#'
+#' @export
+concat_files <- function(files, outfile, chunk_size = 1024^2) {
+  
+  # Basic input validation
+  stopifnot(is.character(files), length(files) > 0)
+  stopifnot(is.character(outfile), length(outfile) == 1)
+  stopifnot(all(file.exists(files)))
+  
+  # Open output connection in binary write mode
+  out <- file(outfile, open = "wb")
+  on.exit(close(out), add = TRUE)
+  
+  # Loop over input files
+  for (f in files) {
+    
+    # Open input file in binary read mode
+    in_con <- file(f, open = "rb")
+    
+    # Stream file content in chunks
+    repeat {
+      
+      # Read a block of raw bytes
+      chunk <- readBin(in_con, what = "raw", n = chunk_size)
+      
+      # Stop when end-of-file is reached
+      if (!length(chunk)) break
+      
+      # Write bytes to output
+      writeBin(chunk, out)
+    }
+    
+    # Close input connection for this file
+    close(in_con)
+  }
+  
+  # Return output path invisibly
+  invisible(normalizePath(outfile, mustWork = FALSE))
+  
+  
+}

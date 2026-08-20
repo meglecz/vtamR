@@ -32,6 +32,8 @@ NULL
 #' file is written.
 #' @param quiet Logical; if `TRUE`, suppress informational messages and show
 #' only warnings or errors.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #'
 #' @return A data frame with the following columns:
 #' `asv_id`, `domain`, `kingdom`, `phylum`, `class`, `order`, `family`, `genus`.
@@ -56,7 +58,8 @@ assign_taxonomy_rdp <- function(
     rm_chloroplast=TRUE,
     outfile="",
     quiet=TRUE,
-    sep=","){
+    sep=",",
+    log_file=NULL){
   
   ###### test if rRDP is installed
   if (!requireNamespace("rRDP", quietly = TRUE) || !requireNamespace("rRDPData", quietly = TRUE)) {
@@ -83,7 +86,10 @@ assign_taxonomy_rdp <- function(
     )
   }
   
-  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   # can accept df or file as an input
   if(is.character(asv)){
@@ -139,6 +145,9 @@ assign_taxonomy_rdp <- function(
     check_dir(outfile, is_file=TRUE)
     write.table(taxa, file = outfile,  row.names = F, sep=sep)
   }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   
   return(taxa)
 }

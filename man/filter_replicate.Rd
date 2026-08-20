@@ -9,7 +9,8 @@ filter_replicate(
   outfile = NULL,
   cutoff = NA,
   renkonen_distance_quantile = 0.9,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ corresponds to the 90th percentile).}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame with inconsistent replicates removed.

@@ -8,7 +8,8 @@ filter_occurrence_read_count(
   read_count,
   cutoff = 10,
   outfile = NULL,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame.

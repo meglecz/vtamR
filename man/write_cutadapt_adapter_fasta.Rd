@@ -23,7 +23,7 @@ are \code{NA} in \code{fastainfo_df} for the given \code{fasta_file}.
 }
 \description{
 Create a FASTA file containing tag combinations formatted for \code{cutadapt}.
-This file is used by \code{demultiplex_and_trim} to demultiplex input FASTA files.
+This file is used by \code{demultiplex_and_trim_fasta} to demultiplex input FASTA files.
 }
 \examples{
 \dontrun{

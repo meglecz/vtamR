@@ -9,7 +9,8 @@ filter_contaminant(
   sampleinfo,
   outfile = NULL,
   conta_file = NULL,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ contaminant ASVs. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame with contaminant ASVs removed.

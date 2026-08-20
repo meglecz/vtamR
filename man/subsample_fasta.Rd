@@ -17,7 +17,8 @@ subsample_fasta(
   num_threads = 0,
   compress = FALSE,
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -57,6 +58,9 @@ is used and not available in the system PATH.}
 \item{sep}{Character string: field separator used in input and output CSV files.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Updated input data frame with adjusted file names (if needed) and updated read counts.
@@ -67,8 +71,8 @@ listed in the \code{fastainfo} data frame.
 This function is useful for standardizing sequencing depth across libraries.
 }
 \details{
-It can be applied before or after demultiplexing (\code{demultiplex_and_trim}),
-but is recommended after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim}.
+It can be applied before or after demultiplexing (\code{demultiplex_and_trim_fasta}),
+but is recommended after \code{merge_fastq_pairs} and before \code{demultiplex_and_trim_fasta}.
 
 Two implementations are available:
 \itemize{

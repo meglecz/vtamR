@@ -4,7 +4,7 @@
 \alias{pool_filters}
 \title{Retain occurrences shared across multiple filtered datasets}
 \usage{
-pool_filters(..., outfile = NULL, sep = ",")
+pool_filters(..., outfile = NULL, sep = ",", log_file = NULL)
 }
 \arguments{
 \item{...}{Data frames with the following columns:
@@ -15,6 +15,9 @@ data frame. If NULL, no file is written.}
 
 \item{sep}{Character string specifying the field separator used in input and
 output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count_df} data frame containing only shared occurrences.

@@ -16,7 +16,8 @@ plot_cluster_classification(
   plotfile = "",
   sep = ",",
   num_threads = 0,
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -52,6 +53,9 @@ If empty, no file is written.}
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A connected scatterplot showing the number of clusters in each class

@@ -2,18 +2,20 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{filter_chimera}
 \alias{filter_chimera}
-\title{Filter chimeric sequences}
+\title{Filter chimera}
 \usage{
 filter_chimera(
   read_count,
   outfile = NULL,
   vsearch_path = "vsearch",
   num_threads = 0,
-  by_sample = T,
+  by_sample = TRUE,
+  filter_occurrence = FALSE,
   sample_prop = 0.8,
   abskew = 2,
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -31,6 +33,12 @@ If \code{0}, all available CPUs are used.}
 \item{by_sample}{Logical. If \code{TRUE}, chimera detection is performed separately
 within each sample.}
 
+\item{filter_occurrence}{Logical. If TRUE, an ASV is removed only from the
+samples in which it is flagged as a chimera and may remain present in other
+samples. If FALSE, an ASV is removed entirely if it is flagged as a chimera
+in at least the proportion of samples specified by sample_prop.
+Otherwise, none of its occurrences are removed.}
+
 \item{sample_prop}{Numeric value between 0 and 1 specifying the minimum proportion
 of samples in which an ASV must be flagged as a chimera (when \code{by_sample = TRUE})
 to be removed.}
@@ -43,6 +51,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
 warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame with chimeric ASVs removed.
@@ -57,8 +68,17 @@ abundance ratio required between parental sequences and a chimera candidate.
 Detection can be performed across the full dataset (\code{by_sample = FALSE}) or
 independently within each sample (\code{by_sample = TRUE}).
 
-When \code{by_sample = TRUE}, an ASV is removed if it is flagged as a chimera in
-at least a proportion \code{sample_prop} of the samples in which it is present.
+When the analysis is performed sample by sample (\code{by_sample = TRUE}),
+\code{filter_occurrence} determines whether the entire ASV is removed
+(\code{filter_occurrence = FALSE}) or only the occurrence is removed
+(\code{filter_occurrence = TRUE}).
+}
+\details{
+When \code{filter_occurrence = FALSE}, an ASV is removed only if it is flagged as
+a PCR error in at least the proportion of samples specified by \code{sample_prop}.
+
+When \code{filter_occurrence = TRUE}, the ASV is removed only from the samples in
+which it is flagged as a PCR error and may remain present in other samples.
 }
 \examples{
 \dontrun{

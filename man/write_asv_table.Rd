@@ -16,7 +16,8 @@ write_asv_table(
   add_sums_by_asv = FALSE,
   add_expected_asv = FALSE,
   mock_composition = NULL,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -56,6 +57,9 @@ and the number of samples in which each ASV is present.}
 \code{action} can be \code{keep} or \code{tolerate}. Required if \code{add_expected_asv = TRUE}.}
 
 \item{sep}{Field separator character used in input and output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Invisible data frame corresponding to the ASV table. Columns represent samples,

@@ -13,7 +13,8 @@ classify_control_occurrences(
   false_negatives = NULL,
   performance_metrics = NULL,
   habitat_proportion = 0.5,
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -43,6 +44,9 @@ within a habitat is below this threshold, it is considered an artifact in all sa
 of that habitat.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A list containing:

@@ -11,10 +11,13 @@ filter_pcr_error(
   num_threads = 0,
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
-  by_sample = T,
+  by_sample = TRUE,
+  filter_occurrence = TRUE,
+  min_read_count = 10,
   sample_prop = 0.8,
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -39,6 +42,17 @@ ASVs at or below this threshold are flagged as PCR errors.}
 \item{by_sample}{Logical. If \code{TRUE}, PCR error detection is performed separately
 within each sample.}
 
+\item{filter_occurrence}{Logical. If TRUE, an ASV is removed only from the
+samples in which it is flagged as a PCR error and may remain present in other
+samples. If FALSE, an ASV is removed entirely if it is flagged as a PCR
+error in at least the proportion of samples specified by sample_prop.
+Otherwise, none of its occurrences are removed.}
+
+\item{min_read_count}{Positive integer specifying the minimum read count threshold.
+When \code{by_sample} is \code{FALSE}, ASVs with a total read count below this threshold
+are ignored. When \code{by_sample} is \code{TRUE}, ASVs with a read count below this
+threshold in an individual sample are ignored.}
+
 \item{sample_prop}{Numeric value between 0 and 1 specifying the minimum proportion
 of samples in which an ASV must be flagged as a PCR error (when \code{by_sample = TRUE})
 to be removed.}
@@ -48,6 +62,9 @@ output CSV files.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppress informational messages and only show
 warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 Filtered \code{read_count} data frame with PCR error ASVs removed.
@@ -55,15 +72,27 @@ Filtered \code{read_count} data frame with PCR error ASVs removed.
 \description{
 Remove ASVs flagged as potential PCR errors based on sequence similarity
 (\code{max_mismatch}) and relative abundance (\code{pcr_error_var_prop}).
-
-ASVs are considered PCR errors when they are highly similar to a more abundant
-ASV and their abundance ratio is below or equal to \code{pcr_error_var_prop}.
+}
+\details{
+An ASV is considered a PCR error when it is highly similar to a more abundant
+ASV and its abundance ratio is less than or equal to \code{pcr_error_var_prop}.
 
 The analysis can be performed across the full dataset (\code{by_sample = FALSE})
 or independently within each sample (\code{by_sample = TRUE}).
 
-When \code{by_sample = TRUE}, an ASV is removed only if it is flagged as a PCR error
-in at least a proportion \code{sample_prop} of samples.
+When the analysis is performed across the full dataset (\code{by_sample = FALSE}),
+ASVs classified as PCR errors are removed entirely from the dataset.
+
+When the analysis is performed sample by sample (\code{by_sample = TRUE}),
+\code{filter_occurrence} determines whether the entire ASV is removed
+(\code{filter_occurrence = FALSE}) or only the occurrence is removed
+(\code{filter_occurrence = TRUE}).
+
+When \code{filter_occurrence = FALSE}, an ASV is removed only if it is flagged as
+a PCR error in at least the proportion of samples specified by \code{sample_prop}.
+
+When \code{filter_occurrence = TRUE}, the ASV is removed only from the samples in
+which it is flagged as a PCR error and may remain present in other samples.
 }
 \examples{
 \dontrun{
@@ -73,6 +102,7 @@ filtered_read_count_df <- filter_pcr_error(
   pcr_error_var_prop = 0.2,
   max_mismatch = 2,
   by_sample = TRUE,
+  filter_occurrence = TRUE,
   sample_prop = 0.8
 )
 
@@ -80,6 +110,7 @@ filtered_read_count_df <- filter_pcr_error(
   read_count_df,
   vsearch_path = vsearch_path,
   pcr_error_var_prop = 0.2,
+  filtaer_occurrences = FALSE,
   max_mismatch = 2,
   by_sample = FALSE
 )

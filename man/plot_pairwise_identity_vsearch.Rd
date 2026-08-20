@@ -15,7 +15,8 @@ plot_pairwise_identity_vsearch(
   outfile = "",
   plotfile = "",
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -46,6 +47,9 @@ If empty, no file is written.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A density plot of pairwise ASV identity distributions across clustering thresholds.

@@ -4,7 +4,7 @@
 \alias{plot_renkonen_distance_density}
 \title{Plot Renkonen Distance Density}
 \usage{
-plot_renkonen_distance_density(df, plotfile = "")
+plot_renkonen_distance_density(df, plotfile = "", log_file = NULL)
 }
 \arguments{
 \item{df}{Data frame with the following columns:
@@ -13,6 +13,9 @@ This output can be produced using \code{compute_renkonen_distances()}.}
 
 \item{plotfile}{Character string: name of the output PNG file. If empty,
 no file is written.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A density plot object.

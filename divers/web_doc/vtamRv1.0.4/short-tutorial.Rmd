@@ -1,0 +1,535 @@
+---
+title: "Short Tutorial vtamR - v1.0.4"
+auhor: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{Short Tutorial vtamR - v1.0.4}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=TRUE,
+  cache=TRUE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+# Short Tutorial
+
+This is a short version of the tutorial using the ZFZR demo data set.
+For more details check out the appropriate section of the 
+[detailed tutorial](tutorial-vtamr-pipeline.html)
+and the documentation of the functions (`?function_name`)
+
+## Set up
+
+### Load library
+
+```{r}
+library(vtamR)
+```
+
+### Set paths (if needed)
+
+I suppose all third party tools are in your PATH. If not, see the
+[detailed tutorial on how to set the PATH](tutorial-vtamr-pipeline.html#set-path).
+
+## Input data
+*See [Input data](tutorial-vtamr-pipeline.html#input-data) for more details.*
+
+### Demo data
+
+```{r}
+outdir <- "vtamR_demo_out/zfzr_plate1"
+
+fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
+fastqinfo <- system.file("extdata/demo/fastqinfo_zfzr_plate1.csv", package = "vtamR")
+mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
+asv_list <- system.file("extdata/demo/ASV_list_with_IDs.csv", package = "vtamR") # all ASV of MFZR
+```
+
+### Database
+
+```{r}
+taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
+blast_db <- system.file("extdata/db_test", package = "vtamR")
+blast_db <- file.path(blast_db, "COInr_reduced")
+```
+
+## Pre-processing
+
+### Merge Fastq Pairs
+*See [Merge Fastq Pairs and Quality Filter](tutorial-vtamr-pipeline.html#merge) for more details.*
+
+```{r}
+merged_dir <- file.path(outdir, "1_merged")
+
+fastainfo_df <- merge_fastq_pairs(
+  fastqinfo=fastqinfo,
+  fastq_dir=fastq_dir,
+  outdir=merged_dir,
+  fastq_maxee=1,
+  fastq_maxns=0,
+  fastq_allowmergestagger=T
+)
+```
+
+### Subsampling
+*See [Randomly Select Sequences](tutorial-vtamr-pipeline.html#subsample) for more details.*
+
+```{r}
+randomseq_dir <- file.path(outdir, "2_random_seq")
+
+fastainfo_df <- subsample_fasta(
+  fastainfo = fastainfo_df,
+  fasta_dir = merged_dir,
+  outdir = randomseq_dir,
+  n = 40000
+)
+```
+
+### Demultiplex
+*See [Demultiplex and Trim](tutorial-vtamr-pipeline.html#demultiplex) for more details.*
+
+```{r}
+demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
+
+sampleinfo_df <- demultiplex_and_trim(
+  fastainfo=fastainfo_df,
+  fasta_dir=randomseq_dir,
+  outdir=demultiplexed_dir,
+  check_reverse=TRUE,
+  cutadapt_minimum_length = 150,
+  cutadapt_maximum_length = 165
+)
+```
+
+### Dereplicate
+*See [Dereplicate](tutorial-vtamr-pipeline.html#dereplicate) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
+updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
+
+read_count_df <- dereplicate(
+  sampleinfo_df,
+  dir=demultiplexed_dir,
+  outfile=outfile,
+  input_asv_list=asv_list,
+  output_asv_list=updated_asv_list
+)
+```
+
+
+## Filtering
+*See [Filtering](tutorial-vtamr-pipeline.html#filtering) for more details.*
+
+### Initialize Statistics
+*See [Initialize Statistics](tutorial-vtamr-pipeline.html#init-stat) for more details.*
+
+```{r}
+stat_df <- data.frame(
+  parameters = character(),
+  asv_count = integer(),
+  read_count = integer(),
+  sample_count = integer(),
+  sample_replicate_count = integer()
+)
+
+stat_df <- get_stat(read_count_df, stat_df, stage = "input", params = NA)
+```
+
+### Filtering ASVs
+
+#### Denoising
+*See [Denoising with SWARM](tutorial-vtamr-pipeline.html#denoise) for more details.*
+
+```{r}
+split_clusters <- TRUE
+by_sample <- TRUE
+
+outfile <- file.path(outdir, "4_filter", "2_swarm_denoise.csv")
+read_count_df <- denoise_by_swarm(
+  read_count_df,
+  outfile=outfile,
+  by_sample=by_sample,
+  split_clusters=split_clusters
+)
+
+param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters)
+stat_df <- get_stat(read_count_df, stat_df, stage="swarm_denoise", params=param)
+```
+
+#### Filter ASVs Global
+*See [Filter out ASVs with Low Total Read Count](tutorial-vtamr-pipeline.html#filter_asv_global) for more details.*
+
+```{r}
+global_read_count_cutoff = 2
+outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
+
+read_count_df <- filter_asv_global(
+  read_count_df, 
+  outfile=outfile, 
+  cutoff=global_read_count_cutoff
+  )
+
+param <- paste("global_read_count_cutoff:", global_read_count_cutoff)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_asv_global", params=param)
+```
+
+#### Filter ASVs Read Length
+*See [Filter ASVs Based on Read Length](tutorial-vtamr-pipeline.html#filter_indel) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
+
+read_count_df <- filter_indel(
+  read_count_df, 
+  outfile=outfile
+  )
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
+```
+
+#### Filter ASVs Stop Codons
+*See [Filter ASVs with Stop Codons](tutorial-vtamr-pipeline.html#filter_stop_codon) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
+
+read_count_df <- filter_stop_codon(
+  read_count_df, 
+  outfile=outfile
+  )
+
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_stop_codon", params=NA)
+```
+
+#### Filter Contaminant ASVs
+*See [Filter Potential Contaminant ASVs](tutorial-vtamr-pipeline.html#filter_contaminant) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "6_filter_contaminant.csv")
+conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
+
+read_count_df <- filter_contaminant(
+  read_count_df,
+  sampleinfo=sampleinfo_df,
+  conta_file=conta_file,
+  outfile=outfile
+)
+
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
+```
+
+#### Filter Chimeric ASVs
+*See [Filter Chimeric ASVs](tutorial-vtamr-pipeline.html#filter_chimera) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "7_filter_chimera.csv")
+
+read_count_df <- filter_chimera(
+  read_count_df,
+  outfile=outfile
+)
+
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_chimera", params=NA)
+```
+
+### Filter Replicates
+
+*See [Filter Aberrant Replicates](tutorial-vtamr-pipeline.html#filter_replicate) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "8_filter_replicate.csv")
+renkonen_distance_quantile <- 0.9
+
+read_count_df <- filter_replicate(
+  read_count_df,
+  renkonen_distance_quantile = renkonen_distance_quantile,
+  outfile = outfile
+)
+
+param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=param)
+```
+
+### Filtering Occurrences
+
+#### Create `mock_composition` File
+*See [Create `mock_composition` File](tutorial-vtamr-pipeline.html#match_variants_to_mock_species) for more details.*
+
+```{r}
+outdir_mock <- file.path(outdir, "mock_composition")
+
+mock_template <- match_variants_to_mock_species(
+  read_count=read_count_df,
+  fas=mock_ncbi_fasta,
+  taxonomy=taxonomy,
+  sampleinfo = sampleinfo_df,
+  outdir= outdir_mock
+)
+
+mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
+mock_composition_df <- read.csv(mock_composition)
+```
+
+**Note:**
+
+The `mock_composition_template_to_check.csv` file contains only 5 of the 6 expected ASVs.
+Since the NCBI reference sequences were correctly chosen, this indicates that the ZFZP primer pair did not amplify *Phoxinus phoxinus*.
+
+Because this sequence is absent from the `mock_composition`, it will not be counted as a false negative when evaluating performance. This is an artefact, and it should be kept in mind that it is in fact a false negative.
+
+See [Create `mock_composition` File](tutorial-vtamr-pipeline.html#match_variants_to_mock_species) for more details.
+
+
+#### Filter Occurrences by Samples
+*See [Filter Low-Abundance Occurrences within Samples ](tutorial-vtamr-pipeline.html#filter_occurrence_sample) for more details.*
+
+**Suggest parameter value**
+```{r}
+outfile = file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
+
+suggest_sample_cutoff_df <- suggest_sample_cutoff(
+  read_count=read_count_df,
+  mock_composition=mock_composition,
+  outfile=outfile
+)
+
+head(suggest_sample_cutoff_df)
+```
+
+**Apply filter**
+```{r}
+sample_cutoff <- 0.0001
+outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
+
+read_count_df <- filter_occurrence_sample(
+  read_count_df, 
+  cutoff=sample_cutoff, 
+  outfile=outfile)
+
+param <- paste("cutoff:", sample_cutoff)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_sample", params=param)
+```
+
+#### Filter Occurrences by Replicate
+*See [Filter Occurrences by Replicate Consistency](tutorial-vtamr-pipeline.html#filter_min_replicate-1) for more details.*
+
+```{r}
+min_replicate_number <- 2
+outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
+
+read_count_df <- filter_min_replicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )
+
+param <- paste("cutoff:", min_replicate_number)
+stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
+```
+
+
+#### Filter Occurrences by Variant and Read count
+
+*See [Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`)](tutorial-vtamr-pipeline.html#filter_occurrence_variant) for more details.*
+
+**Suggest parameter values**
+```{r}
+outdir_suggest = file.path(outdir, "4_filter", "suggest_parameters")
+
+suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
+  read_count_df,
+  mock_composition = mock_composition,
+  sampleinfo = sampleinfo_df,
+  outdir= outdir_suggest,
+  min_replicate_number=2
+)
+
+head(suggest_variant_readcount_cutoffs_df)
+```
+
+**Filter occurrences by variant**
+```{r}
+variant_cutoff = 0.001
+outfile <- file.path(outdir, "4_filter", "11_filter_occurrence_variant.csv")
+
+read_count_df_variant <- filter_occurrence_variant(read_count_df, cutoff=variant_cutoff, outfile=outfile)
+```
+
+**Filter occurrences by read count**
+
+```{r}
+read_count_cutoff <- 10
+outfile <- file.path(outdir, "4_filter", "12_filter_occurrence_read_count.csv")
+
+read_count_df_rc <- filter_occurrence_read_count(
+  read_count_df, 
+  cutoff=read_count_cutoff, 
+  outfile=outfile
+  )
+```
+
+**Pool results**
+```{r}
+outfile <- file.path(outdir, "4_filter", "13_pool_filters.csv")
+
+read_count_df <- pool_filters(
+  read_count_df_rc, 
+  read_count_df_variant, 
+  outfile=outfile
+  )
+
+rm(read_count_df_rc)
+rm(read_count_df_variant)
+```
+
+
+#### Filter Occurrences by Replicate Again
+
+*See [Filter Occurrences by Replicate Consistency](tutorial-vtamr-pipeline.html#filter_min_replicate-2) for more details.*
+
+```{r}
+min_replicate_number <- 2
+outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
+
+read_count_df <- filter_min_replicate(
+  read_count_df, 
+  cutoff=min_replicate_number, 
+  outfile=outfile
+  )
+```
+
+## Final steps
+
+### Pool replicates
+*See [Pool replicates](tutorial-vtamr-pipeline.html#pool_replicates) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
+
+read_count_sample_df <- pool_replicates(
+  read_count_df,
+  outfile = outfile
+)
+```
+
+### Performance Metrics
+*See [Performance Metrics](tutorial-vtamr-pipeline.html#classify_control_occurrences) for more details.*
+
+```{r}
+false_negatives <- file.path(outdir, "4_filter", "false_negatives.csv")
+performance_metrics <- file.path(outdir, "4_filter", "performance_metrics.csv")
+known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
+
+results <- classify_control_occurrences(
+  read_count_sample_df, 
+  sampleinfo=sampleinfo_df, 
+  mock_composition=mock_composition, 
+  known_occurrences=known_occurrences, 
+  false_negatives=false_negatives,
+  performance_metrics=performance_metrics
+  )
+
+head(read.csv(performance_metrics))
+```
+
+**Note:**
+Keep in mind that one expected sequence in the mock is not present in the `mock_composition`.
+Therefore, the true number of false negatives is 1, and the sensitivity is:
+
+TP / (TP + FN) = 5 / (5 + 1) = 0.833
+
+
+### Print Summary Statistics
+*See [Print Summary Statistics](tutorial-vtamr-pipeline.html#print_stats) for more details.*
+
+```{r}
+write.csv(stat_df, file = file.path(outdir, "summary.csv"))
+```
+
+
+## Taxonomic Assignment
+*See [Taxonomic Assignment](tutorial-vtamr-pipeline.html#taxonomic-assignment) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
+
+asv_tax <- assign_taxonomy_ltg(
+  asv=read_count_sample_df,
+  taxonomy=taxonomy,
+  blast_db=blast_db
+)
+```
+
+## Clustering (mOTUs)
+*See [Clustering (mOTUs)](tutorial-vtamr-pipeline.html#cluster_asv) for more details.*
+
+```{r}
+outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
+
+read_count_samples_df_ClusterSize <- cluster_asv(
+  read_count_sample_df,
+  method = "swarm",
+  swarm_d  = 7,
+  outfile=outfile
+)
+```
+
+## Output table
+*See [Output table](tutorial-vtamr-pipeline.html#write_asv_table) for more details.*
+
+```{r}
+outfile=file.path(outdir, "motu_table_taxa.csv")
+
+asv_table_df <- write_asv_table(
+  read_count_sample_df,
+  outfile=outfile,
+  asv_tax=asv_tax,
+  sampleinfo=sampleinfo_df
+)
+```

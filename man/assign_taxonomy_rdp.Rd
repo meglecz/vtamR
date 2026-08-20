@@ -12,7 +12,8 @@ assign_taxonomy_rdp(
   rm_chloroplast = TRUE,
   outfile = "",
   quiet = TRUE,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -37,6 +38,9 @@ file is written.}
 only warnings or errors.}
 
 \item{sep}{Field separator character for input and output CSV files.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame with the following columns:

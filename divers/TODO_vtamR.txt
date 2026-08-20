@@ -1,25 +1,72 @@
 # Ideas for vtamR
 
-## Expliquer 4 FP
 
-## add explanation sto tuto:
-- Dezip fichier (clique droit, extraire ici)
-- Completer l'ajout de chemin dans cmd
-- Install => expliquer 
+### check min_read_count in suggest_pcr_error
 
-## make full R script for from fastq till filtered ASV
+## path
+define by (look for path in this order)
+- package variable
+- direct setting by xxx_path argument
+- use prg in path
+
+## simplify benchmarking (is is possile since now filter gives the same results for vtam and vtamR)
+- filter
+- taxassign (default)
+- pool
+- optimize on filtered data => test simply if same results, do  ot try to alternate fiter and optimze
+
+# rethink the use of log, since it became central for getting miem info
+- it can be obligatory and if no filname provided, in the current dir
+ (possibility of having all the output from all the tests) OR package wide definition and deactivate actively ???
+ 
+# function to make a test data set => sample a proportion, or number of the reads from each fasta os fastq files
+
+
+ 
+## wrapper
+	use a file like the log_file, that contains also the name of the output
+	write a script that corresponds to the file and excute it if specified
+	
+## make a phyloseq object
+ 
+
+## make full R script for from fastq till filtered ASV, Try to find a good place 
+so people can easily access (vignettes? the idea is to provide Rmd or R as a template)
+Add link to the main tuto xxxx
  - mfzr_plate1 
  - mfzr_plate2
  - zfzr_plate1
 
+
+## write function for quality filtering fastq
+
+## modify subsample to be able to take fastq files as well 
+=> possible to reequilibrate replicates before any other mege or demultiplex
+
+## allow sortedinfo WO sample_type and habitat.
+
+## make function report_mime that extract minimum necessary information
+from the outout
+take the a series of input files and extract info present in the checklist
+of MIME. If some of the input file is not given return NA for the values that depend
+ont it. Make an output table similar to the checklist.
+
+## improve concatenate files
+- check sequences ID
+- pool any files with any names listed in a df (outfile, infile columns); indir, outdir options
+
+## concatenate_file is slow and uses a lot of memory
+
+
+## Expliquer 4 FP
+
+## add explanation to tuto:
+- Dezip fichier (clique droit, extraire ici)
+- Completer l'ajout de chemin dans cmd
+- Install => expliquer 
+
+
 ## revise install in readme.
-
-
-## stage
-- Install vtamR
-- faire tourner le demo
-- lire et corriger le tuto
-- verifier tout les liens
 
 ## pool_datasets rearrange columns in output
 
@@ -30,7 +77,7 @@
 ## OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
           reads during this filtering step. "
 
-## SortReads with check_reverse in windows islong.
+## SortReads with check_reverse in windows is long.
 
 
 Revise file stucture of the tutriel. outdir/marker/...
@@ -649,7 +696,7 @@ suggest_filter_parameters_pcr_error => suggest_pcr_error_cutoff
 suggest_filter_parameters_readcount_variant => suggest_variant_readcount_cutoffs
 suggest_filter_parameters_sample => suggest_sample_cutoff
 
-## 2026/04/22
+## 2026/04/22 v.1.0.3
 
 Glossaire 
 - Renkonen distance and add link when appropriate
@@ -670,6 +717,131 @@ Initialize stat_df in the function if no input.
 Make dir, outdir obligatory
 
 Define optional file names as NULL by default
+
+
+### 2026/05/01
+
+add pattern to history_by and summarize_by
+
+filter_asv_global =< cutoff instead of < cutoff
+
+###
+Update Readme.Rmd
+Update download OSF with 2026 COinr version
+
+###
+Deactivate check_file_info in merge_fastq_pairs
+
+###
+Modify history_by to accept a vector of values, not just a singe value; adjust tuto
+
+###
+Add pool_fastas go through 2 or more directory:
+Make a list of all filenames
+If a filename is in more than one dir, pool the content and write a file into the output
+directory. Otherwise copy the fie to outdir.
+Adjust tuto
+
+###
+modify filter_pcr_error
+Add min_read_count argument => if less than this read in the sample/run, the variant is not checked
+
+################ install on bombyx
+
+### 2026/07/01
+
+download_osf works both of windows and linux commit: download_osf win
+
+### 2026/07/03 commit demultiplex_fastq_pairs
+
+write demultiplex_fastq_pairs so it can comply to SRA expectations
+-demultiplex_fastq and trim 
+	- --revcomp for paired end read is supported from cutadapt v4.6 => 
+	this is not (yet) available as a easy single file insallation on windows => 
+	running both orientation seperatelly and pool the output
+-merge is adapted to name output files by sample-replicate.fasta is run on
+	demultiplexed files, use the fw fasts filenale otherwise.
+- count_reads => bug when using bash commasds => corrected
+- check_dir => delete slash at the end of dir and return invisible path; 
+	corrected when calling the function
+	
+### 2026/07/10 commit v1.0.4
+
+### 2026/07/28 commit pcr_error,chimera
+
+Modify filter_pcr_error:
+	- add argument filter_occurrence, to be able to filter out some occurrences of an ASV but not 
+	necessarily in all samples.
+	- min_read_count applies to the total number of reads of an if by_sample == FALSE, 
+	to the numer of reads of the ASv in the sample if by_sample == TRUE
+	
+Modify filter_chimera
+	- add argument filter_occurrence, to be able to filter out some occurrences of an ASV but not 
+	necessarily in all samples.
+
+
+### 2026/07/31 commit make_log
+
+## write log file with the function called from the script, all their parametres
+start_time and run time. 
+
+- collect_log is called at the beginging of the function, and gets name, parametres and start 
+time, and returne a data frame. It can deal with functions that have ... input.
+- write_log is calles at the end of the function and addte end_time and runtime.
+It appendre the df to a logfile.
+
+- In principle, we can collect only arguments that are explicitly set by the 
+user, or all arguments, including the ones with default values. This second
+option, is a bit more cmplicated, but provides a complete log, that can be helpful
+et the moment of publication. It is also better to prepare a file, with all 
+packages and third party programs with their version.
+- The name of the logfile can be specified by a package option. In that case 
+it is not necessary to specify the log file name, when calling the function.
+However it has two drawbacks
+	- the same logfile is valid within the R session. Therefoe, if user set it 
+	in one script, but do not cheng it in subsequent, the same file fille be automaticelly 
+	completed, which is probably not how the users want it.
+	- in case of logged funcetions called from other functions, the log file
+	became unncessarily complicate. It is enough to have the log of the 
+	major function, directly called by the user. 
+This lead to a idea of explicitelly setting the log_file name in the script, and 
+explcitelly calling them from the functions. Gives more control to the users 
+and more responsability.
+
+- tuto updated
+
+### 2026/08/01 commit collect_package_info install bombyx
+
+- collect_log is updated, it includes the version of the programs, where the argument name ends with "_path"
+- collect_package_info to get all loaded / attached packages
+
+### 2026/08/05 commit miem_bioinformatics
+
+miem_bioinformatics function to fill as much as possible the bioinformatics part
+of the MIEM checklist. The input is a log file and the R_version file
+
+
+## 2026/08/04 
+
+rename functions
+demultiplex_and_trim => demultiplex_and_trim_fasta 
+demultiplex_fastq_pairs => demultiplex_and_trim_fastq
+
+MIEM results
+ - extact info from output files (use log file)
+ 
+## 2026/08/14
+ 
+miem_results
+
+## 2026/08/19
+
+## deactivate warning in suggest_variant_readcount_cutoffs
+" WARNING: The following expected ASVs are not present in the read_count dataframe:"
+
+ 
+
+
 
 
 

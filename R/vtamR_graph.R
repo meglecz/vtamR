@@ -175,6 +175,8 @@ plot_read_count_histogram <- function(read_count_df,
 #' @param x_axis_label_size Numeric; size of x-axis labels.
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #'
 #' @return A bar plot object.
 #'
@@ -184,8 +186,14 @@ plot_renkonen_distance_barplot <- function(df,
                                            sampleinfo=NULL, 
                                            sep=",", 
                                            x_axis_label_size=6,
-                                           plotfile=""
+                                           plotfile="",
+                                           log_file=NULL
 ){
+  
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   
   if(is.character(sampleinfo)){ # input file
     sampleinfo_df <- read.csv(sampleinfo, sep=sep)
@@ -230,6 +238,8 @@ plot_renkonen_distance_barplot <- function(df,
     print(p) # print plot to file
     dev.off()
   }
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(p)
 }
 
@@ -244,13 +254,20 @@ plot_renkonen_distance_barplot <- function(df,
 #'   This output can be produced using `compute_renkonen_distances()`.
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   If `NULL`, no log file is written.
 #'
 #' @return A density plot object.
 #'
 #' @export
 #' 
-plot_renkonen_distance_density <- function(df, plotfile=""){
+plot_renkonen_distance_density <- function(df, plotfile="",
+                                           log_file=NULL){
   
+  # get function name, all arguments and stat time
+  if(!is.null(log_file)){
+    log <- collect_log()
+  }
   df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
   
   p <- ggplot(df, aes(x = renkonen_d, fill = comparison)) +
@@ -266,6 +283,7 @@ plot_renkonen_distance_density <- function(df, plotfile=""){
     print(p) # print plot to file
     dev.off()
   }
-  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(p)
 }

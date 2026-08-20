@@ -67,7 +67,7 @@ FASTA file per tag combination for each input FASTA file, containing
 trimmed reads.
 }
 \description{
-Same as \code{demultiplex_and_trim}, but without checking the reverse-complement
+Same as \code{demultiplex_and_trim_fasta}, but without checking the reverse-complement
 of the sequences. Demultiplex each input FASTA file using tag combinations
 located at the extremities of merged reads, then trim primer sequences.
 }

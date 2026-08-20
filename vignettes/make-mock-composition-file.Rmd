@@ -1,5 +1,5 @@
 ---
-title: "How to make a mock_composition file - v1.0.3"
+title: "How to make a mock_composition file - v1.1.0"
 auhor: Emese Meglécz
 date:  "`r Sys.Date()`"
 output: 
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{How to make a mock_composition file - v1.0.3}
+  %\VignetteIndexEntry{How to make a mock_composition file - v1.1.0}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

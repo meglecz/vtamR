@@ -12,7 +12,8 @@ cluster_swarm(
   num_threads = 0,
   outfile = "",
   sep = ",",
-  quiet = TRUE
+  quiet = TRUE,
+  log_file = NULL
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ pass to reduce the number of small clusters.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+If \code{NULL}, no log file is written.}
 }
 \value{
 A data frame with columns: \code{asv_id}, \code{cluster_id}.
