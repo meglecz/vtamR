@@ -1,5 +1,6 @@
 # Ideas for vtamR
 
+## add option to delete contol samples from asv_table or read_count_df
 
 ### check min_read_count in suggest_pcr_error
 
@@ -26,8 +27,6 @@ define by (look for path in this order)
 ## wrapper
 	use a file like the log_file, that contains also the name of the output
 	write a script that corresponds to the file and excute it if specified
-	
-## make a phyloseq object
  
 
 ## make full R script for from fastq till filtered ASV, Try to find a good place 
@@ -839,8 +838,12 @@ miem_results
 ## deactivate warning in suggest_variant_readcount_cutoffs
 " WARNING: The following expected ASVs are not present in the read_count dataframe:"
 
- 
+## 2026/08/26
 
+- Correct miem_bioinfo to write function prameters both from Rscript and Rmd
+- modify tuto to write logs and summaries to run_info dir.
+- make a phyloseq object (format_for_phyloseq)
+- make a vegan input object (format_for_vegan)
 
 
 

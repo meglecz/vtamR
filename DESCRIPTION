@@ -37,7 +37,8 @@ Suggests:
     devtools,
     roxygen2,
     knitr,
-    rmarkdown
+    rmarkdown,
+    phyloseq
 VignetteBuilder: knitr
 BugReports: https://github.com/meglecz/vtamR/issues
 URL: https://github.com/meglecz/vtamR

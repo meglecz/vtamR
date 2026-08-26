@@ -25,4 +25,3 @@ check_dir(path = "data")
 }
 
 }
-\keyword{internal}

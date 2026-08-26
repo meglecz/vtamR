@@ -1783,3 +1783,174 @@ count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
   }
   return(asv_by_rank)
 }
+
+
+table_to_text <- function(x){
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  m <- format(x, justify = "left", na.encode = FALSE)
+  
+  header <- names(m)
+  widths <- pmax(nchar(header), vapply(m, function(col) max(nchar(col)), integer(1)))
+  
+  pad <- function(s, w) formatC(s, width = -w)  # left-justify, pad right
+  
+  header_line <- paste(mapply(pad, header, widths), collapse = "  ")
+  body_lines  <- do.call(paste, c(
+    lapply(seq_along(m), function(i) pad(m[[i]], widths[i])),
+    sep = "  "
+  ))
+  
+  paste(c(header_line, body_lines), collapse = "\n")
+}
+
+#' Create a phyloseq object from OTU, taxonomy, and sample data
+#'
+#' Constructs a \code{phyloseq} object from three input tables: an OTU
+#' abundance table, a taxonomy table, and a sample metadata table. Input
+#' objects are read using \code{\link{read_input}} and may therefore be
+#' provided either as CSV files or data frames.
+#'
+#' The OTU table is transformed into a taxa-by-sample matrix. If a
+#' \code{replicate} column is present, it is combined with \code{sample}
+#' to create a unique sample identifier. If a \code{cluster_id} column is
+#' present, reads are aggregated at the cluster level; otherwise, reads are
+#' aggregated at the ASV level.
+#'
+#' Missing abundance values are replaced by zero. The taxonomy table is
+#' converted to a matrix containing the standard taxonomic ranks from domain
+#' to species. Sample metadata are reduced to one row per sample, using the
+#' first occurrence when multiple rows are present.
+#'
+#' @param otu OTU/ASV abundance data. Can be a data frame or CSV file path.
+#' The table must contain \code{asv_id},
+#'   \code{sample}, and \code{read_count} columns. An optional \code{asv},
+#'   \code{replicate}, or \code{cluster_id} column may also be present.
+#' @param tax Taxonomy data. Can be a data frame or CSV file path.
+#'  The table must contain an \code{asv_id} column
+#'   and the taxonomic ranks \code{domain}, \code{kingdom} (optional), \code{phylum},
+#'   \code{class}, \code{order}, \code{genus}, and \code{species}.
+#' @param samples Sample metadata (optional).  Can be a data frame or CSV file path.
+#'  The table must contain a \code{sample} column,
+#'   which is used as the row names of the sample metadata.
+#' @param sep Character used as the field separator when reading input files.
+#'
+#' @return A \code{phyloseq} object containing:
+#' \itemize{
+#'   \item an OTU table with taxa as rows and samples as columns;
+#'   \item a taxonomy table containing domain through species classifications;
+#'   \item sample metadata with one row per sample.
+#' }
+#'
+#' @details
+#' When \code{replicate} is present in the OTU table, the sample identifier is
+#' constructed as \code{sample-replicate}. When \code{cluster_id} is present,
+#' \code{asv_id} and \code{asv} are removed and read counts are summed by
+#' cluster and sample. Otherwise, read counts are summed by ASV and sample.
+#'
+#' The resulting OTU matrix is converted to a matrix with taxa as rows, as
+#' required by \code{phyloseq::otu_table()} with \code{taxa_are_rows = TRUE}.
+#'
+#' @examples
+#' \dontrun{
+#' phy_object <- make_phyloseq(
+#'   otu = "otu.csv",
+#'   tax = "taxonomy.csv",
+#'   samples = "samples.csv"
+#' )
+#' 
+#' phy_object
+#' }
+#'
+#' @export
+make_phyloseq <- function(otu,  tax, samples = NULL, sep = ","){
+  
+  if (missing(otu)) stop("Argument 'otu' is required")
+  if (missing(tax)) stop("Argument 'tax' is required")
+  #  if (missing(samples)) stop("Argument 'samples' is required")
+  
+  ###### test if phyloseq is installed
+  if (!requireNamespace("phyloseq", quietly = TRUE) ) {
+    stop(
+      "Package 'phyloseq' is required for this function.\n",
+      "Please install it with:\n",
+      "  if (!requireNamespace('BiocManager', quietly = TRUE))\n",
+      "    install.packages('BiocManager')\n",
+      "  BiocManager::install('phyloseq')",
+      call. = FALSE
+    )
+  }
+  
+  ### otu ########################################
+  
+  otu_mat <- read_input(otu, sep = sep)
+  # make one column with sample-replicate
+  if("replicate" %in% colnames(otu_mat)){
+    otu_mat <- otu_mat  %>%
+      mutate(sample = paste(sample, replicate, sep="-")) %>%
+      select(-replicate)
+  }
+  
+  if("cluster_id" %in% colnames(otu_mat)){ # if cluster_id make output with clusters
+    otu_mat <- otu_mat  %>%
+      select(-asv_id, -asv) %>%
+      group_by(cluster_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop") %>%
+      rename(asv_id = cluster_id) 
+  } else {
+    otu_mat <- otu_mat  %>%
+      select(-asv) %>%
+      group_by(asv_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop")
+  }
+  
+  otu_mat <- pivot_wider(otu_mat, 
+                         names_from = sample,
+                         values_from = read_count)
+  otu_mat[is.na(otu_mat)] <- 0
+  otu_mat <- as.data.frame(otu_mat)
+  rownames(otu_mat) <- otu_mat$asv_id
+  otu_mat <- select(otu_mat, -asv_id)
+  otu_mat <- as.matrix(otu_mat)
+  
+  ### tax ########################################
+  
+  tax_mat <- read_input(tax, sep = sep)
+  tax_mat <- as.data.frame(tax_mat)
+  rownames(tax_mat) <- tax_mat$asv_id
+  
+  if("kingdom" %in% colnames(tax_mat)){
+    tax_mat <- tax_mat %>%
+      select(domain, kingdom, phylum, class, order, genus, species)
+  } else {
+    tax_mat <- tax_mat %>%
+      select(domain, phylum, class, order, genus, species)
+  }
+  tax_mat <- as.matrix(tax_mat)
+  
+  ### samples ########################################
+  if(!is.null(samples)){
+    samples <- read_input(samples, sep = sep) %>%
+      group_by(sample) %>%
+      slice_head(n = 1) %>%
+      ungroup()
+    
+    sample_df <- as.data.frame(samples)
+    rownames(sample_df) <- sample_df$sample
+    sample_df <- select(sample_df, -sample)
+  }
+  
+  ### phyloseq ########################################
+  if(is.null(samples)){
+    OTU = phyloseq::otu_table(otu_mat, taxa_are_rows = TRUE)
+    TAX = phyloseq::tax_table(tax_mat)
+    phy_object <- phyloseq::phyloseq(OTU, TAX)
+  } else {
+    OTU = phyloseq::otu_table(otu_mat, taxa_are_rows = TRUE)
+    TAX = phyloseq::tax_table(tax_mat)
+    sample_df = phyloseq::sample_data(sample_df)
+    
+    phy_object <- phyloseq::phyloseq(OTU, TAX, sample_df)
+  }
+  return(phy_object)
+}
+

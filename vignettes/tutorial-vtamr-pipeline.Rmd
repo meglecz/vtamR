@@ -323,7 +323,7 @@ record of the analysis workflow.
 First, define the path to the log file:
 
 ```{r set-log-file}
-log_file <- file.path(outdir, "vtamR_log_mfzr.csv")
+log_file <- file.path(outdir, "run_info", "vtamR_log_mfzr.csv")
 ```
 
 Whenever the `log_file` argument is provided when calling a vtamR function, 
@@ -1305,7 +1305,7 @@ after each processing step, and saves the information to a CSV file for tracking
 your workflow.
 
 ```{r}
-write.csv(stat_df, file = file.path(outdir, "summary.csv"))
+write.csv(stat_df, file = file.path(outdir, "run_info", "summary.csv"))
 ```
 
 
@@ -1525,7 +1525,9 @@ stat_df <- get_stat(read_count_samples_df_ClusterSize,
 knitr::kable(stat_df, format = "markdown")
 ```
 
-## Print Output {#write_asv_table}
+## Output 
+
+### ASV table {#write_asv_table}
 
 The `write_asv_table` function restructures your `read_count_df` so that:
 
@@ -1565,6 +1567,64 @@ asv_table_df <- write_asv_table(
   log_file = log_file)
 ```
 
+### Convert output to a `phyloseq` object
+
+If you want to continue your biodiversity analyses using the `phyloseq`
+package, you can use the `format_for_phyloseq()` function to create a
+`phyloseq` object from the `vtamR` results.
+
+In this example, we use `sampleinfo_df` as the source of sample metadata and
+retain the `sample_type` and `habitat` variables. You can include any
+additional sample-level variables that you may need for downstream analyses.
+
+```{r format_to_phyloseq}
+# Create a data frame containing sample metadata
+samples <- sampleinfo_df %>%
+  select(sample, sample_type, habitat) %>%
+  distinct()
+
+phy_object <- format_for_phyloseq(
+  otu = read_count_sample_df,
+  tax = asv_tax,
+  samples = samples
+)
+```
+
+### Convert output for the `vegan` package
+
+If you prefer to perform your biodiversity analyses using the `vegan`
+package, you can use `format_for_vegan()` to convert the `vtamR` results into
+a format suitable for `vegan` analyses.
+
+The function returns a list containing two data frames:
+
+* an OTU/ASV table, with samples in rows and ASVs or clusters in columns.
+  Read counts are stored in the cells;
+* a taxonomy table, with ASVs or clusters in rows and the major taxonomic
+  levels in columns.
+
+Only ASVs or clusters present in the OTU table are retained in the taxonomy
+table.
+
+In this example, we use `sampleinfo_df` to identify sample types and remove
+control samples. The resulting tables can also be written to CSV files by
+specifying output file paths with `outfile_motu` and `outfile_taxa`.
+
+```{r format_to_vegan}
+vegan_dfs <- format_for_vegan(
+  otu = read_count_sample_df,
+  tax = asv_tax,
+  sample_type = sampleinfo_df,
+  rm_coltrol = TRUE,
+  outfile_motu = file.path(outdir, "vegan", "motu_table_vegan.csv"), 
+  outfile_taxa = file.path(outdir, "vegan", "tax_table_vegan.csv")
+)
+
+vegan_motu_df <- vegan_dfs[[1]]
+vegan_tax_df <- vegan_dfs[[2]]
+```
+
+
 ## Document your workflow
 
 ### Record R and package versions
@@ -1579,7 +1639,7 @@ which can be archived together with your results and will be useful when
 sharing or publishing your work.
 
 ```{r versions}
-package_versions <- file.path(outdir, "R_package_versions.csv")
+package_versions <- file.path(outdir, "run_info", "R_package_versions.csv")
 collect_package_info(package_versions)
 ```
 
@@ -1612,7 +1672,7 @@ study-specific descriptions or methodological details that require expert input.
 
 **MIEM bioinformatics**
 ```{r miem_bioinformatics}
-miem_dir <- file.path(outdir, "MIEM")
+miem_dir <- file.path(outdir, "run_info", "MIEM")
 miem_bioinformatics(
   log = log_file,
   r_versions = package_versions,
@@ -1699,7 +1759,7 @@ An R script for analyzing the second MFZR plate is available here: xxxxxxxxxxxxx
 Let's define a new output directory and log file.
 ```{r, eval=TRUE}
 outdir <- file.path("vtamR_demo_out", "pooled_mfzr_plates") 
-log_file <- file.path(outdir, "vtamR_log_pooled_mfzr_plates.csv") 
+log_file <- file.path(outdir, "run_info", "vtamR_log_pooled_mfzr_plates.csv") 
 ```
 
 **Pool Filtered Datasets**
@@ -1828,7 +1888,7 @@ zfzr_filtered <-  system.file(
 Let's define a new output directory and log file.
 ```{r, eval=TRUE}
 outdir <- file.path("vtamR_demo_out", "pooled_markers") 
-log_file <- file.path(outdir, "vtamR_log_pooled_markers.csv") 
+log_file <- file.path(outdir, "run_info", "vtamR_log_pooled_markers.csv") 
 ```
 
 If you have consistently used the `ASV_list_with_IDs.csv` from previous runs 

@@ -84,7 +84,7 @@ I suppose all third party tools are in your PATH. If not, see the
 
 ```{r}
 outdir <- "vtamR_demo_out/zfzr_plate1"
-log_file <- file.path(outdir, "vtamR_log_zfzr.csv")
+log_file <- file.path(outdir, "run_info", "vtamR_log_zfzr.csv")
 
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <- system.file("extdata/demo/fastqinfo_zfzr_plate1.csv", package = "vtamR")
@@ -525,7 +525,7 @@ TP / (TP + FN) = 5 / (5 + 1) = 0.833
 *See [Print Summary Statistics](tutorial-vtamr-pipeline.html#print_stats) for more details.*
 
 ```{r}
-write.csv(stat_df, file = file.path(outdir, "summary.csv"))
+write.csv(stat_df, file = file.path(outdir, "run_info", "summary.csv"))
 ```
 
 
@@ -559,10 +559,12 @@ read_count_samples_df_ClusterSize <- cluster_asv(
 )
 ```
 
-## Output table
+## Output
+
+### ASV table
 *See [Output table](tutorial-vtamr-pipeline.html#write_asv_table) for more details.*
 
-```{r}
+```{r write_asv_table}
 outfile=file.path(outdir, "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
@@ -574,12 +576,41 @@ asv_table_df <- write_asv_table(
 )
 ```
 
+### Convert output to a phyloseq object
+```{r make_phyloseq}
+# Create a data frame containing sample metadata
+samples <- sampleinfo_df %>%
+  select(sample, sample_type, habitat) %>%
+  distinct()
+
+phy_object <- format_for_phyloseq(
+  otu = read_count_sample_df,
+  tax = asv_tax,
+  samples = sampleinfo_df
+)
+```
+
+### Convert output for the `vegan` package
+
+```{r format_to_vegan}
+vegan_dfs <- format_for_vegan(
+  otu = read_count_sample_df,
+  tax = asv_tax,
+  sample_type = sampleinfo_df,
+  rm_coltrol = TRUE,
+  outfile_motu = file.path(outdir, "vegan", "motu_table_vegan.csv"), 
+  outfile_taxa = file.path(outdir, "vegan", "tax_table_vegan.csv")
+)
+
+vegan_motu_df <- vegan_dfs[[1]]
+vegan_tax_df <- vegan_dfs[[2]]
+```
 
 ## Document your workflow
 
 ### Record R and package versions 
 ```{r versions}
-package_versions <- file.path(outdir, "R_package_versions.csv")
+package_versions <- file.path(outdir, "run_info", "R_package_versions.csv")
 collect_package_info(package_versions)
 ```
 
@@ -587,13 +618,14 @@ collect_package_info(package_versions)
 
 **MIEM bioinformatics**
 ```{r miem_bioinformatics}
-miem_dir <- file.path(outdir, "MIEM")
+miem_dir <- file.path(outdir, "run_info", "MIEM")
 tmp <- miem_bioinformatics(
   log = log_file,
   r_versions = package_versions,
   outfile = file.path(miem_dir, "MIEM_bioinfo.csv")
   )
 ```
+
 
 **MIEM Sequencing Summary**
 ```{r miem_results}
