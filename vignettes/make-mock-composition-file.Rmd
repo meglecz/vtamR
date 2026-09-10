@@ -168,6 +168,7 @@ We will use files generated in the first part of the
   [Tutorial](tutorial-vtamr-pipeline.html).
 * `blast_db` and `taxonomy` are configured as described in the
   [Tutorial](tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment).
+  
 
 ```{r set_db, eval=TRUE}
 library(vtamR)
@@ -178,7 +179,9 @@ sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
 blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
 
-outdir_mock <- "mock_composition"
+outdir_mock <- "mock_composition1"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir_mock, "vtamR_log.csv"))
 
 mock_template <- match_variants_to_mock_species(
   read_count=read_count_file,
@@ -264,6 +267,12 @@ sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
+```
+
+# set package option to define the log_file
+```{r log}
+outdir_mock <- "mock_composition2"
+options(vtamR.log_file =  file.path(outdir_mock, "vtamR_log.csv"))
 ```
 
 Let's limit the analyses to the mock samples

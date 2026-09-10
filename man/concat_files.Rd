@@ -4,7 +4,7 @@
 \alias{concat_files}
 \title{Concatenate files in a portable, streaming way}
 \usage{
-concat_files(files, outfile, chunk_size = 1024^2)
+concat_files(files, outfile, chunk_size = 1024^2, log_file = NULL)
 }
 \arguments{
 \item{files}{Character vector of input file paths.}
@@ -13,6 +13,17 @@ concat_files(files, outfile, chunk_size = 1024^2)
 
 \item{chunk_size}{Integer. Number of bytes to read per iteration.
 Larger values are faster but use more memory. Default is 1 MB.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 The output file path (invisibly).

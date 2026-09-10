@@ -587,9 +587,11 @@ get_program_version <- function(name, path) {
 #'
 #'
 #' @keywords internal
-#' @noRd
-collect_log <- function() {
+collect_log <- function(file = NULL) {
   
+  if(is.na(file)){ # if user defines NA => do not write log
+    return(invisible(NA))
+  }
   ## Name of calling function
   fun_name <- as.character(sys.call(-1)[[1]])
   
@@ -710,12 +712,15 @@ collect_log <- function() {
 #' @return The completed log data frame, returned invisibly.
 #'
 #' @keywords internal
-#' @noRd
  
 write_log <- function(log, file = NULL, sep=",") {
   
-  if (is.null(file))
-    return(invisible(log))
+  if(is.na(file)){ # user do not want log
+    return(invisible(NA))
+  }
+  
+#  if (is.null(file))
+#    return(invisible(log))
   
   check_dir(file, is_file = TRUE)
   
@@ -743,6 +748,43 @@ write_log <- function(log, file = NULL, sep=",") {
   )
   
   invisible(log)
+}
+
+#' Resolve the path to the log file
+#'
+#' Internal helper that determines which log file path should be used,
+#' following the priority order: an explicitly supplied `file` argument,
+#' then the `vtamR.log_file` package option, then a default
+#' `"vtamR_log.csv"` in the current working directory. If the resolved
+#' path is not `NA`, the function ensures that the parent directory of
+#' the log file exists (creating it if necessary).
+#'
+#' @param file Character string specifying the path to the CSV log file,
+#'   `NA` to disable logging, or `NULL` (the default) to resolve the path
+#'   automatically from the `vtamR.log_file` option or the default
+#'   `"vtamR_log.csv"`.
+#'
+#' @return A character string with the resolved log file path, or `NA` if
+#'   logging is disabled.
+#'
+#' @keywords internal
+get_log_file <- function(file = NULL){
+  
+  if(!is.null(file)){ # user defined something (NA => no log file, or direct path)
+    file = file
+  } else {
+    package_log <- getOption("vtamR.log_file")
+    if(!is.null(package_log)){ # package log defined
+      file = package_log
+    }else{
+      file = "vtamR_log.csv"
+    }
+  }
+  
+  if(!is.na(file)){ # user did not deacivate log
+    check_dir(file, is_file = TRUE) # make dir if do not exists
+  }
+  return(file)
 }
 
 
@@ -815,8 +857,15 @@ set_miem_field <- function(miem, field, text) {
 #' in a table suitable for inclusion in the Supplementary Material of
 #' a manuscript.
 #'
-#' @param log A data.frame containing the vtamR log or the path to a CSV
-#'   log file.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
 #' @param r_versions A data.frame containing installed R package versions
 #'   or the path to a CSV file.
 #' @param outfile Optional output CSV file.
@@ -833,14 +882,19 @@ set_miem_field <- function(miem, field, text) {
 #' @export
 #' 
 miem_bioinformatics <- function(
-  log,
+  log_file = NULL,
   r_versions,
   outfile = "",
   sep = ","){
   
+  log_file <- get_log_file(file = log_file)
+  if(is.na(log_file)){
+    msg <- paste0("ERROR: `log_file` cannot be NA. Please, provide the path by the `log_file` argument")
+    stop(msg)
+  }
   
   # read input 
-  log_df <-read_input(log, sep = sep)
+  log_df <-read_input(log_file, sep = sep)
   r_df <- read_input(r_versions, sep = sep)
   
   # initialize miem
@@ -1595,7 +1649,7 @@ miem_results <- function(
   # use the last info file to get sample_types
   
   if(!is.null(info_files) && !is.null(read_count_files)){
-    read_count_by_saple(info_files = info_files, read_count_files = read_count_files, outdir = outdir, sep = sep)
+    read_count_by_sample(info_files = info_files, read_count_files = read_count_files, outdir = outdir, sep = sep)
   }
   
   ### Total number of OTUs or ASVs assigned to taxa (and to what level of taxonomy)
@@ -1627,7 +1681,8 @@ miem_results <- function(
       read_count = final_read_count, 
       sampleinfo = sampleinfo, 
       mock_composition = mock_composition, 
-      sep = sep)
+      sep = sep,
+      log_file = NA)
     known_occurrences <- results[[1]]
     false_neagtives <- results[[2]]
     performance <- results[[3]]
@@ -1687,7 +1742,7 @@ miem_results <- function(
 #' number of unique ASVs in each read-count file.
 #'
 #' @keywords internal
-read_count_by_saple  <- function(read_count_files, info_files, outdir = ".", sep = ","){
+read_count_by_sample  <- function(read_count_files, info_files, outdir = ".", sep = ","){
   
   sampleinfo <- info_files[length(info_files)]
   sampleinfo_df <- read_input(sampleinfo, sep = sep) %>%
@@ -1991,6 +2046,16 @@ count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
 #'   written to disk.
 #' @param sep Character used to separate fields in input and output files.
 #'   Defaults to \code{","}.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A list of two data frames:
 #' \itemize{
@@ -2026,10 +2091,17 @@ count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
 #'
 #' @export
 
-format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, outfile_motu = NULL, outfile_taxa = NULL, sep = ","){
+format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, 
+                             outfile_motu = NULL, outfile_taxa = NULL, 
+                             sep = ",", log_file = NULL){
   
   if (missing(otu)) stop("Argument 'otu' is required")
   if (missing(tax)) stop("Argument 'tax' is required")
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if(rm_coltrol){
     if(is.null(sample_type)){
@@ -2114,6 +2186,8 @@ format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, ou
   }
   
   df_list <- list(otu_table, tax_table)
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(df_list)
 }
 
@@ -2147,10 +2221,23 @@ format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, ou
 #'   When provided, the table must contain \code{sample} and
 #'   \code{sample_type} columns. The metadata are added to the resulting
 #'   \code{phyloseq} object as sample data.
+#' @param outfile Optional character string specifying the output file
+#'   path for the \code{phyloseq} object. If \code{NULL}, the file is not
+#'   written to disk.
 #' @param rm_control Logical; if \code{TRUE}, samples whose
 #'   \code{sample_type} is not \code{"real"} are removed. 
 #'   When \code{TRUE}, \code{samples} must be provided.
 #' @param sep Character used to separate fields in the input files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A \code{\link[phyloseq]{phyloseq}} object containing:
 #' \itemize{
@@ -2199,7 +2286,9 @@ format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, ou
 #'
 #' @export
 
-format_for_phyloseq <- function(otu, tax, samples = NULL, rm_control = FALSE, sep = ",")
+format_for_phyloseq <- function(otu, tax, samples = NULL, outfile = NULL,
+                                rm_control = FALSE, 
+                                log_file = NULL, sep = ",")
 {
   
   if (missing(otu)) stop("Argument 'otu' is required")
@@ -2217,6 +2306,12 @@ format_for_phyloseq <- function(otu, tax, samples = NULL, rm_control = FALSE, se
       call. = FALSE
     )
   }
+  
+  # get function name, all arguments and stat time
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if(rm_control & is.null(samples)){
     msg <- "samples must be specified when rm_control is TRUE and contain a sample and sample_type columns"
@@ -2314,5 +2409,13 @@ format_for_phyloseq <- function(otu, tax, samples = NULL, rm_control = FALSE, se
     
     phy_object <- phyloseq::phyloseq(OTU, TAX, sample_df)
   }
+  
+  if(!is.null(outfile)){
+    check_dir(outfile, is_file = TRUE)
+    saveRDS(phy_object, file = outfile)
+  }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
   return(phy_object)
 }

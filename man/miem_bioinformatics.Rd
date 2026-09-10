@@ -4,11 +4,18 @@
 \alias{miem_bioinformatics}
 \title{Generate a MIEM bioinformatics report}
 \usage{
-miem_bioinformatics(log, r_versions, outfile = "", sep = ",")
+miem_bioinformatics(log_file = NULL, r_versions, outfile = "", sep = ",")
 }
 \arguments{
-\item{log}{A data.frame containing the vtamR log or the path to a CSV
-log file.}
+\item{log_file}{Character string specifying the path to the CSV log file.
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}}
 
 \item{r_versions}{A data.frame containing installed R package versions
 or the path to a CSV file.}

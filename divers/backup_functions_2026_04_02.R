@@ -1954,3 +1954,212 @@ make_phyloseq <- function(otu,  tax, samples = NULL, sep = ","){
   return(phy_object)
 }
 
+
+######################################################
+
+count_reads <- function(file, file_type="fastq"){
+  
+  if (endsWith(file, ".zip")) {
+    stop("File compression type is not supported.")
+  }
+  
+  if(is_linux()){
+    # compressed files
+    if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
+      if(file_type == "fastq"){
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+        #        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("zcat ", file, "| grep '^>' -P | wc -l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of liens in file will be returned for", file)
+        print(msg)
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }
+    }else{
+      #uncompressed files
+      if(file_type == "fastq"){
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("grep '^>' -P", file, "| wc -l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of lines in file will be returned for", file)
+        print(msg)
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }
+    }
+    return(seq_count)
+  }else{
+    print("WARNING: This command on non linux-like systems is slow 
+          and might not work with very large files.")
+    
+    if(file_type == "fasta"){ # can deal with compressed and uncompressed files
+      df <- read_fasta_to_df(file, dereplicate=F)
+      seq_count <- nrow(df)
+    }else { # fastq and others
+      if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
+        file_connection <- gzfile(file, "rb")
+      }else{
+        file_connection <- file(file, "r")
+      }
+      data <- readLines(file_connection, n = -1)
+      close(file_connection)
+      seq_count <- length(data)
+      if(file_type == "fastq"){
+        seq_count <- seq_count / 4
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of lines in file will be returned for", file)
+        print(msg)
+      }
+      
+    }
+    return(seq_count)
+  } # end non-linux-like
+}
+
+
+count_fastq_records <- function(fastq, chunk_lines = 4e6) {
+  
+  con <- open_any(fastq, "rt")
+  on.exit(close(con))
+  total_lines <- 0L
+  while (length(lines <- readLines(con, n = chunk_lines)) > 0) {
+    total_lines <- total_lines + length(lines)
+  }
+  if (total_lines %% 4 != 0) {
+    warning(sprintf("%s: line count (%d) not a multiple of 4 - malformed FASTQ?",
+                    fastq, total_lines), call. = FALSE)
+  }
+  total_lines %/% 4L
+}
+
+#### will be replaced by count_reads
+count_fasta_headers <- function(fasta, chunk_lines = 1e6) {
+  con <- open_any(fasta, "rt")
+  on.exit(close(con))
+  total <- 0L
+  while (length(lines <- readLines(con, n = chunk_lines)) > 0) {
+    total <- total + sum(startsWith(lines, ">"))
+  }
+  total
+}
+
+
+###########################################
+## copy-whole-file helper (used when n >= total)
+#.copy_fastq <- function(fastq, outfile) fast_copy(fastq, outfile)
+
+#' Random-subsample a single FASTQ file
+#' ### replaced by random_sample_fastq_pair
+random_sample_fastq <- function(fastq, outfile, n = 1e6, randseed = NULL,
+                                quiet = TRUE, chunk_records = 2.5e5,
+                                pigz_path="pigz", compress_method = "R",
+                                num_threads = 0) {
+  s <- sample_fastq_indices(fastq, n = n, randseed = randseed, quiet = quiet)
+  if (is.null(s$keep_idx)) {
+    warning(sprintf("WARNING: %s contains %d records.\nThe input file is copied to output.",
+                    fastq, s$total), call. = FALSE)
+    fast_copy(fastq, outfile,  
+              pigz_path=pigz_path, 
+              compress_method = compress_method,
+              num_threads = num_threads)
+    return(invisible(s$total))
+  }
+  keep_lookup <- logical(s$total); keep_lookup[s$keep_idx] <- TRUE
+  if (!quiet) cat("Extracting sampled records.\n")
+  extract_fastq_records(fastq, outfile, keep_lookup, s$total, chunk_records)
+  invisible(n)
+}
+
+
+########################################################
+count_reads_original <- function(file, file_type="fastq", chunk_lines=1e5, fast_count = TRUE){
+  
+  if (endsWith(file, ".zip")) {
+    stop("File compression type is not supported.")
+  }
+  
+  if(is_linux() & fast_count ){
+    # compressed files
+    if(endsWith(file, ".gz") || endsWith(file, ".bz") || endsWith(file, ".gz2")){
+      if(file_type == "fastq"){
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+        #        seq_count <- as.integer(system(cmd, intern=TRUE))
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("zcat ", file, "| grep '^>' -P | wc -l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of liens in file will be returned for", file)
+        print(msg)
+        cmd <- paste("zcat ", file, "| wc -l ", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }
+    }else{
+      #uncompressed files
+      if(file_type == "fastq"){
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+        seq_count <- seq_count/4
+      }else if(file_type == "fasta"){
+        cmd <- paste("grep '^>' -P", file, "| wc -l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }else{
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of lines in file will be returned for", file)
+        print(msg)
+        cmd <- paste("wc", file, "-l", sep=" ")
+        seq_count <- scan(text = system(cmd, intern = TRUE), what = integer(), nmax = 1, quiet = TRUE)
+      }
+    }
+    return(seq_count)
+  }else{
+    print("WARNING: This command is quicker on linux-like systems using fast_count == TRUE.")
+    
+    if(file_type == "fasta"){ # can deal with compressed and uncompressed files
+      
+      con <- open_any(file, "rt")
+      on.exit(close(con))
+      seq_count <- 0L
+      while (length(lines <- readLines(con, n = chunk_lines)) > 0) {
+        seq_count <- seq_count + sum(startsWith(lines, ">"))
+      }
+    }else { # fastq and others
+      
+      con <- open_any(file, "rt")
+      on.exit(close(con))
+      total_lines <- 0L
+      while (length(lines <- readLines(con, n = chunk_lines)) > 0) {
+        total_lines <- total_lines + length(lines)
+      }
+      if (total_lines %% 4 != 0) {
+        warning(sprintf("%s: line count (%d) not a multiple of 4 - malformed FASTQ?",
+                        file, total_lines), call. = FALSE)
+      }
+      
+      if(file_type == "fastq"){
+        seq_count <- total_lines %/% 4L
+      }else{
+        seq_count <- total_lines
+        msg <- paste(file_type, "is neither fasta nor fastq. 
+                     The number of lines in file will be returned for", file)
+        print(msg)
+      }
+      
+    }
+    return(seq_count)
+  } # end non-linux-like
+}

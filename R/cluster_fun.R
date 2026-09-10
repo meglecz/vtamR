@@ -144,7 +144,15 @@ pairwise_identity <- function(asv,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #' 
 #' @return A data frame with columns: `asv_id`, `cluster_id`.
 #' 
@@ -172,10 +180,11 @@ cluster_swarm <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -297,7 +306,15 @@ cluster_swarm <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #' 
 #' @return A data frame with columns: `asv_id`, `cluster_id`.
 #' 
@@ -324,10 +341,11 @@ cluster_vsearch <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -429,7 +447,15 @@ cluster_vsearch <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #' 
 #' @return A density plot object showing distributions of pairwise ASV identities
 #' within and between Swarm clusters across tested `d` values.
@@ -468,10 +494,11 @@ plot_pairwise_identity_swarm <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -507,7 +534,8 @@ plot_pairwise_identity_swarm <- function(read_count,
                                 fastidious=FALSE,
                                 swarm_path=swarm_path, 
                                 num_threads=num_threads, 
-                                quiet=quiet)
+                                quiet=quiet,
+                                log_file = NA)
     #####
     # add to pairwise_id the clusters of each query and target and define 
     # if they are in the same or different clusters
@@ -598,7 +626,15 @@ plot_pairwise_identity_swarm <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #' 
 #' @return A density plot of pairwise ASV identity distributions across clustering thresholds.
 #' 
@@ -633,10 +669,11 @@ plot_pairwise_identity_vsearch <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -676,7 +713,8 @@ plot_pairwise_identity_vsearch <- function(read_count,
                                     identity=d, 
                                     vsearch_path=vsearch_path, 
                                     num_threads=num_threads, 
-                                    quiet=TRUE)
+                                    quiet=TRUE,
+                                    log_file = NA)
     
     #####
     # add to pairwise_id the clusters of each query and target and define 
@@ -766,7 +804,15 @@ plot_pairwise_identity_vsearch <- function(read_count,
 #' @param log_file Character string specifying the path to the CSV log file.
 #'   If `NULL`, no log file is written.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A data frame with columns:
 #' `cluster_id` and one column per taxonomic level containing the classification
@@ -787,10 +833,10 @@ classify_clusters <- function(cluster, taxa, outfile="",
                               taxlevels=c("domain", "phylum", "class", "order","family", "genus", "species"),
                               log_file=NULL
 ){
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   ##### make df if read_count is file
   if(is.character(cluster)){
@@ -902,7 +948,15 @@ classify_clusters <- function(cluster, taxa, outfile="",
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A connected scatterplot showing the number of clusters in each class
 #' (closed, open, hybrid) across clustering parameters and taxonomic levels.
@@ -937,7 +991,11 @@ plot_cluster_classification <- function(read_count, taxa,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-#  collect_log()
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -972,18 +1030,21 @@ plot_cluster_classification <- function(read_count, taxa,
                                   swarm_d=i, 
                                   swarm_path=swarm_path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
     }else{
       cluster_df <- cluster_vsearch(read_count = read_count_df, 
                                     identity=i, 
                                     vsearch_path=vsearch_path, 
                                     num_threads=num_threads, 
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
     }
     
     ### classify
     classification <- classify_clusters(cluster = cluster_df, taxa = taxa_df, quiet=quiet, 
-                                        taxlevels=taxlevels)
+                                        taxlevels=taxlevels,
+                                        log_file = NA)
     #### count the number of clusters in each class (open, closed, hybrid, NA)
     for(tl in taxlevels){
       col_name <- paste("classification", tl, sep="_")
@@ -1032,8 +1093,9 @@ plot_cluster_classification <- function(read_count, taxa,
     print(p) # print plot to file
     dev.off()
   }
-  # add end_time and runtime, print
-#  write_log(log, file=log_file)
+  
+  # Append log to log_file. If log_file == NA, no log
+  write_log(log, file = log_file)
   return(p)
   
 }
@@ -1140,7 +1202,15 @@ pool_by_cluster <- function(read_count_df,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A data frame. If `group = TRUE`, ASVs are merged by cluster;
 #' otherwise, the original structure is preserved with an additional `cluster_id` column.
@@ -1177,10 +1247,10 @@ cluster_asv <- function(read_count,
     num_threads <- parallel::detectCores()
   }
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -1218,13 +1288,15 @@ cluster_asv <- function(read_count,
                                     swarm_path=path, 
                                     num_threads=num_threads, 
                                     fastidious = fastidious,
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
       }else{
         cluster_df <- cluster_vsearch(read_count = df_sample, 
                                       identity=identity, 
                                       vsearch_path=path, 
                                       num_threads=num_threads, 
-                                      quiet=quiet)
+                                      quiet=quiet,
+                                      log_file = NA)
       }
       
       # modify input df according to group
@@ -1244,13 +1316,15 @@ cluster_asv <- function(read_count,
                                   swarm_d=swarm_d, 
                                   swarm_path=path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
     }else{
       cluster_df <- cluster_vsearch(read_count = read_count_df, 
                                     identity=identity, 
                                     vsearch_path=path, 
                                     num_threads=num_threads, 
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
     }
     
     if(group){# pool ASV by cluster
@@ -1308,7 +1382,15 @@ cluster_asv <- function(read_count,
 #' @param sep Field separator character for input and output CSV files.
 #' @param quiet Logical; if `TRUE`, suppress informational messages and show only warnings/errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A data frame with the same structure as the input, where ASVs
 #' belonging to the same cluster are pooled (read counts summed) within each
@@ -1340,10 +1422,10 @@ denoise_by_swarm <- function(read_count,
                              log_file=NULL
 ){
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if (split_clusters & (!by_sample | swarm_d != 1 | !fastidious)) {
     stop(
@@ -1390,7 +1472,8 @@ denoise_by_swarm <- function(read_count,
                                   swarm_d=swarm_d, 
                                   swarm_path=swarm_path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
       
       # pool ASV by cluster
       if(split_clusters){
@@ -1411,7 +1494,8 @@ denoise_by_swarm <- function(read_count,
                                 swarm_d=swarm_d, 
                                 swarm_path=swarm_path, 
                                 num_threads=num_threads, 
-                                quiet=quiet)
+                                quiet=quiet,
+                                log_file = NA)
     out_df <- pool_by_cluster(read_count_df, cluster_df)
   }
   

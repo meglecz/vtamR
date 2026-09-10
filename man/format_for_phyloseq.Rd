@@ -4,7 +4,15 @@
 \alias{format_for_phyloseq}
 \title{Format OTU, taxonomy, and sample data as a phyloseq object}
 \usage{
-format_for_phyloseq(otu, tax, samples = NULL, rm_control = FALSE, sep = ",")
+format_for_phyloseq(
+  otu,
+  tax,
+  samples = NULL,
+  outfile = NULL,
+  rm_control = FALSE,
+  log_file = NULL,
+  sep = ","
+)
 }
 \arguments{
 \item{otu}{Character string giving the path to the OTU/ASV abundance
@@ -23,9 +31,24 @@ When provided, the table must contain \code{sample} and
 \code{sample_type} columns. The metadata are added to the resulting
 \code{phyloseq} object as sample data.}
 
+\item{outfile}{Optional character string specifying the output file
+path for the \code{phyloseq} object. If \code{NULL}, the file is not
+written to disk.}
+
 \item{rm_control}{Logical; if \code{TRUE}, samples whose
 \code{sample_type} is not \code{"real"} are removed.
 When \code{TRUE}, \code{samples} must be provided.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 
 \item{sep}{Character used to separate fields in the input files.}
 }

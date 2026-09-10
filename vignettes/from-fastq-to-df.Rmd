@@ -106,7 +106,8 @@ for the best strategy for you.
 See also [Files to keep](tutorial-vtamr-pipeline.html#files-to-keep) on how to handle the 
 large intermediate files that should be compressed or deleted once the analyses are complete.
 
-# Case 1 - One sample per fastq - no tag - no primer
+
+# Case 1 - One sample per fastq - No tag - No primer
 
 In this scenario, each pair of fasta files correspond to a sample (or
 a replicate of a sample if you have replicates), 
@@ -143,8 +144,14 @@ Make sure there is **no space in the path and file names**.
 ```{r set-input1}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo1.csv", package = "vtamR")
+```
 
+Set output directory and log life
+```{r}
 outdir <- "vtamR_demo_case1"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+
 merged_dir <- file.path(outdir, "merged")
 ```
 
@@ -219,8 +226,14 @@ Make sure there is **no space in the path and file names**.
 ```{r set-input2}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo2.csv", package = "vtamR")
+```
 
+**Set output directory and log life**
+```{r}
 outdir <- "vtamR_demo_case2"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+
 merged_dir <- file.path(outdir, "merged")
 ```
 
@@ -312,11 +325,18 @@ Make sure there is **no space in the path and file names**.
 ```{r set-input3}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
+```
 
+**Set output directory and log life**
+```{r}
 outdir <- "vtamR_demo_case3a"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+
 merged_dir <- file.path(outdir, "merged")
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
 ```
+
 
 ### Merge Fastq File Pairs and Quality Filter Reads
 
@@ -330,7 +350,7 @@ fastainfo_df <- merge_fastq_pairs(
   )
 ```
 
-### Demultiplex, Trim off Tags and Primers**
+### Demultiplex, Trim off Tags and Primers
 ```{r demultiplex3}
 sampleinfo_df <- demultiplex_and_trim_fasta(
   fastainfo_df, 
@@ -401,8 +421,14 @@ Make sure that there are **no spaces in file or directory names**.
 ```{r set-input4}
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
+```
 
+**Set output directory and log life**
+```{r}
 outdir <- "vtamR_demo_case3b"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
 merged_dir <- file.path(outdir, "merged")
 ```
@@ -450,3 +476,35 @@ read_count_df <- dereplicate(
   outfile=outfile
   )
 ```
+
+# Subsampling
+
+Subsampling FASTA or FASTQ file pairs is useful when sequences come 
+from different sequencing libraries with strongly different numbers of reads. 
+
+For example, in our sample dataset each sequencing library had one replicate 
+of all samples. Subsampling each library to a similar number of reads helps 
+avoid filtering out occurrences from a replicate that happens to have relatively few reads.
+
+Standardizing read numbers is also a good idea when working with different 
+sequencing runs that have strongly different coverage.
+
+The `random_sample_batch` function subsamples (without replacement) reads in 
+FASTA files or FASTQ file pairs. You can set any one of the following three parameters:
+
+* `n`: the number of sequences selected from each file
+* `p`: the proportion of sequences to be sampled from each file
+* `N`: the total number of sequences to be sampled from all input files, 
+while keeping the relative read counts among files
+
+This step can be run on the raw input FASTQ file pairs, 
+on demultiplexed FASTA or FASTQ file pairs, or on merged FASTA files.
+
+However, if your workflow includes `filter_occurrence_variant` or 
+`filter_occurrence_read_count` — which rely on total read counts in negative controls — 
+standardizing read numbers across samples is **not recommended**. 
+That said, it's still possible to subsample demultiplexed files using the 
+proportion of reads to be sampled (`p`) or the total number of reads across 
+all samples while keeping relative read counts across samples (`N`).
+
+

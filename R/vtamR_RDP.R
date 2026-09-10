@@ -33,7 +33,15 @@ NULL
 #' @param quiet Logical; if `TRUE`, suppress informational messages and show
 #' only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A data frame with the following columns:
 #' `asv_id`, `domain`, `kingdom`, `phylum`, `class`, `order`, `family`, `genus`.
@@ -86,10 +94,10 @@ assign_taxonomy_rdp <- function(
     )
   }
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   # can accept df or file as an input
   if(is.character(asv)){

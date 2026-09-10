@@ -11,7 +11,8 @@ format_for_vegan(
   sample_type = NULL,
   outfile_motu = NULL,
   outfile_taxa = NULL,
-  sep = ","
+  sep = ",",
+  log_file = NULL
 )
 }
 \arguments{
@@ -45,6 +46,17 @@ written to disk.}
 
 \item{sep}{Character used to separate fields in input and output files.
 Defaults to \code{","}.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A list of two data frames:

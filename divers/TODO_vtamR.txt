@@ -10,11 +10,6 @@ define by (look for path in this order)
 - direct setting by xxx_path argument
 - use prg in path
 
-## simplify benchmarking (is is possile since now filter gives the same results for vtam and vtamR)
-- filter
-- taxassign (default)
-- pool
-- optimize on filtered data => test simply if same results, do  ot try to alternate fiter and optimze
 
 # rethink the use of log, since it became central for getting miem info
 - it can be obligatory and if no filname provided, in the current dir
@@ -39,8 +34,6 @@ Add link to the main tuto xxxx
 
 ## write function for quality filtering fastq
 
-## modify subsample to be able to take fastq files as well 
-=> possible to reequilibrate replicates before any other mege or demultiplex
 
 ## allow sortedinfo WO sample_type and habitat.
 
@@ -838,21 +831,60 @@ miem_results
 ## deactivate warning in suggest_variant_readcount_cutoffs
 " WARNING: The following expected ASVs are not present in the read_count dataframe:"
 
-## 2026/08/26
+## 2026/08/26 commit vegan
 
-- Correct miem_bioinfo to write function prameters both from Rscript and Rmd
+- Correct miem_bioinfo to write function parameters both from Rscript and Rmd
 - modify tuto to write logs and summaries to run_info dir.
 - make a phyloseq object (format_for_phyloseq)
 - make a vegan input object (format_for_vegan)
 
+## 2026/08/31
+
+modify subsample to be able to take fastq files as well 
+=> possible to reequilibrate replicates before any other mege or demultiplex
+
+count_reads updated => 
+	- on linux like systems, uses bash (zcat, wc, grep) to count the reads, unless
+	specified otherwise (fast_count == FALSE)
+	- on non-linux like system read files by chunks to speed up.
+	- input is a character vector of file names, output is a vector with the number of reads of the input files
+	
+random_sample_fastq and random_sample_fasta are OK, 
+	- can deal with I/O compression
+	- use chucks to read and write. 
+	- can deal with fastq file pairs.
+	- Slower that vsearch, but works on both systems, and can deal with fastq file pairs.
+
+
+random_sample => wrapper to run random_sample_fastq or random_sample_fasta for 
+all files in info file
+	- seq_format: fasta or fastq
+	- n: number of sequences from each file
+	- p: real, get n by p*total number of sequences in file
+	- if read_count in info file, use this instead of counting the number of sequences
+	
+
+## 2026/09/10 commit -m "package_log"
+
+- add log_file to random_sample_batch, format_for_vegan, format_for, phyloseq
+- Update tuto with random_sample_batch
+- logfile
+	- direct setting by log_file argument 
+		- path
+		- if NA => possibilty to deactivate
+	- package variable
+	- arbitary name in working directory
 
 
 
-
-
-
-
-
+############# next task
+## path
+define by (look for path in this order)
+- direct setting by xxx_path argument
+- package variable
+- use prg in path
+ 
+ 
 
 
 

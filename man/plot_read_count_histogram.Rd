@@ -8,7 +8,8 @@ plot_read_count_histogram(
   read_count_df,
   min_read_count = 0,
   binwidth = 100,
-  plotfile = ""
+  plotfile = "",
+  log_file = NULL
 )
 }
 \arguments{
@@ -21,6 +22,17 @@ reads are filtered out before plotting.}
 
 \item{plotfile}{Character string: name of the output PNG file. If empty,
 no file is written.}
+
+\item{log_file}{Character string specifying the path to the CSV log file.
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A histogram plot object.

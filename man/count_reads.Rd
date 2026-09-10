@@ -2,31 +2,74 @@
 % Please edit documentation in R/vtamR_fun.R
 \name{count_reads}
 \alias{count_reads}
-\title{Count reads in sequence or text files}
+\title{Count sequences or lines in a FASTA/FASTQ file}
 \usage{
-count_reads(file, file_type = "fastq")
+count_reads(files, file_type = "fastq", chunk_lines = 1e+05, fast_count = TRUE)
 }
 \arguments{
-\item{file}{Character string: path to the input file.}
+\item{files}{Character vector giving the paths to the input files.}
 
-\item{file_type}{Character string specifying the file type: \code{"fasta"} or \code{"fastq"}.
-For any other value, the function returns the number of lines in the file.}
+\item{file_type}{Character string specifying the file format. Supported
+values are \code{"fastq"} and \code{"fasta"}. Other values cause the
+function to return the number of lines in the file.}
+
+\item{chunk_lines}{Integer specifying the maximum number of lines to read
+at a time when using the non-Linux code path. Defaults to \code{1e5}.}
+
+\item{fast_count}{Logical value controlling the counting method.
+When \code{TRUE} on Linux, shell commands are used for faster counting.
+When \code{FALSE}, the chunk-based R implementation is used in all operating
+systems.}
 }
 \value{
-Integer: number of sequences for FASTA/FASTQ files, or number of
-lines for other file types.
+An integer vector giving the number of sequences for the input
+FASTA and FASTQ files, or the total number of lines for unsupported
+\code{file_type} values.
 }
 \description{
-Count the number of sequences in FASTA or FASTQ files, or the number of lines
-in other file types.
+Counts the number of sequences in a FASTA or FASTQ file. On Linux-like
+systems, shell commands are used for faster counting when
+\code{fast_count = TRUE}. On other systems, the file is read in chunks
+using \code{readLines()}.
 }
 \details{
-This function is optimized for Linux-like systems and may be slower on Windows
-for large files.
-It supports both gz-compressed and uncompressed files (ZIP archives are not supported).
+Compressed files with \code{.gz}, \code{.bz}, or \code{.gz2} extensions are
+supported. ZIP-compressed files are not supported.
+
+For FASTA files, sequences are identified by lines beginning with
+\code{">"}. For FASTQ files, the number of sequences is calculated as the
+number of lines divided by four.
+
+If \code{file_type} is neither \code{"fasta"} nor \code{"fastq"}, the
+function returns the total number of lines in the file and prints a message.
+
+ZIP-compressed files (files ending in \code{.zip}) are not supported and
+cause the function to stop with an error.
+
+On Linux-like systems, compressed FASTQ files are counted using
+\code{zcat} and \code{wc}, while compressed FASTA files are counted by
+counting header lines beginning with \code{">"}. For uncompressed files,
+\code{wc} and \code{grep} are used.
+
+On non-Linux systems, or when \code{fast_count = FALSE}, files are read
+incrementally in chunks to avoid loading the entire file into memory.
+Setting \code{chunk_lines} too high increases memory usage and may slow down
+the function. Setting it too low can also reduce performance due to the
+increased number of read operations.
+FASTQ files are expected to contain exactly four lines per sequence. A
+warning is issued if the total number of lines is not divisible by four.
 }
 \examples{
 \dontrun{
-count_reads(file = "data/test.fasta", file_type = "fasta")
+# Count reads in a FASTQ file
+count_reads("reads.fastq", file_type = "fastq")
+
+# Count sequences in a FASTA file
+count_reads("sequences.fasta", file_type = "fasta")
+
+# Use the chunk-based implementation
+count_reads("reads.fastq.gz", file_type = "fastq",
+            count_by_read = TRUE)
 }
+
 }

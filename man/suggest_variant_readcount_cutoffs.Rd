@@ -71,7 +71,15 @@ step size between tested variant cutoff values.}
 warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the package-level option/variable storing a default log path
+(if set);
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 
 \item{`min_replicate_number()`}{Positive integer specifying the minimum number of
 replicates for \code{filter_min_replicate()}.}

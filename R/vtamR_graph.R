@@ -27,6 +27,16 @@ NULL
 #' @param x_axis_label_size Numeric; size of x-axis labels.
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A bar plot object.
 #'
@@ -37,8 +47,14 @@ plot_read_count_by_sample <- function(read_count_df,
                                       sample_replicate=T, 
                                       sep=",", 
                                       x_axis_label_size=6,
-                                      plotfile=""
+                                      plotfile="",
+                                      log_file = NULL
 ){
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if(sampleinfo != ""){
     sampleinfo_df <- read.csv(sampleinfo, sep=sep)
@@ -105,6 +121,8 @@ plot_read_count_by_sample <- function(read_count_df,
     print(p) # print plot to file
     dev.off()
   }
+  # Append log to log_file. If log_file == NA, no log
+  write_log(log, file = log_file)
   return(p)
 }
 
@@ -122,6 +140,16 @@ plot_read_count_by_sample <- function(read_count_df,
 #' @param binwidth Numeric; width of histogram bins for read count intervals.
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A histogram plot object.
 #'
@@ -130,8 +158,14 @@ plot_read_count_by_sample <- function(read_count_df,
 plot_read_count_histogram <- function(read_count_df, 
                                       min_read_count=0, 
                                       binwidth=100,
-                                      plotfile= ""
+                                      plotfile= "",
+                                      log_file = NULL
 ){
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   # get read_count for each asv
   df <- read_count_df %>%
@@ -156,6 +190,10 @@ plot_read_count_histogram <- function(read_count_df,
     print(p) # print plot to file
     dev.off()
   }
+  
+  # Append log to log_file. If log_file == NA, no log
+  write_log(log, file = log_file)
+  
   return(p)
 }
 
@@ -176,7 +214,15 @@ plot_read_count_histogram <- function(read_count_df,
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A bar plot object.
 #'
@@ -190,10 +236,10 @@ plot_renkonen_distance_barplot <- function(df,
                                            log_file=NULL
 ){
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if(is.character(sampleinfo)){ # input file
     sampleinfo_df <- read.csv(sampleinfo, sep=sep)
@@ -255,7 +301,15 @@ plot_renkonen_distance_barplot <- function(df,
 #' @param plotfile Character string: name of the output PNG file. If empty,
 #'   no file is written.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the package-level option/variable storing a default log path
+#'       (if set);
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A density plot object.
 #'
@@ -264,10 +318,11 @@ plot_renkonen_distance_barplot <- function(df,
 plot_renkonen_distance_density <- function(df, plotfile="",
                                            log_file=NULL){
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   df$comparison <- ifelse(df$sample1 == df$sample2, "within samples", "between samples")
   
   p <- ggplot(df, aes(x = renkonen_d, fill = comparison)) +
