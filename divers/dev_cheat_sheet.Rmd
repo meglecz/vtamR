@@ -174,7 +174,6 @@ devtools::check()
 ## install package localy and build vignettes
 ```{r}
 library("devtools")
-devtools::install(build_vignettes = TRUE)
 ```
 
 ## build vignettes
@@ -200,6 +199,48 @@ devtools::build_vignettes()
 
 ## 
 ```{r}
+remotes::install_github(
+  repo = "meglecz/vtamR",       # Replace with the repository name
+  ref = "develop",       # Replace with the branch name
+  upgrade = TRUE             # Optional: to upgrade if already installed
+)
+```
+
+### static github website
+Run all this from vtamR and not from vtamR/divers !!!
+
+```{r}
+install.packages("pkgdown")
+```
+
+In R, from your package root with develop checked out: 
+This creates a _pkgdown.yml file and adds docs/ to .Rbuildignore automatically. Skip this step if _pkgdown.yml already exists.
+```{r}
+usethis::use_pkgdown()
+```
+Correct the URL manually to url: https://meglecz.github.io/vtamR/
+
+
+This renders your vignettes (already working locally), builds the function reference from your roxygen docs, and writes the full site into docs/ at the repo root.
+
+```{r}
+pkgdown::build_site()
+```
+
+```{bash}
+git add docs/ .Rbuildignore _pkgdown.yml
+git commit -m "Build pkgdown site"
+git push origin develop
+```
+
+
+
+
+
+
+
+
+```{}
 remotes::install_github(
   repo = "meglecz/vtamR",       # Replace with the repository name
   ref = "develop",       # Replace with the branch name

@@ -8417,8 +8417,10 @@ demultiplex_fastq_pairs_strand_plus <- function(fastqinfo,
   }else{
     fastqinfo_df <- fastqinfo
   }
-  fastqinfo_df <- fastqinfo_df %>%
-    select(-read_count)
+  if("read_count" %in% colnames(fastqinfo_df)){
+    fastqinfo_df <- fastqinfo_df %>%
+      select(-read_count)
+  }
   
   check_file_info(fastqinfo_df, fastq_dir, file_type="fastqinfo", sep=",", quiet=TRUE)
   
@@ -10273,7 +10275,7 @@ random_sample_fastq <- function(fastq1, fastq2 = NULL,
 #' )
 #' }
 #' 
-#' #' @export
+#' @export
 random_sample_batch_by <- function(info, 
                                    dir, 
                                    outdir, 

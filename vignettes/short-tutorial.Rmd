@@ -70,6 +70,7 @@ and the documentation of the functions (`?function_name`)
 
 ```{r}
 library(vtamR)
+library(dplyr)
 ```
 
 
@@ -85,6 +86,14 @@ options(vtamR.blast_path = "blastn")
 options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
 options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
 options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+```
+
+```{r, echo = FALSE, eval=TRUE}
+options(vtamR.vsearch_path = "~/miniconda3/envs/vtam/bin/vsearch")
+options(vtamR.blast_path = "~/miniconda3/envs/vtam/bin/blastn")
+options(vtamR.cutadapt_path = "~/miniconda3/envs/vtam_benchmark/bin/cutadapt")
+options(vtamR.swarm_path = "swarm")
+options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
 ```
 
 ## Input data
@@ -232,10 +241,10 @@ by_sample <- TRUE
 
 outfile <- file.path(outdir, "4_filter", "2_swarm_denoise.csv")
 read_count_df <- denoise_by_swarm(
-  read_count_df,
-  outfile=outfile,
-  by_sample=by_sample,
-  split_clusters=split_clusters
+  read_count = read_count_df,
+  outfile = outfile,
+  by_sample = by_sample,
+  split_clusters = split_clusters
 )
 
 param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters)
@@ -250,9 +259,9 @@ global_read_count_cutoff = 2
 outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
 
 read_count_df <- filter_asv_global(
-  read_count_df, 
-  outfile=outfile, 
-  cutoff=global_read_count_cutoff
+  read_count = read_count_df, 
+  outfile = outfile, 
+  cutoff = global_read_count_cutoff
   )
 
 param <- paste("global_read_count_cutoff:", global_read_count_cutoff)
@@ -266,8 +275,8 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_asv_global", params=pa
 outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
 
 read_count_df <- filter_indel(
-  read_count_df, 
-  outfile=outfile
+  read_count = read_count_df, 
+  outfile = outfile
   )
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
 ```
@@ -279,8 +288,8 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
 outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
 
 read_count_df <- filter_stop_codon(
-  read_count_df, 
-  outfile=outfile
+  read_count = read_count_df, 
+  outfile = outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_stop_codon", params=NA)
@@ -294,10 +303,10 @@ outfile <- file.path(outdir, "4_filter", "6_filter_contaminant.csv")
 conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
 
 read_count_df <- filter_contaminant(
-  read_count_df,
-  sampleinfo=sampleinfo_df,
-  conta_file=conta_file,
-  outfile=outfile
+  read_count = read_count_df,
+  sampleinfo = sampleinfo_df,
+  conta_file = conta_file,
+  outfile = outfile
 )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
@@ -310,8 +319,8 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=N
 outfile <- file.path(outdir, "4_filter", "7_filter_chimera.csv")
 
 read_count_df <- filter_chimera(
-  read_count_df,
-  outfile=outfile
+  read_count = read_count_df,
+  outfile = outfile
 )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_chimera", params=NA)
@@ -326,7 +335,7 @@ outfile <- file.path(outdir, "4_filter", "8_filter_replicate.csv")
 renkonen_distance_quantile <- 0.9
 
 read_count_df <- filter_replicate(
-  read_count_df,
+  read_count = read_count_df,
   renkonen_distance_quantile = renkonen_distance_quantile,
   outfile = outfile
 )
@@ -344,11 +353,11 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=par
 outdir_mock <- file.path(outdir, "mock_composition")
 
 mock_template <- match_variants_to_mock_species(
-  read_count=read_count_df,
-  fas=mock_ncbi_fasta,
-  taxonomy=taxonomy,
+  read_count = read_count_df,
+  fas = mock_ncbi_fasta,
+  taxonomy = taxonomy,
   sampleinfo = sampleinfo_df,
-  outdir= outdir_mock
+  outdir = outdir_mock
 )
 
 mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
@@ -373,9 +382,9 @@ See [Create `mock_composition` File](tutorial-vtamr-pipeline.html#match_variants
 outfile = file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
 
 suggest_sample_cutoff_df <- suggest_sample_cutoff(
-  read_count=read_count_df,
-  mock_composition=mock_composition,
-  outfile=outfile
+  read_count = read_count_df,
+  mock_composition = mock_composition,
+  outfile = outfile
 )
 
 head(suggest_sample_cutoff_df)
@@ -387,9 +396,9 @@ sample_cutoff <- 0.0001
 outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
 
 read_count_df <- filter_occurrence_sample(
-  read_count_df, 
-  cutoff=sample_cutoff, 
-  outfile=outfile
+  read_count = read_count_df, 
+  cutoff = sample_cutoff, 
+  outfile = outfile
   )
 
 param <- paste("cutoff:", sample_cutoff)
@@ -404,9 +413,9 @@ min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
 
 read_count_df <- filter_min_replicate(
-  read_count_df, 
-  cutoff=min_replicate_number, 
-  outfile=outfile
+  read_count = read_count_df, 
+  cutoff = min_replicate_number, 
+  outfile = outfile
   )
 
 param <- paste("cutoff:", min_replicate_number)
@@ -423,11 +432,11 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params
 outdir_suggest = file.path(outdir, "4_filter", "suggest_parameters")
 
 suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
-  read_count_df,
+  read_count = read_count_df,
   mock_composition = mock_composition,
   sampleinfo = sampleinfo_df,
-  outdir= outdir_suggest,
-  min_replicate_number=2
+  outdir = outdir_suggest,
+  min_replicate_number = 2
 )
 
 head(suggest_variant_readcount_cutoffs_df)
@@ -439,9 +448,9 @@ variant_cutoff = 0.001
 outfile <- file.path(outdir, "4_filter", "11_filter_occurrence_variant.csv")
 
 read_count_df_variant <- filter_occurrence_variant(
-  read_count_df, 
-  cutoff=variant_cutoff, 
-  outfile=outfile
+  read_count = read_count_df, 
+  cutoff = variant_cutoff, 
+  outfile = outfile
   )
 param <- paste("variant_cutoff:", variant_cutoff)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_variant", params=param)
@@ -454,9 +463,9 @@ read_count_cutoff <- 10
 outfile <- file.path(outdir, "4_filter", "12_filter_occurrence_read_count.csv")
 
 read_count_df_rc <- filter_occurrence_read_count(
-  read_count_df, 
-  cutoff=read_count_cutoff, 
-  outfile=outfile
+  read_count = read_count_df, 
+  cutoff = read_count_cutoff, 
+  outfile = outfile
   )
 param <- paste("read_count_cutoff:", read_count_cutoff)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_read_count", params=param)
@@ -467,8 +476,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_read_count"
 outfile <- file.path(outdir, "4_filter", "13_pool_filters.csv")
 
 read_count_df <- pool_filters(
-  read_count_df_rc, 
-  read_count_df_variant, 
+  read_count_df_rc, read_count_df_variant, 
   outfile=outfile
   )
 
@@ -488,9 +496,9 @@ min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
 
 read_count_df <- filter_min_replicate(
-  read_count_df, 
-  cutoff=min_replicate_number, 
-  outfile=outfile
+  read_count = read_count_df, 
+  cutoff = min_replicate_number, 
+  outfile = outfile
   )
 param <- paste("min_replicate_number:", min_replicate_number)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
@@ -505,7 +513,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params
 outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
 
 read_count_sample_df <- pool_replicates(
-  read_count_df,
+  read_count = read_count_df,
   outfile = outfile
 )
 ```
@@ -519,12 +527,12 @@ performance_metrics <- file.path(outdir, "4_filter", "performance_metrics.csv")
 known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
 
 results <- classify_control_occurrences(
-  read_count_sample_df, 
-  sampleinfo=sampleinfo_df, 
-  mock_composition=mock_composition, 
-  known_occurrences=known_occurrences, 
-  false_negatives=false_negatives,
-  performance_metrics=performance_metrics
+  read_count = read_count_sample_df, 
+  sampleinfo = sampleinfo_df, 
+  mock_composition = mock_composition, 
+  known_occurrences = known_occurrences, 
+  false_negatives = false_negatives,
+  performance_metrics = performance_metrics
   )
 
 head(read.csv(performance_metrics))
@@ -554,10 +562,10 @@ write.csv(stat_df, file = file.path(run_info_dir, "summary.csv"))
 outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
 
 asv_tax <- assign_taxonomy_ltg(
-  asv=read_count_sample_df,
-  taxonomy=taxonomy,
-  blast_db=blast_db,
-  outfile=outfile
+  asv = read_count_sample_df,
+  taxonomy = taxonomy,
+  blast_db = blast_db,
+  outfile = outfile
 )
 ```
 
@@ -568,10 +576,10 @@ asv_tax <- assign_taxonomy_ltg(
 outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
 
 read_count_samples_df_ClusterSize <- cluster_asv(
-  read_count_sample_df,
+  read_count = read_count_sample_df,
   method = "swarm",
-  swarm_d  = 7,
-  outfile=outfile
+  swarm_d = 7,
+  outfile = outfile
 )
 ```
 
@@ -584,17 +592,16 @@ read_count_samples_df_ClusterSize <- cluster_asv(
 outfile=file.path(outdir, "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
-  read_count_sample_df,
-  outfile=outfile,
-  asv_tax=asv_tax,
-  sampleinfo=sampleinfo_df
+  read_count = read_count_sample_df,
+  outfile = outfile,
+  asv_tax = asv_tax,
+  sampleinfo = sampleinfo_df
 )
 ```
 
 ### Convert output to a phyloseq object
 ```{r make_phyloseq}
 # Create a data frame containing sample metadata
-library(dplyr)
 samples <- sampleinfo_df %>%
   select(sample, sample_type, habitat) %>%
   distinct()

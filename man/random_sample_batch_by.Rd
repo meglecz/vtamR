@@ -159,7 +159,6 @@ random_sample_batch_by(
 )
 }
 
-#' @export
 }
 \seealso{
 \code{\link[=random_sample_batch]{random_sample_batch()}}, \code{\link[=random_sample_fasta]{random_sample_fasta()}}, \code{\link[=random_sample_fastq]{random_sample_fastq()}},

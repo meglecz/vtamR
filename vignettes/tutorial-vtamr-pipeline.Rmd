@@ -154,6 +154,14 @@ locations of the programs on your computer. To configure these options,
 locate the vsearch.exe, blastn.exe, cutadapt.exe, swarm.exe, and pigz.exe files, 
 and specify their paths without the .exe extension.
 
+```{r, echo = FALSE, eval=TRUE}
+options(vtamR.vsearch_path = "~/miniconda3/envs/vtam/bin/vsearch")
+options(vtamR.blast_path = "~/miniconda3/envs/vtam/bin/blastn")
+options(vtamR.cutadapt_path = "~/miniconda3/envs/vtam_benchmark/bin/cutadapt")
+options(vtamR.swarm_path = "swarm")
+options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
+```
+
 ### Input Data
 
 #### Data Structure and Workflow
@@ -270,8 +278,8 @@ It is optional, but useful, as user-generated files may contain subtle
 errors that are difficult to identify manually.
 
 ```{r check-fileinfo}
-check_file_info(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
-check_file_info(file=asv_list, file_type="asv_list")
+check_file_info(file = fastqinfo, dir = fastq_dir, file_type = "fastqinfo")
+check_file_info(file = asv_list, file_type = "asv_list")
 ```
 
 ## Ouput
@@ -681,8 +689,8 @@ outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
 
 read_count_df <- filter_asv_global(
   read_count = read_count_df, 
-  outfile=outfile,
-  cutoff=global_read_count_cutoff
+  outfile = outfile,
+  cutoff = global_read_count_cutoff
   )
 
 param <- paste("global_read_count_cutoff:", global_read_count_cutoff, sep=" ")
@@ -705,7 +713,7 @@ outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
 
 read_count_df <- filter_indel(
   read_count = read_count_df,
-  outfile=outfile
+  outfile = outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
@@ -732,8 +740,8 @@ outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
 genetic_code = 5
 read_count_df <- filter_stop_codon(
   read_count = read_count_df, 
-  genetic_code=genetic_code,
-  outfile=outfile
+  genetic_code = genetic_code,
+  outfile = outfile
   )
 
 param <- paste("genetic_code:", genetic_code, sep=" ")
@@ -761,9 +769,9 @@ conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
 
 read_count_df <- filter_contaminant(
   read_count = read_count_df, 
-  sampleinfo=sampleinfo_df,
-  conta_file=conta_file,
-  outfile=outfile
+  sampleinfo = sampleinfo_df,
+  conta_file = conta_file,
+  outfile = outfile
   )
 
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
@@ -793,10 +801,10 @@ sample_prop = 0.8
 
 read_count_df <- filter_chimera(
   read_count = read_count_df, 
-  outfile=outfile,
-  by_sample=by_sample, 
-  sample_prop=sample_prop, 
-  abskew=abskew
+  outfile = outfile,
+  by_sample = by_sample, 
+  sample_prop = sample_prop, 
+  abskew = abskew
   )
 
 param <- paste("by_sample:", by_sample, "sample_prop:", sample_prop, "abskew:", abskew, sep=" ")
@@ -817,7 +825,7 @@ replicates within each sample and identify those that deviate significantly from
 ```{r renkonen-dist}
 renkonen_within_df <- compute_renkonen_distances(
   read_count = read_count_df, 
-  compare_all=FALSE)
+  compare_all = FALSE)
 ```
 
 #### Visualize Renkonen Distances
@@ -848,8 +856,8 @@ a **different-looking graph**.
 ```{r renkonen-dist-barplot}
 plot_renkonen_distance_barplot(
   df = renkonen_within_df, 
-  sampleinfo=sampleinfo_df, 
-  x_axis_label_size=6
+  sampleinfo = sampleinfo_df, 
+  x_axis_label_size = 6
   )
 ```
 
@@ -913,10 +921,10 @@ outdir_mock <- file.path(outdir, "mock_composition")
 
 mock_template <- match_variants_to_mock_species(
   read_count = read_count_df,
-  fas=mock_ncbi_fasta, # fasta with reference sequences on the mock or closely related species
-  taxonomy=taxonomy,
+  fas = mock_ncbi_fasta, # fasta with reference sequences on the mock or closely related species
+  taxonomy = taxonomy,
   sampleinfo = sampleinfo_df,
-  outdir= outdir_mock
+  outdir = outdir_mock
   )
 mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
 mock_composition_df <- read.csv(mock_composition)
@@ -990,8 +998,8 @@ outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
   
 read_count_df <- filter_occurrence_sample(
   read_count = read_count_df, 
-  cutoff=sample_cutoff, 
-  outfile=outfile
+  cutoff = sample_cutoff, 
+  outfile = outfile
   )
 
 param <- paste("cutoff:", sample_cutoff, sep=" ")
@@ -1011,8 +1019,8 @@ outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
   
 read_count_df <- filter_min_replicate(
   read_count = read_count_df, 
-  cutoff=min_replicate_number, 
-  outfile=outfile
+  cutoff = min_replicate_number, 
+  outfile = outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")
@@ -1195,8 +1203,8 @@ outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
 
 read_count_df <- filter_min_replicate(
   read_count = read_count_df, 
-  cutoff=min_replicate_number, 
-  outfile=outfile
+  cutoff = min_replicate_number, 
+  outfile = outfile
   )
 
 param <- paste("cutoff:", min_replicate_number, sep=" ")  
@@ -1256,11 +1264,11 @@ known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
 
 results <- classify_control_occurrences(
   read_count = read_count_sample_df, 
-  sampleinfo=sampleinfo_df, 
-  mock_composition=mock_composition, 
-  known_occurrences=known_occurrences, 
-  false_negatives=false_negatives,
-  performance_metrics=performance_metrics)
+  sampleinfo = sampleinfo_df, 
+  mock_composition = mock_composition, 
+  known_occurrences = known_occurrences, 
+  false_negatives = false_negatives,
+  performance_metrics = performance_metrics)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
@@ -1300,10 +1308,10 @@ You can also download a **ready-to-use COI reference database** (see [Installati
 outfile <- file.path(outdir, "4_filter", "assign_taxonomy_ltg.csv")
 
 asv_tax <- assign_taxonomy_ltg(
-  asv=read_count_sample_df, 
-  taxonomy=taxonomy, 
-  blast_db=blast_db, 
-  outfile=outfile)
+  asv = read_count_sample_df, 
+  taxonomy = taxonomy, 
+  blast_db = blast_db, 
+  outfile = outfile)
 ```
 
 ## Clustering (mOTUs) {#cluster_asv}
@@ -1356,12 +1364,12 @@ plotfile <- file.path(outdir, "5_cluster", "plot_pairwise_identity_vsearch.png")
 
 plot_vsearch <- plot_pairwise_identity_vsearch(
   read_count = read_count_sample_df,
-  identity_min=0.9,
-  identity_max=0.99,
-  identity_increment=0.01,
+  identity_min = 0.9,
+  identity_max = 0.99,
+  identity_increment = 0.01,
   min_id = 0.8, 
-  outfile=outfile, 
-  plotfile=plotfile)
+  outfile = outfile, 
+  plotfile = plotfile)
 
 print(plot_vsearch)
                                           
@@ -1480,8 +1488,8 @@ read_count_samples_df_ClusterSize <- cluster_asv(
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
-  by_sample=FALSE,
-  outfile=outfile)
+  by_sample = FALSE,
+  outfile = outfile)
 
 stat_df <- get_stat(read_count_samples_df_ClusterSize, 
                    stat_df, 
@@ -1522,14 +1530,14 @@ outfile=file.path(outdir, "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
   read_count = read_count_sample_df, 
-  outfile=outfile, 
-  asv_tax=asv_tax, 
-  sampleinfo=sampleinfo_df, 
-  add_empty_samples=FALSE, 
-  add_sums_by_sample=TRUE, 
-  add_sums_by_asv=TRUE, 
-  add_expected_asv=TRUE, 
-  mock_composition=mock_composition)
+  outfile = outfile, 
+  asv_tax = asv_tax, 
+  sampleinfo = sampleinfo_df, 
+  add_empty_samples = FALSE, 
+  add_sums_by_sample = TRUE, 
+  add_sums_by_asv = TRUE, 
+  add_expected_asv = TRUE, 
+  mock_composition = mock_composition)
 ```
 
 ### Convert output to a `phyloseq` object
@@ -1781,7 +1789,7 @@ read_count_motu <- cluster_asv(
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
-  outfile=outfile
+  outfile = outfile
   )
 ```
 
@@ -1794,10 +1802,10 @@ it is usually simpler to rerun the assignment on the pooled dataset.
 outfile <- file.path(outdir, "tax_assign_ltg.csv")
 
 asv_tax_pooled <- assign_taxonomy_ltg(
-  asv=read_count_motu, 
-  taxonomy=taxonomy, 
-  blast_db=blast_db, 
-  outfile=outfile
+  asv = read_count_motu, 
+  taxonomy = taxonomy, 
+  blast_db = blast_db, 
+  outfile = outfile
   )
 ```
 
@@ -1808,10 +1816,10 @@ outfile=file.path(outdir, "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
   read_count = read_count_motu, 
-  outfile=outfile, 
-  asv_tax=asv_tax_pooled, 
-  add_sums_by_sample=T, 
-  add_sums_by_asv=T
+  outfile = outfile, 
+  asv_tax = asv_tax_pooled, 
+  add_sums_by_sample = T, 
+  add_sums_by_asv = T
   )
 ```
 
@@ -1896,17 +1904,17 @@ read_count_motu <- cluster_asv(
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
-  outfile=outfile
+  outfile = outfile
   )
 
 #### TaxAssign
 outfile <- file.path(outdir, "assign_taxonomy_ltg.csv") 
 
 asv_tax_pooled <- assign_taxonomy_ltg(
-  asv=read_count_motu, 
-  taxonomy=taxonomy, 
-  blast_db=blast_db, 
-  outfile=outfile
+  asv = read_count_motu, 
+  taxonomy = taxonomy, 
+  blast_db = blast_db, 
+  outfile = outfile
   )
 
 #### Print mOTU table
@@ -1914,10 +1922,10 @@ outfile <- file.path(outdir, "motu_table_taxa.csv")
 
 asv_table_df <- write_asv_table(
   read_count = read_count_motu, 
-  outfile=outfile, 
-  asv_tax=asv_tax_pooled, 
-  add_sums_by_sample=T, 
-  add_sums_by_asv=T
+  outfile = outfile, 
+  asv_tax = asv_tax_pooled, 
+  add_sums_by_sample = T, 
+  add_sums_by_asv = T
   )
 ```
 
@@ -2138,7 +2146,7 @@ This limits `merge_fastq_pairs` to use **8 CPU threads**:
 
 ```{r, eval=FALSE}
 fastainfo_df <- merge_fastq_pairs(
-  fastqinfo, 
+  fastqinfo = fastqinfo, 
   fastq_dir = fastq_dir, 
   vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
   outdir = merged_dir,
@@ -2269,9 +2277,9 @@ For more details and advanced options, see `?filter_pcr_error`.
 outfile <- file.path(outdir, "filter_pcr_error.csv")
 
 read_count_df <- filter_pcr_error(
-  read_count_df, 
-  outfile=outfile, 
-  pcr_error_var_prop=0.15
+  read_count = read_count_df, 
+  outfile = outfile, 
+  pcr_error_var_prop = 0.15
   )
 ```
 
@@ -2295,9 +2303,9 @@ The highest read count ratio observed among unexpected ASVs can be used as a
 outfile <- file.path(outdir, "suggest_parameters", "suggest_pcr_error_cutoff.csv")
 
 suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
-  read_count_df, 
-  mock_composition=mock_composition,
-  outfile=outfile
+  read_count = read_count_df, 
+  mock_composition = mock_composition,
+  outfile = outfile
   )
 ```
 
@@ -2424,8 +2432,8 @@ is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplex
 ```{r make-known-occurrences, eval=FALSE}
 # Detect known occurrences
 results <- classify_control_occurrences(read_count = read_count_df, 
-                                sampleinfo=sampleinfo_df, 
-                                mock_composition=mock_composition)
+                                sampleinfo = sampleinfo_df, 
+                                mock_composition = mock_composition)
 
 # give explicit names to the 3 output data frames
 known_occurrences_df <- results[[1]]
@@ -2459,9 +2467,9 @@ For each ASV:
 
 ```{r, eval=FALSE}
 asv_spec <- compute_asv_specific_cutoff(
-  read_count_df, 
-  max_cutoff=0.05,
-  mock_composition=mock_composition_df
+  read_count = read_count_df, 
+  max_cutoff = 0.05,
+  mock_composition = mock_composition_df
   ) 
 ```
 
@@ -2478,9 +2486,9 @@ Pass `asv_spec` to `filter_occurrence_variant`:
 
 ```{r, eval=FALSE}
 read_count_df <- filter_occurrence_variant(
-  read_count_df, 
+  read_count = read_count_df, 
   asv_specific_cutoffs = asv_spec,
-  min_read_count_prop=0.7
+  min_read_count_prop = 0.7
   )
 ```
 
@@ -2497,10 +2505,10 @@ You can also use a global cutoff together with ASV-specific cutoffs.
 
 ```{r, eval=FALSE}
 read_count_df <- filter_occurrence_variant(
-  read_count_df, 
-  cutoff=0.002,
+  read_count = read_count_df, 
+  cutoff = 0.002,
   asv_specific_cutoffs = asv_spec,
-  min_read_count_prop=0.7
+  min_read_count_prop = 0.7
   )
 ```
 
@@ -2535,7 +2543,7 @@ allowing direct application to your ASV dataset.
 
 ```{r assign_taxonomy_rdp, eval=FALSE}
 taxa <- assign_taxonomy_rdp(
-  asv=read_count_df,
+  asv = read_count_df,
   max_memory = 8,
   confidence = 0.8,
   rm_chloroplast = TRUE
@@ -2560,8 +2568,8 @@ This requires a folder containing the trained classifier created with `trainRDP(
 
 ```{r assign_taxonomy_rdp_custom, eval=FALSE}
 taxa <- assign_taxonomy_rdp(
-  asv=read_count_df,
-  dir="path/to/custom_RDP_trained_DB"
+  asv = read_count_df,
+  dir = "path/to/custom_RDP_trained_DB"
   max_memory = 8,
   confidence = 0.8,
   rm_chloroplast = TRUE)
@@ -2592,9 +2600,9 @@ start with a number).
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r}
 filter_dir <- file.path("vtamR_demo_out", "mfzr_plate1", "4_filter")
-tmp_ASV <- history_by(dir=filter_dir, 
-                        feature="asv_id", 
-                        values=c(4, 27)
+tmp_ASV <- history_by(dir = filter_dir, 
+                        feature = "asv_id", 
+                        values = c(4, 27)
 )
 
 knitr::kable(head(tmp_ASV), format = "markdown")
@@ -2603,9 +2611,9 @@ knitr::kable(head(tmp_ASV), format = "markdown")
 *Get the history of a sequence of the ASV  (`feature`).*
 ```{r}
 tmp_ASV <- history_by(
-  dir=filter_dir, 
-  feature="asv",
-  values="ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC"
+  dir = filter_dir, 
+  feature = "asv",
+  values = "ACTATATTTTATTTTTGGGGCTTGATCCGGAATGCTGGGCACCTCTCTAAGCCTTCTAATTCGTGCCGAGCTGGGGCACCCGGGTTCTTTAATTGGCGACGATCAAATTTACAATGTAATCGTCACAGCCCATGCTTTTATTATGATTTTTTTCATGGTTATGCCTATTATAATC"
   )
 
 knitr::kable(tmp_ASV, format = "markdown")
@@ -2613,9 +2621,9 @@ knitr::kable(tmp_ASV, format = "markdown")
 
 *Get the history of the sample (`feature`) tpos1 (`value`).*
 ```{r}
-tmp_sample <- history_by(dir=filter_dir, 
-                              feature="sample", 
-                              value=c("tpos1", "tnegtag")
+tmp_sample <- history_by(dir = filter_dir, 
+                         feature = "sample", 
+                         value = c("tpos1", "tnegtag")
                          )
 
 knitr::kable(head(tmp_sample), format = "markdown")
@@ -2650,9 +2658,9 @@ across filtering steps.
 
 ```{r}
 read_count_by_sample <- summarize_by(
-  dir=filter_dir, 
-  feature="read_count", 
-  grouped_by="sample"
+  dir = filter_dir, 
+  feature = "read_count", 
+  grouped_by = "sample"
   )
 
 knitr::kable(read_count_by_sample, format = "markdown")
@@ -2662,9 +2670,9 @@ knitr::kable(read_count_by_sample, format = "markdown")
 
 ```{r}
 asv_by_sample <- summarize_by(
-  dir=filter_dir, 
-  feature="asv", 
-  grouped_by="sample"
+  dir = filter_dir, 
+  feature = "asv", 
+  grouped_by = "sample"
   )
 
 knitr::kable(asv_by_sample, format = "markdown")
@@ -2675,9 +2683,9 @@ knitr::kable(asv_by_sample, format = "markdown")
 
 ```{r}
 asvid_by_replicate <- summarize_by(
-  dir=filter_dir, 
-  feature="asv_id", 
-  grouped_by="replicate"
+  dir = filter_dir, 
+  feature = "asv_id", 
+  grouped_by = "replicate"
   )
 
 knitr::kable(asvid_by_replicate, format = "markdown")
@@ -2762,8 +2770,8 @@ Alternatively, you can use `sum` to obtain the total read count across replicate
 ```{r pool-replicates2}
 outfile <- file.path(outdir, "PooledReplicates.csv")
 read_count_samples_df <- pool_replicates(
-  read_count_df, 
-  outfile=outfile
+  read_count = read_count_df, 
+  outfile = outfile
   )
 ```
 
@@ -2787,9 +2795,9 @@ reads in your raw input FASTQ files before starting the analysis.
 
 ```{r, eval=FALSE}
 df <- count_reads_in_dir(
-  dir=fastq_dir, 
-  pattern="_fw.fastq.gz", 
-  file_type="fastq"
+  dir = fastq_dir, 
+  pattern = "_fw.fastq.gz", 
+  file_type = "fastq"
   )
 ```
 
@@ -3099,7 +3107,7 @@ Harmonizing ASV IDs across datasets is essential.
 updated_asv_list1 <- file.path(outdir, "ASV_list_with_IDs_1.csv")
 
 read_count_df1 <- dereplicate(
-  sampleinfo_df1,
+  sampleinfo = sampleinfo_df1,
   dir = demultiplexed_dir1,
   input_asv_list = "",  # or an existing ASV list
   output_asv_list = updated_asv_list1
@@ -3109,7 +3117,7 @@ read_count_df1 <- dereplicate(
 updated_asv_list2 <- file.path(outdir, "ASV_list_with_IDs_2.csv")
 
 read_count_df2 <- dereplicate(
-  sampleinfo_df2,
+  sampleinfo = sampleinfo_df2,
   dir = demultiplexed_dir2,
   input_asv_list = updated_asv_list1,
   output_asv_list = updated_asv_list2
@@ -3119,7 +3127,7 @@ read_count_df2 <- dereplicate(
 updated_asv_list3 <- file.path(outdir, "ASV_list_with_IDs_3.csv")
 
 read_count_df3 <- dereplicate(
-  sampleinfo_df3,
+  sampleinfo = sampleinfo_df3,
   dir = demultiplexed_dir3,
   input_asv_list = updated_asv_list2,
   output_asv_list = updated_asv_list3

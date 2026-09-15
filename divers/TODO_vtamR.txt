@@ -1,26 +1,10 @@
 # Ideas for vtamR
 
-## harmonize sampleinfo, fastainfo, fastqinfo, info
 
 ## add option to delete contol samples from asv_table or read_count_df
 
 ### check min_read_count in suggest_pcr_error
 
-## path
-define by (look for path in this order)
-- package variable
-- direct setting by xxx_path argument
-- use prg in path
-
-
-# rethink the use of log, since it became central for getting miem info
-- it can be obligatory and if no filname provided, in the current dir
- (possibility of having all the output from all the tests) OR package wide definition and deactivate actively ???
- 
-# function to make a test data set => sample a proportion, or number of the reads from each fasta os fastq files
-
-
- 
 ## wrapper
 	use a file like the log_file, that contains also the name of the output
 	write a script that corresponds to the file and excute it if specified
@@ -39,20 +23,11 @@ Add link to the main tuto xxxx
 
 ## allow sortedinfo WO sample_type and habitat.
 
-## make function report_mime that extract minimum necessary information
-from the outout
-take the a series of input files and extract info present in the checklist
-of MIME. If some of the input file is not given return NA for the values that depend
-ont it. Make an output table similar to the checklist.
-
 ## improve concatenate files
 - check sequences ID
 - pool any files with any names listed in a df (outfile, infile columns); indir, outdir options
 
 ## concatenate_file is slow and uses a lot of memory
-
-
-## Expliquer 4 FP
 
 ## add explanation to tuto:
 - Dezip fichier (clique droit, extraire ici)
@@ -68,11 +43,7 @@ ont it. Make an output table similar to the checklist.
 
 ## Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
 
-## OptimizeLFNreadCountLFNvariant Avoid this warning "The cutoff value of LFNvariant function might need to be reduced.WARNING: The following ASVs have lost a high proportion of their 
-          reads during this filtering step. "
-
 ## SortReads with check_reverse in windows is long.
-
 
 Revise file stucture of the tutriel. outdir/marker/...
 Use demo_pipeline.R 
@@ -83,19 +54,11 @@ Use demo_pipeline.R
  
 ## Add info on tolerate occurrences
 
-## check examples , arguments in doc
-
 ## replace test_filters by an R script to run with demo files (make test_run() function)
 
 ## Add quality filter function
 
-## rewise Roxygen doc, using ` when necessary.
-
-## test if count_seq or count in random_seqR is more effifient for files in different size.
-
 ## dereplicate with vsearch
-
-## FilterPCRerror too long
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
 
@@ -107,8 +70,6 @@ Use demo_pipeline.R
 
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
-
-## make rdp_local
 
 # DONE 
 
