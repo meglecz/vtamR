@@ -65,23 +65,6 @@ Detailed documentation is available at **[Manual](https://people.imbe.fr/~emegle
 - Detailed tutorial on how to construct a full metabarcoding pipeline.
 
 
-## Implementation
-
-The heavy lifting of sequence analyses are done by the following third party 
-programs. They should be installed on your computer:
-
-* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
-* VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
-* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
-* SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-* PIGZ (optional)
-
-`vtamR` has been tested using the above mentioned versions, 
-but it should work with later versions.
-
-`vtamR` was tested on **Windows** and **Linux**, and should work in all 
-operating systems.
-
 ## Install `vtamR`
 
 Install `vtamR` and its CRAN dependencies using `pak`:
@@ -116,6 +99,22 @@ if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phylose
 
 ## Install third party programs
 
+The heavy lifting of sequence analyses are done by the following third party 
+programs. They should be installed on your computer. 
+⚠️ **Read the detailed installation instructions below before proceeding if you do not have experience with installing command line programs.** 
+
+* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
+* VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
+* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
+* SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
+* PIGZ (optional)
+
+`vtamR` has been tested using the above mentioned versions, 
+but it should work with later versions.
+
+`vtamR` was tested on **Windows** and **Linux**, and should work in all 
+operating systems.
+
 ### Linux
 
 * `VSEARCH` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
@@ -125,9 +124,9 @@ if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phylose
 * `PIGZ` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
-**Add the executables to your PATH** 
+**Add executables to your PATH (Optional)** 
 
-This step is optional. If third-party executables are included in your `PATH`, 
+If third-party executables are included in your `PATH`, 
 you won’t need to manually specify their locations when running functions that use them.
 
 If you prefer **not** to modify your `PATH`, be sure to provide the 
@@ -198,15 +197,15 @@ so you won’t need to specify its location when using it.
 * The executables will be installed in:
 `C:\Program Files\NCBI\blast-x.xx.x+\bin`
 
-**VSEARCH** (Optional)
+**PIGZ** (Optional)
 
 * Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
 * Decompress the zip file
 * The executable (pigz.exe) is in the pigz-win32 directory
 
-**Add executables to your PATH**
+**Add executables to your PATH (Optional)**
 
-This step is optional. If third-party executables are included in your 
+If third-party executables are included in your 
 system PATH, you won’t need to manually specify their locations when running 
 functions that use them.
 

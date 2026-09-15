@@ -7,7 +7,7 @@
 filter_pcr_error(
   read_count,
   outfile = NULL,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
@@ -26,8 +26,6 @@ filter_pcr_error(
 
 \item{outfile}{Character string specifying the CSV file to write the output
 data frame. If NULL, no file is written.}
-
-\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to use.
 If \code{0}, all available CPUs are used.}
@@ -67,12 +65,14 @@ warnings or errors.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
-To disable logging entirely, set \code{log_file = NA}.}
+To disable logging entirely, set \code{log_file = NA}.
+
+@template param_vsearch_path}
 }
 \value{
 Filtered \code{read_count} data frame with PCR error ASVs removed.

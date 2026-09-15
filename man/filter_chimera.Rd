@@ -7,7 +7,7 @@
 filter_chimera(
   read_count,
   outfile = NULL,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   by_sample = TRUE,
   filter_occurrence = FALSE,
@@ -24,8 +24,6 @@ filter_chimera(
 
 \item{outfile}{Character string specifying the CSV file to write the output
 data frame. If NULL, no file is written.}
-
-\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to use.
 If \code{0}, all available CPUs are used.}
@@ -56,12 +54,14 @@ warnings or errors.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
-To disable logging entirely, set \code{log_file = NA}.}
+To disable logging entirely, set \code{log_file = NA}.
+
+@template param_vsearch_path}
 }
 \value{
 Filtered \code{read_count} data frame with chimeric ASVs removed.
@@ -92,7 +92,6 @@ which it is flagged as a PCR error and may remain present in other samples.
 \dontrun{
 filtered_read_count_df <- filter_chimera(
   read_count_df,
-  vsearch_path = vsearch_path,
   by_sample = TRUE,
   sample_prop = 0.7,
   abskew = 4
@@ -100,7 +99,6 @@ filtered_read_count_df <- filter_chimera(
 
 filtered_read_count_df <- filter_chimera(
   read_count_df,
-  vsearch_path = vsearch_path,
   by_sample = FALSE,
   abskew = 4
 )

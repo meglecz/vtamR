@@ -8,7 +8,7 @@ demultiplex_fastq_pairs_strand_plus(
   fastqinfo,
   fastq_dir,
   outdir,
-  cutadapt_path = "cutadapt",
+  cutadapt_path = NULL,
   num_threads = 0,
   tag_to_end = T,
   primer_to_end = T,
@@ -30,8 +30,9 @@ FASTQ files (listed in the \code{fastq_fw} and \code{fastq_rv} columns of \code{
 
 \item{outdir}{Character string specifying the output directory.}
 
-\item{cutadapt_path}{Character string specifying the path to the
-\code{cutadapt} executable.}
+\item{cutadapt_path}{Optional path to the \code{cutadapt} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.cutadapt_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}

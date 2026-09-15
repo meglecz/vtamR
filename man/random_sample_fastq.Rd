@@ -14,7 +14,7 @@ random_sample_fastq(
   check_pair_counts = TRUE,
   chunk_records = 25000,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   quiet = TRUE,
   num_threads = 0,
   fast_count = TRUE,
@@ -64,9 +64,9 @@ without sampling (i.e. n > number of reads)
 Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.
 Defaults to \code{"R"}.}
 
-\item{pigz_path}{Character string giving the path to the \code{pigz}
-executable. Defaults to \code{"pigz"}. Used by \code{\link{fast_copy}}
-when the input file(s) can be copied directly to the output.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{quiet}{Logical indicating whether progress messages should be
 suppressed. Defaults to \code{TRUE}.}
@@ -91,8 +91,8 @@ directly, so it is the caller's responsibility to ensure it is correct.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }

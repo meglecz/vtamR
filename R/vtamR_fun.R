@@ -1,7 +1,7 @@
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange 
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
-#' @importFrom dplyr slice_head
+#' @importFrom dplyr slice_head pull
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
 #' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
@@ -30,8 +30,6 @@ NULL
 #'   FASTQ files (listed in `fastqinfo$fastq_fw` and 
 #'   `fastqinfo$fastq_rv`).
 #' @param outdir Character string specifying the output directory.
-#' @param vsearch_path Character string specifying the path to the 
-#'   `vsearch` executable.
 #' @param compress_method Character or logical. Compression method: 
 #'   `"pigz"`, `"gzip"`, or `"R"`.  
 #'   `"pigz"` requires `pigz` to be installed and available in the 
@@ -39,9 +37,6 @@ NULL
 #'   `"gzip"` is available on Linux systems.  
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`.
-#' @param pigz_path Character string specifying the path to the `pigz` 
-#'   executable. Only required if `compress_method = "pigz"` and it is not 
-#'   available in the system PATH.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param fastq_ascii Integer (33 or 64) specifying the ASCII offset used for 
@@ -76,12 +71,15 @@ NULL
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
+#' @template param_pigz_path
 #' 
 #' @return Data frame corresponding to the generated `fastainfo.csv` file.
 #' 
@@ -118,9 +116,9 @@ NULL
 merge_fastq_pairs <- function(fastqinfo, 
                   fastq_dir, 
                   outdir, 
-                  vsearch_path="vsearch",
+                  vsearch_path=NULL,
                   compress_method="R",
-                  pigz_path="pigz",
+                  pigz_path= NULL,
                   num_threads=0,
                   fastq_ascii=33, 
                   fastq_maxdiffs=10, 
@@ -141,14 +139,14 @@ merge_fastq_pairs <- function(fastqinfo,
 
   fastq_dir = check_dir(fastq_dir)
   outdir = check_dir(outdir)
+
+  
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
   
-  # get function name, all arguments and stat time
-#  if(!is.null(log_file)){
-#    log <- collect_log()
-#    }
   # package variable => use this for log, then user defined value, then wd/vtamR_log.csv
   log_file <- get_log_file(file = log_file)
   log <- collect_log(file = log_file)
@@ -387,10 +385,6 @@ count_seq <- function(file) {
 #' @param outfile Character string specifying the output FASTA file (including path).
 #' @param primer_fw Character string specifying the forward primer (IUPAC ambiguity codes are accepted).
 #' @param primer_rv Character string specifying the reverse primer (IUPAC ambiguity codes are accepted).
-#' @param vsearch_path Character string specifying the path to the 
-#'   `vsearch` executable. 
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable. 
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param compress_method Character or logical. Compression method: 
@@ -401,9 +395,6 @@ count_seq <- function(file) {
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`.  
 #'   Only used if `check_reverse = TRUE`.
-#' @param pigz_path Character string specifying the path to the `pigz` 
-#'   executable. Only required if `compress_method = "pigz"` and it is not 
-#'   available in the system PATH.
 #' @param check_reverse Logical. If `TRUE`, also check reverse-complemented 
 #'   sequences from the input FASTA file.
 #' @param primer_to_end Logical. If `TRUE`, primers are assumed to be 
@@ -419,6 +410,10 @@ count_seq <- function(file) {
 #'   output CSV files.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#' 
+#' @template param_vsearch_path
+#' @template param_cutadapt_path
+#' @template param_pigz_path
 #' 
 #' @return `NULL`. Produces an output FASTA file.
 #' 
@@ -442,10 +437,10 @@ trim_primers_file <- function(fasta,
                                outfile, 
                                primer_fw, 
                                primer_rv, 
-                               cutadapt_path="cutadapt", 
-                               vsearch_path="vsearch", 
+                               cutadapt_path=NULL, 
+                               vsearch_path=NULL, 
                                compress_method="R",
-                               pigz_path="pigz",
+                               pigz_path= NULL,
                                num_threads = 0,
                                check_reverse=F, 
                                primer_to_end=T, 
@@ -459,6 +454,10 @@ trim_primers_file <- function(fasta,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
   
   if(fasta == outfile){
     msg <- paste("Input and output filenames are identical:", fasta, "Please, change one of them!", sep=" ")
@@ -578,10 +577,6 @@ trim_primers_file <- function(fasta,
 #'   input FASTA files.
 #' @param outdir Character string specifying the output directory for trimmed 
 #'   FASTA files.
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable. 
-#' @param vsearch_path Character string specifying the path to the 
-#'   `vsearch` executable.
 #' @param check_reverse Logical. If `TRUE`, also check reverse-complemented 
 #'   sequences from the input FASTA files.
 #' @param primer_to_end Logical. If `TRUE`, primers are assumed to be 
@@ -603,21 +598,22 @@ trim_primers_file <- function(fasta,
 #'   `"gzip"` is available on Linux systems.  
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`. 
-#' @param pigz_path Character string specifying the path to the `pigz` 
-#'   executable. Only required if `compress_method = "pigz"` and it is not 
-#'   available in the system PATH.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
+#' @template param_cutadapt_path
+#' @template param_pigz_path
 #' 
 #' @return Data frame. The updated `fastainfo` data frame with modified 
 #'   file names and sequence counts.
@@ -645,9 +641,9 @@ trim_primers <- function(fastainfo,
                        outdir, 
                        compress=F, 
                        compress_method="R",
-                       pigz_path="pigz",
-                       cutadapt_path="cutadapt", 
-                       vsearch_path="vsearch", 
+                       pigz_path = NULL,
+                       cutadapt_path = NULL, 
+                       vsearch_path = NULL, 
                        check_reverse=F, 
                        primer_to_end=T, 
                        cutadapt_error_rate=0.1, 
@@ -660,6 +656,10 @@ trim_primers <- function(fastainfo,
   
   fasta_dir = check_dir(fasta_dir)
   outdir = check_dir(outdir)
+  
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -744,10 +744,6 @@ trim_primers <- function(fastainfo,
 #'   `habitat` (optional), `replicate`, `fasta`.
 #' @param fasta_dir Character string specifying the directory containing input 
 #'   FASTA files (listed in the `fasta` column of `fastainfo`).
-#' @param vsearch_path Character string specifying the path to the 
-#'   `vsearch` executable. 
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable. 
 #' @param compress_method Character or logical. Compression method: 
 #'   `"pigz"`, `"gzip"`, or `"R"`.  
 #'   `"pigz"` requires `pigz` to be installed and available in the 
@@ -756,9 +752,6 @@ trim_primers <- function(fastainfo,
 #'   `"R"` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`.  
 #'   Only needed if `check_reverse = TRUE`.
-#' @param pigz_path Character string specifying the path to the `pigz` 
-#'   executable. Only required if `compress_method = "pigz"` and it is not 
-#'   available in the system PATH.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param outdir Character string specifying the output directory.
@@ -784,12 +777,16 @@ trim_primers <- function(fastainfo,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
+#' @template param_cutadapt_path
+#' @template param_pigz_path
 #' 
 #' @return Data frame corresponding to the output `sampleinfo.csv` file 
 #'   and one FASTA file per tag combination for each input FASTA file, 
@@ -815,10 +812,10 @@ trim_primers <- function(fastainfo,
 demultiplex_and_trim_fasta <- function(fastainfo, 
                       fasta_dir, 
                       outdir, 
-                      cutadapt_path="cutadapt",
-                      vsearch_path="vsearch", 
+                      cutadapt_path = NULL,
+                      vsearch_path = NULL, 
                       compress_method="R",
-                      pigz_path="pigz",
+                      pigz_path = NULL,
                       num_threads=0,
                       check_reverse=FALSE, 
                       tag_to_end=TRUE, 
@@ -837,6 +834,9 @@ demultiplex_and_trim_fasta <- function(fastainfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -1044,8 +1044,6 @@ return(df)
 #'   `habitat` (optional), `replicate`, `fasta`.
 #' @param fasta_dir Character string specifying the directory containing input 
 #'   FASTA files (listed in the `fasta` column of `fastainfo`).
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param outdir Character string specifying the output directory.
@@ -1065,6 +1063,8 @@ return(df)
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#'   
+#' @template param_cutadapt_path
 #' 
 #' @return Data frame corresponding to the output `sampleinfo.csv` file and one 
 #'   FASTA file per tag combination for each input FASTA file, containing 
@@ -1089,7 +1089,7 @@ return(df)
 demultiplex_and_trim_strand_plus <- function(fastainfo, 
                                  fasta_dir, 
                                  outdir, 
-                                 cutadapt_path="cutadapt", 
+                                 cutadapt_path = NULL, 
                                  num_threads=0,
                                  tag_to_end=T, 
                                  primer_to_end=T, 
@@ -1104,6 +1104,8 @@ demultiplex_and_trim_strand_plus <- function(fastainfo,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  
   fasta_dir = check_dir(fasta_dir)
   outdir = check_dir(outdir)
   
@@ -1390,8 +1392,8 @@ reverse_complement <- function(sequence){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -1699,8 +1701,8 @@ check_one_to_one <- function(df){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -1793,8 +1795,8 @@ update_asv_list <- function(asv_list1,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -1891,8 +1893,8 @@ filter_contaminant <- function (read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -1962,8 +1964,8 @@ filter_asv_global <- function (read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2029,8 +2031,8 @@ filter_occurrence_read_count <- function (read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2120,8 +2122,8 @@ filter_occurrence_sample <- function (read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2276,8 +2278,8 @@ compute_asv_specific_cutoff <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2469,8 +2471,8 @@ filter_occurrence_variant <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2526,8 +2528,8 @@ pool_filters <- function(... , outfile=NULL, sep=",", log_file=NULL){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2599,8 +2601,8 @@ filter_min_replicate <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2738,8 +2740,8 @@ get_stop_codons <- function(genetic_code=5){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2891,12 +2893,12 @@ write_fasta_vector <- function(sequences, filename, seq_as_id=F) {
 #'   below this threshold are flagged as PCR errors.
 #' @param max_mismatch Positive integer specifying the maximum number of 
 #'   mismatches (including gaps) used to define similarity between ASVs.
-#' @param vsearch_path Character string specifying the path to the 
-#'   `vsearch` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#'   
+#' @template param_vsearch_path
 #' 
 #' @return Input data frame with an added `PCRerror` column 
 #'   (1 = potential PCR error, 0 = otherwise).
@@ -2909,7 +2911,6 @@ write_fasta_vector <- function(sequences, filename, seq_as_id=F) {
 #' 
 #' unique_asv_df_flagged <- flag_pcr_error(
 #'   unique_asv_df,
-#'   vsearch_path = vsearch_path,
 #'   pcr_error_var_prop = 0.2,
 #'   max_mismatch = 2
 #' )
@@ -2918,7 +2919,7 @@ write_fasta_vector <- function(sequences, filename, seq_as_id=F) {
 #' @export
 #' 
 flag_pcr_error <- function(unique_asv_df,
-                                 vsearch_path="vsearch", 
+                                 vsearch_path=NULL, 
                                  num_threads=0,
                                  pcr_error_var_prop=0.1, 
                                  max_mismatch=1,
@@ -2928,6 +2929,9 @@ flag_pcr_error <- function(unique_asv_df,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
+  
   # no ASV in the unique_asv_df => return a dataframe with 0 for all ASVs in PCRerror column
   if(length(unique_asv_df$asv) == 0){ 
     unique_asv_df$PCRerror <- rep(0, length(unique_asv_df$asv))
@@ -3063,7 +3067,6 @@ flag_pcr_error <- function(unique_asv_df,
 #'   threshold in an individual sample are ignored.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
-#' @param vsearch_path Character string specifying the path to the `vsearch` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
 #' @param sep Character string specifying the field separator used in input and 
@@ -3074,12 +3077,14 @@ flag_pcr_error <- function(unique_asv_df,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#'   @template param_vsearch_path
 #'   
 #' @return Filtered `read_count` data frame with PCR error ASVs removed.
 #' 
@@ -3110,7 +3115,7 @@ flag_pcr_error <- function(unique_asv_df,
 
 filter_pcr_error <- function(read_count,
                                  outfile=NULL, 
-                                 vsearch_path="vsearch", 
+                                 vsearch_path=NULL, 
                                  num_threads=0,
                                  pcr_error_var_prop=0.1,
                                  max_mismatch=1, 
@@ -3126,6 +3131,7 @@ filter_pcr_error <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -3288,11 +3294,12 @@ filter_pcr_error <- function(read_count,
 #'   ASVs must be unique.
 #' @param abskew Positive integer specifying the minimum abundance ratio required 
 #'   between parent sequences and a chimera candidate.
-#' @param vsearch_path Character string specifying the path to the `vsearch` executable.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
+#' 
+#' @template param_vsearch_path
 #' 
 #' @return Input data frame with an added `chimera` column 
 #'   (1 = potential chimera, 0 = otherwise).
@@ -3308,12 +3315,18 @@ filter_pcr_error <- function(read_count,
 #' 
 #' @export
 #'
-flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2, 
-                        quiet=TRUE, num_threads=0){
+flag_chimera <- function(unique_asv_df, 
+                         vsearch_path = NULL, 
+                         abskew=2, 
+                         quiet=TRUE, 
+                         num_threads=0){
 
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
+  
   # no ASV in the unique_asv_df => return a data frame with 0 for all ASVs in Chimera column
   if(length(unique_asv_df$asv) == 0){ 
     unique_asv_df$chimera <- rep(0, length(unique_asv_df$asv))
@@ -3418,7 +3431,6 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   to be removed.
 #' @param outfile Character string specifying the CSV file to write the output 
 #'   data frame. If NULL, no file is written.
-#' @param vsearch_path Character string specifying the path to the `vsearch` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
 #' @param sep Character string specifying the field separator used in input and 
@@ -3429,12 +3441,14 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#'  @template param_vsearch_path
 #'   
 #' @return Filtered `read_count` data frame with chimeric ASVs removed.
 #' 
@@ -3442,7 +3456,6 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' \dontrun{
 #' filtered_read_count_df <- filter_chimera(
 #'   read_count_df,
-#'   vsearch_path = vsearch_path,
 #'   by_sample = TRUE,
 #'   sample_prop = 0.7,
 #'   abskew = 4
@@ -3450,7 +3463,6 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 #' 
 #' filtered_read_count_df <- filter_chimera(
 #'   read_count_df,
-#'   vsearch_path = vsearch_path,
 #'   by_sample = FALSE,
 #'   abskew = 4
 #' )
@@ -3462,7 +3474,7 @@ flag_chimera <- function(unique_asv_df, vsearch_path="vsearch", abskew=2,
 filter_chimera <- function(
   read_count, 
   outfile=NULL, 
-  vsearch_path="vsearch",
+  vsearch_path = NULL,
   num_threads=0,
   by_sample=TRUE, 
   filter_occurrence=FALSE,
@@ -3476,6 +3488,8 @@ filter_chimera <- function(
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -3681,8 +3695,8 @@ renkonen_dist <- function(df1, df2){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -3804,8 +3818,8 @@ compute_renkonen_distances <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -3922,8 +3936,8 @@ filter_replicate <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -4030,7 +4044,6 @@ pool_replicates <- function(read_count,
 #'   `tax_id`, `parent_tax_id`, `rank`, `name_txt`, `old_tax_id` (merged tax IDs), 
 #'   `taxlevel` (8: species ... 0: root).
 #' @param blast_db Character string specifying the BLAST database name.
-#' @param blast_path Character string specifying the path to the BLAST executable.
 #' @param ltg_params Data frame or path to a CSV file defining identity thresholds 
 #'   (`pid`) and associated parameters (`pcov`, `phit`, `taxn`, `seqn`, `refres`, `ltgres`).
 #' @param outfile Character string specifying the CSV file to write the output 
@@ -4049,12 +4062,14 @@ pool_replicates <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'  
+#'  @template param_blast_path#'
 #'   
 #' @return Data frame with columns: 
 #' `asv_id`, `ltg_taxid`, `ltg_name`, `ltg_rank`, `ltg_rank_index`,
@@ -4079,20 +4094,21 @@ assign_taxonomy_ltg <- function(
     asv, 
     taxonomy, 
     blast_db, 
-    blast_path="blastn", 
-    ltg_params=NULL, 
-    outfile=NULL, 
-    fill_lineage=TRUE,
-    num_threads=0, 
-    tax_sep="\t", 
-    sep=",",
-    quiet=TRUE,
-    log_file=NULL
+    blast_path = NULL, 
+    ltg_params = NULL, 
+    outfile = NULL, 
+    fill_lineage = TRUE,
+    num_threads = 0, 
+    tax_sep = "\t", 
+    sep = ",",
+    quiet = TRUE,
+    log_file = NULL
     ){
 
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  blast_path <- get_path("blast", path = blast_path)
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -4271,13 +4287,14 @@ return(taxres_df)
 #' @param df Data frame containing `asv` and `asv_id` columns.
 #' @param blast_db Character string specifying the BLAST database (including path if needed).
 #' @param outdir Character string specifying the output directory.
-#' @param blast_path Character string specifying the path to the BLAST executable.
 #' @param qcov_hsp_perc Real number between 0 and 100 specifying the minimum query coverage.
 #' @param perc_identity Real number between 0 and 100 specifying the minimum percentage identity.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and only show 
 #'   warnings or errors.
+#'   
+#' @template param_blast_path
 #' 
 #' @return Data frame containing BLAST results with columns: `qseqid`, `pident`, 
 #'   `qcovhsp`, `staxids`.
@@ -4287,7 +4304,6 @@ return(taxres_df)
 #' run_blast(
 #'   df = read_count_df,
 #'   blast_db = "xxxxxxxx",
-#'   blast_path = "blastn",
 #'   qcov_hsp_perc = 80,
 #'   perc_identity = 90,
 #'   num_threads = 4
@@ -4299,7 +4315,7 @@ return(taxres_df)
 run_blast <- function(df, 
                       blast_db, 
                       outdir, 
-                      blast_path="blastn", 
+                      blast_path = NULL, 
                       qcov_hsp_perc=70, 
                       perc_identity=70, 
                       num_threads=0, 
@@ -4309,6 +4325,8 @@ run_blast <- function(df,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  blast_path <- get_path("blast", path = blast_path)
+  
   outdir = check_dir(outdir)
   
   # make fasta file with unique reads; use numbers as ids  
@@ -4848,8 +4866,8 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -5116,7 +5134,6 @@ write_asv_table <- function(read_count,
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`.
 #' @param mock_composition Data frame or CSV file with columns: 
 #'   `sample`, `action` (`keep` or `tolerate`), `asv`.
-#' @param vsearch_path Character string specifying the path to vsearch executables.
 #' @param num_threads Positive integer specifying the number of CPU threads to use. 
 #'   If `0`, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
@@ -5132,13 +5149,15 @@ write_asv_table <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
 #'   
+#' @template param_vsearch_path
+#' 
 #' @return Data frame with the following columns: `sample`, `expected_read_count`,
 #'   `unexpected_read_count`, `pcr_error_var_prop`, `expected_asv_id`, 
 #'   `unexpected_asv_id`, `expected_asv`, `unexpected_asv`.
@@ -5147,7 +5166,6 @@ write_asv_table <- function(read_count,
 #' suggest_pcr_error_cutoff(
 #'   read_count = read_count_df,
 #'   mock_composition = "data/mock_composition.csv",
-#'   vsearch_path = vsearch_path,
 #'   max_mismatch = 2,
 #'   min_read_count = 5
 #' )
@@ -5157,7 +5175,7 @@ write_asv_table <- function(read_count,
 #'
 suggest_pcr_error_cutoff <- function(read_count, 
                              mock_composition, 
-                             vsearch_path= "vsearch", 
+                             vsearch_path = NULL, 
                              num_threads=0,
                              sep=",", 
                              outfile=NULL, 
@@ -5170,6 +5188,8 @@ suggest_pcr_error_cutoff <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -5412,8 +5432,8 @@ suggest_pcr_error_cutoff <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -5595,8 +5615,8 @@ suggest_sample_cutoff <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -6016,8 +6036,8 @@ detect_false_negatives <- function(read_count_samples, mock_composition,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -6240,8 +6260,8 @@ suggest_variant_readcount_cutoffs <- function(read_count,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -6356,8 +6376,6 @@ pool_datasets <- function(files,
 #' `centroid` columns.
 #' @param method Character string specifying how read counts are aggregated
 #' within groups. Must be one of `"mean"`, `"max"`, `"sum"`, or `"min"`.
-#' @param vsearch_path Character string specifying the path to the `vsearch`
-#' executable.
 #' @param num_threads Positive integer specifying the number of CPUs to use.
 #' If 0, all available CPUs are used.
 #' @param sep Character string specifying the field separator used in input
@@ -6368,12 +6386,14 @@ pool_datasets <- function(files,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
 #' 
 #' @return A data frame with columns `asv_id`, `sample`, `read_count`,
 #' `asv`, and optional `replicate`, where ASVs belonging to the same group
@@ -6396,11 +6416,17 @@ pool_markers <- function(files,
                          outfile=NULL, 
                          asv_with_centroids=NULL,
                          method="mean", 
-                         vsearch_path="vsearch", 
+                         vsearch_path = NULL, 
                          num_threads=0,
                          sep=",", 
                          quiet=T,
                          log_file=NULL){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -6459,7 +6485,7 @@ pool_markers <- function(files,
                      group = FALSE,
                      by_sample = FALSE,
                      method = "vsearch",
-                     path = vsearch_path,
+                     vsearch_path = vsearch_path,
                      identity = 1,
                      quiet = TRUE
                      )
@@ -6853,16 +6879,14 @@ read_fasta_to_df <- function(file, dereplicate=F){
 #'
 #' # Count sequences in a FASTA file
 #' count_reads("sequences.fasta", file_type = "fasta")
-#'
-#' # Use the chunk-based implementation
-#' count_reads("reads.fastq.gz", file_type = "fastq",
-#'             count_by_read = TRUE)
 #' }
 #'
 #' @export
 #' 
-count_reads <- function(files, file_type="fastq", 
-                        chunk_lines=1e5, fast_count = TRUE){
+count_reads <- function(files, 
+                        file_type="fastq", 
+                        chunk_lines=1e5, 
+                        fast_count = TRUE){
   
   seq_counts <- numeric(length(files))
 
@@ -6909,8 +6933,7 @@ count_reads <- function(files, file_type="fastq",
       }
   #    seq_counts[i] <- seq_count
     }else{
-      print("WARNING: This command is quicker on linux-like systems using fast_count == TRUE.")
-      
+
       if(file_type == "fasta"){ # can deal with compressed and uncompressed files
         
         con <- open_any(file, "rt")
@@ -6949,6 +6972,8 @@ count_reads <- function(files, file_type="fastq",
   return(seq_counts)
 }
 
+
+
 #' Count reads in files within a directory
 #' 
 #' Count the number of sequences in FASTA or FASTQ files, or the number of lines 
@@ -6963,9 +6988,17 @@ count_reads <- function(files, file_type="fastq",
 #' @param pattern Regular expression: pattern used to select files in the directory. Only files whose names match the pattern are processed.
 #' @param file_type Character string specifying file type: `"fasta"` or `"fastq"`.
 #'   For any other value, the function returns the number of lines in each file.
-#' @param sep Field separator character in input and output CSV files.
 #' @param outfile Character string: output CSV file name. If NULL, no file is written.
+#' @param chunk_lines Integer specifying the maximum number of lines to read
+#'   at a time when using the chunk-based counting method. Defaults to
+#'   \code{1e5}. Passed to \code{count_reads()}.
+#' @param fast_count Logical value controlling the counting method. When
+#'   \code{TRUE} on Linux-like systems, shell commands are used for faster
+#'   counting. When \code{FALSE}, the chunk-based R implementation is used.
+#'   Passed to \code{count_reads()}.
+#' @param sep Field separator character in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
+#' 
 #' @return Data frame with two columns: `filename`, `read_count`.
 #' @examples
 #' \dontrun{
@@ -6978,6 +7011,8 @@ count_reads_in_dir<- function(dir,
                          pattern=".", 
                          file_type="fasta", 
                          outfile=NULL, 
+                         chunk_lines=1e5, 
+                         fast_count = TRUE, 
                          sep=",", 
                          quiet=T
                          ){
@@ -6994,7 +7029,10 @@ count_reads_in_dir<- function(dir,
     if(!quiet){
       print(file_p)
     }
-    n <- count_reads(file_p, file_type=file_type)
+    n <- count_reads(file_p, 
+                     file_type=file_type,
+                     chunk_lines=chunk_lines, 
+                     fast_count = fast_count)
     df[i, "read_count"] <- n
   }
   
@@ -7553,7 +7591,6 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #'   2: kingdom, 1: domain, 0: root).
 #'   A COInr taxonomy file can be used.
 #' @param outdir Character string: output directory for generated files.
-#' @param blast_path Character string: path to BLAST executable.
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and show only warnings or errors.
@@ -7561,13 +7598,15 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`
-#'   
+#'  
+#' @template param_blast_path
+#' 
 #' @return Data frame with columns: `sample`, `action`, `asv`, `taxon`, `asv_id`.
 #' @examples
 #' \dontrun{
@@ -7575,7 +7614,6 @@ write_fasta_with_counts <- function(df, outfile, read_count=FALSE) {
 #'   read_count = read_count_df,
 #'   fas = "reference.fasta",
 #'   taxonomy = "taxonomy.tsv",
-#'   blast_path = blast_path,
 #'   sampleinfo = sampleinfo_df
 #' )
 #' }
@@ -7587,12 +7625,17 @@ match_variants_to_mock_species <- function(
     sampleinfo,
     taxonomy,
     outdir,
-    blast_path = "blastn",
+    blast_path = NULL,
     num_threads=0,
     sep=",",
     quiet=TRUE,
     log_file=NULL
 ){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  blast_path <- get_path("blast", path = blast_path)
   
   ##### Make blast db from mock fasta
   
@@ -7663,7 +7706,8 @@ match_variants_to_mock_species <- function(
                     blast_path=blast_path, 
                     ltg_params=ltg_params_df, 
                     quiet=quiet, 
-                    fill_lineage=TRUE)
+                    fill_lineage=TRUE,
+                    log_file = NA)
   
   
   
@@ -7882,7 +7926,6 @@ random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TR
 #' @param outfile Character string: path to the output FASTA file. If it ends in `.gz`,
 #'   the output will be gzip-compressed.
 #' @param n Positive integer: number of sequences to randomly sample.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
 #' @param randseed Integer or NULL: random seed for sampling. If NULL or 0 (default),
 #'   a pseudo-random seed is used. A non-zero seed ensures reproducible results.
 #' @param compress_method Character or logical: compression method used for output files.
@@ -7892,17 +7935,18 @@ random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TR
 #'   - `"gzip"` is Linux-only.
 #'   - `"R"` uses `R.utils` and is cross-platform but slower.
 #'   Performance (fastest → slowest): `pigz` > `gzip` > `R`.
-#' @param pigz_path Character string: path to the `pigz` executable. Only required if
-#'   `pigz` is used and not available in the system PATH.
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
 #' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
+#' 
+#' @template param_vsearch_path
+#' @template param_pigz_path
+#' 
 #' @return Invisibly returns the number of sequences written to the output file.
 #' @examples
 #' \dontrun{
 #' random_sample_linux(
 #'   fasta = "all_sequences.fasta.gz",
 #'   outfile = "subset_100.fasta.gz",
-#'   vsearch_path = "vsearch",
 #'   n = 100,
 #'   randseed = 123,
 #'   quiet = FALSE
@@ -7913,9 +7957,9 @@ random_sample_r <- function(fasta, outfile, n=1000000, randseed = NULL, quiet=TR
 random_sample_linux <- function(fasta, 
                                    outfile, 
                                    n=1000000, 
-                                   vsearch_path="vsearch", 
+                                   vsearch_path= NULL, 
                                    compress_method= "R",
-                                   pigz_path="pigz",
+                                   pigz_path= NULL,
                                    randseed = NULL, 
                                    quiet=TRUE, 
                                    num_threads=0) {
@@ -7923,6 +7967,13 @@ random_sample_linux <- function(fasta,
   if(!is_linux()){
     stop("This parameter setting is suppored only on linux")
   }
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
   
   check_dir(outfile, is_file=TRUE)
   
@@ -8025,7 +8076,6 @@ random_sample_linux <- function(fasta,
 #' @param outdir Character string: directory where output FASTA files are written.
 #' @param use_vsearch Logical: if TRUE, uses VSEARCH for subsampling (Linux only).
 #'   Otherwise uses a cross-platform R-based implementation.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
 #' @param randseed Integer or NULL: random seed for reproducibility. If NULL or 0,
 #'   a pseudo-random seed is used. A non-zero seed ensures reproducible results.
 #' @param num_threads Positive integer: number of CPU threads to use. If 0, all available CPUs are used.
@@ -8036,21 +8086,22 @@ random_sample_linux <- function(fasta,
 #'   - `"gzip"`: slower; available on Linux-like systems
 #'   - `"R"`: cross-platform; uses `R.utils` but is slowest
 #'   Performance order: `pigz` > `gzip` > `R`
-#' @param pigz_path Character string: path to the `pigz` executable. Required only if `pigz`
-#'   is used and not available in the system PATH.
 #' @param quiet Logical: if TRUE, suppress informational messages; only warnings and errors are shown.
 #' @param sep Character string: field separator used in input and output CSV files.
 #' @param log_file Character string specifying the path to the CSV log file.
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
-#'   
+#'  
+#' @template param_vsearch_path
+#' @template param_pigz_path
+#' 
 #' @return Updated input data frame with adjusted file names (if needed) and updated read counts.
 #' @examples
 #' \dontrun{
@@ -8073,10 +8124,10 @@ subsample_fasta <- function(fastainfo,
                        fasta_dir,
                        outdir, 
                        use_vsearch=FALSE,
-                       vsearch_path="vsearch",
+                       vsearch_path = NULL,
                        randseed=NULL, 
                        compress_method="R",
-                       pigz_path="pigz",
+                       pigz_path= NULL,
                        num_threads=0,
                        compress=FALSE, 
                        sep=",",
@@ -8085,6 +8136,14 @@ subsample_fasta <- function(fastainfo,
   
   fasta_dir = check_dir(fasta_dir)
   outdir = check_dir(outdir)
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
+
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -8173,8 +8232,8 @@ subsample_fasta <- function(fastainfo,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -8287,8 +8346,6 @@ concatenate_files <- function(dirs,
 #'   `fastq_rv`
 #' @param fastq_dir Character string specifying the directory containing input 
 #'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param outdir Character string specifying the output directory.
@@ -8304,6 +8361,8 @@ concatenate_files <- function(dirs,
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param quiet Logical. If `TRUE`, suppress informational messages and 
 #'   only display warnings or errors.
+#'   
+#' @template param_cutadapt_path
 #' 
 #' @return Data frame similar to the input `fastqinfo` file, 
 #'   but contains the output fastq file names and read counts.
@@ -8326,7 +8385,7 @@ concatenate_files <- function(dirs,
 demultiplex_fastq_pairs_strand_plus <- function(fastqinfo, 
                                                 fastq_dir, 
                                                 outdir, 
-                                                cutadapt_path="cutadapt", 
+                                                cutadapt_path = NULL, 
                                                 num_threads=0,
                                                 tag_to_end=T, 
                                                 primer_to_end=T, 
@@ -8336,10 +8395,17 @@ demultiplex_fastq_pairs_strand_plus <- function(fastqinfo,
                                                 quiet=T
 ){
   
+  if (fastq_dir == outdir) {
+    msg <- "ERROR: `fastq_dir` and `outdir` must be different to avoid overwriting input files."
+    stop(msg)
+  }
+  
   # do the complete job of demultiplexing and trimming of input file without checking the reverse sequences
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  
 
   fastq_dir = check_dir(fastq_dir)
   outdir = check_dir(outdir)
@@ -8351,6 +8417,8 @@ demultiplex_fastq_pairs_strand_plus <- function(fastqinfo,
   }else{
     fastqinfo_df <- fastqinfo
   }
+  fastqinfo_df <- fastqinfo_df %>%
+    select(-read_count)
   
   check_file_info(fastqinfo_df, fastq_dir, file_type="fastqinfo", sep=",", quiet=TRUE)
   
@@ -8628,8 +8696,6 @@ write_cutadapt_adapter_fastq <- function(
 #'   `fastq_rv`
 #' @param fastq_dir Character string specifying the directory containing input 
 #'   FASTQ files (listed in the `fastq_fw` and `fastq_rv` columns of `fastqinfo`).
-#' @param cutadapt_path Character string specifying the path to the 
-#'   `cutadapt` executable. 
 #' @param compress Logical. If `TRUE`, compress output files using gzip.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
@@ -8651,13 +8717,15 @@ write_cutadapt_adapter_fastq <- function(
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
-#'   
+#'  
+#' @template param_cutadapt_path
+#'  
 #' @return Data frame similar to the input `fastqinfo` file, 
 #'   but contains the output fastq file names and read counts.
 #' 
@@ -8679,7 +8747,7 @@ demultiplex_and_trim_fastq <- function(
   fastqinfo, 
   fastq_dir, 
   outdir, 
-  cutadapt_path="cutadapt",
+  cutadapt_path= NULL,
   check_reverse=FALSE, 
   num_threads=0,
   tag_to_end=TRUE, 
@@ -8696,6 +8764,9 @@ demultiplex_and_trim_fastq <- function(
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  cutadapt_path <- get_path("cutadapt", path = cutadapt_path)
+  
+  
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
   # get function name, all arguments and stat time. If log_file == NA, no log
@@ -8852,8 +8923,8 @@ demultiplex_and_trim_fastq <- function(
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -8978,11 +9049,6 @@ concat_files <- function(files, outfile,
 #'  Defaults to `"R"`. Only relevant when a file has
 #'   fewer sequences than required and is copied to the output directory with
 #'   a different compression state than the input.
-#' @param pigz_path Character string: path to the `pigz` executable. Only required if
-#'   `pigz` is used and not available in the system PATH. 
-#'   Only relevant when a file has
-#'   fewer sequences than required and is copied to the output directory with
-#'   a different compression state than the input.
 #' @param num_threads  Positive integer: number of CPU threads to use. 
 #'   If 0, all available CPUs are used. Only relevant when a file has
 #'   fewer sequences than required and is copied to the output directory with
@@ -8998,12 +9064,14 @@ concat_files <- function(files, outfile,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_pigz_path
 #'  
 #' @return A data frame containing the updated information table. Input sequence
 #'   file columns are replaced with the names of the subsampled output
@@ -9026,6 +9094,10 @@ concat_files <- function(files, outfile,
 #' FASTA files are processed with [random_sample_fasta()], while paired-end
 #' FASTQ files are processed with [random_sample_fastq()]. For paired-end FASTQ
 #' data, forward and reverse reads are sampled together to preserve pairing.
+#' 
+#' The function determines whether the input describes FASTA files or
+#' paired-end FASTQ files and writes the combined updated information table
+#' to `fastainfo.csv` or `fastqinfo.csv`, respectively.
 #'
 #' @seealso
 #' [random_sample_fasta()], [random_sample_fastq()], [count_reads()],
@@ -9065,7 +9137,8 @@ random_sample_batch <- function(info, dir, outdir,
                                 n = NULL, p = NULL, N = NULL,
                                 chunk_lines = 1e5, randseed = NULL,
                                 compress = FALSE,
-                                compress_method = "R", pigz_path = "pigz", 
+                                compress_method = "R", 
+                                pigz_path = NULL, 
                                 num_threads = 0, 
                                 fast_count = TRUE,
                                 sep = ",",
@@ -9075,6 +9148,17 @@ random_sample_batch <- function(info, dir, outdir,
   
   #### check if exactly one of the mutually exclusive parameters are defined, and stop if not
   check_one_of(n = n, p = p, N = N)
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
+  
+  if (dir == outdir) {
+    msg <- "ERROR: `dir` and `outdir` must be different to avoid overwriting input files."
+    stop(msg)
+  }
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -9205,8 +9289,8 @@ random_sample_batch <- function(info, dir, outdir,
                           quiet = quiet,
                           num_threads = num_threads,
                           fast_count = fast_count,
-                          total_reads = files[i, "read_count"],
-                          log_file = NA) # do not recount sequences
+                          total_reads = files[i, "read_count"], # do not recount sequences
+                          log_file = NA) 
       
     }
     # update and write info file
@@ -9353,8 +9437,6 @@ open_any <- function(path, mode) {
 #' @param compress_method Character string specifying the compression method.
 #'   Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.
 #'   Defaults to \code{"R"}.
-#' @param pigz_path Character string giving the path to the \code{pigz}
-#'   executable. Defaults to \code{"pigz"}. Only necessary if compress_method is "pigz".
 #' @param num_threads Integer specifying the number of threads to use when
 #'   \code{compress_method = "pigz"}. A value of \code{0} uses all detected
 #'   CPU cores. Defaults to \code{0}.
@@ -9362,7 +9444,9 @@ open_any <- function(path, mode) {
 #'   suppressed. Defaults to \code{TRUE}.
 #'
 #' @return Invisibly returns \code{TRUE} if the operation succeeds.
-#'
+#' 
+#' @template param_pigz_path
+#' 
 #' @details
 #' The compression status of a file is determined from whether its filename
 #' ends in \code{.gz}.
@@ -9401,8 +9485,17 @@ open_any <- function(path, mode) {
 #'
 #' @export
 fast_copy <- function(file, outfile,  
-                      pigz_path="pigz", compress_method = "R",
-                      num_threads = 0, quiet=TRUE) {
+                      pigz_path= NULL, 
+                      compress_method = "R",
+                      num_threads = 0, 
+                      quiet=TRUE) {
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
+  
   file_gz <- grepl("\\.gz$", file)
   outfile_gz <- grepl("\\.gz$", outfile)
   
@@ -9461,9 +9554,6 @@ fast_copy <- function(file, outfile,
 #'   used by \code{\link{fast_copy}} when the complete input file is copied.
 #'   Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.
 #'   Defaults to \code{"R"}.
-#' @param pigz_path Character string giving the path to the \code{pigz}
-#'   executable. Defaults to \code{"pigz"}. Used by \code{\link{fast_copy}} if
-#'   the complete input file needs to be copied.
 #' @param num_threads Integer specifying the number of threads to use when
 #'   \code{compress_method = "pigz"}. A value of \code{0} uses all detected
 #'   CPU cores. Defaults to \code{0}.
@@ -9483,12 +9573,15 @@ fast_copy <- function(file, outfile,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_pigz_path
+#' 
 #' @return Invisibly returns the number of sequences requested by \code{n}.
 #'   If \code{n} is greater than or equal to the total number of sequences,
 #'   the total number of sequences in the input file is returned instead.
@@ -9542,13 +9635,24 @@ fast_copy <- function(file, outfile,
 #' }
 #'
 #' @export
-random_sample_fasta <- function(fasta, outfile, n = 1e6, randseed = NULL,
+random_sample_fasta <- function(fasta, 
+                                outfile, 
+                                n = 1e6, 
+                                randseed = NULL,
                                 chunk_lines = 1e5,
-                                compress_method = "R", pigz_path = "pigz", 
-                                num_threads = 0, quiet = TRUE,
+                                compress_method = "R", 
+                                pigz_path = NULL, 
+                                num_threads = 0, 
+                                quiet = TRUE,
                                 fast_count = TRUE,
                                 total_reads = NULL,
                                 log_file = NULL) {
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -9570,7 +9674,7 @@ random_sample_fasta <- function(fasta, outfile, n = 1e6, randseed = NULL,
   }
   
   if (n >= total) {
-    warning(sprintf("WARNING: %s contains %d sequences.\nThe input file is copied to output.",
+    warning(sprintf("%s contains %d sequences. The input file is copied to output.\n",
                     fasta, total), call. = FALSE)
     fast_copy(file = fasta, outfile = outfile, pigz_path= pigz_path, compress_method = compress_method,
               num_threads = num_threads, quiet = quiet)
@@ -9888,9 +9992,6 @@ extract_fastq_records <- function(fastq, outfile, keep_lookup,
 #'   without sampling (i.e. n > number of reads)
 #'   Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.
 #'   Defaults to \code{"R"}.
-#' @param pigz_path Character string giving the path to the \code{pigz}
-#'   executable. Defaults to \code{"pigz"}. Used by \code{\link{fast_copy}}
-#'   when the input file(s) can be copied directly to the output.
 #' @param quiet Logical indicating whether progress messages should be
 #'   suppressed. Defaults to \code{TRUE}.
 #' @param num_threads Integer specifying the number of threads to use when
@@ -9910,12 +10011,15 @@ extract_fastq_records <- function(fastq, outfile, keep_lookup,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
+#' 
+#' @template param_pigz_path
+#' 
 #' @return Invisibly returns the number of records sampled. If
 #'   \code{n >= total}, the total number of records in the input file is
 #'   returned instead.
@@ -9980,11 +10084,18 @@ random_sample_fastq <- function(fastq1, fastq2 = NULL,
                                 n = 1e6, randseed = NULL, 
                                 check_pair_counts = TRUE,
                                 chunk_records = 2.5e4, 
-                                compress_method = "R", pigz_path = "pigz",
-                                quiet = TRUE, num_threads = 0,
+                                compress_method = "R", 
+                                pigz_path = NULL,
+                                quiet = TRUE, 
+                                num_threads = 0,
                                 fast_count = TRUE,
                                 total_reads = NULL,
                                 log_file = NULL) {
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
   
   # resolve path to log_file
   log_file <- get_log_file(file = log_file)
@@ -10002,7 +10113,7 @@ random_sample_fastq <- function(fastq1, fastq2 = NULL,
   }
   
   if (is.null(s$keep_idx)) {
-    msg <- paste0("WARNING: ",fastq1, " contains ",s$total," records.\nInput file pair is copied to output.")
+    msg <- paste0(fastq1, " contains ",s$total," records. Input file pair is copied to output.\n")
     warning(msg)
     fast_copy(fastq1, outfile1,  
               pigz_path=pigz_path, 
@@ -10035,4 +10146,352 @@ random_sample_fastq <- function(fastq1, fastq2 = NULL,
   write_log(log, file = log_file)
   
   invisible(n)
+}
+
+
+#' Randomly Subsample Sequence Files by Group
+#'
+#' Randomly subsamples sequences from multiple FASTA files or paired-end FASTQ
+#' files described in an input information file, independently for each
+#' distinct value of a specified column.
+#'
+#' This is a convenience wrapper around [random_sample_batch()]. The input
+#' information table is split according to the column specified by `by`, and
+#' [random_sample_batch()] is called separately for each resulting group.
+#' The updated information tables are then combined and written to a single
+#' output information file.
+#'
+#' The sampling size can be specified as a total number of reads per group
+#' (`N`). Reads are allocated proportionally according to the number of reads
+#' in each file within each group. Consequently, the total number of reads
+#' sampled across all groups may exceed `N`.
+#'
+#' For FASTA input, the information file must contain a `fasta` column. For
+#' paired-end FASTQ input, it must contain both `fastq_fw` and `fastq_rv`
+#' columns. An optional `read_count` column can be supplied to avoid recounting
+#' reads in the input files.
+#'
+#' @param info Character string with path to the input information file or
+#'   data frame describing the sequence files. The file must contain either a
+#'   `fasta` column or both `fastq_fw` and `fastq_rv` columns. An optional
+#'   `read_count` column may contain the number of reads in each file.
+#' @param by Character string specifying the name of the column used to split
+#'   the input information table into groups. [random_sample_batch()] is called
+#'   once for each distinct value in this column. Defaults to `"replicate"`.
+#' @param dir Character string. Directory containing the input sequence files
+#'   listed in `info`.
+#' @param outdir Character string. Directory where the subsampled sequence
+#'   files and updated information file will be written.
+#' @param N Integer. Total number of reads to sample within each
+#'   group. Reads are allocated proportionally according to the number of reads
+#'   in each file within that group. If `N` is greater than or equal to the
+#'   total number of reads in a group, input files are copied to the output directory
+#'   without subsampling.
+#' @param chunk_lines Numeric. Number of lines to process at a time when
+#'   counting or sampling sequences. Larger values may improve performance but
+#'   require more memory. Defaults to `1e5`.
+#' @param randseed Integer, or `NULL`. Random seed used to make
+#'   sampling reproducible. If `NULL`, no seed is explicitly set.
+#' @param compress Logical. If `TRUE`, output sequence files are compressed and
+#'   output filenames are generated accordingly. Defaults to `FALSE`.
+#' @param compress_method Character string. Must be one of `"pigz"`, `"gzip"`,
+#'   or `"R"`. Compression method used when writing output files.
+#'   Defaults to `"R"`. Only relevant when a files have fewer sequences than
+#'   required and is copied to the output directory with a different
+#'   compression state than the input.
+#' @param num_threads Positive integer: number of CPU threads to use.
+#'   If 0, all available CPUs are used. Only relevant when a file has fewer
+#'   sequences than required and is copied to the output directory with a
+#'   different compression state than the input.
+#' @param fast_count Logical. If `TRUE`, uses the faster read-counting method
+#'   implemented by [count_reads()]. Defaults to `TRUE`. Available only on
+#'   Linux-like systems.
+#' @param sep Character string. Field separator used to read and write the
+#'   information file. Defaults to `","`.
+#' @param quiet Logical. If `TRUE`, suppresses progress and informational
+#'   messages where supported. Defaults to `TRUE`.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_pigz_path
+#' 
+#' @return A data frame containing the combined updated information tables
+#'   returned by [random_sample_batch()] for each group. Input sequence file
+#'   columns are replaced with the names of the subsampled output files, and
+#'   a `read_count` column is added containing the number of reads retained
+#'   after sampling. The combined information table is also written to
+#'   `outdir`.
+#'
+#' @details
+#' The function first reads the input information table and extracts the
+#' distinct values of the column specified by `by`. For each value, it
+#' subsets the information table and calls [random_sample_batch()] with
+#' `N = N`. The resulting updated information tables are combined.
+#'
+#' Sampling is therefore performed independently within each group:
+#'
+#' * With `N`, up to `N` reads are sampled across the files belonging to each
+#'   group, allocated proportionally according to their original read counts.
+#' * The same input sequence file may be processed separately in different
+#'   groups if it appears in more than one group.
+#'
+#' The function determines whether the input describes FASTA files or
+#' paired-end FASTQ files and writes the combined updated information table
+#' to `fastainfo.csv` or `fastqinfo.csv`, respectively.
+#'
+#' @seealso
+#' [random_sample_batch()], [random_sample_fasta()], [random_sample_fastq()],
+#' [count_reads()], [fast_copy()], [smart_gzip()].
+#'
+#' @examples
+#' \dontrun{
+#' # Sample approximately 1 million reads independently within each replicate
+#' random_sample_batch_by(
+#'   info = "samples.csv",
+#'   by = "replicate",
+#'   dir = "input_sequences",
+#'   outdir = "subsampled_sequences",
+#'   N = 1e6
+#' )
+#'
+#' # Sample 5000 reads independently within each condition
+#' random_sample_batch_by(
+#'   info = "samples.csv",
+#'   by = "condition",
+#'   dir = "input_sequences",
+#'   outdir = "subsampled_sequences",
+#'   N = 5000,
+#'   randseed = 123
+#' )
+#' }
+#' 
+#' #' @export
+random_sample_batch_by <- function(info, 
+                                   dir, 
+                                   outdir, 
+                                   by = "replicate",
+                                   N = NULL,
+                                   chunk_lines = 1e5, 
+                                   randseed = NULL,
+                                   compress = FALSE,
+                                   compress_method = "R", 
+                                   pigz_path = NULL,
+                                   num_threads = 0, 
+                                   fast_count = TRUE,
+                                   sep = ",",
+                                   quiet = TRUE,
+                                   log_file = NULL){
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
+  
+  
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
+  outdir <- check_dir(outdir)
+  
+  #### read and make a vector of unique values in the "by" column
+  info_df <- read_input(info, sep = sep) 
+  values_to_loop_over <- unique(info_df[[by]])
+  
+  #### determine output info file name
+  if("fasta" %in% colnames(info_df)){
+    out_info <- file.path(outdir, "fastainfo.csv")
+  } else if ("fastq_fw" %in% colnames(info_df) && "fastq_rv" %in% colnames(info_df)){
+    out_info <- file.path(outdir, "fastqinfo.csv")
+  } else {
+    msg <- paste0("ERROR `info` must contain a fasta or a fastq_fw and fastq_rv columns.")
+    stop(msg)
+  }
+  
+  info_updated <- data.frame()
+  
+  for(val in values_to_loop_over){
+    
+    info_df_tmp <- info_df %>%
+      filter(.data[[by]] == val)
+    
+    info_tmp <- random_sample_batch(info = info_df_tmp, 
+                                    dir = dir, 
+                                    outdir = outdir, 
+                                    N = N,
+                                    chunk_lines = chunk_lines, 
+                                    randseed = randseed,
+                                    compress = compress,
+                                    compress_method = compress_method, 
+                                    pigz_path = pigz_path, 
+                                    num_threads = num_threads, 
+                                    fast_count = fast_count,
+                                    sep = sep,
+                                    quiet = quiet,
+                                    log_file = NA
+                                    
+    )
+    info_updated <- rbind(info_updated, info_tmp)
+  }
+  
+  # overwrite updated info file, since random_sample_batch has written info with the last "by" value
+  write.table(info_updated, file = out_info, sep=sep, row.names = FALSE)
+  
+  write_log(log, file=log_file)
+  return(info_updated)
+}
+
+#' Count reads in a batch of FASTA or paired-end FASTQ files
+#'
+#' Reads an input information file containing paths to FASTA files or
+#' paired-end FASTQ files, counts the sequences in each unique file, and
+#' appends the resulting read counts to the information table.
+#'
+#' For FASTA input, the information file must contain a \code{fasta} column.
+#' For FASTQ input, it must contain \code{fastq_fw} column. 
+#' For paired-end FASTQ files, only the forward-read files in \code{fastq_fw}
+#' are counted.
+#'
+#' The input file paths are interpreted relative to \code{dir}. Each unique
+#' file is counted once, and the resulting count is joined back to the
+#' information table using the corresponding file column.
+#'
+#' @param info Character string giving the path to the input information file, 
+#'   or a data frame.
+#'   The file must contain either a \code{fasta} or 
+#'   \code{fastq_fw} column.
+#' @param dir Character string giving the directory containing the sequence
+#'   files listed in \code{info}.
+#' @param outfile Character string giving the path to the output file.
+#'   If \code{NULL}, the information table is not written to disk.
+#' @param chunk_lines Integer specifying the maximum number of lines to read
+#'   at a time when using the chunk-based counting method. Defaults to
+#'   \code{1e5}. Passed to \code{count_reads()}.
+#' @param fast_count Logical value controlling the counting method. When
+#'   \code{TRUE} on Linux-like systems, shell commands are used for faster
+#'   counting. When \code{FALSE}, the chunk-based R implementation is used.
+#'   Passed to \code{count_reads()}.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#' @param sep Character string specifying the field separator used to read
+#'   and write the information file. Defaults to \code{","}.
+#'
+#' @return An updated data frame containing the original information table
+#'   and a \code{read_count} column. For FASTA input, counts are joined using
+#'   the \code{fasta} column. For paired-end FASTQ input, counts are joined
+#'   using the \code{fastq_fw} column. The data frame is returned invisibly.
+#'
+#' @details
+#' Each unique sequence file is counted only once, even if it appears multiple
+#' times in the information table. The resulting counts are joined back to all
+#' matching rows.
+#'
+#' The sequence files are expected to be supported by \code{count_reads()},
+#' including FASTA and FASTQ files and supported compressed formats.
+#'
+#' An error is raised if \code{info} does not contain the required sequence-file
+#' columns.
+#'
+#' @examples
+#' \dontrun{
+#' # Count reads in a FASTA batch
+#' counts <- count_reads_batch(
+#'   info = "fasta_info.csv",
+#'   dir = "data/fasta"
+#' )
+#'
+#' # Count reads in paired-end FASTQ files and write the updated table
+#' counts <- count_reads_batch(
+#'   info = "fastq_info.csv",
+#'   dir = "data/fastq",
+#'   outfile = "fastq_info_with_counts.csv",
+#'   sep = ","
+#' )
+#'
+#' # Use chunk-based counting
+#' counts <- count_reads_batch(
+#'   info = "fastq_info.csv",
+#'   dir = "data/fastq",
+#'   fast_count = FALSE,
+#'   chunk_lines = 1e5
+#' )
+#' }
+#'
+#' @export
+#'
+
+count_reads_batch <- function(info, 
+                              dir,
+                              outfile = NULL,
+                              chunk_lines=1e5, 
+                              fast_count = TRUE,
+                              log_file = NULL, 
+                              sep = ","){
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
+  check_dir(outfile, is_file = TRUE)
+  
+  
+  #### read info file
+  info_df <- read_input(info, sep = sep) 
+  
+  ### get sequence type
+  if("fasta" %in% colnames(info_df)){
+    seq_type <- "fasta"
+    files <- unique(info_df$fasta)
+  } else if ("fastq_fw" %in% colnames(info_df)){
+    seq_type <- "fastq"
+    files <- unique(info_df$fastq_fw)
+  } else {
+    msg <- paste0("ERROR `info` must contain a fasta or a fastq_fw column.")
+    stop(msg)
+  }
+  
+  df_count <- data.frame(
+    file = character(),
+    read_count = numeric()
+  )
+  for(file_curr in files){
+    file_p <- file.path(dir, file_curr)
+    rc <- count_reads(file_p,
+                      chunk_lines = chunk_lines,
+                      fast_count = fast_count,
+                      file_type = seq_type
+    )
+    df_count <- df_count %>%
+      add_row(file = file_curr, read_count = rc)
+  }
+  
+  if(seq_type == "fasta"){
+    info_df <- left_join(info_df, df_count, by = c("fasta" = "file"))
+  } else {
+    info_df <- left_join(info_df, df_count, by = c("fastq_fw" = "file"))
+  }
+  
+  if(!is.null(outfile)){
+    write.table(info_df, file = outfile, row.names = FALSE, sep = sep)
+  }
+  return(invisible(info_df))
 }

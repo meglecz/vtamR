@@ -10,7 +10,7 @@ plot_pairwise_identity_vsearch(
   identity_max = 0.99,
   identity_increment = 0.01,
   min_id = 0.8,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   outfile = "",
   plotfile = "",
@@ -33,7 +33,9 @@ clustering identity thresholds from \code{identity_min} to \code{identity_max}.}
 \item{min_id}{Numeric value between 0 and 1. Minimum pairwise identity;
 ASV pairs below this threshold are excluded from alignment and plotting.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
@@ -52,8 +54,8 @@ If empty, no file is written.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
@@ -84,7 +86,6 @@ plot <- plot_pairwise_identity_vsearch(
   identity_max = 0.99,
   identity_increment = 0.01,
   min_id = 0.8,
-  vsearch_path = "vsearch",
   num_threads = 8,
   plotfile = "density_plot.png"
 )

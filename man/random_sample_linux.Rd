@@ -8,9 +8,9 @@ random_sample_linux(
   fasta,
   outfile,
   n = 1e+06,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   randseed = NULL,
   quiet = TRUE,
   num_threads = 0
@@ -24,7 +24,9 @@ the output will be gzip-compressed.}
 
 \item{n}{Positive integer: number of sequences to randomly sample.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{compress_method}{Character or logical: compression method used for output files.
 Must be one of \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
@@ -36,8 +38,9 @@ Must be one of \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
 Performance (fastest → slowest): \code{pigz} > \code{gzip} > \code{R}.
 }}
 
-\item{pigz_path}{Character string: path to the \code{pigz} executable. Only required if
-\code{pigz} is used and not available in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{randseed}{Integer or NULL: random seed for sampling. If NULL or 0 (default),
 a pseudo-random seed is used. A non-zero seed ensures reproducible results.}
@@ -68,7 +71,6 @@ to the output file, preserving the requested compression format.
 random_sample_linux(
   fasta = "all_sequences.fasta.gz",
   outfile = "subset_100.fasta.gz",
-  vsearch_path = "vsearch",
   n = 100,
   randseed = 123,
   quiet = FALSE

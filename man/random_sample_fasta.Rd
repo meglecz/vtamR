@@ -11,7 +11,7 @@ random_sample_fasta(
   randseed = NULL,
   chunk_lines = 1e+05,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   num_threads = 0,
   quiet = TRUE,
   fast_count = TRUE,
@@ -43,9 +43,9 @@ used by \code{\link{fast_copy}} when the complete input file is copied.
 Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.
 Defaults to \code{"R"}.}
 
-\item{pigz_path}{Character string giving the path to the \code{pigz}
-executable. Defaults to \code{"pigz"}. Used by \code{\link{fast_copy}} if
-the complete input file needs to be copied.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Integer specifying the number of threads to use when
 \code{compress_method = "pigz"}. A value of \code{0} uses all detected
@@ -70,8 +70,8 @@ directly, so it is the caller's responsibility to ensure it is correct.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }

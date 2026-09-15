@@ -8,9 +8,9 @@ merge_fastq_pairs(
   fastqinfo,
   fastq_dir,
   outdir,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   num_threads = 0,
   fastq_ascii = 33,
   fastq_maxdiffs = 10,
@@ -42,8 +42,9 @@ FASTQ files (listed in \code{fastqinfo$fastq_fw} and
 
 \item{outdir}{Character string specifying the output directory.}
 
-\item{vsearch_path}{Character string specifying the path to the
-\code{vsearch} executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{compress_method}{Character or logical. Compression method:
 \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
@@ -53,9 +54,9 @@ system PATH (or specified via \code{pigz_path}).
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
 Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{pigz_path}{Character string specifying the path to the \code{pigz}
-executable. Only required if \code{compress_method = "pigz"} and it is not
-available in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}
@@ -106,8 +107,8 @@ only display warnings or errors.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }

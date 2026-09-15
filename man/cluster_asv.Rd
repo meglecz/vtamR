@@ -9,7 +9,8 @@ cluster_asv(
   group = TRUE,
   by_sample = FALSE,
   method = "swarm",
-  path = "",
+  swarm_path = NULL,
+  vsearch_path = NULL,
   num_threads = 0,
   swarm_d = 1,
   fastidious = FALSE,
@@ -31,7 +32,13 @@ If FALSE, the input data frame is returned with an added \code{cluster_id} colum
 
 \item{method}{Character string specifying the clustering method: \code{"swarm"} or \code{"vsearch"}.}
 
-\item{path}{Character string: path to the Swarm or VSEARCH executable.}
+\item{swarm_path}{Optional path to the \code{swarm} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.swarm_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
+
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
@@ -54,8 +61,8 @@ VSEARCH \code{cluster_size} clustering.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
@@ -97,7 +104,6 @@ read_count_df <- cluster_asv(
   group = TRUE,
   method = "vsearch",
   by_sample = TRUE,
-  path = swarm_path,
   num_threads = 4
 )
 }

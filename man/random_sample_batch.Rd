@@ -15,7 +15,7 @@ random_sample_batch(
   randseed = NULL,
   compress = FALSE,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   num_threads = 0,
   fast_count = TRUE,
   sep = ",",
@@ -66,11 +66,9 @@ Defaults to \code{"R"}. Only relevant when a file has
 fewer sequences than required and is copied to the output directory with
 a different compression state than the input.}
 
-\item{pigz_path}{Character string: path to the \code{pigz} executable. Only required if
-\code{pigz} is used and not available in the system PATH.
-Only relevant when a file has
-fewer sequences than required and is copied to the output directory with
-a different compression state than the input.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPU threads to use.
 If 0, all available CPUs are used. Only relevant when a file has
@@ -91,8 +89,8 @@ messages where supported. Defaults to \code{TRUE}.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
@@ -137,6 +135,10 @@ their original read counts.
 FASTA files are processed with \code{\link[=random_sample_fasta]{random_sample_fasta()}}, while paired-end
 FASTQ files are processed with \code{\link[=random_sample_fastq]{random_sample_fastq()}}. For paired-end FASTQ
 data, forward and reverse reads are sampled together to preserve pairing.
+
+The function determines whether the input describes FASTA files or
+paired-end FASTQ files and writes the combined updated information table
+to \code{fastainfo.csv} or \code{fastqinfo.csv}, respectively.
 }
 \examples{
 \dontrun{

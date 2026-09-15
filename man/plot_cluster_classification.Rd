@@ -9,8 +9,8 @@ plot_cluster_classification(
   taxa,
   clustering_method = "swarm",
   cluster_params = c(2, 4, 6, 8, 10),
-  vsearch_path = "vsearch",
-  swarm_path = "swarm",
+  vsearch_path = NULL,
+  swarm_path = NULL,
   taxlevels = c("species", "genus"),
   outfile = "",
   plotfile = "",
@@ -34,9 +34,13 @@ Missing values should be represented as \code{NA} when no assignment is availabl
 \item{cluster_params}{Numeric vector of clustering parameters:
 Swarm \code{d} values or VSEARCH identity thresholds (values between 0 and 1).}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
-\item{swarm_path}{Character string: path to the Swarm executable.}
+\item{swarm_path}{Optional path to the \code{swarm} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.swarm_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{taxlevels}{Character vector specifying taxonomic levels to classify and plot
 (e.g. \code{"species"}, \code{"genus"}).}
@@ -58,8 +62,8 @@ If empty, no file is written.}
 The path is resolved with the following priority:
 \enumerate{
 \item the \code{log_file} argument, if explicitly provided by the user;
-\item the package-level option/variable storing a default log path
-(if set);
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
@@ -93,7 +97,6 @@ plot <- plot_cluster_classification(
   taxa,
   clustering_method = "swarm",
   cluster_params = c(2, 4, 6, 8, 10),
-  swarm_path = swarm_path,
   taxlevels = c("species", "genus"),
   num_threads = 8
 )

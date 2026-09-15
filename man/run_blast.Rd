@@ -8,7 +8,7 @@ run_blast(
   df,
   blast_db,
   outdir,
-  blast_path = "blastn",
+  blast_path = NULL,
   qcov_hsp_perc = 70,
   perc_identity = 70,
   num_threads = 0,
@@ -22,7 +22,9 @@ run_blast(
 
 \item{outdir}{Character string specifying the output directory.}
 
-\item{blast_path}{Character string specifying the path to the BLAST executable.}
+\item{blast_path}{Optional path to the \code{blast} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.blast_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{qcov_hsp_perc}{Real number between 0 and 100 specifying the minimum query coverage.}
 
@@ -49,7 +51,6 @@ taxonomic assignment or filtering.
 run_blast(
   df = read_count_df,
   blast_db = "xxxxxxxx",
-  blast_path = "blastn",
   qcov_hsp_perc = 80,
   perc_identity = 90,
   num_threads = 4

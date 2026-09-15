@@ -312,15 +312,14 @@ check_dir <- function(path, is_file=FALSE){
 #'   `gzip` is available on Linux systems.  
 #'   `R` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`.
-#' @param pigz_path Character string specifying the path to the `pigz`
-#'   executable. Only required if `method = "pigz"` and it is not available 
-#'   in the system PATH.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param quiet Logical. If `TRUE`, suppress informational messages.
 #' @param compress Logical. If `TRUE`, compress the file; if 
 #'   `FALSE`, decompress it.
-#'
+#' 
+#' @template param_pigz_path
+#' 
 #' @return Invisibly returns a character string: the path to the output file.
 #' 
 #' @examples
@@ -337,13 +336,18 @@ check_dir <- function(path, is_file=FALSE){
 smart_gzip <- function(file,
                        outfile = NULL,
                        remove = FALSE,
-                       pigz_path = "pigz",
+                       pigz_path = NULL,
                        method = "R",
                        num_threads = 0,
                        quiet = TRUE,
                        compress = FALSE) {
   # Check input
   if (!file.exists(file)) stop("File not found: ", file)
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
   
   # Detect operation type and define flags
   if (compress) {
@@ -372,11 +376,7 @@ smart_gzip <- function(file,
            if (compress) "expected compressed (.gz ) output" else "expected uncompessed output")
   }
   outfile <- path.expand(outfile)
-  
-  # Detect number of threads
-  if (num_threads == 0){
-    num_threads <- parallel::detectCores()
-  }
+
   
   # Use pigz if provided
   if (method=="pigz") {
@@ -861,8 +861,8 @@ set_miem_field <- function(miem, field, text) {
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -938,7 +938,7 @@ miem_bioinformatics <- function(
     miem <- set_miem_field(miem, field="Taxonomic assignment method", msg)
     
     # Taxonomic assignment parameters (and thresholds)
-    if(ltg_par == "NULL"){
+    if(is.null(ltg_par)){
       msg <- paste0(
         "Default parameters of the assign_taxonomy_ltg function from the vtamR ",
         "package (v", vtamR_version, ") were used for taxonomic assignment."
@@ -2050,8 +2050,8 @@ count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2232,8 +2232,8 @@ format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -2418,4 +2418,59 @@ format_for_phyloseq <- function(otu, tax, samples = NULL, outfile = NULL,
   # add end_time and runtime, print
   write_log(log, file=log_file)
   return(phy_object)
+}
+
+#' Get the path to an external program
+#'
+#' Resolves the path to an external program (e.g. \code{vsearch}, \code{cutadapt},
+#' \code{pigz}, \code{blastn}, \code{swarm}) used by the package. The resolution
+#' follows this order of priority:
+#' \enumerate{
+#'   \item If \code{path} is explicitly supplied by the user, it is used as-is.
+#'   \item Otherwise, the package option \code{vtamR.<program>_path} is checked
+#'         (e.g. \code{vtamR.vsearch_path} for \code{program = "vsearch"}).
+#'   \item If neither is set, the bare program name is returned, relying on it
+#'         being available on the system \code{PATH}.
+#' }
+#'
+#' @param program A character string giving the name of the external program
+#'   (e.g. \code{"vsearch"}, \code{"cutadapt"}, \code{"pigz"}, \code{"blastn"},
+#'   \code{"swarm"}). Used to look up the corresponding package option
+#'   \code{vtamR.<program>_path}.
+#' @param path Optional character string giving an explicit path to the
+#'   program executable. If supplied, it takes precedence over any package
+#'   option or default. Default is \code{NULL}.
+#'
+#' @return A character string giving the resolved path (or bare name) of the
+#'   external program.
+#'
+#' @examples
+#' \dontrun{
+#' get_path("vsearch")
+#' get_path("cutadapt")
+#' get_path("blastn", path = "/usr/local/bin/blastn")
+#'
+#' options(vtamR.pigz_path = "/opt/pigz/bin/pigz")
+#' get_path("pigz")
+#' }
+#'
+#' @export
+get_path <- function(program, path = NULL){
+  
+  if(!is.null(path)){ # user defined something
+    return(path)
+  }
+  
+  opt_name <- paste0("vtamR.", program, "_path")
+  package_path <- getOption(opt_name)
+  
+  if(!is.null(package_path)){ # package option defined
+    return(package_path)
+  }
+  
+  if(program == "blast"){
+    return("blastn")
+  } else {
+    return(program) # fallback: assume it's on PATH
+  }
 }

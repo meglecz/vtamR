@@ -7,7 +7,7 @@
 fast_copy(
   file,
   outfile,
-  pigz_path = "pigz",
+  pigz_path = NULL,
   compress_method = "R",
   num_threads = 0,
   quiet = TRUE
@@ -20,8 +20,9 @@ fast_copy(
 A filename ending in \code{.gz} indicates that the destination should be
 gzip-compressed.}
 
-\item{pigz_path}{Character string giving the path to the \code{pigz}
-executable. Defaults to \code{"pigz"}. Only necessary if compress_method is "pigz".}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{compress_method}{Character string specifying the compression method.
 Supported values are \code{"R"}, \code{"pigz"}, and \code{"gzip"}.

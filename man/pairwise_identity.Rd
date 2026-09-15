@@ -7,7 +7,7 @@
 pairwise_identity(
   asv,
   min_id = 0.8,
-  vsearch_path = vsearch,
+  vsearch_path = NULL,
   num_threads = 0,
   outfile = "",
   sep = ",",
@@ -20,7 +20,9 @@ pairwise_identity(
 \item{min_id}{Numeric value between 0 and 1. Minimum identity threshold;
 ASV pairs with identity below this value are ignored.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
@@ -47,7 +49,6 @@ Pairs with identity below \code{min_id} are not included in the output.
 identity_df <- pairwise_identity(
   asv,
   min_id = 0.8,
-  vsearch_path = vsearch,
   num_threads = 8
 )
 }

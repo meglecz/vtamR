@@ -31,8 +31,8 @@ NULL
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -144,8 +144,8 @@ plot_read_count_by_sample <- function(read_count_df,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -217,8 +217,8 @@ plot_read_count_histogram <- function(read_count_df,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }
@@ -304,8 +304,8 @@ plot_renkonen_distance_barplot <- function(df,
 #'   The path is resolved with the following priority:
 #'   \enumerate{
 #'     \item the `log_file` argument, if explicitly provided by the user;
-#'     \item the package-level option/variable storing a default log path
-#'       (if set);
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
 #'     \item `"vtamR_log.csv"` in the current working directory, used as a
 #'       last resort if neither of the above is set.
 #'   }

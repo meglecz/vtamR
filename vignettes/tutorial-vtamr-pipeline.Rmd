@@ -72,8 +72,6 @@ with ASVs assigned to taxonomic groups.
 - **Replicate Handling:** Supports technical or biological replicates of the same sample.
 - **Control-Based Filtering:** Uses positive and negative control samples to refine 
 filtering, minimizing both [false positives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) and [false negatives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary).
-- **Data Pooling:** Allows integration of **multiple datasets** (from previous analyses) 
-and results from **overlapping markers**.
 
 
 **Novelties Compared to VTAM**
@@ -111,70 +109,50 @@ Please, follow the [Installation](installation.html) instructions.
 This a detailed, tutorial. 
 For impatient users, see the [Short tutorial](short-tutorial.html).
 
+> **Before beginning your analysis, review the [Tips – Good to Know](#tips---good-to-know) section.**
+> This section highlights key features and options of `vtamR`, 
+helping you run the functions more effectively.
+
 ## Set up
 
 ### Load Library
 ```{r setup}
 library(vtamR)
+library(dplyr)
 ```
 
+### Set Paths to Third-Party Programs {#set-path}
 
-### Set Path to Third-Party Programs {#set-path}
+R can execute external programs directly if their executables 
+are available in your system's `PATH` (see [Installation](installation.html)).
 
-If the third-party programs are **not** in your `PATH` 
-(see [Installation](installation.html)),
-**adjust the `xxx_path` variables** according to your setup.
+If an executable is not in your `PATH`, you must tell R where to find it. 
+There are two ways to do this.
 
-```{r set_path_win, eval=FALSE}
-# Example for Windows
-cutadapt_path <- "C:/Users/Public/cutadapt"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
-blast_path <- "C:/Users/Public/blast-2.16.0+/bin/blastn"
-swarm_path <- "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"
-pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional
+The first option is to provide the path to the executable using the `xxx_path`
+(e.g. `vsearch_path`, `cutadapt_path`) argument of each function that calls an 
+external program. Although this approach works, it can become tedious, 
+especially when the same program is used in several functions.
+
+A simpler approach is to set a package option for each executable. 
+Once these options have been declared, usually at the beginning of your script, 
+`vtamR` can use them automatically. You will then no longer need to provide 
+the corresponding `xxx_path` argument in each function call.
+
+For example:
+
+```{r, eval=FALSE}
+options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
+options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
+options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
 ```
 
-```{r set_path_linux, eval=FALSE}
-# Example for Linux
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt"
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch"
-blast_path <- "~/miniconda3/envs/vtam/bin/blastn"
-swarm_path <- "swarm" # swarm is in the PATH
-pigz_path <- "pigz"   # optional; pigz is in the PATH
-```
-
-If the third-party programs **are** in your `PATH`, you have two options:
-
-1. *Define the `xxx_path` variables as shown below*, 
-and run the tutorial examples exactly as written.
-
-```{r set_path, eval=TRUE}
-# All executables are in the PATH
-#cutadapt_path <- "cutadapt"
-cutadapt_path <- "~/miniconda3/envs/vtam_benchmark/bin/cutadapt"
-vsearch_path <- "vsearch"
-blast_path <- "blastn"
-swarm_path <- "swarm"
-pigz_path <- "pigz"
-```
-
-2. *Do not define the `xxx_path` arguments at all*, 
-and simply omit them when calling the `vtamR` functions.
-
-For example, run:
-
-```{r example_wo_path, eval=FALSE}
-read_count_df <- filter_chimera(read_count_df)
-```
-
-instead of:
-
-```{r example_with_path, eval=FALSE}
-read_count_df <- filter_chimera(
-  read_count_df,
-  vsearch_path = vsearch_path
-  )
-```
+In this example, the paths are configured for Windows. Replace them with the actual 
+locations of the programs on your computer. To configure these options, 
+locate the vsearch.exe, blastn.exe, cutadapt.exe, swarm.exe, and pigz.exe files, 
+and specify their paths without the .exe extension.
 
 ### Input Data
 
@@ -235,12 +213,6 @@ These data sets are processed independently using the same pipeline.
 We will first analyze the **first "plate" of the MFZR marker**, 
 then demonstrate how to **pool results** from different plates and markers.
 
-Let’s begin by setting the **output directory** for **plate 1 of MFZR**.
-
-```{r general-parameters}
-outdir <- file.path("vtamR_demo_out", "mfzr_plate1")
-```
-
 **Loading Data**
 
 To load the **demo files included in `vtamR`**, we will use the `system.file()` function.
@@ -287,7 +259,7 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 ```
 
 
-### Check the Format of Input Files
+#### Check the Format of Input Files
 
 The `check_file_info()` function:
 
@@ -302,12 +274,17 @@ check_file_info(file=fastqinfo, dir=fastq_dir, file_type="fastqinfo")
 check_file_info(file=asv_list, file_type="asv_list")
 ```
 
-> **Before beginning your analysis, review the [Tips – Good to Know](#tips---good-to-know) section.**
-> This section highlights key features and options of `vtamR`, 
-helping you run the functions more effectively.
+## Ouput
 
+### Output directory
 
-## Set the log file
+Let’s set the **output directory** for **plate 1 of MFZR**.
+
+```{r general-parameters}
+outdir <- file.path("vtamR_demo_out", "mfzr_plate1")
+```
+
+### Set the log file
 
 `vtamR` automatically generates a log file that records every major function called during an analysis. For each function call, the log includes:
 
@@ -317,7 +294,9 @@ helping you run the functions more effectively.
 
 This log is extremely valuable for reproducibility. It lets you reconstruct exactly how an analysis was performed, even years later, even if the original script has been lost or modified. In effect, the log file is a complete record of your analysis workflow.
 
-### Two ways to set the log path
+#### Two ways to set the log path
+
+Just like for externam program paths, there are two ways to set the log path.
 
 **Option 1: Pass `log_file` to each function call.**
 You can specify the path to the log file directly, using the `log_file` argument of each major `vtamR` function. This works, but it's a bit laborious — it's easy to forget the argument on some calls, or to accidentally use different filenames across calls, which leaves you with several files that each contain only part of the information.
@@ -333,162 +312,160 @@ For all functions with a `log_file` argument, the log path is resolved in the fo
 
 We strongly recommend using the package option, and that's what we'll do in this tutorial.
 
-First, define the path to the log file:
+Define the path to the log file as a package option:
 
 ```{r set-log-file}
-# set the package option that defines the log file path
 options(vtamR.log_file = file.path(outdir, "vtamR_log.csv"))
 ```
 
 From this point on, every call to a `vtamR` function that supports logging will have its details appended to this file automatically.
 
-### A tip for finalized pipelines
+**A tip for finalized pipelines**
 
 Once your pipeline is finalized, consider archiving the log file from your testing phase, then running the final pipeline with a fresh `log_file`. This gives you a clean, complete record of the exact procedure and parameters used to produce your final results — long after the analysis is done. It's also the input for the `miem_bioinfo()` function, which extracts information from the log file to help you prepare documentation for publication (e.g., a MIEM checklist).
 
-### Two simple rules to follow
-
 Using the log file comes with only a minor requirements — well worth the benefit of fully reproducible analyses:
 
-Always name arguments explicitly when calling a function — for example, use `my_function(input = my_file)` rather than relying on positional matching (`my_function(my_file)`).
+**Always name arguments explicitly when calling a function** — for example, use `my_function(input = my_file)` rather than relying on positional matching (`my_function(my_file)`).
 
 
 ## Pre-process reads
 
-Your FASTQ files can vary depending on your lab and sequencing setup. 
-They might include:
+Your FASTQ files may vary depending on your laboratory and sequencing setup. They may include:
 
-- **Multiple [sample replicates](#glossary)**
-- **[Tags](#glossary)** (for [demultiplexing](#glossary))
-- **Primer sequences**
+* **Multiple [sample replicates](#glossary)**
+* **[Tags](#glossary)** for [demultiplexing](#glossary)
+* **Primer sequences**
 
-In this tutorial, our FASTQ files contain reads from several samples. 
-So, we’ll need to:
+The pre-processing steps applied to the reads, as well as their order, may also vary depending on your experimental design.
 
-- **Merge and quality-check** the read pairs using `merge_fastq_pairs`.
-- **Subsample** each library to ensure all replicates have 
-similar coverage with `subsample_fasta`.
-- **Demultiplex** and trim off tags and primers with `demultiplex_and_trim_fasta`.
+See [From FASTQ to data frame](from-fastq-to-df.html) for examples of how to handle different experimental designs and how to change the order of merging and demultiplexing steps.
+ 
+### Count reads in input FASTQ files
 
-See the [From fastq to data frame](from-fastq-to-df.html) on
-how to deal with other experimental designs or change
-the order of merging and demultiplexing. In fact demultiplexing raw fastq files
-irsh has the advantage of producing fastq file paires ready for SRA submission.
+Let's count the number of input sequences in each input FASTQ file pair.
 
-See the [From fastq to data frame](from-fastq-to-df.html) vignette for guidance 
-on handling other experimental designs or changing the order of merging and 
-demultiplexing steps. 
-Note that demultiplexing raw FASTQ files first has the added advantage of 
-producing FASTQ file pairs that are ready for SRA submission.
+In the following `count_reads_batch()` function 
+
+* The files listed in the `fastq_fw` column of `fastqinfo` are examined.
+  **[fastqinfo](#fastqinfo)** can be either a CSV file or a data frame 
+  containing information about the input files, primers, tags, samples, and other experimental metadata.
+* The input FASTQ files are located in `dir`.
+* The updated `fastqinfo` table, completed with the read count for each input 
+file pair, is written to `outfile`.
+* The function returns the `fastqinfo` data frame completed by read counts.
+
+For more information, see `?count_reads_batch`.
+
+```{r count_reads}
+fastqinfo_rc_file <- file.path(outdir, "fastqinfo_rc.csv")
+          
+          
+fastqinfo_rc <- count_reads_batch(
+  info = fastqinfo,
+  dir = fastq_dir, # directory of input fastq files
+  outfile = fastqinfo_rc_file # file path for the updated fastqinfo
+)
+
+knitr::kable(select(fastqinfo_rc, sample, fastq_fw, read_count), format = "markdown")
+```
+
+### Randomly subsample sequencing reads
+
+This step can be useful for balancing read counts across your sequencing libraries. 
+It is optional, but may help ensure that replicates have similar numbers of reads.
+
+The `random_sample_batch` function allows you to randomly subsample reads from
+FASTA files or FASTQ file pairs listed in a CSV file or data frame, 
+such as your `fastqinfo_rc` data frame.
+
+You can choose to sample:
+
+* A fixed number of sequences from each file (`n`)
+* A proportion of sequences from each file (`p`)
+* A total number of sequences across all files (`N`), while preserving the relative read counts among files
+
+Here, we select `n` sequences from each FASTQ file in the `info` data frame.
+
+In this example, the three replicates have comparable numbers of reads. 
+However, in more contrasted cases, it can be useful to randomly subsample files that contain substantially more reads than the others.
+
+For demonstration purposes, we will randomly select 40,000 read pairs from replicates 2 and 3. Replicate 1 contains fewer reads, so its FASTQ files will simply be copied to the output directory without subsampling.
+
+`compress = FALSE`: In this tutorial, we’ll work with uncompressed files. For guidance on whether to compress your files, see the [To Compress or Not to Compress](#to-compress-or-not-to-compress) section.
+
+> Important: It is also possible to subsample files after demultiplexing. However, this will alter the relative read counts of the samples, which is important for some of the filters applied in subsequent steps. For example, negative controls are expected to contain relatively few reads.
+If you prefer sunsampling after demultiplexing check_out the 
+[short tutorial](short-tutorial.html) and the `random_sample_batch_by()` function.
+
+
+For more information, see `?random_sample_batch`.
+
+```{r random_sample_batch}
+random_sample_dir <- file.path(outdir, "1_random_sampled_fastq")
+
+fastqinfo_subsampled <- random_sample_batch(
+  info = fastqinfo_rc, # output of count_reads_batch
+  dir = fastq_dir, # directory of input fastq files
+  outdir = random_sample_dir, # file path for the updated fastqinfo_rc
+  compress = FALSE,
+  n = 4e4
+)
+```
+### Demultiplex
+
+* The FASTQ file pairs listed in **[fastqinfo](#fastqinfo)** are demultiplexed, and tags and adapters are trimmed from the reads. `fastqinfo` can be either a CSV file or a data frame containing information about the input files, primers, tags, samples, and other experimental metadata.
+* Setting `primer_to_end = FALSE` allows the primer to occur somewhere within the read rather than requiring it to start at the very beginning of the read after tag trimming.
+* `check_reverse == TRUE` allows to check reverse-complemented sequences as well.
+
+
+```{r demultiplex}
+demultiplexed_dir <- file.path(outdir, "2_demultiplexed_fastq")
+
+fastqinfo_delultiplexed <- demultiplex_and_trim_fastq(
+  fastqinfo = fastqinfo_subsampled, 
+  fastq_dir = random_sample_dir,  # directory of input fastq files
+  outdir = demultiplexed_dir,  # directory of output fastq files
+  primer_to_end = FALSE,
+  check_reverse = TRUE,
+  compress = FALSE
+  )
+```
 
 ### Merge Fastq Pairs and Quality Filter {#merge}
 
 The `merge_fastq_pairs` function combines each read-pair into a single
 sequence in fasta format and can also handle **quality filtering**.
 
-- **`compress = FALSE`:** In this tutorial, we’ll work with uncompressed files. 
-For guidance on whether to compress your files, check out the 
-[To Compress or Not to Compress](#to-compress-or-not-to-compress) section.
+For additional quality filtering options, 
+check out `?merge_fastq_pairs`.
 
-- **Managing Large Files:** Once your analysis is complete, you might want 
-to compress or delete large intermediate files. For tips on this, see 
-[Files to Keep](#files-to-keep).
-
-- **More Options:** For additional quality filtering options, 
-take a look at `?merge_fastq_pairs`.
-
-**Key Files**
-
-- **[fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo):** 
-This can be either a CSV file or a data frame.
-- **[fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo):** 
-This is the output of `merge_fastq_pairs`. It’s an updated version of 
+**[fastainfo_df](#fastainfo)** 
+ is the output of `merge_fastq_pairs`. It’s an updated version of 
 `fastqinfo`, where FASTQ filenames are replaced with FASTA filenames, and 
-read counts are included for each file.
-
+read counts are included or updated for each file.
+This data frame is written also to a CSV file in the `outdir`.
 
 ```{r merge}
-merged_dir <- file.path(outdir, "1_merged")
+merged_dir <- file.path(outdir, "3_merged")
 
-fastainfo_df <- merge_fastq_pairs(
-  fastqinfo=fastqinfo, 
-  fastq_dir=fastq_dir, # directory of input fasta files
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir=merged_dir, # directory of output fasta files
-  fastq_maxee=1, # Maximum Expected Error for each read
-  fastq_maxns=0, # no Ns in output
-  compress=FALSE,
-  fastq_allowmergestagger=T # reads might be longer than the marker
+sampleinfo_df <- merge_fastq_pairs(
+  fastqinfo = fastqinfo_delultiplexed, 
+  fastq_dir = demultiplexed_dir, # directory of input fastq files
+  outdir = merged_dir, # directory of output fasta files
+  fastq_maxee = 1, # Maximum Expected Error for each read
+  fastq_maxns = 0, # no Ns in output
+  compress = FALSE,
+  fastq_allowmergestagger = T # reads might be longer than the marker
   )
 ```
 
-### Randomly Select Sequences (Subsampling) {#random_sample_batch}
 
-The `random_sample_batch` function lets you randomly subsample the reads 
-in FASTA files or FASTQ file pairs listed in a CSV file or data frame, 
-such as your `fastainfo` data frame.
+> Important: Managing Large Files
+Once your analysis is complete, you might want 
+to compress or delete large intermediate files. 
+For tips on this, see [Files to Keep](#files-to-keep).
 
-You can set the 
-
-* number of sequences selected from each file (`n`), 
-* the proportion of sequences to be sampled (`p`), 
-* or the total number of sequences to be sampled (`N`) while keeping the 
-relative read counts among files.
-
-This step is great for **balancing read counts across your sequencing libraries**. 
-It's optional, but can be really helpful if you want to make sure all your replicates 
-have a similar number of reads.
-
-Here we select `n` sequences from each FASTA file in the `fastainfo` data frame. 
-For more details, check out the [`random_sample_batch` documentation](#random_sample_batch).
-
-
-```{r random_sample_batch}
-randomseq_dir <- file.path(outdir, "2_random_seq")
-
-fastainfo_df <- random_sample_batch(
-  info = fastainfo_df,
-  dir = merged_dir,
-  outdir = randomseq_dir,
-  n = 40000
-  ) 
-
-```
-You may encounter a **warning** indicating that the file `mfzr_1_fw.fasta` contains 
-fewer than 40,000 sequences.
-Since subsampling is performed **without replacement**, this file will be copied 
-directly to the output directory. As a result, it will contain slightly fewer 
-reads than the other files — this is expected and not a cause for concern.
-
-### Demultiplex and Trim {#demultiplex}
-
-The `demultiplex_and_trim_fasta` function is used to both **[demultiplex](#glossary)** your 
-FASTA files (i.e. separate reads based on their tag combinations) 
-and **[trim](#glossary)** [tag](#glossary) and primer sequences from those reads.
-
-You can check the help page (`?demultiplex_and_trim_fasta`) to choose the 
-right settings for your data.
-
-* If `check_reverse = TRUE`, the function will also look for matches 
-on the reverse complement strand.
-* `sampleinfo_df` is an updated version of `fastainfo_df`.
-* This data frame, along with the files it references, is 
-used as input for the `dereplicate` step.
-
-```{r demultiplex}
-demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
-
-sampleinfo_df <- demultiplex_and_trim_fasta(
-  fastainfo=fastainfo_df,  # input df (output of subsample_fasta)
-  fasta_dir=randomseq_dir, # input directory with fasta files
-  outdir=demultiplexed_dir,  # output directory
-  check_reverse=TRUE, 
-  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  cutadapt_minimum_length = 170,
-  cutadapt_maximum_length = 185
-  )
-```
 
 ### Dereplicate
 
@@ -503,7 +480,7 @@ This means grouping identical sequences together so that each unique sequence
 
 The output is a data frame called [read_count_df](#read_count_df), 
 which can also be saved as a **CSV file** if you provide the `outfile` argument. 
-Saving this file is strongly recommended—it becomes your starting point for filtering. 
+Saving this file is strongly recommended — it becomes your starting point for filtering. 
 This way, you can try different filtering strategies without having to re-run 
 the more time-consuming pre-processing steps.
 
@@ -525,11 +502,11 @@ outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo=sampleinfo_df, # input df (output of demultiplex_and_trim_fasta)
-  dir=demultiplexed_dir, # directory with input fasta files
-  outfile=outfile, # write the output data frame to this file
-  input_asv_list=asv_list, 
-  output_asv_list=updated_asv_list
+  sampleinfo = sampleinfo_df, # input df (output of demultiplex_and_trim_fasta)
+  dir = merged_dir, # directory with input fasta files
+  outfile = outfile, # write the output data frame to this file
+  input_asv_list = asv_list, 
+  output_asv_list = updated_asv_list
   )
 ```
 
@@ -672,7 +649,6 @@ read_count_df <- denoise_by_swarm(
   outfile=outfile,
   by_sample=by_sample,
   split_clusters=split_clusters,
-  swarm_path=swarm_path,
   quiet=TRUE
   )
 
@@ -817,7 +793,6 @@ sample_prop = 0.8
 
 read_count_df <- filter_chimera(
   read_count = read_count_df, 
-  vsearch_path=vsearch_path, 
   outfile=outfile,
   by_sample=by_sample, 
   sample_prop=sample_prop, 
@@ -941,8 +916,7 @@ mock_template <- match_variants_to_mock_species(
   fas=mock_ncbi_fasta, # fasta with reference sequences on the mock or closely related species
   taxonomy=taxonomy,
   sampleinfo = sampleinfo_df,
-  outdir= outdir_mock,
-  blast_path=blast_path
+  outdir= outdir_mock
   )
 mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
 mock_composition_df <- read.csv(mock_composition)
@@ -1329,7 +1303,6 @@ asv_tax <- assign_taxonomy_ltg(
   asv=read_count_sample_df, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
-  blast_path=blast_path, # can be omitted if BLAST is in the PATH
   outfile=outfile)
 ```
 
@@ -1387,7 +1360,6 @@ plot_vsearch <- plot_pairwise_identity_vsearch(
   identity_max=0.99,
   identity_increment=0.01,
   min_id = 0.8, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH 
   outfile=outfile, 
   plotfile=plotfile)
 
@@ -1436,7 +1408,6 @@ scatterplot_vsearch <- plot_cluster_classification(
   taxa = asv_tax,
   clustering_method = "vsearch",
   cluster_params = c(0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99),
-  vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
   taxlevels = c("species", "genus"),
   outfile = outfile,
   plotfile = plotfile)
@@ -1510,7 +1481,6 @@ read_count_samples_df_ClusterSize <- cluster_asv(
   identity = 0.97,
   group = TRUE,
   by_sample=FALSE,
-  path=vsearch_path, # can be omitted if VSEARCH is in the PATH
   outfile=outfile)
 
 stat_df <- get_stat(read_count_samples_df_ClusterSize, 
@@ -1715,9 +1685,9 @@ The last file in read_count_files is also used to:
 ```{r miem_results}
 info_files = c(
   fastqinfo,
-  file.path(outdir, "1_merged/fastainfo.csv"),
-  file.path(outdir, "2_random_seq/fastainfo.csv"),
-  file.path(outdir, "3_demultiplexed/sampleinfo.csv")
+  file.path(outdir, "1_random_sampled_fastq/fastqinfo.csv"),
+  file.path(outdir, "2_demultiplexed_fastq/fastqinfo.csv"),
+  file.path(outdir, "3_merged/fastainfo.csv")
 )
 
 read_count_files = c(
@@ -1811,7 +1781,6 @@ read_count_motu <- cluster_asv(
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
-  path=vsearch_path, # can be omitted if VSEARCH is in the PATH
   outfile=outfile
   )
 ```
@@ -1828,7 +1797,6 @@ asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
-  blast_path=blast_path, # can be omitted if BLAST is in the PATH
   outfile=outfile
   )
 ```
@@ -1909,7 +1877,6 @@ pooled_markers <- pool_markers(
   outfile = outfile,  # ASVs identical over their overlapping region are merged into a single line
   asv_with_centroids = asv_with_centroids,  # same as input, with added centroid_id and centroid
   method = "mean",  # mean read counts across pooled ASVs
-  vsearch_path = "vsearch",
   quiet = TRUE
 )
 ```
@@ -1929,7 +1896,6 @@ read_count_motu <- cluster_asv(
   method = "vsearch",
   identity = 0.97,
   group = TRUE,
-  path=vsearch_path, 
   outfile=outfile
   )
 
@@ -1940,7 +1906,6 @@ asv_tax_pooled <- assign_taxonomy_ltg(
   asv=read_count_motu, 
   taxonomy=taxonomy, 
   blast_db=blast_db, 
-  blast_path=blast_path, 
   outfile=outfile
   )
 
@@ -2215,15 +2180,25 @@ To use these tools, vtamR needs to know where their executables are located.
 * If these programs are already in your **system PATH**, vtamR will 
 find them automatically.  You don’t need to specify their locations when calling functions.
 
-* If the programs are **not in your PATH**, you must provide their paths
-explicitly using the relevant arguments:
+* If the programs are **not in your PATH**, set a package option for each program:
 
 ```{r, eval=FALSE}
-vsearch_path  # Path to VSEARCH
-cutadapt_path # Path to CUTADAPT
-blast_path    # Path to BLAST
-swarm_path    # Path to SWARM
-pigz_path     # Path to PIGZ
+options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
+options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
+options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+```
+
+You can also specify the path to the executable using the appropriate 
+argument when calling a function. However, this approach is more laborious 
+and error-prone, as you need to provide the path each time the function is called.
+
+```{r, eval=FALSE}
+merge_fastq_pairs(
+  vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
+  ...
+)
 ```
 
 To see which external tools a function requires, check its help page:
@@ -2231,43 +2206,42 @@ To see which external tools a function requires, check its help page:
 
 ## Files to Keep
 
-During the first steps of the workflow (`merge_fastq_pairs`, `subsample_fasta`, `Sortreads`, `trim_primers`), many intermediate files are generated, and some can be very large,
-especially before dereplication (`dereplicate`).
+During the preprocessing steps of the workflow (`merge_fastq_pairs`, `random_sample_batch`, `demultiplex_and_trim_fasta`, `demultiplex_and_trim_fastq`, and `trim_primers`), 
+many intermediate files are generated. Some of these files can be very large.
 
-Compressing and decompressing files between steps can take time, so 
-vtamR produces uncompressed files by default. You can change this behavior using the [compress](#to-compress-or-not-to-compress) option.
+Compressing and decompressing files between steps can be time-consuming, so `vtamR` produces uncompressed files by default. You can change this behavior using the [`compress`](#to-compress-or-not-to-compress) option.
 
-Here’s a practical guide on what to keep, delete, or compress:
+The following provides a practical guide on which files to keep, compress, or delete.
 
-* `merge_fastq_pairs`:
+### Preprocessing
 
-  * Delete the output FASTA files.
-  * Keep `fastainfo.csv` for read count information after merging.
+* **Keep the information files** (`fastainfo.csv` and `fastqinfo.csv`) generated in the output directory. These files contain information about the files and samples processed during the workflow.
 
-* `subsample_fasta`:
+* **Keep the files that can be submitted to the SRA.** These are usually the outputs of `demultiplex_and_trim_fastq`, where each pair of files corresponds to a sample replicate and the primers and tags have been removed.
 
-  * Compress the FASTA files.
-  * Keep them to ensure reproducibility in case of re-analysis.
+* **Compress subsampled files.** If the files have been subsampled, you can compress them to save disk space. Alternatively, if you have set the `seed` argument, the subsampling is reproducible, so these files can be safely deleted and regenerated if needed.
 
-* `demultiplex_and_trim_fasta`:
+* **Delete other intermediate files** once you are satisfied that they are no longer needed.
 
-  * Delete the output FASTA files.
-  * Keep `sampleinfo.csv` for read count information after trimming.
+### `dereplicate`
 
-* `dereplicate`:
+The files generated by `dereplicate` are particularly important because dereplication can be computationally intensive.
 
-  * Save the dereplicated information to a file (e.g., `1_before_filter.csv` in the tutorial).
-  * Compress after analysis.
-  * This file is important, as you can restart analyses from here without redoing the long merging and demultiplexing steps.
-  * Compress and keep the updated ASV list (`ASV_list_with_IDs.csv`), which can be reused for later datasets to synchronize `asv_id`s.
+* **Keep the dereplicated information file** (e.g., `1_before_filter.csv` in this tutorial).
 
-* Output of filtering steps:
+* **Compress the file after analysis** to reduce its size.
 
-  * Compress if files are large.
-  * Useful for tracing the history of a sample or ASV (see [history_by](#history_by)) or for making summary files (see [summarize_by](#summarize_by)).
+* **Keep this file for reproducibility.** It allows you to restart the analysis from the dereplication step without repeating the potentially time-consuming merging and demultiplexing steps.
 
-This strategy balances disk space and reproducibility, keeping only the essential 
-information to resume or audit your analyses.
+* **Keep and compress the updated ASV list** (`ASV_list_with_IDs.csv`). This file can be reused with later datasets to ensure that `asv_id`s remain synchronized across analyses.
+
+### Outputs of filtering steps
+
+* **Compress large files** to save disk space.
+
+* **Keep these files when possible**, as they can be useful for tracing the history of a sample or ASV using [`history_by`](#history_by), or for generating summary files using [`summarize_by`](#summarize_by).
+
+This strategy provides a good balance between disk usage and reproducibility. It preserves the essential files needed to resume analyses, reproduce results, or audit the processing history, while allowing large intermediate files that can be regenerated to be safely removed.
 
 # Supplementary Functions
 
@@ -2297,7 +2271,6 @@ outfile <- file.path(outdir, "filter_pcr_error.csv")
 read_count_df <- filter_pcr_error(
   read_count_df, 
   outfile=outfile, 
-  vsearch_path=vsearch_path,
   pcr_error_var_prop=0.15
   )
 ```
@@ -2324,7 +2297,6 @@ outfile <- file.path(outdir, "suggest_parameters", "suggest_pcr_error_cutoff.csv
 suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
   read_count_df, 
   mock_composition=mock_composition,
-  vsearch_path=vsearch_path, 
   outfile=outfile
   )
 ```
@@ -2382,9 +2354,7 @@ fastainfo_df <- subsample_fasta(
                 fasta_dir    = merged_dir,
                 outdir       = randomseq_dir,
                 use_vsearch  = TRUE,
-                vsearch_path = vsearch_path, # can be omitted if VSEARCH is in the PATH
-                compress_method = "pigz",
-                pigz_path    = pigz_path, # can be omitted if PIGZ is in the PATH
+                compress_method = "pigz",H
                 n            = 10000,
                 compress     = TRUE)
 ```

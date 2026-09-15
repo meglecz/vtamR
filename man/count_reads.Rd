@@ -66,10 +66,6 @@ count_reads("reads.fastq", file_type = "fastq")
 
 # Count sequences in a FASTA file
 count_reads("sequences.fasta", file_type = "fasta")
-
-# Use the chunk-based implementation
-count_reads("reads.fastq.gz", file_type = "fastq",
-            count_by_read = TRUE)
 }
 
 }

@@ -1,5 +1,7 @@
 # Ideas for vtamR
 
+## harmonize sampleinfo, fastainfo, fastqinfo, info
+
 ## add option to delete contol samples from asv_table or read_count_df
 
 ### check min_read_count in suggest_pcr_error
@@ -874,17 +876,28 @@ all files in info file
 		- if NA => possibilty to deactivate
 	- package variable
 	- arbitary name in working directory
+	
+## 2026/09/15 commit path
+
+- random_sample_batch_by
+- read_counts_batch
+
+- update tuto
+	count_reads, subsample, demultiplex, merge, dereplicate in detailed
+	ount_reads, demultiplex, subsample, merge, dereplicate in short
+- upgate log_file doc: 
+	the `vtamR.log_file` option set with
+	       \code{options(vtamR.log_file = ...)},
+- Declare path by 
+	- direct setting
+	- package option
+	- PATH
+@param pigz_path
+@template param_pigz_path
+pigz_path = NULL
+pigz_path <- get_path("pigz", path = pigz_path)
 
 
-
-############# next task
-## path
-define by (look for path in this order)
-- direct setting by xxx_path argument
-- package variable
-- use prg in path
- 
- 
 
 
 

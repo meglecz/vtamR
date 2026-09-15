@@ -72,10 +72,20 @@ and the documentation of the functions (`?function_name`)
 library(vtamR)
 ```
 
+
 ### Set paths (if needed)
 
-I suppose all third party tools are in your PATH. If not, see the
-[detailed tutorial on how to set the PATH](tutorial-vtamr-pipeline.html#set-path).
+If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.
+
+See the [detailed tutorial on how to set the PATH](tutorial-vtamr-pipeline.html#set-path) for more information.
+
+```{r, eval=FALSE}
+options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+options(vtamR.blast_path = "blastn")
+options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
+options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+```
 
 ## Input data
 *See [Input data](tutorial-vtamr-pipeline.html#input-data) for more details.*
@@ -84,8 +94,8 @@ I suppose all third party tools are in your PATH. If not, see the
 
 ```{r}
 outdir <- "vtamR_demo_out/zfzr_plate1"
-# set package option to define the log_file
 options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+
 
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <- system.file("extdata/demo/fastqinfo_zfzr_plate1.csv", package = "vtamR")
@@ -103,53 +113,78 @@ blast_db <- file.path(blast_db, "COInr_reduced")
 
 ## Pre-processing
 
-### Merge Fastq Pairs
-*See [Merge Fastq Pairs and Quality Filter](tutorial-vtamr-pipeline.html#merge) for more details.*
+To demonstrate different options, here, we will use a different order of the 
+pre-processing steps
+
+In the details tutorial we had
+ - count_reads_batch
+ - random_sample_batch
+ - demultiplex_and_trim_fastq
+ - merge_fastq_pairs
+ 
+ Here we will place de subampling after the demmutliplex step:
+ 
+ - demultiplex_and_trim_fastq
+ - random_sample_batch_by
+ - merge_fastq_pairs
+ 
+### Demultiplex
+*See [Demultiplex and Trim](tutorial-vtamr-pipeline.html#demultiplex) for more details.*
 
 ```{r}
-merged_dir <- file.path(outdir, "1_merged")
+demultiplexed_dir <- file.path(outdir, "1_demultiplexed")
 
-fastainfo_df <- merge_fastq_pairs(
-  fastqinfo=fastqinfo,
-  fastq_dir=fastq_dir,
-  outdir=merged_dir,
-  fastq_maxee=1,
-  fastq_maxns=0,
-  fastq_allowmergestagger=T
+fastqinfo_df <- demultiplex_and_trim_fastq(
+  fastqinfo = fastqinfo,
+  fastq_dir = fastq_dir,
+  outdir = demultiplexed_dir,
+  primer_to_end = FALSE,
+  check_reverse = TRUE,
+  compress = FALSE
 )
 ```
 
 ### Subsampling
 *See [Randomly Select Sequences](tutorial-vtamr-pipeline.html#subsample) for more details.*
 
+If we used `random_sample_batch` with the `n` option as in the [detailed tutoriel](tutorial-vtamr-pipeline.html#subsample),
+we would sample `n` sequences from each file and distort the relative read counts 
+among samples.
+To avoid this problem we will use `random_sample_batch_by` and the `N` option.
+This allow the select `N` sequences all together from the files of each `replicate` (befined by the `by` argument),
+while keeping the relative proportion of the read count among the files of the same 
+replicate.
+
 ```{r}
 randomseq_dir <- file.path(outdir, "2_random_seq")
 
-fastainfo_df <- random_sample_batch(
-  info = fastainfo_df,
-  dir = merged_dir,
+fastqinfo_df <- random_sample_batch_by(
+  info = fastqinfo_df,
+  by = "replicate",
+  dir = demultiplexed_dir,
   outdir = randomseq_dir,
-  n = 40000
+  N = 40000,
+  compress = FALSE
   ) 
 
 ```
 
-
-### Demultiplex
-*See [Demultiplex and Trim](tutorial-vtamr-pipeline.html#demultiplex) for more details.*
+### Merge Fastq Pairs
+*See [Merge Fastq Pairs and Quality Filter](tutorial-vtamr-pipeline.html#merge) for more details.*
 
 ```{r}
-demultiplexed_dir <- file.path(outdir, "3_demultiplexed")
+merged_dir <- file.path(outdir, "3_merged")
 
-sampleinfo_df <- demultiplex_and_trim_fasta(
-  fastainfo=fastainfo_df,
-  fasta_dir=randomseq_dir,
-  outdir=demultiplexed_dir,
-  check_reverse=TRUE,
-  cutadapt_minimum_length = 150,
-  cutadapt_maximum_length = 165
+sampleinfo_df <- merge_fastq_pairs(
+  fastqinfo = fastqinfo_df,
+  fastq_dir = randomseq_dir,
+  outdir = merged_dir,
+  fastq_maxee = 1,
+  fastq_maxns = 0,
+  fastq_allowmergestagger = T
 )
 ```
+
 
 ### Dereplicate
 *See [Dereplicate](tutorial-vtamr-pipeline.html#dereplicate) for more details.*
@@ -159,11 +194,11 @@ outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
 updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo_df,
-  dir=demultiplexed_dir,
-  outfile=outfile,
-  input_asv_list=asv_list,
-  output_asv_list=updated_asv_list
+  sampleinfo = sampleinfo_df,
+  dir = merged_dir,
+  outfile = outfile,
+  input_asv_list = asv_list,
+  output_asv_list = updated_asv_list
 )
 ```
 
@@ -612,9 +647,9 @@ tmp <- miem_bioinformatics(
 ```{r miem_results}
 info_files = c(
   fastqinfo,
-  file.path(outdir, "1_merged/fastainfo.csv"),
-  file.path(outdir, "2_random_seq/fastainfo.csv"),
-  file.path(outdir, "3_demultiplexed/sampleinfo.csv")
+  file.path(outdir, "1_demultiplexed/fastqinfo.csv"),
+  file.path(outdir, "2_random_seq/fastqinfo.csv"),
+  file.path(outdir, "3_merged/fastainfo.csv")
 )
 read_count_files = c(
   file.path(outdir, "4_filter/1_before_filter.csv"),
