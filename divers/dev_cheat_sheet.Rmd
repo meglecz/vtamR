@@ -215,7 +215,7 @@ Edit the file to add or update
 ```
 
 ### install piggyback, No need for users
-```{r}
+```{r, eval=FALSE}
 install.packages("piggyback")
 library(piggyback)
 ```
@@ -234,7 +234,7 @@ piggyback::pb_release_create(repo = "meglecz/vtamR", tag = "short-tutorial-outpu
 ```
 
 ### Every time the output format changes: overwrite the asset
-```{r}
+```{r eval=FALSE}
 piggyback::pb_upload(
   file = "short_tutorial_output.zip",
   repo = "meglecz/vtamR",
@@ -264,9 +264,17 @@ devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
 ### Re-install from github develop
 ```{r}
 remotes::install_github(
-  repo = "meglecz/vtamR",       # Replace with the repository name
-  ref = "develop",       # Replace with the branch name
-  upgrade = TRUE             # Optional: to upgrade if already installed
+  repo = "meglecz/vtamR",
+  ref = "develop", # from develop branch
+  upgrade = "never", # do not update packages used by vtamR
+  force = TRUE # if pb with changing versions
+)
+
+devtools::install_github(
+  repo = "meglecz/vtamR",
+  ref = "develop", # from develop branch
+  upgrade = "never", # do not update packages used by vtamR
+  force = TRUE # if pb with changing versions
 )
 ```
 
@@ -280,6 +288,8 @@ vignette("installation")
 vignette("tutorial-vtamr-pipeline") 
 vignette("from-fastq-to-df") 
 vignette("make-mock-composition-file") 
+
+packageVersion("vtamR")
 
 ```
 
