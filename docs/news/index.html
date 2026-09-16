@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,11 +18,11 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline - v1.1.0</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame</a></li>
+    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs</a></li>
+    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file</a></li>
+    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR</a></li>
+    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -41,7 +41,35 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.0" id="vtamr-110---20260819">vtamR 1.1.0 - 2026/08/19<a class="anchor" aria-label="anchor" href="#vtamr-110---20260819"></a></h2>
+<h2 class="pkg-version" data-toc-text="2.0.0.9000" id="vtamr-2009000-2026-09-16">vtamR 2.0.0.9000 (2026-09-16)<a class="anchor" aria-label="anchor" href="#vtamr-2009000-2026-09-16"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-2-0-0-9000">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-2-0-0-9000"></a></h3>
+<ul><li>Log file path is now resolved in this order: the <code>log_file</code> argument, then the <code>vtamR.log_file</code> package option, then falling back to <code>vtamR_log.csv</code> in the working directory.</li>
+<li>External program paths are now resolved in this order: the corresponding <code>xxx_path</code> argument, then the matching package option, then the system <code>PATH</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-functions-2-0-0-9000">New functions<a class="anchor" aria-label="anchor" href="#new-functions-2-0-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/format_for_phyloseq.html">format_for_phyloseq()</a></code>: convert pipeline output into a <code>phyloseq</code> object.</li>
+<li>
+<code><a href="../reference/format_for_vegan.html">format_for_vegan()</a></code>: convert pipeline output into <code>vegan</code>-compatible tables.</li>
+<li>
+<code><a href="../reference/random_sample_batch.html">random_sample_batch()</a></code>: randomly subsample FASTA or FASTQ file pairs.</li>
+<li>
+<code><a href="../reference/random_sample_batch_by.html">random_sample_batch_by()</a></code>: randomly subsample file pairs grouped by a metadata variable (e.g. replicate), preserving relative read counts within each group.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-2-0-0-9000">Improvements<a class="anchor" aria-label="anchor" href="#improvements-2-0-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/count_reads.html">count_reads()</a></code> now reads files in chunks, with a <code>fast_count</code> option on Linux that uses bash commands for faster counting.</li></ul></div>
+<div class="section level3">
+<h3 id="documentation-and-resources-2-0-0-9000">Documentation and resources<a class="anchor" aria-label="anchor" href="#documentation-and-resources-2-0-0-9000"></a></h3>
+<ul><li>Built a pkgdown site for the package manual: <a href="https://meglecz.github.io/vtamR/" class="uri">https://meglecz.github.io/vtamR/</a>.</li>
+<li>Example output of the short tutorial is now available via <code><a href="../reference/download_tutorial_output.html">download_tutorial_output()</a></code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="vtamr-110-2026-08-19">vtamR 1.1.0 (2026-08-19)<a class="anchor" aria-label="anchor" href="#vtamr-110-2026-08-19"></a></h2>
 <ul><li>Add filter_occurrence argument to filter_pcr_error() and filter_chimera(). If TRUE, occurrences are filtered, if FALSE ASVs are filtered</li>
 <li>make_log(): make a detailed log file with steps and their parameters</li>
 <li>collect_package_info(): to record all loaded / attached packages</li>
@@ -51,7 +79,7 @@
 <li>rename demultiplex_fastq_pairs() to demultiplex_and_trim_fastq()</li>
 </ul></div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.4" id="vtamr-104---20260710">vtamR 1.0.4 - 2026/07/10<a class="anchor" aria-label="anchor" href="#vtamr-104---20260710"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.4" id="vtamr-104-2026-07-10">vtamR 1.0.4 (2026-07-10)<a class="anchor" aria-label="anchor" href="#vtamr-104-2026-07-10"></a></h2>
 <ul><li>Add pattern argument to history_by and summarize_by</li>
 <li>Modify history_by to accept a vector of values, not just a singe value</li>
 <li>Correct filter_asv_global =&lt; cutoff instead of &lt; cutoff</li>
@@ -63,22 +91,25 @@
 <li>Modify check_dir: delete slash at the end of dir and return invisible path</li>
 </ul></div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.3" id="vtamr-103---20260416">vtamR 1.0.3 - 2026/04/16<a class="anchor" aria-label="anchor" href="#vtamr-103---20260416"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.3" id="vtamr-103-2026-04-16">vtamR 1.0.3 (2026-04-16)<a class="anchor" aria-label="anchor" href="#vtamr-103-2026-04-16"></a></h2>
 <ul><li>Short tutoriel added</li>
 <li>Initialize stat_df from get_stat</li>
 <li>Make dir, outdir obligatory</li>
 </ul></div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.2" id="vtamr-102---20260416">vtamR 1.0.2 - 2026/04/16<a class="anchor" aria-label="anchor" href="#vtamr-102---20260416"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.2" id="vtamr-102-2026-04-16">vtamR 1.0.2 (2026-04-16)<a class="anchor" aria-label="anchor" href="#vtamr-102-2026-04-16"></a></h2>
 <p>Documentation updated</p>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.1" id="vtamr-101---20260413">vtamR 1.0.1 - 2026/04/13<a class="anchor" aria-label="anchor" href="#vtamr-101---20260413"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.0.1" id="vtamr-101-2026-04-13">vtamR 1.0.1 (2026-04-13)<a class="anchor" aria-label="anchor" href="#vtamr-101-2026-04-13"></a></h2>
 <p>Tutorial updated</p>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="vtamr-100">vtamR 1.0.0<a class="anchor" aria-label="anchor" href="#vtamr-100"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-1-0-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-0"></a></h3>
 <ul><li>Function Names Harmonized: Correspondences between old and new function names can be found in <code>vtamR/R_divers/vtam_functions_table.csv</code>.</li></ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.2" id="vtamr-032">vtamR 0.3.2<a class="anchor" aria-label="anchor" href="#vtamr-032"></a></h2>
 <ul><li>PoolDatasets is split to pool_datasets and pool_markers</li>

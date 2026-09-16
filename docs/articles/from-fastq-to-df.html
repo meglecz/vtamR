@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>From fastq to data frame - v1.1.0 • vtamR</title>
+<title>From fastq to data frame • vtamR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="From fastq to data frame - v1.1.0">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="From fastq to data frame">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,11 +33,11 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline - v1.1.0</a></li>
+<li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame</a></li>
+    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs</a></li>
+    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file</a></li>
+    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR</a></li>
+    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -60,9 +60,10 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>From fastq to data frame - v1.1.0</h1>
+      <h1>From fastq to data frame</h1>
+                        <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-15</h4>
+            <h4 data-toc-skip class="date">2026-09-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/from-fastq-to-df.Rmd" class="external-link"><code>vignettes/from-fastq-to-df.Rmd</code></a></small>
       <div class="d-none name"><code>from-fastq-to-df.Rmd</code></div>
@@ -101,8 +102,12 @@ table {
 <p>According to your wet lab and sequencing protocol, each FASTQ file may contain one or more <a href="tutorial-vtamr-pipeline.html#glossary">sample-replicates</a>. In addition, sequences may include <a href="tutorial-vtamr-pipeline.html#glossary">tags</a> (used for <a href="tutorial-vtamr-pipeline.html#glossary">demultiplexing</a>) as well as primer sequences.</p>
 <p>In the following sections, we present <strong>three common scenarios</strong> for generating the <a href="tutorial-vtamr-pipeline.html#read_count_df">read_count_df</a> data frame, which serves as the input for the filtering steps.</p>
 <div class="section level2">
-<h2 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
+<h2 id="from-fastq-to-data-frame">From fastq to data frame<a class="anchor" aria-label="anchor" href="#from-fastq-to-data-frame"></a>
 </h2>
+<p><strong>Package version:</strong> 2.0.0.9000</p>
+<div class="section level3">
+<h3 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
+</h3>
 <p><em>Load library</em></p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span></code></pre></div>
@@ -121,16 +126,16 @@ table {
 <p>If third party programs are in your <code>PATH</code> (See <a href="installation.html#install-third-party-programs">Installation</a>), simply omit the <code>cutadapt_path</code>, <code>pigz_path</code>, <code>vsearch_path</code> argument when calling the <code>vtamR</code> functions.</p>
 <p><code>compress = FALSE</code> In the tutorial we will use uncompressed files, but see <a href="tutorial-vtamr-pipeline.html#to-compress-or-not-to-compress">To compress or not to compress</a> for the best strategy for you. See also <a href="tutorial-vtamr-pipeline.html#files-to-keep">Files to keep</a> on how to handle the large intermediate files that should be compressed or deleted once the analyses are complete.</p>
 </div>
-<div class="section level2">
-<h2 id="case-1---one-sample-per-fastq---no-tag---no-primer">Case 1 - One sample per fastq - No tag - No primer<a class="anchor" aria-label="anchor" href="#case-1---one-sample-per-fastq---no-tag---no-primer"></a>
-</h2>
+<div class="section level3">
+<h3 id="case-1---one-sample-per-fastq---no-tag---no-primer">Case 1 - One sample per fastq - No tag - No primer<a class="anchor" aria-label="anchor" href="#case-1---one-sample-per-fastq---no-tag---no-primer"></a>
+</h3>
 <p>In this scenario, each pair of fasta files correspond to a sample (or a replicate of a sample if you have replicates), so no demultiplexing is necessary.</p>
 <p>The reads have been trimmed from all artificial add-ons, such as adapters, tags, indices and also from primers.</p>
 <p>Read pairs should be <strong>quality filtered</strong>, <strong>merged</strong> and written to <strong>fasta format</strong>. This can be done by the <code>merge_fastq_pairs</code> function.</p>
 <p>See the help (<code><a href="../reference/merge_fastq_pairs.html">?merge_fastq_pairs</a></code>) for setting the correct parameters for quality filtering.</p>
-<div class="section level3">
-<h3 id="set-input">Set Input<a class="anchor" aria-label="anchor" href="#set-input"></a>
-</h3>
+<div class="section level4">
+<h4 id="set-input">Set Input<a class="anchor" aria-label="anchor" href="#set-input"></a>
+</h4>
 <ul>
 <li>
 <a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: is either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged. The <code>tag_fw</code>, <code>primer_fw</code>, <code>tag_rv</code>, <code>primer_rv</code> are irrelevant in this case, just fill them with <code>NA</code>.</li>
@@ -153,9 +158,9 @@ table {
 <span></span>
 <span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="merge-fastq-file-pairs-and-quality-filter-reads">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads"></a>
-</h3>
+<div class="section level4">
+<h4 id="merge-fastq-file-pairs-and-quality-filter-reads">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads"></a>
+</h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastqinfo</span>, </span>
@@ -165,9 +170,9 @@ table {
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="dereplicate-reads">Dereplicate reads<a class="anchor" aria-label="anchor" href="#dereplicate-reads"></a>
-</h3>
+<div class="section level4">
+<h4 id="dereplicate-reads">Dereplicate reads<a class="anchor" aria-label="anchor" href="#dereplicate-reads"></a>
+</h4>
 <p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -179,16 +184,16 @@ table {
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level2">
-<h2 id="case-2---one-sample-per-fastq---primer---no-tag">Case 2 - One Sample per Fastq - Primer - No Tag<a class="anchor" aria-label="anchor" href="#case-2---one-sample-per-fastq---primer---no-tag"></a>
-</h2>
+<div class="section level3">
+<h3 id="case-2---one-sample-per-fastq---primer---no-tag">Case 2 - One Sample per Fastq - Primer - No Tag<a class="anchor" aria-label="anchor" href="#case-2---one-sample-per-fastq---primer---no-tag"></a>
+</h3>
 <p>This is one of the most frequent case. Each pair of fasta files correspond to a sample (or a replicate of a sample if you have replicates), so no demultiplexing is necessary.</p>
 <p>The reads has been trimmed from all artificial add-ons, such as adapters, tags, BUT they still have the primers.</p>
 <p>Read pairs should be <strong>quality filtered</strong>, <strong>merged</strong> and written to <strong>fasta format</strong> by <code>merge_fastq_pairs</code> function as in the previous section.</p>
 <p>Then the <code>trim_primer</code> function will <strong>trim the primers</strong> from the reads. See the help (<code>?trim_primer</code>) for setting the correct parameters for primer trimming.</p>
-<div class="section level3">
-<h3 id="set-input-1">Set Input<a class="anchor" aria-label="anchor" href="#set-input-1"></a>
-</h3>
+<div class="section level4">
+<h4 id="set-input-1">Set Input<a class="anchor" aria-label="anchor" href="#set-input-1"></a>
+</h4>
 <ul>
 <li>
 <a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame.<br>
@@ -217,9 +222,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span></span>
 <span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="merge-fastq-file-pairs-and-quality-filter-reads-1">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-1"></a>
-</h3>
+<div class="section level4">
+<h4 id="merge-fastq-file-pairs-and-quality-filter-reads-1">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-1"></a>
+</h4>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastainfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastqinfo</span>, </span>
@@ -229,9 +234,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="trim-primers">Trim Primers<a class="anchor" aria-label="anchor" href="#trim-primers"></a>
-</h3>
+<div class="section level4">
+<h4 id="trim-primers">Trim Primers<a class="anchor" aria-label="anchor" href="#trim-primers"></a>
+</h4>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"demultiplexed"</span><span class="op">)</span></span>
@@ -246,9 +251,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="dereplicate">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate"></a>
-</h3>
+<div class="section level4">
+<h4 id="dereplicate">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate"></a>
+</h4>
 <p>The fasta files produced by <code>TrimPrimer</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code>?Dereplicate</code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -260,19 +265,19 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level2">
-<h2 id="case-3---several-samples-per-fastq---tags---primers">Case 3 - Several Samples per Fastq - Tags - Primers<a class="anchor" aria-label="anchor" href="#case-3---several-samples-per-fastq---tags---primers"></a>
-</h2>
-<p>In this case, one pair of fastq files contains reads from multiples samples or sample-replicates, so it is necessary to demultiplex them, and trim from tags and primers.</p>
 <div class="section level3">
-<h3 id="case-3a-merge---demultiplex">Case 3a Merge - demultiplex<a class="anchor" aria-label="anchor" href="#case-3a-merge---demultiplex"></a>
+<h3 id="case-3---several-samples-per-fastq---tags---primers">Case 3 - Several Samples per Fastq - Tags - Primers<a class="anchor" aria-label="anchor" href="#case-3---several-samples-per-fastq---tags---primers"></a>
 </h3>
+<p>In this case, one pair of fastq files contains reads from multiples samples or sample-replicates, so it is necessary to demultiplex them, and trim from tags and primers.</p>
+<div class="section level4">
+<h4 id="case-3a-merge---demultiplex">Case 3a Merge - demultiplex<a class="anchor" aria-label="anchor" href="#case-3a-merge---demultiplex"></a>
+</h4>
 <p>Read pairs should be <strong>quality filtered</strong>, <strong>merged</strong> and written to <strong>fasta format</strong> as in the previous sections.</p>
 <p>Then the <code>demultiplex_and_trim_fasta</code> function will <strong><a href="tutorial-vtamr-pipeline.html#glossary">demultiplex</a></strong> the fasta files according to the <strong><a href="tutorial-vtamr-pipeline.html#glossary">tag</a></strong> combinations and <strong><a href="tutorial-vtamr-pipeline.html#glossary">trim</a></strong> the primers from the reads.</p>
 <p>See the help (<code><a href="../reference/demultiplex_and_trim_fasta.html">?demultiplex_and_trim_fasta</a></code>) for setting the correct parameters for demultiplexing and primer trimming:</p>
-<div class="section level4">
-<h4 id="set-input-2">Set Input<a class="anchor" aria-label="anchor" href="#set-input-2"></a>
-</h4>
+<div class="section level5">
+<h5 id="set-input-2">Set Input<a class="anchor" aria-label="anchor" href="#set-input-2"></a>
+</h5>
 <ul>
 <li>
 <a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged.</li>
@@ -301,9 +306,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span>
 <span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"demultiplexed"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="merge-fastq-file-pairs-and-quality-filter-reads-2">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-2"></a>
-</h4>
+<div class="section level5">
+<h5 id="merge-fastq-file-pairs-and-quality-filter-reads-2">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-2"></a>
+</h5>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastainfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastqinfo</span>, </span>
@@ -313,9 +318,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="demultiplex-trim-off-tags-and-primers">Demultiplex, Trim off Tags and Primers<a class="anchor" aria-label="anchor" href="#demultiplex-trim-off-tags-and-primers"></a>
-</h4>
+<div class="section level5">
+<h5 id="demultiplex-trim-off-tags-and-primers">Demultiplex, Trim off Tags and Primers<a class="anchor" aria-label="anchor" href="#demultiplex-trim-off-tags-and-primers"></a>
+</h5>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/demultiplex_and_trim_fasta.html">demultiplex_and_trim_fasta</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastainfo_df</span>, </span>
@@ -327,9 +332,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="dereplicate-1">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-1"></a>
-</h4>
+<div class="section level5">
+<h5 id="dereplicate-1">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-1"></a>
+</h5>
 <p>The fasta files produced by <code>demultiplex_and_trim_fasta</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -341,16 +346,16 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <p>Here’s a polished version with corrected grammar, clearer wording, and improved consistency:</p>
 </div>
 </div>
-<div class="section level3">
-<h3 id="case-3b-demultiplex-first-then-merge">Case 3b: Demultiplex First, Then Merge<a class="anchor" aria-label="anchor" href="#case-3b-demultiplex-first-then-merge"></a>
-</h3>
+<div class="section level4">
+<h4 id="case-3b-demultiplex-first-then-merge">Case 3b: Demultiplex First, Then Merge<a class="anchor" aria-label="anchor" href="#case-3b-demultiplex-first-then-merge"></a>
+</h4>
 <p>When submitting FASTQ files to the NCBI Sequence Read Archive (SRA), each file must contain reads from a single sample-replicate combination and must be trimmed of tags/adapters and primers. Therefore, instead of merging reads first and then demultiplexing them, as described in the previous section, the order of these steps can be reversed.</p>
 <p>FASTQ file pairs can be demultiplexed and trimmed of tags and primers using the <code>demultiplex_and_trim_fastq</code> function. This procedure produces FASTQ file pairs that can be submitted directly to the SRA.</p>
 <p>The demultiplexed FASTQ files should then be merged and converted to FASTA format before proceeding with the filtering steps.</p>
 <p>See the help page (<code><a href="../reference/demultiplex_and_trim_fastq.html">?demultiplex_and_trim_fastq</a></code>) for details on setting the appropriate parameters for demultiplexing and primer trimming.</p>
-<div class="section level4">
-<h4 id="input-parameters">Input Parameters<a class="anchor" aria-label="anchor" href="#input-parameters"></a>
-</h4>
+<div class="section level5">
+<h5 id="input-parameters">Input Parameters<a class="anchor" aria-label="anchor" href="#input-parameters"></a>
+</h5>
 <ul>
 <li>
 <strong><code>fastqinfo</code></strong> (<a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>): Either a CSV file or a data frame. For <code>demultiplex_and_trim_fastq</code>, the key information includes the list of FASTQ file pairs to be demultiplexed, as well as the primer and tag sequences associated with each sample-replicate combination.</li>
@@ -375,9 +380,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"demultiplexed"</span><span class="op">)</span></span>
 <span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="demultiplex-trim-off-tags-and-primers-and-keep-fastq-format">Demultiplex, Trim off Tags and Primers and keep fastq format<a class="anchor" aria-label="anchor" href="#demultiplex-trim-off-tags-and-primers-and-keep-fastq-format"></a>
-</h4>
+<div class="section level5">
+<h5 id="demultiplex-trim-off-tags-and-primers-and-keep-fastq-format">Demultiplex, Trim off Tags and Primers and keep fastq format<a class="anchor" aria-label="anchor" href="#demultiplex-trim-off-tags-and-primers-and-keep-fastq-format"></a>
+</h5>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastqinfo_delultiplexed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/demultiplex_and_trim_fastq.html">demultiplex_and_trim_fastq</a></span><span class="op">(</span></span>
 <span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo</span>, </span>
@@ -390,9 +395,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  quiet<span class="op">=</span><span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="merge-fastq-file-pairs-and-quality-filter-reads-3">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-3"></a>
-</h4>
+<div class="section level5">
+<h5 id="merge-fastq-file-pairs-and-quality-filter-reads-3">Merge Fastq File Pairs and Quality Filter Reads<a class="anchor" aria-label="anchor" href="#merge-fastq-file-pairs-and-quality-filter-reads-3"></a>
+</h5>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
 <span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo_delultiplexed</span>, </span>
@@ -402,9 +407,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <span>  compress<span class="op">=</span><span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="dereplicate-2">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-2"></a>
-</h4>
+<div class="section level5">
+<h5 id="dereplicate-2">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-2"></a>
+</h5>
 <p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -416,9 +421,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 </div>
 </div>
 </div>
-<div class="section level2">
-<h2 id="subsampling">Subsampling<a class="anchor" aria-label="anchor" href="#subsampling"></a>
-</h2>
+<div class="section level3">
+<h3 id="subsampling">Subsampling<a class="anchor" aria-label="anchor" href="#subsampling"></a>
+</h3>
 <p>Subsampling FASTA or FASTQ file pairs is useful when sequences come from different sequencing libraries with strongly different numbers of reads.</p>
 <p>For example, in our sample dataset each sequencing library had one replicate of all samples. Subsampling each library to a similar number of reads helps avoid filtering out occurrences from a replicate that happens to have relatively few reads.</p>
 <p>Standardizing read numbers is also a good idea when working with different sequencing runs that have strongly different coverage.</p>
@@ -433,6 +438,7 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 </ul>
 <p>This step can be run on the raw input FASTQ file pairs, on demultiplexed FASTA or FASTQ file pairs, or on merged FASTA files.</p>
 <p>However, if your workflow includes <code>filter_occurrence_variant</code> or <code>filter_occurrence_read_count</code> — which rely on total read counts in negative controls — standardizing read numbers across samples is <strong>not recommended</strong>. That said, it’s still possible to subsample demultiplexed files using the proportion of reads to be sampled (<code>p</code>) or the total number of reads across all samples while keeping relative read counts across samples (<code>N</code>).</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

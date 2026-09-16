@@ -1,17 +1,16 @@
 ---
-title: "Short Tutorial vtamR - v1.1.0"
-auhor: Emese Meglécz
+title: "Short Tutorial vtamR"
+author: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
   html_document:
     toc: true
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Short Tutorial vtamR - v1.1.0}
+  %\VignetteIndexEntry{Short Tutorial vtamR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
 
 <style>
 /* Block console output (<pre>) scrolls horizontally AND vertically */
@@ -59,10 +58,23 @@ knitr::opts_chunk$set(
 
 # Short Tutorial
 
+**Package version:** `r packageVersion("vtamR")`
+
+## Documentation
+
 This is a short version of the tutorial using the ZFZR demo data set.
 For more details check out the appropriate section of the 
 [detailed tutorial](tutorial-vtamr-pipeline.html)
 and the documentation of the functions (`?function_name`)
+
+> **Want to see the expected output without running the pipeline yourself?**
+> Download a ready-made copy of this tutorial's output with:
+> ```{r, eval=FALSE}
+> vtamR::download_tutorial_output(dest = "my_folder/")
+> ```
+> This is useful for checking your own results against a reference, or for
+> browsing the output structure before running the third-party tools
+> (vsearch, blast, swarm, cutadapt) required for the pipeline itself.
 
 ## Set up
 

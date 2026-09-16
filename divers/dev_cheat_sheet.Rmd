@@ -1,7 +1,7 @@
 ---
 title: "vtamR Developer notes"
-auhor: Emese Meglecz
-date: "2024-06-24"
+author: Emese Meglécz
+date:  "`r Sys.Date()`"
 output:
   html_document:
     toc: true
@@ -13,7 +13,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
-
+# Developper
+## Load and roxygenise
 ```{r}
 library("devtools")
 library("roxygen2")
@@ -25,9 +26,9 @@ usethis::use_roxygen_md()
 ```
 
 
+## Creating a package
+
 ```{r}
-### Developer
-# Creating a package
 install.packages(c("devtools", "roxygen2", "usethis", "testthat"))
 usethis::create_package("path/to/your/packageName")
 usethis::use_git()
@@ -53,40 +54,61 @@ results <- rcmdcheck::rcmdcheck()
 results$errors
 results$warnings
 results$notes
+```
 
-# Load package without installing; Use during development
-library("vtamR")
-library("rRDP")
+## uninstall
+```{r}
+remove.packages("vtamR")
+```
+
+## create a rda with the asv_tax, so users can load it
+```{r}
+full_asv_tax <- asv_tax
+usethis::use_data(full_asv_tax, overwrite = TRUE)
+rm(full_asv_tax)
+data(full_asv_tax)
+```
+
+
+
+
+
+
+## Building new version
+
+### Update the following files
+
+- DESCRIPTION
+- vignettes
+- inst/citation
+- complete NEWS.md
+
+### load and roxygenise
+```{r}
 library("devtools")
 library("roxygen2")
-library("seqinr")
-library("dplyr")
-library("tidyr")
-library("ggplot2") 
-### before release
+setwd("C:\\Users\\emese\\vtamR")
 setwd("/home/meglecz/vtamR")
 load_all(".")
 roxygenise()
 usethis::use_roxygen_md()
+```
 
-### to test as a package 
-# Install the package with vignettes, but vignettes are not available for users it is only local
+### check package
+```{r}
+usethis::use_roxygen_md()
+library("devtools")
+devtools::check()  
+```
+
+### install package localy and build vignettes (or not)
+```{r}
 devtools::install(build_vignettes = TRUE)
+devtools::install(build_vignettes = FALSE)
+```
 
-# USER
-library("vtamR") 
-
-##see vignettes
-vignette(package = "vtamR")
-vignette("installation") 
-vignette("tutorial-vtamr-pipeline") 
-vignette("from-fastq-to-df") 
-vignette("make-mock-composition-file") 
-
-
-
-#######################
 ### If pb with vignette not building correctly
+```{r}
 find.package("vtamR")
 remove.packages("vtamR")
 # clean package
@@ -99,86 +121,10 @@ devtools::clean_dll()
 devtools::document()
 
 devtools::install(build_vignettes = FALSE, force = TRUE, dependencies = TRUE)
-# test library
-library(vtamR)
-# install with vignettes (local)
-devtools::install(build_vignettes = TRUE)
-vignette(package = "vtamR")
-vignette("installation")
-
-#### from github
-if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
-
-if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
-devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
-############################
-
-######################
-# Making doc in html
-### Keep the vignettes and if changes are necessary modify these files
-# check if it builds correctly
-library("devtools")
-devtools::build_vignettes()
-# copy Rmd to web_doc modify TOC
-  html_document:
-    toc: true
-    toc_float: true
-# knit and put the html to webpage
-# make index to link the different pages
-
-## uninstall
-remove.packages("vtamR")
-# Restart R 
-library(vtamR)
-vignette(package="vtamR")
-?Merge
-
-
-
-############
-# create a rda with the asv_tax, so users can load it
-full_asv_tax <- asv_tax
-usethis::use_data(full_asv_tax, overwrite = TRUE)
-rm(full_asv_tax)
-data(full_asv_tax)
-############
-
-
-
-############
-### info package
-# Lists all  objects from namespace:
-getNamespaceExports("vtamR")
-l <- getNamespaceExports("vtamR")
-write.csv(l, "vtam_functions.csv")
-
-# Shows the package help page with an index of functions:
-help(package = "vtamR")
-?vtamR
-
-apropos("filter")
 ```
 
-# Building new version
-- DESCRIPTION
-- vignettes
-- inst/citation
-- complete NEWS.md
-
-## check package
-```{r}
-library("devtools")
-devtools::check()  
-```
-## install package localy and build vignettes
-```{r}
-library("devtools")
-```
-
-## build vignettes
-
-### It creates Rmd and html in doc
+### Build vignettes
+#### It creates Rmd and html in doc
 ```{r}
 setwd("/home/meglecz/vtamR")
 setwd("C:\\Users\\emese\\vtamR")
@@ -186,9 +132,9 @@ library("devtools")
 devtools::build_vignettes()
 ```
 
-### Make an html with toc float
+#### Make an html with toc float
 
-# copy Rmd to web_doc modify TOC
+copy Rmd to web_doc modify TOC
 ```{r}
   html_document:
     toc: true
@@ -197,23 +143,14 @@ devtools::build_vignettes()
 # make index to link the different pages
 ```
 
-## 
-```{r}
-remotes::install_github(
-  repo = "meglecz/vtamR",       # Replace with the repository name
-  ref = "develop",       # Replace with the branch name
-  upgrade = TRUE             # Optional: to upgrade if already installed
-)
-```
-
-### static github website
+## static github website
 Run all this from vtamR and not from vtamR/divers !!!
 
 ```{r}
 install.packages("pkgdown")
 ```
 
-In R, from your package root with develop checked out: 
+In R, from package root with develop checked out: 
 This creates a _pkgdown.yml file and adds docs/ to .Rbuildignore automatically. Skip this step if _pkgdown.yml already exists.
 ```{r}
 usethis::use_pkgdown()
@@ -222,6 +159,7 @@ Correct the URL manually to url: https://meglecz.github.io/vtamR/
 
 
 This renders your vignettes (already working locally), builds the function reference from your roxygen docs, and writes the full site into docs/ at the repo root.
+Do this every time the pkgdown site should be updated
 
 ```{r}
 pkgdown::build_site()
@@ -234,16 +172,119 @@ git push origin develop
 ```
 
 
+On GitHub: 
+go to your repo → Settings → Pages → under 'Build and deployment', 
+  set 
+    Source to 'Deploy from a branch', 
+    Branch to develop, 
+    folder to /docs. 
+  Save.
+  
+  
+GitHub takes a minute or two to build and deploy. 
+Then visit https://meglecz.github.io/vtamR/ to confirm it's live. 
+If it 404s at first, give it a few minutes and refresh — first deploy can be slow.
+
+When submitting the paper, set doc to main???
 
 
+## create data release
+
+### set a personal access token
+
+```{r}
+  usethis::edit_r_environ()
+```
+
+Edit the file to add or update 
+```
+# GITHUB_PAT=ghp_xxxxxxxxxxxx
+```
+
+### install piggyback, No need for users
+```{r}
+install.packages("piggyback")
+library(piggyback)
+```
+
+### zip output files
+move /home/meglecz/vtamR/vignettes/vtamR_demo_out/zfzr_plate1/ to 
+/home/meglecz/vtamR/short_tutorial_output/ and zip
+
+```{r}
+zip::zip("short_tutorial_output.zip", files = "short_tutorial_output/", recurse = TRUE)
+```
+
+First time only: create the release
+```{r}
+piggyback::pb_release_create(repo = "meglecz/vtamR", tag = "short-tutorial-output-v1")
+```
+
+### Every time the output format changes: overwrite the asset
+```{r}
+piggyback::pb_upload(
+  file = "short_tutorial_output.zip",
+  repo = "meglecz/vtamR",
+  tag  = "short-tutorial-output-v1"
+)
+```
+
+### users do
+```{r}
+tmp_out <- download_tutorial_output()
+```
 
 
+# Users
 
+## Install
 
-```{}
+#### from github develop
+```{r}
+if(!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
+pak::pkg_install("meglecz/vtamR@develop", dependencies=TRUE)
+
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+devtools::install_github("meglecz/vtamR@develop", dependencies = TRUE)
+```
+
+### Re-install from github develop
+```{r}
 remotes::install_github(
   repo = "meglecz/vtamR",       # Replace with the repository name
   ref = "develop",       # Replace with the branch name
   upgrade = TRUE             # Optional: to upgrade if already installed
 )
 ```
+
+
+## read vignettes
+```{r}
+library("vtamR") 
+
+vignette(package = "vtamR")
+vignette("installation") 
+vignette("tutorial-vtamr-pipeline") 
+vignette("from-fastq-to-df") 
+vignette("make-mock-composition-file") 
+
+```
+
+
+## info package
+
+### Lists all  objects from namespace:
+```{r}
+getNamespaceExports("vtamR")
+l <- getNamespaceExports("vtamR")
+write.csv(l, "vtam_functions.csv")
+```
+
+### Shows the package help page with an index of functions:
+```{r}
+help(package = "vtamR")
+?vtamR
+
+apropos("filter")
+```
+

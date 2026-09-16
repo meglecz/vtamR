@@ -859,6 +859,21 @@ pigz_path = NULL
 pigz_path <- get_path("pigz", path = pigz_path)
 
 
+## 2026/09/15 commit Build pkgdown site
+Build pkgdown site => follows develop
+
+## 2026/09/16 
+
+Install and README updated, with 
+	- correct link to manual
+	- Note on extracting zip files on windows
+	
+- Release short-tutorial-output-v1 
+- Add download_tutorial_output()
+- Update tuto and vignette
+
+
+
 
 
 

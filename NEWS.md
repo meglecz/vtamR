@@ -1,4 +1,39 @@
-# vtamR 1.1.0 - 2026/08/19
+
+
+# vtamR 2.0.0.9000 (2026-09-16)
+
+## Breaking changes
+
+- Log file path is now resolved in this order: the `log_file` argument, 
+  then the `vtamR.log_file` package option, then falling back to 
+  `vtamR_log.csv` in the working directory.
+- External program paths are now resolved in this order: the corresponding 
+  `xxx_path` argument, then the matching package option, then the system 
+  `PATH`.
+
+## New functions
+
+- `format_for_phyloseq()`: convert pipeline output into a `phyloseq` object.
+- `format_for_vegan()`: convert pipeline output into `vegan`-compatible 
+  tables.
+- `random_sample_batch()`: randomly subsample FASTA or FASTQ file pairs.
+- `random_sample_batch_by()`: randomly subsample file pairs grouped by a 
+  metadata variable (e.g. replicate), preserving relative read counts 
+  within each group.
+
+## Improvements
+
+- `count_reads()` now reads files in chunks, with a `fast_count` option on 
+  Linux that uses bash commands for faster counting.
+
+## Documentation and resources
+
+- Built a pkgdown site for the package manual: 
+  <https://meglecz.github.io/vtamR/>.
+- Example output of the short tutorial is now available via 
+  `download_tutorial_output()`.
+
+# vtamR 1.1.0 (2026-08-19)
 
 - Add filter_occurrence argument to filter_pcr_error() and filter_chimera(). If TRUE, occurrences are filtered, if FALSE ASVs are filtered
 - make_log(): make a detailed log file with steps and their parameters
@@ -8,9 +43,7 @@
 - rename demultiplex_and_trim() to demultiplex_and_trim_fasta()
 - rename demultiplex_fastq_pairs() to demultiplex_and_trim_fastq() 
 
-
-
-# vtamR 1.0.4 - 2026/07/10
+# vtamR 1.0.4 (2026-07-10)
 
 - Add pattern argument to history_by and summarize_by
 - Modify history_by to accept a vector of values, not just a singe value
@@ -25,21 +58,23 @@
 - Modify check_dir: delete slash at the end of dir and return invisible path
 
 
-# vtamR 1.0.3  - 2026/04/16
+# vtamR 1.0.3  (2026-04-16)
 
 - Short tutoriel added
 - Initialize stat_df from get_stat
 - Make dir, outdir obligatory
 
-# vtamR 1.0.2 - 2026/04/16
+# vtamR 1.0.2 (2026-04-16)
 
 Documentation updated
 
-# vtamR 1.0.1  - 2026/04/13
+# vtamR 1.0.1 (2026-04-13)
 
 Tutorial updated
 
 # vtamR 1.0.0 
+
+## Breaking changes
 
 - Function Names Harmonized: Correspondences between old and new function 
 names can be found in `vtamR/R_divers/vtam_functions_table.csv`.

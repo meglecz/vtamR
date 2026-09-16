@@ -18,62 +18,56 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-**vtamR** is a revised, completed version of 
-[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
-(Validation and Taxonomic Assignation of Metabarcoding Data) 
-rewritten in R. It is a complete metabarcoding pipeline:
+**vtamR** is an advanced, R-based revision of 
+[VTAM](https://spj.science.org/doi/pdf/10.1016/j.csbj.2023.01.034) 
+(Validation and Taxonomic Assignment of Metabarcoding Data). 
+It provides a **comprehensive metabarcoding pipeline**, enabling:
 
-* Sequence analyses **from raw fastq files** of amplicon sequences till 
-Amplicon Sequence Variant 
-([ASV](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary)) 
-table of **validated ASVs assigned to taxonomic groups**.
-* Handles technical or biological **replicates** of the same sample.
-* Uses positive and negative **control samples to fine tune the filtering** and 
-reduce [false positive](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-and [false negative](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) 
-occurrences.
-* Can pool multiple data sets (results of earlier analyses)
-* Can pool results from overlapping markers
-
-**Novelties compared with VTAM:**
-
-* As a collection of R functions, `vtamR` is highly adaptable, allowing users to
-include, exclude, and reorder different analysis steps.
-* Includes **SWARM** for denoising, followed by a post-treatment to separate 
-abundant ASVs that differ by only one nucleotide but have been clustered together.
-* Provides additional **graphical and visualization options**.
-* Includes functions to generate statistics for each filtering step (e.g. read and variant counts).
-* Generates detailed log files and summaries to facilitate **reproducibility and reporting**, 
-including support for the **MIEM checklist**.
-* Supports **ASV clustering into mOTUs**.
-* Outputs can be easily converted to a **phyloseq** object of data frames ready for **vegan**.
-* The concepts of **marker** and **run** have been removed to simplify the analysis workflow.
+- **End-to-End Sequence Analysis:** Processes raw FASTQ files of amplicon 
+sequences to generate a validated 
+[Amplicon Sequence Variant (ASV)](tutorial-vtamr-pipeline.html#glossary) table, 
+with ASVs assigned to taxonomic groups.
+- **Replicate Handling:** Supports technical or biological replicates of the same sample.
+- **Control-Based Filtering:** Uses positive and negative control samples to refine 
+filtering, minimizing both [false positives](tutorial-vtamr-pipeline.html#glossary) and [false negatives](tutorial-vtamr-pipeline.html#glossary).
 
 
-# Tutorial
+**Novelties Compared to VTAM**
 
-A detailed **[Tutorial](https://people.imbe.fr/~emeglecz/vtamR)**
-on how to construct a full metabarcoding pipeline is avalibale online.
+- **Modular Design:** As a series of R functions, `vtamR` is **highly adaptable**, 
+allowing users to include, exclude, or reorder analysis steps as needed.
+- **More Flexible Preprocessing:** Demultiplexing and subsampling of FASTA or FASTQ pairs.
+- **Denoising with SWARM:** Incorporates SWARM for robust denoising
+of amplicon sequence variants (ASVs).
+- **Post-Processing of Swarms:** Splits swarms among abundant ASVs to prevent 
+pooling of highly similar yet distinct ASVs, preserving **intra-specific variability**.
+- **Visualization Tools:** Offers **graphic options** to aid in data interpretation and decision-making.
+- **Filtering Statistics:** Includes functions to generate **statistics for each filtering step** 
+(e.g., read and variant counts).
+- **ASV Clustering into mOTUs:**
+  - Uses **VSEARCH or SWARM** to cluster ASVs into molecular operational taxonomic units (mOTUs).
+  - Provides visualization tools to help users **select optimal clustering parameters**.
+- **Simplified Workflow:** The concepts of "marker" and "run" have been removed to streamline analyses.
+- **Detailed Log File:** Records all major functions called, along with their parameters and runtimes.
+- **Summary Information:** Facilitates publication of results (e.g., MIEM checklist).
+- **Flexible Output:** Formats output for direct use with `phyloseq` or `vegan`.
 
-# Installation
+## Documentation
 
+Detailed documentation is available at **[Manual](https://meglecz.github.io/vtamR/)** 
 
-## Implementation
+- [Installation](https://meglecz.github.io/vtamR/articles/installation.html)
+- [Short tutorial](https://meglecz.github.io/vtamR/articles/short-tutorial.html)
+- [Detailed tutorial on how to construct a full metabarcoding pipeline.](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html)
+- [From fastq to data frame](https://meglecz.github.io/vtamR/articles/from-fastq-to-df.html)
+- [How to make a mock_composition file](https://meglecz.github.io/vtamR/articles/make-mock-composition-file.html)
 
-The heavy lifting of sequence analyses are done by the following third party 
-programs. They should be installed on your computer:
+You can also download a ready-made example output (matching the Short
+tutorial) without running the pipeline:
 
-* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
-* VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
-* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
-* SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
-* PIGZ (optional)
-
-`vtamR` has been tested using the above mentioned versions, 
-but it should work with later versions.
-
-`vtamR` was tested on **Windows** and **Linux**, and should work in all 
-operating systems.
+```{r}
+vtamR::download_tutorial_output(dest = "my_folder/")
+```
 
 ## Install `vtamR`
 
@@ -109,6 +103,22 @@ if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phylose
 
 ## Install third party programs
 
+The heavy lifting of sequence analyses are done by the following third party 
+programs. They should be installed on your computer. 
+⚠️ **Read the detailed installation instructions below before proceeding if you do not have experience with installing command line programs.** 
+
+* BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
+* VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
+* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200)) (v4.0)
+* SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
+* PIGZ (optional)
+
+`vtamR` has been tested using the above mentioned versions, 
+but it should work with later versions.
+
+`vtamR` was tested on **Windows** and **Linux**, and should work in all 
+operating systems.
+
 ### Linux
 
 * `VSEARCH` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
@@ -118,9 +128,9 @@ if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phylose
 * `PIGZ` (optional) [https://github.com/madler/pigz](https://github.com/madler/pigz)
 
 
-**Add the executables to your PATH** 
+**Add executables to your PATH (Optional)** 
 
-This step is optional. If third-party executables are included in your `PATH`, 
+If third-party executables are included in your `PATH`, 
 you won’t need to manually specify their locations when running functions that use them.
 
 If you prefer **not** to modify your `PATH`, be sure to provide the 
@@ -162,6 +172,18 @@ system("pigz --version")
 Download binaries and save them to a convenient place on your computer 
 (path without space, e.g. `C:/Users/Public/`)
 
+> **Note:** In Windows, double-clicking a `.zip` file doesn't actually decompress 
+(extract) it — it just lets you browse the contents while they're still compressed.
+>
+> To properly extract the files, you need to:
+>
+> - **Right-click** on the zip file
+> - Select **"Extract All..."**
+> - Choose a destination folder (or keep the default)
+> - Click **Extract**
+>
+> This creates a real, uncompressed copy of the files on your disk.
+
 **VSEARCH**
 
 * Download binaries from https://github.com/torognes/vsearch/releases/tag/v2.23.0
@@ -191,15 +213,15 @@ so you won’t need to specify its location when using it.
 * The executables will be installed in:
 `C:\Program Files\NCBI\blast-x.xx.x+\bin`
 
-**VSEARCH** (Optional)
+**PIGZ** (Optional)
 
 * Download [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
 * Decompress the zip file
 * The executable (pigz.exe) is in the pigz-win32 directory
 
-**Add executables to your PATH**
+**Add executables to your PATH (Optional)**
 
-This step is optional. If third-party executables are included in your 
+If third-party executables are included in your 
 system PATH, you won’t need to manually specify their locations when running 
 functions that use them.
 
@@ -302,4 +324,5 @@ The database is provided in the `rRDPData` R data package.
 
 It is also possible to provide a trained classifier object created 
 with `trainRDP()`.
+
 

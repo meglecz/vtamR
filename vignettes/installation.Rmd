@@ -1,13 +1,13 @@
 ---
-title: "Install vtamR and Third Party Programs - v1.1.0"
-auhor: Emese Meglécz
+title: "Install vtamR and Third Party Programs"
+author: Emese Meglécz
 date:  "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette:
+output:
+  html_document:
     toc: true
-    toc_depth: 3
+    toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Install vtamR and Third Party Programs - v1.1.0}
+  %\VignetteIndexEntry{Install vtamR and Third Party Programs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -56,13 +56,18 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Install vtamR and Third Party Programs
+
+**Package version:** `r packageVersion("vtamR")`
 ## Documentation
 
-Detailed documentation is available at **[Manual](https://people.imbe.fr/~emeglecz/vtamR)** 
+Detailed documentation is available at **[Manual](https://meglecz.github.io/vtamR/)** 
 
-- Installation
-- Short tutorial
-- Detailed tutorial on how to construct a full metabarcoding pipeline.
+- [Installation](https://meglecz.github.io/vtamR/articles/installation.html)
+- [Short tutorial](https://meglecz.github.io/vtamR/articles/short-tutorial.html)
+- [Detailed tutorial on how to construct a full metabarcoding pipeline.](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html)
+- [From fastq to data frame](https://meglecz.github.io/vtamR/articles/from-fastq-to-df.html)
+- [How to make a mock_composition file](https://meglecz.github.io/vtamR/articles/make-mock-composition-file.html)
 
 
 ## Install `vtamR`
@@ -166,7 +171,19 @@ system("pigz --version")
 ### Windows
 
 Download binaries and save them to a convenient place on your computer 
-(path without space, e.g. `C:/Users/Public/`)
+(**path without space**, e.g. `C:/Users/Public/`)
+
+> **Note:** In Windows, double-clicking a `.zip` file doesn't actually decompress 
+(extract) it — it just lets you browse the contents while they're still compressed.
+>
+> To properly extract the files, you need to:
+>
+> - **Right-click** on the zip file
+> - Select **"Extract All..."**
+> - Choose a destination folder (or keep the default)
+> - Click **Extract**
+>
+> This creates a real, uncompressed copy of the files on your disk.
 
 **VSEARCH**
 

@@ -2474,3 +2474,87 @@ get_path <- function(program, path = NULL){
     return(program) # fallback: assume it's on PATH
   }
 }
+
+#' Download example metabarcoding pipeline output
+#'
+#' Downloads and unzips a full example output from the vtamR metabarcoding
+#' pipeline, useful for following along with the vtamR tutorials. The example
+#' data is hosted as an asset on a dedicated GitHub release, independent of
+#' package version releases, so it is only updated when the pipeline's output
+#' format actually changes.
+#'
+#' If the target output directory already exists, the function does nothing
+#' unless \code{overwrite = TRUE}, to avoid needless re-downloading.
+#'
+#' @param dest Character. Directory in which to download and unzip the
+#'   example output. Defaults to \code{tempdir()}; pass a persistent path
+#'   (e.g. a project subdirectory) if you want the files to survive beyond
+#'   the current R session.
+#' @param tag Character. GitHub release tag to download the example data
+#'   from. Defaults to \code{"short-tutorial-output-v1"}. Override this to
+#'   fetch an older snapshot (e.g. matching an older version of a tutorial).
+#' @param filename Character. Name of the zip asset attached to the release.
+#'   Defaults to \code{"short_tutorial_output.zip"}.
+#' @param overwrite Logical. If \code{TRUE}, re-downloads and overwrites any
+#'   existing files at the destination. Defaults to \code{FALSE}.
+#'
+#' @return (Invisibly) the path to the unzipped example output directory. If
+#'   the download fails, returns \code{invisible(NULL)}.
+#'
+#' @examples
+#' \dontrun{
+#' # Download the current example output to a temporary directory
+#' out_dir <- download_tutorial_output()
+#' list.files(out_dir, recursive = TRUE)
+#'
+#' # Download to a persistent project folder
+#' download_tutorial_output(dest = "my_vtamR_project/")
+#'
+#' # Fetch an older snapshot matching an older tutorial
+#' download_tutorial_output(tag = "short-tutorial-output-v0")
+#' }
+#'
+#' @seealso
+#' The vtamR tutorials, which use this example output as a reference for
+#' expected pipeline results at each step.
+#'
+#' @export
+download_tutorial_output <- function(dest = tempdir(),
+                             tag = "short-tutorial-output-v1",
+                             filename = "short_tutorial_output.zip",
+                             overwrite = FALSE) {
+  
+  if (!dir.exists(dest)) dir.create(dest, recursive = TRUE)
+  
+  repo <- "meglecz/vtamR"
+  zip_url <- sprintf("https://github.com/%s/releases/download/%s/%s",
+                     repo, tag, filename)
+  
+  zip_path <- file.path(dest, filename)
+  out_dir  <- file.path(dest, tools::file_path_sans_ext(filename))
+  
+  if (dir.exists(out_dir) && !overwrite) {
+    message("Example output already exists at: ", out_dir,
+            "\nUse overwrite = TRUE to re-download.")
+    return(invisible(out_dir))
+  }
+  
+  message("Downloading example output (release: ", tag, ")...")
+  
+  result <- tryCatch({
+    utils::download.file(zip_url, destfile = zip_path, mode = "wb", quiet = FALSE)
+    TRUE
+  }, error = function(e) {
+    message("Download failed. Check that the release '", tag,
+            "' has an asset named '", filename, "' attached.")
+    FALSE
+  })
+  
+  if (!result) return(invisible(NULL))
+  
+  zip::unzip(zip_path, exdir = dest, overwrite = overwrite)
+  unlink(zip_path)
+  
+  message("Example output ready at: ", out_dir)
+  invisible(out_dir)
+}

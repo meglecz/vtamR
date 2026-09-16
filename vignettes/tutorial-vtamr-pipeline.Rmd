@@ -1,17 +1,16 @@
 ---
-title: "Tutorial - vtamR pipeline - v1.1.0"
-auhor: Emese Meglécz
+title: "Tutorial - vtamR pipeline"
+author: Emese Meglécz
 date:  "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette:
+output:
+  html_document:
     toc: true
-    toc_depth: 3
+    toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Tutorial - vtamR pipeline - v1.1.0}
+  %\VignetteIndexEntry{Tutorial - vtamR pipeline}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
 
 <style>
 /* Block console output (<pre>) scrolls horizontally AND vertically */
@@ -57,6 +56,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Tutorial - vtamR pipeline
+
+**Package version:** `r packageVersion("vtamR")`
 
 # Summary
 

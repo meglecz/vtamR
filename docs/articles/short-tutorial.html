@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Short Tutorial vtamR - v1.1.0 • vtamR</title>
+<title>Short Tutorial vtamR • vtamR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Short Tutorial vtamR - v1.1.0">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Short Tutorial vtamR">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,11 +33,11 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR - v1.1.0</a></li>
-    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline - v1.1.0</a></li>
+<li><a class="dropdown-item" href="../articles/from-fastq-to-df.html">From fastq to data frame</a></li>
+    <li><a class="dropdown-item" href="../articles/installation.html">Install vtamR and Third Party Programs</a></li>
+    <li><a class="dropdown-item" href="../articles/make-mock-composition-file.html">How to make a mock_composition file</a></li>
+    <li><a class="dropdown-item" href="../articles/short-tutorial.html">Short Tutorial vtamR</a></li>
+    <li><a class="dropdown-item" href="../articles/tutorial-vtamr-pipeline.html">Tutorial - vtamR pipeline</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -60,9 +60,10 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Short Tutorial vtamR - v1.1.0</h1>
+      <h1>Short Tutorial vtamR</h1>
+                        <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-15</h4>
+            <h4 data-toc-skip class="date">2026-09-16</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/short-tutorial.Rmd" class="external-link"><code>vignettes/short-tutorial.Rmd</code></a></small>
       <div class="d-none name"><code>short-tutorial.Rmd</code></div>
@@ -101,14 +102,25 @@ table {
 <div class="section level2">
 <h2 id="short-tutorial">Short Tutorial<a class="anchor" aria-label="anchor" href="#short-tutorial"></a>
 </h2>
+<p><strong>Package version:</strong> 2.0.0.9000</p>
+<div class="section level3">
+<h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h3>
 <p>This is a short version of the tutorial using the ZFZR demo data set. For more details check out the appropriate section of the <a href="tutorial-vtamr-pipeline.html">detailed tutorial</a> and the documentation of the functions (<code>?function_name</code>)</p>
+<blockquote>
+<p><strong>Want to see the expected output without running the pipeline yourself?</strong> Download a ready-made copy of this tutorial’s output with:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">vtamR</span><span class="fu">::</span><span class="fu"><a href="../reference/download_tutorial_output.html">download_tutorial_output</a></span><span class="op">(</span>dest <span class="op">=</span> <span class="st">"my_folder/"</span><span class="op">)</span></span></code></pre></div>
+<p>This is useful for checking your own results against a reference, or for browsing the output structure before running the third-party tools (vsearch, blast, swarm, cutadapt) required for the pipeline itself.</p>
+</blockquote>
+</div>
 <div class="section level3">
 <h3 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
 </h3>
 <div class="section level4">
 <h4 id="load-library">Load library<a class="anchor" aria-label="anchor" href="#load-library"></a>
 </h4>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -125,7 +137,7 @@ table {
 </h4>
 <p>If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.</p>
 <p>See the <a href="tutorial-vtamr-pipeline.html#set-path">detailed tutorial on how to set the PATH</a> for more information.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.vsearch_path <span class="op">=</span> <span class="st">"C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.blast_path <span class="op">=</span> <span class="st">"blastn"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.cutadapt_path <span class="op">=</span> <span class="st">"C:/Users/Public/cutadapt"</span><span class="op">)</span></span>
@@ -140,7 +152,7 @@ table {
 <div class="section level4">
 <h4 id="demo-data-outdir-log-file">Demo data, outdir, log file<a class="anchor" aria-label="anchor" href="#demo-data-outdir-log-file"></a>
 </h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="st">"vtamR_demo_out/zfzr_plate1"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -153,7 +165,7 @@ table {
 <div class="section level4">
 <h4 id="database">Database<a class="anchor" aria-label="anchor" href="#database"></a>
 </h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">taxonomy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test/taxonomy_reduced.tsv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
 <span><span class="va">blast_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
 <span><span class="va">blast_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">blast_db</span>, <span class="st">"COInr_reduced"</span><span class="op">)</span></span></code></pre></div>
@@ -174,7 +186,7 @@ table {
 <h4 id="demultiplex">Demultiplex<a class="anchor" aria-label="anchor" href="#demultiplex"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#demultiplex">Demultiplex and Trim</a> for more details.</em></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_demultiplexed"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fastqinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/demultiplex_and_trim_fastq.html">demultiplex_and_trim_fastq</a></span><span class="op">(</span></span>
@@ -191,7 +203,7 @@ table {
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#subsample">Randomly Select Sequences</a> for more details.</em></p>
 <p>If we used <code>random_sample_batch</code> with the <code>n</code> option as in the <a href="tutorial-vtamr-pipeline.html#subsample">detailed tutoriel</a>, we would sample <code>n</code> sequences from each file and distort the relative read counts among samples. To avoid this problem we will use <code>random_sample_batch_by</code> and the <code>N</code> option. This allow the select <code>N</code> sequences all together from the files of each <code>replicate</code> (befined by the <code>by</code> argument), while keeping the relative proportion of the read count among the files of the same replicate.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">randomseq_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"2_random_seq"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fastqinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/random_sample_batch_by.html">random_sample_batch_by</a></span><span class="op">(</span></span>
@@ -211,7 +223,7 @@ table {
 <h4 id="merge-fastq-pairs">Merge Fastq Pairs<a class="anchor" aria-label="anchor" href="#merge-fastq-pairs"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#merge">Merge Fastq Pairs and Quality Filter</a> for more details.</em></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"3_merged"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
@@ -227,7 +239,7 @@ table {
 <h4 id="dereplicate">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#dereplicate">Dereplicate</a> for more details.</em></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
 <span><span class="va">updated_asv_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"ASV_list_with_IDs.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -248,7 +260,7 @@ table {
 <h4 id="initialize-statistics">Initialize Statistics<a class="anchor" aria-label="anchor" href="#initialize-statistics"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#init-stat">Initialize Statistics</a> for more details.</em></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  parameters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  asv_count <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -266,7 +278,7 @@ table {
 <h5 id="denoising">Denoising<a class="anchor" aria-label="anchor" href="#denoising"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#denoise">Denoising with SWARM</a> for more details.</em></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">split_clusters</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span><span class="va">by_sample</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span></span>
@@ -285,7 +297,7 @@ table {
 <h5 id="filter-asvs-global">Filter ASVs Global<a class="anchor" aria-label="anchor" href="#filter-asvs-global"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_asv_global">Filter out ASVs with Low Total Read Count</a> for more details.</em></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">global_read_count_cutoff</span> <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"3_filter_asv_global.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -302,7 +314,7 @@ table {
 <h5 id="filter-asvs-read-length">Filter ASVs Read Length<a class="anchor" aria-label="anchor" href="#filter-asvs-read-length"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_indel">Filter ASVs Based on Read Length</a> for more details.</em></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"4_filter_indel.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_indel.html">filter_indel</a></span><span class="op">(</span></span>
@@ -315,7 +327,7 @@ table {
 <h5 id="filter-asvs-stop-codons">Filter ASVs Stop Codons<a class="anchor" aria-label="anchor" href="#filter-asvs-stop-codons"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_stop_codon">Filter ASVs with Stop Codons</a> for more details.</em></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"5_filter_stop_codon.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_stop_codon.html">filter_stop_codon</a></span><span class="op">(</span></span>
@@ -329,7 +341,7 @@ table {
 <h5 id="filter-contaminant-asvs">Filter Contaminant ASVs<a class="anchor" aria-label="anchor" href="#filter-contaminant-asvs"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_contaminant">Filter Potential Contaminant ASVs</a> for more details.</em></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"6_filter_contaminant.csv"</span><span class="op">)</span></span>
 <span><span class="va">conta_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"potential_contaminants.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -346,7 +358,7 @@ table {
 <h5 id="filter-chimeric-asvs">Filter Chimeric ASVs<a class="anchor" aria-label="anchor" href="#filter-chimeric-asvs"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_chimera">Filter Chimeric ASVs</a> for more details.</em></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"7_filter_chimera.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_chimera.html">filter_chimera</a></span><span class="op">(</span></span>
@@ -361,7 +373,7 @@ table {
 <h4 id="filter-replicates">Filter Replicates<a class="anchor" aria-label="anchor" href="#filter-replicates"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_replicate">Filter Aberrant Replicates</a> for more details.</em></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"8_filter_replicate.csv"</span><span class="op">)</span></span>
 <span><span class="va">renkonen_distance_quantile</span> <span class="op">&lt;-</span> <span class="fl">0.9</span></span>
 <span></span>
@@ -382,7 +394,7 @@ table {
 <h5 id="create-mock_composition-file">Create <code>mock_composition</code> File<a class="anchor" aria-label="anchor" href="#create-mock_composition-file"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#match_variants_to_mock_species">Create <code>mock_composition</code> File</a> for more details.</em></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outdir_mock</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"mock_composition"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">mock_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_variants_to_mock_species.html">match_variants_to_mock_species</a></span><span class="op">(</span></span>
@@ -405,7 +417,7 @@ table {
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_occurrence_sample">Filter Low-Abundance Occurrences within Samples</a> for more details.</em></p>
 <p><strong>Suggest parameter value</strong></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"suggest_parameters"</span>, <span class="st">"sample_cutoff.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">suggest_sample_cutoff_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_sample_cutoff.html">suggest_sample_cutoff</a></span><span class="op">(</span></span>
@@ -444,7 +456,7 @@ table {
 <span><span class="co">#&gt; 5 Synorthocladius semivirens</span></span>
 <span><span class="co">#&gt; 6 Synorthocladius semivirens</span></span></code></pre></div>
 <p><strong>Apply filter</strong></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.0001</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"9_filter_occurrence_sample.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -461,7 +473,7 @@ table {
 <h5 id="filter-occurrences-by-replicate">Filter Occurrences by Replicate<a class="anchor" aria-label="anchor" href="#filter-occurrences-by-replicate"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_min_replicate-1">Filter Occurrences by Replicate Consistency</a> for more details.</em></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">min_replicate_number</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"10_filter_min_replicate.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -479,7 +491,7 @@ table {
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_occurrence_variant">Filter Low-Abundance Occurrences (<code>filter_occurrence_variant</code> and <code>filter_occurrence_read_count</code>)</a> for more details.</em></p>
 <p><strong>Suggest parameter values</strong></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outdir_suggest</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"suggest_parameters"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">suggest_variant_readcount_cutoffs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_variant_readcount_cutoffs.html">suggest_variant_readcount_cutoffs</a></span><span class="op">(</span></span>
@@ -499,7 +511,7 @@ table {
 <span><span class="co">#&gt; 5                10          0.005  0  5  3</span></span>
 <span><span class="co">#&gt; 6                10          0.006  0  5  3</span></span></code></pre></div>
 <p><strong>Filter occurrences by variant</strong></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">variant_cutoff</span> <span class="op">=</span> <span class="fl">0.001</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"11_filter_occurrence_variant.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -511,7 +523,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"variant_cutoff:"</span>, <span class="va">variant_cutoff</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_occurrence_variant"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Filter occurrences by read count</strong></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">read_count_cutoff</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"12_filter_occurrence_read_count.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -523,7 +535,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"read_count_cutoff:"</span>, <span class="va">read_count_cutoff</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_occurrence_read_count"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Pool results</strong></p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"13_pool_filters.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_filters.html">pool_filters</a></span><span class="op">(</span></span>
@@ -540,7 +552,7 @@ table {
 <h5 id="filter-occurrences-by-replicate-again">Filter Occurrences by Replicate Again<a class="anchor" aria-label="anchor" href="#filter-occurrences-by-replicate-again"></a>
 </h5>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#filter_min_replicate-2">Filter Occurrences by Replicate Consistency</a> for more details.</em></p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">min_replicate_number</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"14_filter_min_replicate.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -561,7 +573,7 @@ table {
 <h4 id="pool-replicates">Pool replicates<a class="anchor" aria-label="anchor" href="#pool-replicates"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#pool_replicates">Pool replicates</a> for more details.</em></p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"15_pool_replicates.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_sample_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_replicates.html">pool_replicates</a></span><span class="op">(</span></span>
@@ -573,7 +585,7 @@ table {
 <h4 id="performance-metrics">Performance Metrics<a class="anchor" aria-label="anchor" href="#performance-metrics"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#classify_control_occurrences">Performance Metrics</a> for more details.</em></p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">false_negatives</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"false_negatives.csv"</span><span class="op">)</span></span>
 <span><span class="va">performance_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"performance_metrics.csv"</span><span class="op">)</span></span>
 <span><span class="va">known_occurrences</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"known_occurrences.csv"</span><span class="op">)</span></span>
@@ -597,7 +609,7 @@ table {
 <h4 id="print-summary-statistics">Print Summary Statistics<a class="anchor" aria-label="anchor" href="#print-summary-statistics"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#print_stats">Print Summary Statistics</a> for more details.</em></p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">run_info_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"run_info"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/check_dir.html">check_dir</a></span><span class="op">(</span><span class="va">run_info_dir</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">stat_df</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">run_info_dir</span>, <span class="st">"summary.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -607,7 +619,7 @@ table {
 <h3 id="taxonomic-assignment">Taxonomic Assignment<a class="anchor" aria-label="anchor" href="#taxonomic-assignment"></a>
 </h3>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#taxonomic-assignment">Taxonomic Assignment</a> for more details.</em></p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"assign_taxonomy_ltg.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">asv_tax</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assign_taxonomy_ltg.html">assign_taxonomy_ltg</a></span><span class="op">(</span></span>
@@ -621,7 +633,7 @@ table {
 <h3 id="clustering-motus">Clustering (mOTUs)<a class="anchor" aria-label="anchor" href="#clustering-motus"></a>
 </h3>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#cluster_asv">Clustering (mOTUs)</a> for more details.</em></p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"16_mOTU_vsearch.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_samples_df_ClusterSize</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_asv.html">cluster_asv</a></span><span class="op">(</span></span>
@@ -638,7 +650,7 @@ table {
 <h4 id="asv-table">ASV table<a class="anchor" aria-label="anchor" href="#asv-table"></a>
 </h4>
 <p><em>See <a href="tutorial-vtamr-pipeline.html#write_asv_table">Output table</a> for more details.</em></p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"motu_table_taxa.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">asv_table_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/write_asv_table.html">write_asv_table</a></span><span class="op">(</span></span>
@@ -651,7 +663,7 @@ table {
 <div class="section level4">
 <h4 id="convert-output-to-a-phyloseq-object">Convert output to a phyloseq object<a class="anchor" aria-label="anchor" href="#convert-output-to-a-phyloseq-object"></a>
 </h4>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a data frame containing sample metadata</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="va">sampleinfo_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sample</span>, <span class="va">sample_type</span>, <span class="va">habitat</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -667,7 +679,7 @@ table {
 <div class="section level4">
 <h4 id="convert-output-for-the-vegan-package">Convert output for the <code>vegan</code> package<a class="anchor" aria-label="anchor" href="#convert-output-for-the-vegan-package"></a>
 </h4>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vegan_dfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/format_for_vegan.html">format_for_vegan</a></span><span class="op">(</span></span>
 <span>  otu <span class="op">=</span> <span class="va">read_count_sample_df</span>,</span>
 <span>  tax <span class="op">=</span> <span class="va">asv_tax</span>,</span>
@@ -687,7 +699,7 @@ table {
 <div class="section level4">
 <h4 id="record-r-and-package-versions">Record R and package versions<a class="anchor" aria-label="anchor" href="#record-r-and-package-versions"></a>
 </h4>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">package_versions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">run_info_dir</span>,  <span class="st">"R_package_versions.csv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/collect_package_info.html">collect_package_info</a></span><span class="op">(</span><span class="va">package_versions</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -695,16 +707,14 @@ table {
 <h4 id="miem">MIEM<a class="anchor" aria-label="anchor" href="#miem"></a>
 </h4>
 <p><strong>MIEM bioinformatics</strong></p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">miem_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">run_info_dir</span>, <span class="st">"MIEM"</span><span class="op">)</span></span>
 <span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/miem_bioinformatics.html">miem_bioinformatics</a></span><span class="op">(</span></span>
 <span>  r_versions <span class="op">=</span> <span class="va">package_versions</span>,</span>
 <span>  outfile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">miem_dir</span>, <span class="st">"MIEM_bioinfo.csv"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in miem$Information[i] &lt;- text: number of items to replace is not a</span></span>
-<span><span class="co">#&gt; multiple of replacement length</span></span></code></pre></div>
+<span>  <span class="op">)</span></span></code></pre></div>
 <p><strong>MIEM Sequencing Summary</strong></p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">info_files</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastqinfo</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_demultiplexed/fastqinfo.csv"</span><span class="op">)</span>,</span>
