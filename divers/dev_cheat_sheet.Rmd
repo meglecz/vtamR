@@ -76,6 +76,14 @@ data(full_asv_tax)
 
 ## Building new version
 
+- 1. Finalize DESCRIPTION version (e.g. 2.0.0)
+- 2. Install package + build vignettes devtools::install(build_vignettes = TRUE)
+- 3. Render README.Rmd → README.md devtools::build_readme()
+- 4. Rebuild pkgdown site pkgdown::build_site()
+- 5. Check git diff on README.md, docs/, vignettes — confirm everything reflects the final version
+- 6. Commit everything together, push
+- 7. Tag the release (e.g. git tag v2.0.0, or via GitHub UI)
+
 ### Update the following files
 
 - DESCRIPTION
@@ -105,6 +113,11 @@ devtools::check()
 ```{r}
 devtools::install(build_vignettes = TRUE)
 devtools::install(build_vignettes = FALSE)
+```
+
+### build_readme if README.rm has been changed
+```{r}
+devtools::build_readme()
 ```
 
 ### If pb with vignette not building correctly

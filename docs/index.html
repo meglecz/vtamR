@@ -59,99 +59,137 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="vtamr">vtamR<a class="anchor" aria-label="anchor" href="#vtamr"></a>
 </h1></div>
-<!-- badges: start --><!-- badges: end --><p><strong>vtamR</strong> is a revised, completed version of <a href="https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext" class="external-link">VTAM</a> (Validation and Taxonomic Assignation of Metabarcoding Data) rewritten in R. It is a complete metabarcoding pipeline:</p>
+<!-- badges: start --><!-- badges: end --><p><strong>vtamR</strong> is an advanced, R-based revision of <a href="https://spj.science.org/doi/pdf/10.1016/j.csbj.2023.01.034" class="external-link">VTAM</a> (Validation and Taxonomic Assignment of Metabarcoding Data). It provides a <strong>comprehensive metabarcoding pipeline</strong>, enabling:</p>
 <ul>
-<li>Sequence analyses <strong>from raw fastq files</strong> of amplicon sequences till Amplicon Sequence Variant (<a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">ASV</a>) table of <strong>validated ASVs assigned to taxonomic groups</strong>.</li>
-<li>Handles technical or biological <strong>replicates</strong> of the same sample.</li>
-<li>Uses positive and negative <strong>control samples to fine tune the filtering</strong> and reduce <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">false positive</a> and <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">false negative</a> occurrences.</li>
-<li>Can pool multiple data sets (results of earlier analyses)</li>
-<li>Can pool results from overlapping markers</li>
+<li>
+<strong>End-to-End Sequence Analysis:</strong> Processes raw FASTQ files of amplicon sequences to generate a validated <a href="tutorial-vtamr-pipeline.html#glossary">Amplicon Sequence Variant (ASV)</a> table, with ASVs assigned to taxonomic groups.</li>
+<li>
+<strong>Replicate Handling:</strong> Supports technical or biological replicates of the same sample.</li>
+<li>
+<strong>Control-Based Filtering:</strong> Uses positive and negative control samples to refine filtering, minimizing both <a href="tutorial-vtamr-pipeline.html#glossary">false positives</a> and <a href="tutorial-vtamr-pipeline.html#glossary">false negatives</a>.</li>
 </ul>
-<p><strong>Novelties compared to VTAM:</strong></p>
+<p><strong>Novelties Compared to VTAM</strong></p>
 <ul>
-<li>As it is a series of R functions, <code>vtamR</code> is highly adaptable to include/exclude and order different steps of the analyses</li>
-<li>Includes SWARM for denoising</li>
-<li>Graphic options</li>
-<li>Include functions to get statistics of each filtering steps (read and variant count etc.)</li>
-<li>ASV clustering to mOTU</li>
-<li>The notion of marker and run has been dropped to simplify the analyses</li>
+<li>
+<strong>Modular Design:</strong> As a series of R functions, <code>vtamR</code> is <strong>highly adaptable</strong>, allowing users to include, exclude, or reorder analysis steps as needed.</li>
+<li>
+<strong>More Flexible Preprocessing:</strong> Demultiplexing and subsampling of FASTA or FASTQ pairs.</li>
+<li>
+<strong>Denoising with SWARM:</strong> Incorporates SWARM for robust denoising of amplicon sequence variants (ASVs).</li>
+<li>
+<strong>Post-Processing of Swarms:</strong> Splits swarms among abundant ASVs to prevent pooling of highly similar yet distinct ASVs, preserving <strong>intra-specific variability</strong>.</li>
+<li>
+<strong>Visualization Tools:</strong> Offers <strong>graphic options</strong> to aid in data interpretation and decision-making.</li>
+<li>
+<strong>Filtering Statistics:</strong> Includes functions to generate <strong>statistics for each filtering step</strong> (e.g., read and variant counts).</li>
+<li>
+<strong>ASV Clustering into mOTUs:</strong><ul>
+<li>Uses <strong>VSEARCH or SWARM</strong> to cluster ASVs into molecular operational taxonomic units (mOTUs).</li>
+<li>Provides visualization tools to help users <strong>select optimal clustering parameters</strong>.</li>
 </ul>
-</div>
-<div class="section level1">
-<h1 id="tutorial">Tutorial<a class="anchor" aria-label="anchor" href="#tutorial"></a>
-</h1>
-<p>A detailed <strong><a href="https://people.imbe.fr/~emeglecz/vtamR" class="external-link">Tutorial</a></strong> on how to construct a full metabarcoding pipeline is avalibale online.</p>
-</div>
-<div class="section level1">
-<h1 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h1>
+</li>
+<li>
+<strong>Simplified Workflow:</strong> The concepts of “marker” and “run” have been removed to streamline analyses.</li>
+<li>
+<strong>Detailed Log File:</strong> Records all major functions called, along with their parameters and runtimes.</li>
+<li>
+<strong>Summary Information:</strong> Facilitates publication of results (e.g., MIEM checklist).</li>
+<li>
+<strong>Flexible Output:</strong> Formats output for direct use with <code>phyloseq</code> or <code>vegan</code>.</li>
+</ul>
 <div class="section level2">
-<h2 id="implementation">Implementation<a class="anchor" aria-label="anchor" href="#implementation"></a>
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<p>The heavy lifting of sequence analyses are done by the following third party programs. They should be installed on your computer:</p>
+<p>Detailed documentation is available at <strong><a href="https://meglecz.github.io/vtamR/">Manual</a></strong></p>
 <ul>
-<li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/" class="external-link">Altschul et al., 1990</a>) (v2.11.0+)</li>
-<li>vsearch (<a href="https://peerj.com/articles/2584/" class="external-link">Rognes et al., 2016</a>) (v2.7.0)</li>
-<li>cutadapt(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479" class="external-link">Martin, 2011</a>) (v4.0)</li>
-<li>swarm (<a href="https://peerj.com/articles/1420/" class="external-link">Mahé et al., 2015</a>) (v2.1.12)</li>
-<li>pigz (optional)</li>
+<li><a href="https://meglecz.github.io/vtamR/articles/installation.html">Installation</a></li>
+<li><a href="https://meglecz.github.io/vtamR/articles/short-tutorial.html">Short tutorial</a></li>
+<li><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html">Detailed tutorial on how to construct a full metabarcoding pipeline.</a></li>
+<li><a href="https://meglecz.github.io/vtamR/articles/from-fastq-to-df.html">From fastq to data frame</a></li>
+<li><a href="https://meglecz.github.io/vtamR/articles/make-mock-composition-file.html">How to make a mock_composition file</a></li>
 </ul>
-<p><code>vtamR</code> has been tested using the above mentioned versions, but it should work with later versions. <code>vtamR</code> was tested on <strong>Windows</strong> and <strong>Linux</strong>, and should work in all operating systems.</p>
-</div>
-<div class="section level2">
-<h2 id="install-vtamr">Install vtamR<a class="anchor" aria-label="anchor" href="#install-vtamr"></a>
-</h2>
-<p>Install <code>vtamR</code> and its CRAN dependencies by <code>pak</code>.</p>
+<p>You can also download a ready-made example output (matching the Short tutorial) without running the pipeline:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"pak"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span></span>
-<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"meglecz/vtamR@develop"</span>, dependencies<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>Alternatively, you can use <code>devtools</code>.</p>
+<code class="sourceCode R"><span><span class="fu">vtamR</span><span class="fu">::</span><span class="fu"><a href="reference/download_tutorial_output.html">download_tutorial_output</a></span><span class="op">(</span>dest <span class="op">=</span> <span class="st">"my_folder/"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Downloading example output (release: short-tutorial-output-v1)...</span></span>
+<span><span class="co">#&gt; Example output ready at: my_folder//short_tutorial_output</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="install-vtamr">Install <code>vtamR</code>
+<a class="anchor" aria-label="anchor" href="#install-vtamr"></a>
+</h2>
+<p>Install <code>vtamR</code> and its CRAN dependencies using <code>pak</code>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"devtools"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"meglecz/vtamR@develop"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>You also need to install Bioconductor packages manually if you intend to use <code>TaxAssignRDP</code> function.</p>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"pak"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"meglecz/vtamR"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Alternatively</strong>, you can install <code>vtamR</code> using <code>devtools</code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install Bioconductor suggested packages manually if needed (only for TaxAssignRDP)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"devtools"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"meglecz/vtamR"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="optional-bioconductor-packages">Optional Bioconductor packages<a class="anchor" aria-label="anchor" href="#optional-bioconductor-packages"></a>
+</h3>
+<p>Some <code>vtamR</code> functions require additional Bioconductor packages. These are <strong>suggested packages</strong> and are therefore <strong>not installed automatically with <code>vtamR</code></strong>. Install them manually if you intend to use the corresponding functions:</p>
+<ul>
+<li>
+<code>assign_taxonomy_rdp</code> requires <code>rRDP</code>, <code>rRDPData</code>, and <code>Biostrings</code>.</li>
+<li>
+<code>make_phyloseq</code> requires <code>phyloseq</code>.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rRDP"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rRDP"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rRDPData"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rRDPData"</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"Biostrings"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"Biostrings"</span><span class="op">)</span></span></code></pre></div>
-<p>Read the <strong><a href="https://people.imbe.fr/~emeglecz/vtamR" class="external-link">Manual</a></strong> on how to construct a full metabarcoding pipeline.</p>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"Biostrings"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"Biostrings"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"phyloseq"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"phyloseq"</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="install-third-party-programs">Install third party programs<a class="anchor" aria-label="anchor" href="#install-third-party-programs"></a>
 </h2>
+<p>The heavy lifting of sequence analyses are done by the following third party programs. They should be installed on your computer. ⚠️ <strong>Read the detailed installation instructions below before proceeding if you do not have experience with installing command line programs.</strong></p>
+<ul>
+<li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/" class="external-link">Altschul et al., 1990</a>) (v2.11.0+)</li>
+<li>VSEARCH (<a href="https://peerj.com/articles/2584/" class="external-link">Rognes et al., 2016</a>) (v2.7.0)</li>
+<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200" class="external-link">Martin, 2011</a>) (v4.0)</li>
+<li>SWARM (<a href="https://peerj.com/articles/1420/" class="external-link">Mahé et al., 2015</a>) (v2.1.12)</li>
+<li>PIGZ (optional)</li>
+</ul>
+<p><code>vtamR</code> has been tested using the above mentioned versions, but it should work with later versions.</p>
+<p><code>vtamR</code> was tested on <strong>Windows</strong> and <strong>Linux</strong>, and should work in all operating systems.</p>
 <div class="section level3">
 <h3 id="linux">Linux<a class="anchor" aria-label="anchor" href="#linux"></a>
 </h3>
 <ul>
 <li>
-<code>vsearch</code> <a href="https://github.com/torognes/vsearch" class="external-link uri">https://github.com/torognes/vsearch</a>
+<code>VSEARCH</code> <a href="https://github.com/torognes/vsearch" class="external-link uri">https://github.com/torognes/vsearch</a>
 </li>
 <li>
 <code>BLAST</code> <a href="https://www.ncbi.nlm.nih.gov/books/NBK52640/" class="external-link uri">https://www.ncbi.nlm.nih.gov/books/NBK52640/</a>
 </li>
 <li>
-<code>cutadapt</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html" class="external-link uri">https://cutadapt.readthedocs.io/en/stable/installation.html</a>
+<code>CUTADAPT</code> <a href="https://cutadapt.readthedocs.io/en/stable/installation.html" class="external-link uri">https://cutadapt.readthedocs.io/en/stable/installation.html</a>
 </li>
 <li>
-<code>swarm</code> <a href="https://github.com/torognes/swarm" class="external-link uri">https://github.com/torognes/swarm</a>
+<code>SWARM</code> <a href="https://github.com/torognes/swarm" class="external-link uri">https://github.com/torognes/swarm</a>
 </li>
 <li>
-<code>pigz</code> (optional) <a href="https://github.com/madler/pigz" class="external-link uri">https://github.com/madler/pigz</a>
+<code>PIGZ</code> (optional) <a href="https://github.com/madler/pigz" class="external-link uri">https://github.com/madler/pigz</a>
 </li>
 </ul>
-<p><strong>Add the executables to your PATH</strong> so you don’t need to type their full location each time. If you prefer <strong>not</strong> to add them, make sure to provide the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
-<p>You can add a directory to your PATH so that R and RStudio can find the executables you want to use.</p>
+<p><strong>Add executables to your PATH (Optional)</strong></p>
+<p>If third-party executables are included in your <code>PATH</code>, you won’t need to manually specify their locations when running functions that use them.</p>
+<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>, be sure to provide the full path to each program using the corresponding <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <ol style="list-style-type: decimal"><li>Edit (or create) your <code>~/.Renviron</code> file</li></ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> ~/.Renviron</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> ~/.Renviron</span></code></pre></div>
 <ol start="2" style="list-style-type: decimal"><li>Add the directory to the PATH</li></ol>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">PATH=</span><span class="st">"/home/user/tools/myprogram/bin:</span><span class="va">${PATH}</span><span class="st">"</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">PATH=</span><span class="st">"/home/user/tools/myprogram/bin:</span><span class="va">${PATH}</span><span class="st">"</span></span></code></pre></div>
 <p><strong>Note:</strong> The PATH must contain a <strong>directory</strong>, not an executable file. For example, use: <code>/home/username/miniconda3/envs/vtamr/bin</code> and <strong>not</strong>: <code>/home/username/miniconda3/envs/vtamr/bin/cutadapt</code></p>
 <ol start="3" style="list-style-type: decimal"><li>Restart R or RStudio</li></ol>
 <p>The new PATH is loaded at startup.</p>
 <ol start="4" style="list-style-type: decimal"><li>Verify that R sees the correct executables</li></ol>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="st">"cutadapt --version"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="st">"swarm --version"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="st">"vsearch --version"</span><span class="op">)</span></span>
@@ -161,8 +199,22 @@
 <div class="section level3">
 <h3 id="windows">Windows<a class="anchor" aria-label="anchor" href="#windows"></a>
 </h3>
-<p>Download binaries and save the to a convenient place on your computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
-<p><strong>vsearch</strong></p>
+<p>Download binaries and save them to a convenient place on your computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
+<blockquote>
+<p><strong>Note:</strong> In Windows, double-clicking a <code>.zip</code> file doesn’t actually decompress (extract) it — it just lets you browse the contents while they’re still compressed.</p>
+<p>To properly extract the files, you need to:</p>
+<ul>
+<li>
+<strong>Right-click</strong> on the zip file</li>
+<li>Select <strong>“Extract All…”</strong>
+</li>
+<li>Choose a destination folder (or keep the default)</li>
+<li>Click <strong>Extract</strong>
+</li>
+</ul>
+<p>This creates a real, uncompressed copy of the files on your disk.</p>
+</blockquote>
+<p><strong>VSEARCH</strong></p>
 <ul>
 <li>Download binaries from <a href="https://github.com/torognes/vsearch/releases/tag/v2.23.0" class="external-link uri">https://github.com/torognes/vsearch/releases/tag/v2.23.0</a>
 </li>
@@ -170,10 +222,10 @@
 <li>The executable are found in <code>vsearch-x.xx.x-win-x86_64/bin/</code>
 </li>
 </ul>
-<p><strong>cutadapt</strong></p>
+<p><strong>CUTADAPT</strong></p>
 <ul><li>Download <code>cutadapt.exe</code> from <a href="https://github.com/marcelm/cutadapt/releases" class="external-link uri">https://github.com/marcelm/cutadapt/releases</a>
 </li></ul>
-<p><strong>swarm</strong></p>
+<p><strong>SWARM</strong></p>
 <ul>
 <li>Download binaries from <a href="https://github.com/torognes/swarm/releases" class="external-link uri">https://github.com/torognes/swarm/releases</a>
 </li>
@@ -188,15 +240,15 @@
 <li>The executables will be installed in: <code>C:\Program Files\NCBI\blast-x.xx.x+\bin</code>
 </li>
 </ul>
-<p><strong>pigz</strong> (Optional)</p>
+<p><strong>PIGZ</strong> (Optional)</p>
 <ul>
 <li>Download <a href="https://sourceforge.net/projects/pigz-for-windows/files/" class="external-link">pigz-win32.zip</a>
 </li>
 <li>Decompress the zip file</li>
 <li>The executable (pigz.exe) is in the pigz-win32 directory</li>
 </ul>
-<p><strong>Add executables to your PATH</strong></p>
-<p>This step is optional. If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
+<p><strong>Add executables to your PATH (Optional)</strong></p>
+<p>If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
 <p>If you prefer <strong>not</strong> to add them, make sure to provide the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <p>You can use either <strong>GUI</strong> or <strong>PowerShell</strong> to add executables to your PATH.</p>
 <ol style="list-style-type: decimal"><li>Using the Windows GUI (System Settings)</li></ol>
@@ -215,33 +267,33 @@
 <ol start="2" style="list-style-type: decimal"><li>Using PowerShell</li></ol>
 <ul><li>Press <strong>Win + R</strong>, type <code>powershell</code>, and press <strong>Enter</strong>. <em>(Opens Powershell)</em>
 </li></ul>
-<!-- --><div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>setx PATH <span class="st">"$($env:Path);C:\My\New\Folder</span><span class="sc">\v</span><span class="st">search:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm"</span></span></code></pre></div>
+<!-- --><div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>setx PATH <span class="st">"$($env:Path);C:\My\New\Folder</span><span class="sc">\v</span><span class="st">search:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm"</span></span></code></pre></div>
 <ul><li>Close de Powershell, since the change applies only to <strong>new</strong> terminals, not the current one.</li></ul>
 <p><strong>Verify Program Versions</strong></p>
 <p>Open a Command Prompt on Windows (<strong>Win + R</strong>, type <code>cmd</code>)</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cutadapt</span> <span class="at">--version</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">swarm</span> <span class="at">--version</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">vsearch</span> <span class="at">--version</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pigz</span> <span class="at">--version</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">blastn</span> <span class="at">-version</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cutadapt</span> <span class="at">--version</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">swarm</span> <span class="at">--version</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">vsearch</span> <span class="at">--version</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pigz</span> <span class="at">--version</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">blastn</span> <span class="at">-version</span></span></code></pre></div>
 <p><strong>Note</strong> <em>These commands will display the version of each program <strong>if the executables are in your PATH</strong>. Otherwise, don’t forget to provide the full path to the executables.</em></p>
 <p>Example:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>C<span class="sc">:</span><span class="er">/</span>Users<span class="sc">/</span>Public<span class="sc">/</span>vsearch<span class="sc">-</span>x.xx.x<span class="sc">-</span>win<span class="sc">-</span>x86_64<span class="sc">/</span>bin<span class="sc">/</span>vsearch <span class="sc">--</span>version</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>C<span class="sc">:</span><span class="er">/</span>Users<span class="sc">/</span>Public<span class="sc">/</span>vsearch<span class="sc">-</span>x.xx.x<span class="sc">-</span>win<span class="sc">-</span>x86_64<span class="sc">/</span>bin<span class="sc">/</span>vsearch <span class="sc">--</span>version</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="taxassign-reference-data-base">TaxAssign reference data base<a class="anchor" aria-label="anchor" href="#taxassign-reference-data-base"></a>
 </h2>
 <div class="section level3">
-<h3 id="taxassignltg">TaxAssignLTG<a class="anchor" aria-label="anchor" href="#taxassignltg"></a>
+<h3 id="assign_taxonomy_ltg">assign_taxonomy_ltg<a class="anchor" aria-label="anchor" href="#assign_taxonomy_ltg"></a>
 </h3>
-<p>For <code>TaxAssignLTG</code> (BLAST based Lowest Common Ancestor method), a ready-to-use COI database is available from OSF <a href="https://osf.io/vrfwz/" class="external-link">OSF</a>, (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
+<p>For <code>assign_taxonomy_ltg</code> (BLAST based Lowest Common Ancestor method), a ready-to-use COI database is available from OSF <a href="https://osf.io/vrfwz/" class="external-link">OSF</a>, (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
 <p>Download and extract using:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/download_osf.html">download_osf</a></span><span class="op">(</span>filename <span class="op">=</span> <span class="st">"COInr_for_vtam_2025_05_23_dbV5.tar.gz"</span>,</span>
-<span>    url <span class="op">=</span> <span class="st">"https://osf.io/download/jyhz6/"</span>,</span>
+<span><span class="fu"><a href="reference/download_osf.html">download_osf</a></span><span class="op">(</span>filename <span class="op">=</span> <span class="st">"COInr_for_vtam_2026_05_03_dbV5.tar.gz"</span>,</span>
+<span>    url <span class="op">=</span> <span class="st">"https://osf.io/download/yhjvm/"</span>,</span>
 <span>    dest_dir <span class="op">=</span> <span class="st">"COInr_db"</span>,</span>
 <span>    untar <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -251,20 +303,22 @@
 <li>Go to: <a href="https://osf.io/vrfwz/files/osfstorage" class="external-link uri">https://osf.io/vrfwz/files/osfstorage</a>
 </li>
 <li>In <strong>Files</strong> open the the <strong>dbV5</strong> folder.</li>
-<li>Choose your version → Click on the tree-dot menu → Right-click Download → Copy Link Address.</li>
+<li>Open the latest file in the browser (click the file name, not just the folder).</li>
+<li>Look at the URL, it will look like: <a href="https://osf.io/yhjvm/" class="external-link uri">https://osf.io/yhjvm/</a> (yhjvm = file ID)</li>
+<li>Build the download link like this: <a href="https://osf.io/download/yhjvm/" class="external-link uri">https://osf.io/download/yhjvm/</a>
+</li>
 </ul>
 <p>Alternatively, you can also create a custom version from the <strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860" class="external-link">Zenodo</a> and make a custom version using <a href="https://github.com/meglecz/mkCOInr" class="external-link">mkCOInr</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments">database formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments">taxonomy file</a>. If all sequences are extracted from NCBI-nt. The taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
+<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
 </div>
 <div class="section level3">
-<h3 id="taxassignrdp">TaxAssignRDP<a class="anchor" aria-label="anchor" href="#taxassignrdp"></a>
+<h3 id="assign_taxonomy_rdp">assign_taxonomy_rdp<a class="anchor" aria-label="anchor" href="#assign_taxonomy_rdp"></a>
 </h3>
-<p><code>TaxAssignRDP</code> function uses de RDP algorithm to assign bacterial 16S sequences. The database is provided in the <code>rRDPData</code> R data package.</p>
-<p>It is also possible to provide to provide a trained classifier object created with <code>trainRDP()</code>.</p>
+<p><code>assign_taxonomy_rdp</code> function uses de RDP algorithm to assign bacterial 16S sequences. The database is provided in the <code>rRDPData</code> R data package.</p>
+<p>It is also possible to provide a trained classifier object created with <code>trainRDP()</code>.</p>
 </div>
 </div>
 </div>
-
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
