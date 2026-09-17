@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
       <h1>How to make a mock_composition file</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-16</h4>
+            <h4 data-toc-skip class="date">2026-09-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/make-mock-composition-file.Rmd" class="external-link"><code>vignettes/make-mock-composition-file.Rmd</code></a></small>
       <div class="d-none name"><code>make-mock-composition-file.Rmd</code></div>
@@ -102,7 +102,7 @@ table {
 <div class="section level2">
 <h2 id="how-to-make-a-mock_composition-file">How to make a mock_composition file<a class="anchor" aria-label="anchor" href="#how-to-make-a-mock_composition-file"></a>
 </h2>
-<p><strong>Package version:</strong> 2.0.0.9000</p>
+<p><strong>Package version:</strong> 2.0.0.9001</p>
 <div class="section level3">
 <h3 id="what-it-is-and-when-to-use-it">What it is and when to use it<a class="anchor" aria-label="anchor" href="#what-it-is-and-when-to-use-it"></a>
 </h3>
@@ -199,38 +199,35 @@ table {
 <li>
 <code>blast_db</code> and <code>taxonomy</code> are configured as described in the <a href="tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment">Tutorial</a>.</li>
 </ul>
+<p><strong>Set input data, path and load library</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">read_count_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/8_filter_replicate.csv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
-<span><span class="va">reference_mock_fasta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/mock_ncbi.fasta"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
-<span><span class="va">sampleinfo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/sampleinfo_mfzr_plate1.csv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
-<span><span class="va">taxonomy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test/taxonomy_reduced.tsv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
-<span><span class="va">blast_path</span> <span class="op">&lt;-</span> <span class="st">"blastn"</span> <span class="co"># Adapt this if BLAST is not in your PATH</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.blast_path <span class="op">=</span> <span class="st">"blastn"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">outdir_mock</span> <span class="op">&lt;-</span> <span class="st">"mock_composition1"</span></span>
-<span><span class="co"># set package option to define the log_file</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir_mock</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">mock_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_variants_to_mock_species.html">match_variants_to_mock_species</a></span><span class="op">(</span></span>
-<span>  read_count<span class="op">=</span><span class="va">read_count_file</span>,</span>
-<span>  fas<span class="op">=</span><span class="va">reference_mock_fasta</span>,</span>
-<span>  taxonomy<span class="op">=</span><span class="va">taxonomy</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir_mock</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">read_count_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/8_filter_replicate.csv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
+<span><span class="va">reference_mock_fasta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/mock_ncbi.fasta"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
+<span><span class="va">sampleinfo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/sampleinfo_mfzr_plate1.csv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
+<span><span class="va">taxonomy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test/taxonomy_reduced.tsv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Run match_variants_to_mock_species</strong></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mock_template_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_variants_to_mock_species.html">match_variants_to_mock_species</a></span><span class="op">(</span></span>
+<span>  read_count <span class="op">=</span> <span class="va">read_count_file</span>,</span>
+<span>  fas <span class="op">=</span> <span class="va">reference_mock_fasta</span>,</span>
+<span>  taxonomy <span class="op">=</span> <span class="va">taxonomy</span>,</span>
 <span>  sampleinfo <span class="op">=</span> <span class="va">sampleinfo</span>,</span>
-<span>  outdir<span class="op">=</span> <span class="va">outdir_mock</span>,</span>
-<span>  blast_path<span class="op">=</span><span class="va">blast_path</span></span>
+<span>  outdir <span class="op">=</span> <span class="va">outdir_mock</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><strong>Note</strong>: If BLAST is available in your PATH (see <a href="installation.html">Installation</a>), you can omit the <code>blast_path</code> argument.</p>
 </div>
 <div class="section level5">
 <h5 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a>
 </h5>
-<p>The main output file is <strong><code>mock_composition_template_to_check.csv</code></strong>, which serves as a template for the final <code>mock_composition</code> file.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mock_composition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir_mock</span>, <span class="st">"mock_composition_template_to_check.csv"</span><span class="op">)</span></span>
-<span><span class="va">mock_composition_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">mock_composition</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">mock_composition_df</span>, format <span class="op">=</span> <span class="st">"markdown"</span><span class="op">)</span></span></code></pre></div>
+<p>The main output if <code>mock_template_df</code>, which also written to a CSV file <code>mock_composition1/mock_composition_template_to_check.csv</code>. This serves as a template for the final <code>mock_composition</code> file.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">mock_template_df</span>, format <span class="op">=</span> <span class="st">"markdown"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="3%">
@@ -297,7 +294,6 @@ table {
 <li>the species was not amplified in the mock samples, or</li>
 <li>the reference sequence in the custom database is incorrect.</li>
 </ul>
-<p>Here is your text with <strong>correct R Markdown internal link syntax preserved and consistent</strong> (anchors cleaned + safer IDs where needed).</p>
 </div>
 </div>
 <div class="section level4">
@@ -328,7 +324,7 @@ table {
 <li>The <code>blast_db</code> and <code>taxonomy</code> are set up as in the <a href="tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment">Tutorial</a>
 </li>
 </ul>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
@@ -336,14 +332,13 @@ table {
 <span><span class="va">taxonomy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test/taxonomy_reduced.tsv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
 <span><span class="va">sampleinfo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/sampleinfo_mfzr_plate1.csv"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
 <span><span class="va">blast_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/db_test"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
-<span><span class="va">blast_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">blast_db</span>, <span class="st">"COInr_reduced"</span><span class="op">)</span></span>
-<span><span class="va">blast_path</span> <span class="op">&lt;-</span> <span class="st">"blastn"</span> <span class="co"># Adapt this if BLAST is not in your PATH</span></span></code></pre></div>
+<span><span class="va">blast_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">blast_db</span>, <span class="st">"COInr_reduced"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Set package option to define the log_file</strong></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outdir_mock</span> <span class="op">&lt;-</span> <span class="st">"mock_composition2"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir_mock</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s limit the analyses to the mock samples</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">read_count_file</span><span class="op">)</span></span>
 <span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">sampleinfo</span><span class="op">)</span></span>
 <span></span>
@@ -361,13 +356,11 @@ table {
 <p><code>assign_taxonomy_ltg</code> will assign all ASV in the input csv file or data frame (<code>read_count_file</code>).</p>
 <p>See more details of taxonomic assignment <a href="tutorial-vtamr-pipeline.html#taxonomic-assignment">here</a>.</p>
 <p><strong>Note</strong>: If BLAST is in your PATH, you can omit the <code>blast_path</code> argument.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_tax</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assign_taxonomy_ltg.html">assign_taxonomy_ltg</a></span><span class="op">(</span></span>
 <span>  asv <span class="op">=</span> <span class="va">read_count_mock</span>, </span>
 <span>  taxonomy <span class="op">=</span> <span class="va">taxonomy</span>, </span>
-<span>  blast_db <span class="op">=</span> <span class="va">blast_db</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  blast_path <span class="op">=</span> <span class="va">blast_path</span></span>
+<span>  blast_db <span class="op">=</span> <span class="va">blast_db</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
@@ -376,19 +369,19 @@ table {
 <p>Make a data frame with ASVs and read counts in the <a href="tutorial-vtamr-pipeline.html#glossary">wide format</a> and add their taxonomic assignment.</p>
 <p>This format is easier to read for humans than <code>read_count_df</code>.</p>
 <p>See details of <code>write_asv_table</code> <a href="tutorial-vtamr-pipeline.html#print-output">here</a>.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_table_mock</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/write_asv_table.html">write_asv_table</a></span><span class="op">(</span></span>
-<span>  <span class="va">read_count_mock</span>, </span>
+<span>  read_count <span class="op">=</span> <span class="va">read_count_mock</span>, </span>
 <span>  sampleinfo <span class="op">=</span> <span class="va">sampleinfo</span>, </span>
 <span>  asv_tax <span class="op">=</span> <span class="va">asv_tax</span>,</span>
 <span>  pool_replicates <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Sort the output by the taxon name and then by decreasing read count.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_table_mock</span> <span class="op">&lt;-</span> <span class="va">asv_table_mock</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">ltg_name</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">tpos1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s see the ASV present in <code>tpos1</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">asv_table_mock</span>, format <span class="op">=</span> <span class="st">"markdown"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>

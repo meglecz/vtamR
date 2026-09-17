@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{Tutorial - vtamR pipeline}
   %\VignetteEngine{knitr::rmarkdown}
@@ -63,17 +64,17 @@ knitr::opts_chunk$set(
 # Summary
 
 **vtamR** is an advanced, R-based revision of 
-[VTAM](https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext) 
+[VTAM](https://spj.science.org/doi/pdf/10.1016/j.csbj.2023.01.034) 
 (Validation and Taxonomic Assignment of Metabarcoding Data). 
 It provides a **comprehensive metabarcoding pipeline**, enabling:
 
 - **End-to-End Sequence Analysis:** Processes raw FASTQ files of amplicon 
 sequences to generate a validated 
-[Amplicon Sequence Variant (ASV)](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) table, 
+[Amplicon Sequence Variant (ASV)](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary) table, 
 with ASVs assigned to taxonomic groups.
 - **Replicate Handling:** Supports technical or biological replicates of the same sample.
 - **Control-Based Filtering:** Uses positive and negative control samples to refine 
-filtering, minimizing both [false positives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary) and [false negatives](https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary).
+filtering, minimizing both [false positives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary) and [false negatives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary).
 
 
 **Novelties Compared to VTAM**
@@ -95,6 +96,7 @@ pooling of highly similar yet distinct ASVs, preserving **intra-specific variabi
 - **Detailed Log File:** Records all major functions called, along with their parameters and runtimes.
 - **Summary Information:** Facilitates publication of results (e.g., MIEM checklist).
 - **Flexible Output:** Formats output for direct use with `phyloseq` or `vegan`.
+
 
 
 ```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="vtamR Workflow"}
@@ -168,7 +170,7 @@ options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
 
 #### Data Structure and Workflow
 
-**Dataset Composition:**
+*Dataset Composition*
 
 Sequences are typically derived from **96 samples**, corresponding to a 96-well 
 plate used for PCR amplification.
@@ -193,7 +195,7 @@ libraries or time points (e.g., longitudinal studies tracking the same sites ove
 function for integrated analysis.
 
 
-**Multi-Marker Analysis**
+*Multi-Marker Analysis*
 
 `vtamR` supports the analysis of the same samples using 
 **multiple, strongly overlapping markers**. For example, our dataset 
@@ -223,7 +225,7 @@ These data sets are processed independently using the same pipeline.
 We will first analyze the **first "plate" of the MFZR marker**, 
 then demonstrate how to **pool results** from different plates and markers.
 
-**Loading Data**
+*Loading Data*
 
 To load the **demo files included in `vtamR`**, we will use the `system.file()` function.
 For your own datasets, specify the file and directory paths (e.g., `~/vtamR/fastq`).
@@ -308,10 +310,10 @@ This log is extremely valuable for reproducibility. It lets you reconstruct exac
 
 Just like for externam program paths, there are two ways to set the log path.
 
-**Option 1: Pass `log_file` to each function call.**
+*Option 1: Pass `log_file` to each function call.*
 You can specify the path to the log file directly, using the `log_file` argument of each major `vtamR` function. This works, but it's a bit laborious — it's easy to forget the argument on some calls, or to accidentally use different filenames across calls, which leaves you with several files that each contain only part of the information.
 
-**Option 2: Set a package-level option once (recommended).**
+*Option 2: Set a package-level option once (recommended).*
 A much simpler approach is to define the log path once, as a package option, at the start of your script. From then on, every logged function call is automatically appended to the same file — you don't need to specify anything else. This does mean the log will accumulate every trial and attempt, which can get a bit messy, but you'll always have the complete picture of what you did.
 
 For all functions with a `log_file` argument, the log path is resolved in the following order of priority:
@@ -330,13 +332,13 @@ options(vtamR.log_file = file.path(outdir, "vtamR_log.csv"))
 
 From this point on, every call to a `vtamR` function that supports logging will have its details appended to this file automatically.
 
-**A tip for finalized pipelines**
+*A tip for finalized pipelines*
 
 Once your pipeline is finalized, consider archiving the log file from your testing phase, then running the final pipeline with a fresh `log_file`. This gives you a clean, complete record of the exact procedure and parameters used to produce your final results — long after the analysis is done. It's also the input for the `miem_bioinfo()` function, which extracts information from the log file to help you prepare documentation for publication (e.g., a MIEM checklist).
 
 Using the log file comes with only a minor requirements — well worth the benefit of fully reproducible analyses:
 
-**Always name arguments explicitly when calling a function** — for example, use `my_function(input = my_file)` rather than relying on positional matching (`my_function(my_file)`).
+*Always name arguments explicitly when calling a function* — for example, use `my_function(input = my_file)` rather than relying on positional matching (`my_function(my_file)`).
 
 
 ## Pre-process reads
@@ -551,7 +553,7 @@ To keep things organized, I recommend
 This also allows the [summarize_by](#summarize_by) function to easily generate 
 summary statistics at each stage of the analysis.
 
-### Tracking the Evolution of Reads and ASVs (`stat_df`)
+### Tracking the Evolution of Reads and ASVs (`stat_df`){#init-stat}
 
 You can **monitor changes in the number of reads and ASVs** after each filtering step using the `get_stat` function. This function either:
 
@@ -1542,7 +1544,7 @@ asv_table_df <- write_asv_table(
   mock_composition = mock_composition)
 ```
 
-### Convert output to a `phyloseq` object
+### Convert output to a `phyloseq` object{#phyloseq}
 
 If you want to continue your biodiversity analyses using the `phyloseq`
 package, you can use the `format_for_phyloseq()` function to create a
@@ -1567,7 +1569,7 @@ phy_object <- format_for_phyloseq(
 )
 ```
 
-### Convert output for the `vegan` package
+### Convert output for the `vegan` package{#vegan}
 
 If you prefer to perform your biodiversity analyses using the `vegan`
 package, you can use `format_for_vegan()` to convert the `vtamR` results into
@@ -1604,7 +1606,9 @@ vegan_tax_df <- vegan_dfs[[2]]
 
 ## Document your workflow
 
-### Record R and package versions
+### Record R and package versions{#package-versions}
+
+Record R and package versions
 
 The log file records all functions called during the analysis and the parameters
 used for each function. However, one important piece of information is still
@@ -2131,7 +2135,7 @@ These visualizations help you choose an appropriate clustering threshold:
 * See how identity (`VSEARCH`) or `d` (`SWARM`) affects cluster structure.
 * Find a balance between over-splitting and over-merging biological units.
 
-For more guidance, see the [Make mOTUs](#make-motus) section.
+For more guidance, see the [Cluster ASVs into mOTUs](#cluster_asv) section.
 
 ## Arguments
 

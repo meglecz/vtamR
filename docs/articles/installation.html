@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
       <h1>Install vtamR and Third Party Programs</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-16</h4>
+            <h4 data-toc-skip class="date">2026-09-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/installation.Rmd" class="external-link"><code>vignettes/installation.Rmd</code></a></small>
       <div class="d-none name"><code>installation.Rmd</code></div>
@@ -102,7 +102,7 @@ table {
 <div class="section level2">
 <h2 id="install-vtamr-and-third-party-programs">Install vtamR and Third Party Programs<a class="anchor" aria-label="anchor" href="#install-vtamr-and-third-party-programs"></a>
 </h2>
-<p><strong>Package version:</strong> 2.0.0.9000 ## Documentation</p>
+<p><strong>Package version:</strong> 2.0.0.9001 ## Documentation</p>
 <p>Detailed documentation is available at <strong><a href="https://meglecz.github.io/vtamR/">Manual</a></strong></p>
 <ul>
 <li><a href="https://meglecz.github.io/vtamR/articles/installation.html">Installation</a></li>
@@ -148,7 +148,7 @@ table {
 <ul>
 <li>BLAST(<a href="https://pubmed.ncbi.nlm.nih.gov/2231712/" class="external-link">Altschul et al., 1990</a>) (v2.11.0+)</li>
 <li>VSEARCH (<a href="https://peerj.com/articles/2584/" class="external-link">Rognes et al., 2016</a>) (v2.7.0)</li>
-<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200/479" class="external-link">Martin, 2011</a>) (v4.0)</li>
+<li>CUTADAPT(<a href="https://journal.embnet.org/index.php/embnetjournal/article/view/200" class="external-link">Martin, 2011</a>) (v4.0)</li>
 <li>SWARM (<a href="https://peerj.com/articles/1420/" class="external-link">Mahé et al., 2015</a>) (v2.1.12)</li>
 <li>PIGZ (optional)</li>
 </ul>
@@ -176,7 +176,7 @@ table {
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your <code>PATH</code>, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>, be sure to provide the full path to each program using the corresponding <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them to the PATH, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <ol style="list-style-type: decimal">
 <li>Edit (or create) your <code>~/.Renviron</code> file</li>
 </ol>
@@ -203,10 +203,10 @@ table {
 <div class="section level4">
 <h4 id="windows">Windows<a class="anchor" aria-label="anchor" href="#windows"></a>
 </h4>
-<p>Download binaries and save them to a convenient place on your computer (<strong>path without space</strong>, e.g. <code>C:/Users/Public/</code>)</p>
+<p>Download binaries and save them to a convenient place on your computer (path <strong>without space</strong>, e.g. <code>C:/Users/Public/</code>)</p>
 <blockquote>
 <p><strong>Note:</strong> In Windows, double-clicking a <code>.zip</code> file doesn’t actually decompress (extract) it — it just lets you browse the contents while they’re still compressed.</p>
-<p>To properly extract the files, you need to:</p>
+<p><strong>To properly extract the files</strong>, you need to:</p>
 <ul>
 <li>
 <strong>Right-click</strong> on the zip file</li>
@@ -255,7 +255,7 @@ table {
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <p>You can use either <strong>GUI</strong> or <strong>PowerShell</strong> to add executables to your PATH.</p>
 <ol style="list-style-type: decimal">
 <li>Using the Windows GUI (System Settings)</li>
@@ -323,7 +323,7 @@ table {
 </li>
 </ul>
 <p>Alternatively, you can also create a custom version from the <strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860" class="external-link">Zenodo</a> and make a custom version using <a href="https://github.com/meglecz/mkCOInr" class="external-link">mkCOInr</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
+<p><strong>For other markers</strong> you will need a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
 </div>
 <div class="section level4">
 <h4 id="assign_taxonomy_rdp">assign_taxonomy_rdp<a class="anchor" aria-label="anchor" href="#assign_taxonomy_rdp"></a>

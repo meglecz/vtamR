@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
       <h1>Tutorial - vtamR pipeline</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-16</h4>
+            <h4 data-toc-skip class="date">2026-09-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/tutorial-vtamr-pipeline.Rmd" class="external-link"><code>vignettes/tutorial-vtamr-pipeline.Rmd</code></a></small>
       <div class="d-none name"><code>tutorial-vtamr-pipeline.Rmd</code></div>
@@ -102,19 +102,19 @@ table {
 <div class="section level2">
 <h2 id="tutorial---vtamr-pipeline">Tutorial - vtamR pipeline<a class="anchor" aria-label="anchor" href="#tutorial---vtamr-pipeline"></a>
 </h2>
-<p><strong>Package version:</strong> 2.0.0.9000</p>
+<p><strong>Package version:</strong> 2.0.0.9001</p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<p><strong>vtamR</strong> is an advanced, R-based revision of <a href="https://www.csbj.org/article/S2001-0370(23)00034-X/fulltext" class="external-link">VTAM</a> (Validation and Taxonomic Assignment of Metabarcoding Data). It provides a <strong>comprehensive metabarcoding pipeline</strong>, enabling:</p>
+<p><strong>vtamR</strong> is an advanced, R-based revision of <a href="https://spj.science.org/doi/pdf/10.1016/j.csbj.2023.01.034" class="external-link">VTAM</a> (Validation and Taxonomic Assignment of Metabarcoding Data). It provides a <strong>comprehensive metabarcoding pipeline</strong>, enabling:</p>
 <ul>
 <li>
-<strong>End-to-End Sequence Analysis:</strong> Processes raw FASTQ files of amplicon sequences to generate a validated <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">Amplicon Sequence Variant (ASV)</a> table, with ASVs assigned to taxonomic groups.</li>
+<strong>End-to-End Sequence Analysis:</strong> Processes raw FASTQ files of amplicon sequences to generate a validated <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">Amplicon Sequence Variant (ASV)</a> table, with ASVs assigned to taxonomic groups.</li>
 <li>
 <strong>Replicate Handling:</strong> Supports technical or biological replicates of the same sample.</li>
 <li>
-<strong>Control-Based Filtering:</strong> Uses positive and negative control samples to refine filtering, minimizing both <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">false positives</a> and <a href="https://people.imbe.fr/~emeglecz/vtamR/tutorial-vtamr-pipeline.html#glossary" class="external-link">false negatives</a>.</li>
+<strong>Control-Based Filtering:</strong> Uses positive and negative control samples to refine filtering, minimizing both <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">false positives</a> and <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">false negatives</a>.</li>
 </ul>
 <p><strong>Novelties Compared to VTAM</strong></p>
 <ul>
@@ -204,7 +204,7 @@ vtamR Workflow
 <div class="section level5">
 <h5 id="data-structure-and-workflow">Data Structure and Workflow<a class="anchor" aria-label="anchor" href="#data-structure-and-workflow"></a>
 </h5>
-<p><strong>Dataset Composition:</strong></p>
+<p><em>Dataset Composition</em></p>
 <p>Sequences are typically derived from <strong>96 samples</strong>, corresponding to a 96-well plate used for PCR amplification.</p>
 <p>Each plate includes <strong>negative controls, mock samples, and biological samples</strong>. A single sequencing library is generated per replicate, with each library representing a set of 96 PCR reactions.</p>
 <p>While <code>vtamR</code> can analyze datasets <strong>without controls or replicates</strong>, its full potential is realized when these features are utilized:</p>
@@ -219,7 +219,7 @@ vtamR Workflow
 <li>Consistent use of control samples ensures <strong>comparability</strong> across different libraries or time points (e.g., longitudinal studies tracking the same sites over time).</li>
 <li>Filtered datasets can be <strong>pooled</strong> using the <code>pool_dataset()</code> function for integrated analysis.</li>
 </ul>
-<p><strong>Multi-Marker Analysis</strong></p>
+<p><em>Multi-Marker Analysis</em></p>
 <p><code>vtamR</code> supports the analysis of the same samples using <strong>multiple, strongly overlapping markers</strong>. For example, our dataset originates from a project <a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12703" class="external-link">Corse et al., 2017</a> utilizing two markers: <strong>MFZR</strong> and <strong>ZFZR</strong>.</p>
 <p>Both markers target overlapping regions of the <strong>COI gene</strong>, where <strong>MFZR</strong> starts <strong>18 nucleotides upstream</strong> of <strong>ZFZR</strong>.</p>
 </div>
@@ -235,7 +235,7 @@ vtamR Workflow
 <p>for each <strong>marker-plate combination</strong>. Due to the limited sample size, numerical values and graphs may not be highly informative.</p>
 <p>Results from different <strong>marker-plate combinations</strong> are stored in <strong>separate directories</strong>, each maintaining the same structure and filenames. These data sets are processed independently using the same pipeline.</p>
 <p>We will first analyze the <strong>first “plate” of the MFZR marker</strong>, then demonstrate how to <strong>pool results</strong> from different plates and markers.</p>
-<p><strong>Loading Data</strong></p>
+<p><em>Loading Data</em></p>
 <p>To load the <strong>demo files included in <code>vtamR</code></strong>, we will use the <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> function. For your own datasets, specify the file and directory paths (e.g., <code>~/vtamR/fastq</code>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastq_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/fastq"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
@@ -329,8 +329,8 @@ vtamR Workflow
 <h5 id="two-ways-to-set-the-log-path">Two ways to set the log path<a class="anchor" aria-label="anchor" href="#two-ways-to-set-the-log-path"></a>
 </h5>
 <p>Just like for externam program paths, there are two ways to set the log path.</p>
-<p><strong>Option 1: Pass <code>log_file</code> to each function call.</strong> You can specify the path to the log file directly, using the <code>log_file</code> argument of each major <code>vtamR</code> function. This works, but it’s a bit laborious — it’s easy to forget the argument on some calls, or to accidentally use different filenames across calls, which leaves you with several files that each contain only part of the information.</p>
-<p><strong>Option 2: Set a package-level option once (recommended).</strong> A much simpler approach is to define the log path once, as a package option, at the start of your script. From then on, every logged function call is automatically appended to the same file — you don’t need to specify anything else. This does mean the log will accumulate every trial and attempt, which can get a bit messy, but you’ll always have the complete picture of what you did.</p>
+<p><em>Option 1: Pass <code>log_file</code> to each function call.</em> You can specify the path to the log file directly, using the <code>log_file</code> argument of each major <code>vtamR</code> function. This works, but it’s a bit laborious — it’s easy to forget the argument on some calls, or to accidentally use different filenames across calls, which leaves you with several files that each contain only part of the information.</p>
+<p><em>Option 2: Set a package-level option once (recommended).</em> A much simpler approach is to define the log path once, as a package option, at the start of your script. From then on, every logged function call is automatically appended to the same file — you don’t need to specify anything else. This does mean the log will accumulate every trial and attempt, which can get a bit messy, but you’ll always have the complete picture of what you did.</p>
 <p>For all functions with a <code>log_file</code> argument, the log path is resolved in the following order of priority:</p>
 <ol style="list-style-type: decimal">
 <li>the <code>log_file</code> argument, if it is provided in the function call;</li>
@@ -342,10 +342,10 @@ vtamR Workflow
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>From this point on, every call to a <code>vtamR</code> function that supports logging will have its details appended to this file automatically.</p>
-<p><strong>A tip for finalized pipelines</strong></p>
+<p><em>A tip for finalized pipelines</em></p>
 <p>Once your pipeline is finalized, consider archiving the log file from your testing phase, then running the final pipeline with a fresh <code>log_file</code>. This gives you a clean, complete record of the exact procedure and parameters used to produce your final results — long after the analysis is done. It’s also the input for the <code>miem_bioinfo()</code> function, which extracts information from the log file to help you prepare documentation for publication (e.g., a MIEM checklist).</p>
 <p>Using the log file comes with only a minor requirements — well worth the benefit of fully reproducible analyses:</p>
-<p><strong>Always name arguments explicitly when calling a function</strong> — for example, use <code>my_function(input = my_file)</code> rather than relying on positional matching (<code>my_function(my_file)</code>).</p>
+<p><em>Always name arguments explicitly when calling a function</em> — for example, use <code>my_function(input = my_file)</code> rather than relying on positional matching (<code>my_function(my_file)</code>).</p>
 </div>
 </div>
 </div>
@@ -484,7 +484,7 @@ vtamR Workflow
 <span>  compress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n <span class="op">=</span> <span class="fl">4e4</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : /tmp/RtmpPAbqGq/temp_libpath51e74382dbf6/vtamR/extdata/demo/fastq/mfzr_1_fw.fastq.gz contains 37351 records. Input file pair is copied to output.</span></span></code></pre></div>
+<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : /tmp/RtmpWH0c5c/temp_libpath19161885aca5/vtamR/extdata/demo/fastq/mfzr_1_fw.fastq.gz contains 37351 records. Input file pair is copied to output.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="demultiplex">Demultiplex<a class="anchor" aria-label="anchor" href="#demultiplex"></a>
@@ -566,7 +566,7 @@ vtamR Workflow
 <p>Each filtering function returns a <strong>data frame with the filtered results</strong>. You can also save the output as a <strong>CSV file</strong> using the <code>outfile</code> argument. This is especially useful if you want to track how ASVs or samples are retained or removed throughout the analysis, using the <a href="#history_by">history_by</a> and <a href="#summarize_by">summarize_by</a> functions.</p>
 <p>To keep things organized, I recommend <strong>starting output file names with a number</strong> to reflect the order of the steps. This also allows the <a href="#summarize_by">summarize_by</a> function to easily generate summary statistics at each stage of the analysis.</p>
 <div class="section level4">
-<h4 id="tracking-the-evolution-of-reads-and-asvs-stat_df">Tracking the Evolution of Reads and ASVs (<code>stat_df</code>)<a class="anchor" aria-label="anchor" href="#tracking-the-evolution-of-reads-and-asvs-stat_df"></a>
+<h4 id="init-stat">Tracking the Evolution of Reads and ASVs (<code>stat_df</code>)<a class="anchor" aria-label="anchor" href="#init-stat"></a>
 </h4>
 <p>You can <strong>monitor changes in the number of reads and ASVs</strong> after each filtering step using the <code>get_stat</code> function. This function either:</p>
 <ul>
@@ -2493,7 +2493,7 @@ Plot ClusterClasstification for the original data
 <span>  mock_composition <span class="op">=</span> <span class="va">mock_composition</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="convert-output-to-a-phyloseq-object">Convert output to a <code>phyloseq</code> object<a class="anchor" aria-label="anchor" href="#convert-output-to-a-phyloseq-object"></a>
+<h4 id="phyloseq">Convert output to a <code>phyloseq</code> object<a class="anchor" aria-label="anchor" href="#phyloseq"></a>
 </h4>
 <p>If you want to continue your biodiversity analyses using the <code>phyloseq</code> package, you can use the <code><a href="../reference/format_for_phyloseq.html">format_for_phyloseq()</a></code> function to create a <code>phyloseq</code> object from the <code>vtamR</code> results.</p>
 <p>In this example, we use <code>sampleinfo_df</code> as the source of sample metadata and retain the <code>sample_type</code> and <code>habitat</code> variables. You can include any additional sample-level variables that you may need for downstream analyses.</p>
@@ -2512,7 +2512,7 @@ Plot ClusterClasstification for the original data
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="convert-output-for-the-vegan-package">Convert output for the <code>vegan</code> package<a class="anchor" aria-label="anchor" href="#convert-output-for-the-vegan-package"></a>
+<h4 id="vegan">Convert output for the <code>vegan</code> package<a class="anchor" aria-label="anchor" href="#vegan"></a>
 </h4>
 <p>If you prefer to perform your biodiversity analyses using the <code>vegan</code> package, you can use <code><a href="../reference/format_for_vegan.html">format_for_vegan()</a></code> to convert the <code>vtamR</code> results into a format suitable for <code>vegan</code> analyses.</p>
 <p>The function returns a list containing two data frames:</p>
@@ -2540,8 +2540,9 @@ Plot ClusterClasstification for the original data
 <h3 id="document-your-workflow">Document your workflow<a class="anchor" aria-label="anchor" href="#document-your-workflow"></a>
 </h3>
 <div class="section level4">
-<h4 id="record-r-and-package-versions">Record R and package versions<a class="anchor" aria-label="anchor" href="#record-r-and-package-versions"></a>
+<h4 id="package-versions">Record R and package versions<a class="anchor" aria-label="anchor" href="#package-versions"></a>
 </h4>
+<p>Record R and package versions</p>
 <p>The log file records all functions called during the analysis and the parameters used for each function. However, one important piece of information is still missing: the software environment in which the analysis was performed.</p>
 <p>To ensure reproducibility, it is important to record the R version and the versions of all packages used. The information can be saved as a CSV file, which can be archived together with your results and will be useful when sharing or publishing your work.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
@@ -2999,7 +3000,7 @@ Plot ClusterClasstification for the original data
 <li>See how identity (<code>VSEARCH</code>) or <code>d</code> (<code>SWARM</code>) affects cluster structure.</li>
 <li>Find a balance between over-splitting and over-merging biological units.</li>
 </ul>
-<p>For more guidance, see the <a href="#make-motus">Make mOTUs</a> section.</p>
+<p>For more guidance, see the <a href="#cluster_asv">Cluster ASVs into mOTUs</a> section.</p>
 </div>
 </div>
 <div class="section level3">

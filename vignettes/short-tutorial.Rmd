@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{Short Tutorial vtamR}
   %\VignetteEngine{knitr::rmarkdown}
@@ -166,7 +167,7 @@ fastqinfo_df <- demultiplex_and_trim_fastq(
 ```
 
 ### Subsampling
-*See [Randomly Select Sequences](tutorial-vtamr-pipeline.html#subsample) for more details.*
+*See [Randomly Select Sequences](tutorial-vtamr-pipeline.html#randomly-subsample-sequencing-reads) for more details.*
 
 If we used `random_sample_batch` with the `n` option as in the [detailed tutoriel](tutorial-vtamr-pipeline.html#subsample),
 we would sample `n` sequences from each file and distort the relative read counts 
@@ -382,9 +383,6 @@ The `mock_composition_template_to_check.csv` file contains only 5 of the 6 expec
 Since the NCBI reference sequences were correctly chosen, this indicates that the ZFZP primer pair did not amplify *Phoxinus phoxinus*.
 
 Because this sequence is absent from the `mock_composition`, it will not be counted as a false negative when evaluating performance. This is an artefact, and it should be kept in mind that it is in fact a false negative.
-
-See [Create `mock_composition` File](tutorial-vtamr-pipeline.html#match_variants_to_mock_species) for more details.
-
 
 #### Filter Occurrences by Samples
 *See [Filter Low-Abundance Occurrences within Samples ](tutorial-vtamr-pipeline.html#filter_occurrence_sample) for more details.*
@@ -612,6 +610,8 @@ asv_table_df <- write_asv_table(
 ```
 
 ### Convert output to a phyloseq object
+*See [Convert output to a `phyloseq` object](tutorial-vtamr-pipeline.html#phyloseq) for more details. *
+
 ```{r make_phyloseq}
 # Create a data frame containing sample metadata
 samples <- sampleinfo_df %>%
@@ -627,6 +627,7 @@ phy_object <- format_for_phyloseq(
 ```
 
 ### Convert output for the `vegan` package
+*See [Convert output to a `vegan` object](tutorial-vtamr-pipeline.html#vegan) for more details. *
 
 ```{r format_to_vegan}
 vegan_dfs <- format_for_vegan(
@@ -645,12 +646,15 @@ vegan_tax_df <- vegan_dfs[[2]]
 ## Document your workflow
 
 ### Record R and package versions 
+*See [Record R and package versions](tutorial-vtamr-pipeline.html#package-versions) for more details. *
+
 ```{r versions}
 package_versions <- file.path(run_info_dir,  "R_package_versions.csv")
 collect_package_info(package_versions)
 ```
 
 ### MIEM 
+*See [MIEM](tutorial-vtamr-pipeline.html#miem) for more details.*
 
 **MIEM bioinformatics**
 ```{r miem_bioinformatics}

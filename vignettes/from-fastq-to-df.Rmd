@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{From fastq to data frame }
   %\VignetteEngine{knitr::rmarkdown}
@@ -74,34 +75,25 @@ which serves as the input for the filtering steps.
 library(vtamR)
 ```
 
-*Set path to third party programs*
-```{r set_path_win}
-# Example for Windows
-cutadapt_path <- "C:/Users/Public/cutadapt"
-vsearch_path <- "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
-pigz_path <- "C:/Users/Public/pigz-win32/pigz" # optional to speed file compression
-```
 
-```{r set_path, echo=FALSE}
-# Example for Windows
-cutadapt_path <- "cutadapt"
-vsearch_path <- "vsearch"
-pigz_path <- "pigz" # optional to speed file compression
-```
-
-```{r set_path_linux}
-#  Example for Linux
-cutadapt_path <- "~/miniconda3/envs/vtam/bin/cutadapt" # v3.4
-vsearch_path <- "~/miniconda3/envs/vtam/bin/vsearch" # v2.15.1
-pigz_path <- "~/miniconda3/envs/vtam/bin/pigz" # optional to speed file compression
-```
+If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.
 
 **Adapt the path** to third party programs according to your installation
 (See [Installation](installation.html)).
 
-If third party programs are in your `PATH` 
-(See [Installation](installation.html#install-third-party-programs)), simply omit
-the `cutadapt_path`, `pigz_path`, `vsearch_path` argument when calling the `vtamR` functions.
+```{r, eval=FALSE}
+options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+```
+
+```{r, echo = FALSE, eval=TRUE}
+options(vtamR.vsearch_path = "~/miniconda3/envs/vtam/bin/vsearch")
+options(vtamR.cutadapt_path = "~/miniconda3/envs/vtam_benchmark/bin/cutadapt")
+options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
+```
+
+See the [detailed tutorial on how to set the PATH](tutorial-vtamr-pipeline.html#set-path) for more information.
 
 `compress = FALSE` In the tutorial we will use uncompressed files, but see
 [To compress or not to compress](tutorial-vtamr-pipeline.html#to-compress-or-not-to-compress)
@@ -128,16 +120,12 @@ correct parameters for quality filtering.
 
 ### Set Input
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): is either a csv file, or a data frame. The key 
-information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
-The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, 
-just fill them with `NA`.
-* `fastq_dir`: Directory containing the input fastq files.
-* [sampleinfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. It is the updated 
-version of fastqinfo, where fastq file names have been replaced by fasta file 
-names and the read counts are included for each file. 
-* `outdir`: Name of the output directory.
-
+Set output directory and log life
+```{r}
+outdir <- "vtamR_demo_case1"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+```
 
 The demo files below are included with the `vtamR` package, which is why we
 use `system.file()` to access them in this tutorial. 
@@ -149,24 +137,24 @@ fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo1.csv", package = "vtamR")
 ```
 
-Set output directory and log life
-```{r}
-outdir <- "vtamR_demo_case1"
-# set package option to define the log_file
-options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
-
-merged_dir <- file.path(outdir, "merged")
-```
-
 ### Merge Fastq File Pairs and Quality Filter Reads
 
+* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): is either a csv file, or a data frame. The key 
+information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
+The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, 
+just fill them with `NA`.
+* [sampleinfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. It is the updated 
+version of fastqinfo, where fastq file names have been replaced by fasta file 
+names and the read counts are included for each file. 
+
 ```{r merge1}
+merged_dir <- file.path(outdir, "merged")
+
 sampleinfo_df <- merge_fastq_pairs(
-  fastqinfo, 
-  fastq_dir=fastq_dir, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir=merged_dir,
-  compress=FALSE
+  fastqinfo = fastqinfo, 
+  fastq_dir = fastq_dir, # Directory containing the input FASTQ files.
+  outdir = merged_dir, # Name of the output directory
+  compress = FALSE
   )
 ```
 
@@ -178,13 +166,17 @@ The fasta files produced by `merge_fastq_pairs` can be read to a data frame and 
 See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
 more information.
 
+* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+`asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
+It is also written to CSV file if the `outfile` is defined.
+
 ```{r derelicate1}
 outfile <- file.path(outdir, "1_before_filter.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo_df, 
-  dir=merged_dir, 
-  outfile=outfile
+  sampleinfo = sampleinfo_df, 
+  dir = merged_dir, # Directory containing the input FASTA files.
+  outfile = outfile
   )
 ```
 
@@ -207,19 +199,12 @@ See the help (`?trim_primer`) for setting the correct parameters for primer trim
 
 ### Set Input
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame.  
-The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
-The `primer_fw`, `primer_rv` columns are irrelevant in this case, just fill them with `NA`.
-* `fastq_dir`: Directory containing the input fastq files.
-* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): is the output of `merge_fastq_pairs`. 
-It is the updated version of `fastqinfo`, where fastq file names have been 
-replaced by fasta file names containing the merged sequences.
-* `fasta_dir`: Directory containing the input fasta files for `trim_primer`. 
-This directory is created by `merge_fastq_pairs`.
-* If `check_reverse` is TRUE, `trim_primer` checks the reverse complementary strand as well.
-* `sampleinfo_df`: is  updated version of fastainfo. 
-This data frame and the files listed in it are the input for `dereplicate`.
-* `outdir`: Name of the output directory. 
+**Set output directory and log life**
+```{r}
+outdir <- "vtamR_demo_case2"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+```
 
 The demo files below are included with the `vtamR` package, which is why we
 use `system.file()` to access them in this tutorial. 
@@ -231,58 +216,62 @@ fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo2.csv", package = "vtamR")
 ```
 
-**Set output directory and log life**
-```{r}
-outdir <- "vtamR_demo_case2"
-# set package option to define the log_file
-options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
-
-merged_dir <- file.path(outdir, "merged")
-```
-
 ### Merge Fastq File Pairs and Quality Filter Reads
 
+* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame.  
+The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
+The `primer_fw`, `primer_rv` columns are irrelevant in this case, just fill them with `NA`.
+* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): is the output of `merge_fastq_pairs`. 
+It is the updated version of `fastqinfo`, where fastq file names have been 
+replaced by fasta file names containing the merged sequences.
+
 ```{r merge2}
+merged_dir <- file.path(outdir, "merged")
+
 fastainfo_df <- merge_fastq_pairs(
-  fastqinfo, 
-  fastq_dir=fastq_dir, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir=merged_dir,
-  compress=FALSE
+  fastqinfo = fastqinfo, 
+  fastq_dir = fastq_dir, # directory of input FASTQ files
+  outdir = merged_dir, # Name of the output directory
+  compress = FALSE
   )
 ```
 
 ### Trim Primers
 
+* `sampleinfo_df`: is  updated version of fastainfo_df. 
+This data frame and the files listed in it are the input for `dereplicate`.
+
 ```{r primer-trim}
 
 demultiplexed_dir <- file.path(outdir, "demultiplexed")
 sampleinfo_df <- trim_primers(
-  fastainfo_df, 
-  fasta_dir=merged_dir, 
-  outdir=demultiplexed_dir, 
-  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  check_reverse=T,
-  primer_to_end=F,
-  compress=FALSE
+  fastainfo = fastainfo_df, 
+  fasta_dir = merged_dir, # Directory containing the input FASTA files (created by `merge_fastq_pairs`).
+  outdir = demultiplexed_dir,  # Name of the output directory
+  check_reverse = TRUE, # Check the reverse complementary strand as well
+  primer_to_end = FALSE, 
+  compress = FALSE
   )
 ```
 
 ### Dereplicate
 
-The fasta files produced by `TrimPrimer` can be read to a data frame and be 
-[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `Dereplicate` function.
-See the help (`?Dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
+The fasta files produced by `trim_primers` can be read to a data frame and be 
+[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `dereplicate` function.
+See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
 more information.
+
+* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+`asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
+It is also written to CSV file if the `outfile` is defined.
 
 ```{r derelicate2}
 outfile <- file.path(outdir, "1_before_filter.csv")
 
 read_count_df <- dereplicate(
-  sampleinfo_df, 
-  dir=demultiplexed_dir, 
-  outfile=outfile
+  sampleinfo = sampleinfo_df, 
+  dir = demultiplexed_dir, 
+  outfile = outfile
   )
 ```
 
@@ -307,18 +296,12 @@ correct parameters for demultiplexing and primer trimming:
 
 #### Set Input
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame. 
-The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged.
-* `fastq_dir`: Directory containing the input fastq files.
-* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. 
-It is the updated version of `fastqinfo`, where fastq file names have been 
-replaced by fasta file names.
-* `fasta_dir`: Directory containing the input fasta files for `demultiplex_and_trim_fasta`. 
-This directory is created by `merge_fastq_pairs`.
-* If `check_reverse` is TRUE, `demultiplex_and_trim_fasta` checks the reverse complementary stand as well.
-* `sampleinfo_df`: Updated version of `fastainfo`. 
-This data frame and the files listed in it are the input of the `dereplicate`.
-* `outdir`: Name of the output directory. 
+**Set output directory and log life**
+```{r}
+outdir <- "vtamR_demo_case3a"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+```
 
 The demo files below are included with the `vtamR` package, which is why we
 use `system.file()` to access them in this tutorial. 
@@ -330,39 +313,40 @@ fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
 ```
 
-**Set output directory and log life**
-```{r}
-outdir <- "vtamR_demo_case3a"
-# set package option to define the log_file
-options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
-
-merged_dir <- file.path(outdir, "merged")
-demultiplexed_dir <- file.path(outdir, "demultiplexed")
-```
-
 
 #### Merge Fastq File Pairs and Quality Filter Reads
 
+* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame. 
+The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged.
+* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. 
+It is the updated version of `fastqinfo`, where fastq file names have been 
+replaced by fasta file names.
+
 ```{r merge3}
+merged_dir <- file.path(outdir, "merged")
+
 fastainfo_df <- merge_fastq_pairs(
-  fastqinfo, 
-  fastq_dir=fastq_dir, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir=merged_dir,
-  compress=FALSE
+  fastqinfo = fastqinfo, 
+  fastq_dir = fastq_dir, # Directory containing the input FASTQ files.
+  outdir = merged_dir, # Name of the output directory. 
+  compress = FALSE
   )
 ```
 
 #### Demultiplex, Trim off Tags and Primers
+
+* `sampleinfo_df`: Updated version of `fastainfo`. 
+This data frame and the files listed in it are the input of the `dereplicate`.
+
 ```{r demultiplex3}
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+
 sampleinfo_df <- demultiplex_and_trim_fasta(
-  fastainfo_df, 
-  fasta_dir=merged_dir, 
-  outdir=demultiplexed_dir, 
-  check_reverse=TRUE, 
-  cutadapt_path=cutadapt_path, # can be omitted if CUTADAPT is in the PATH
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  compress=FALSE
+  fastainfo = fastainfo_df, 
+  fasta_dir = merged_dir, # Directory containing the input FASTA files.
+  outdir = demultiplexed_dir, # Name of the output directory. 
+  check_reverse = TRUE, # Checks the reverse complementary stand as well
+  compress = FALSE
   )
 ```
 
@@ -373,12 +357,16 @@ The fasta files produced by `demultiplex_and_trim_fasta` can be read to a data f
 See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
 more information.
 
+* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+`asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
+It is also written to CSV file if the `outfile` is defined.
+
 ```{r depelicate3}
 outfile <- file.path(outdir, "1_before_filter.csv")
 read_count_df <- dereplicate(
-  sampleinfo_df, 
-  dir=demultiplexed_dir, 
-  outfile=outfile
+  sampleinfo = sampleinfo_df, 
+  dir = demultiplexed_dir, # Directory containing the input FASTA files.
+  outfile = outfile
   )
 ```
 
@@ -405,15 +393,12 @@ appropriate parameters for demultiplexing and primer trimming.
 
 #### Input Parameters
 
-* **`fastqinfo`** ([fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo)): 
-Either a CSV file or a data frame. For `demultiplex_and_trim_fastq`, the key 
-information includes the list of FASTQ file pairs to be demultiplexed,
-as well as the primer and tag sequences associated with each sample-replicate combination.
-* **`fastq_dir`**: Directory containing the input FASTQ files.
-* If **`check_reverse = TRUE`**, `demultiplex_and_trim_fastq` can check the reverse-complement strand.
-* **`sampleinfo_df`**: An updated version of `fastqinfo`. This data frame, 
-together with the files listed in it, serves as input for the `dereplicate` step.
-* **`outdir`**: Name of the output directory.
+**Set output directory and log life**
+```{r}
+outdir <- "vtamR_demo_case3b"
+# set package option to define the log_file
+options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
+```
 
 The example files used below are included with the `vtamR` package, 
 which is why we use `system.file()` to access them in this tutorial.
@@ -426,40 +411,40 @@ fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
 fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "vtamR")
 ```
 
-**Set output directory and log life**
-```{r}
-outdir <- "vtamR_demo_case3b"
-# set package option to define the log_file
-options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
-
-demultiplexed_dir <- file.path(outdir, "demultiplexed")
-merged_dir <- file.path(outdir, "merged")
-```
-
-
 #### Demultiplex, Trim off Tags and Primers and keep fastq format
+
+* **`fastqinfo`** ([fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo)): 
+Either a CSV file or a data frame. For `demultiplex_and_trim_fastq`, the key 
+information includes the list of FASTQ file pairs to be demultiplexed,
+as well as the primer and tag sequences associated with each sample-replicate combination..
+
 ```{r demultiplex4}
+demultiplexed_dir <- file.path(outdir, "demultiplexed")
+
 fastqinfo_delultiplexed <- demultiplex_and_trim_fastq(
   fastqinfo = fastqinfo, 
-  fastq_dir = fastq_dir, 
-  outdir = demultiplexed_dir, 
-  cutadapt_path=cutadapt_path,
+  fastq_dir = fastq_dir, # Directory containing the input FASTQ files.
+  outdir = demultiplexed_dir, # Name of the output directory.
   primer_to_end = FALSE,
-  check_reverse=TRUE,
-  compress=FALSE,
-  quiet=TRUE
+  check_reverse = TRUE, # Check the reverse-complement strand.
+  compress = FALSE,
+  quiet = TRUE
   )
 ```
 
 #### Merge Fastq File Pairs and Quality Filter Reads
 
+* **`sampleinfo_df`**: An updated version of `fastqinfo`. This data frame, 
+together with the files listed in it, serves as input for the `dereplicate` step.
+
 ```{r merge4}
+merged_dir <- file.path(outdir, "merged")
+
 sampleinfo_df <- merge_fastq_pairs(
   fastqinfo = fastqinfo_delultiplexed, 
-  fastq_dir= demultiplexed_dir, 
-  vsearch_path=vsearch_path, # can be omitted if VSEARCH is in the PATH
-  outdir=merged_dir,
-  compress=FALSE
+  fastq_dir = demultiplexed_dir, # Directory containing the input FASTQ files
+  outdir = merged_dir, # Name of the output directory.
+  compress = FALSE
   )
 ```
 
@@ -471,12 +456,16 @@ The fasta files produced by `merge_fastq_pairs` can be read to a data frame and 
 See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
 more information.
 
+* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+`asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
+It is also written to CSV file if the `outfile` is defined.
+
 ```{r depelicate4}
 outfile <- file.path(outdir, "1_before_filter.csv")
 read_count_df <- dereplicate(
-  sampleinfo_df, 
-  dir=merged_dir, 
-  outfile=outfile
+  sampleinfo = sampleinfo_df, 
+  dir = merged_dir, # Directory containing the input FASTA files
+  outfile = outfile
   )
 ```
 

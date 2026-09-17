@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{How to make a mock_composition file}
   %\VignetteEngine{knitr::rmarkdown}
@@ -172,43 +173,46 @@ We will use files generated in the first part of the
 * `blast_db` and `taxonomy` are configured as described in the
   [Tutorial](tutorial-vtamr-pipeline.html#database-for-taxonomic-assignment).
   
-
-```{r set_db, eval=TRUE}
+**Set input data, path and load library**
+```{r, eval=TRUE}
 library(vtamR)
 
+options(vtamR.blast_path = "blastn")
+
+outdir_mock <- "mock_composition1"
+options(vtamR.log_file =  file.path(outdir_mock, "vtamR_log.csv"))
+```
+
+```{r, echo = FALSE, eval=TRUE}
+options(vtamR.blast_path = "~/miniconda3/envs/vtam/bin/blastn")
+```
+
+```{r set_data, eval=TRUE}
 read_count_file <- system.file("extdata/demo/8_filter_replicate.csv", package = "vtamR")
 reference_mock_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR")
 sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
-blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
+```
 
-outdir_mock <- "mock_composition1"
-# set package option to define the log_file
-options(vtamR.log_file =  file.path(outdir_mock, "vtamR_log.csv"))
-
-mock_template <- match_variants_to_mock_species(
-  read_count=read_count_file,
-  fas=reference_mock_fasta,
-  taxonomy=taxonomy,
+**Run match_variants_to_mock_species**
+```{r set_db, eval=TRUE}
+mock_template_df <- match_variants_to_mock_species(
+  read_count = read_count_file,
+  fas = reference_mock_fasta,
+  taxonomy = taxonomy,
   sampleinfo = sampleinfo,
-  outdir= outdir_mock,
-  blast_path=blast_path
+  outdir = outdir_mock
   )
 ```
 
-**Note**: If BLAST is available in your PATH (see [Installation](installation.html)),
-you can omit the `blast_path` argument.
 
 #### Output
 
-The main output file is **`mock_composition_template_to_check.csv`**,
-which serves as a template for the final `mock_composition` file.
+The main output if `mock_template_df`, which also written to a CSV file  `mock_composition1/mock_composition_template_to_check.csv`. 
+This serves as a template for the final `mock_composition` file.
 
 ```{r show_results, eval=TRUE}
-mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.csv")
-mock_composition_df <- read.csv(mock_composition)
-
-knitr::kable(mock_composition_df, format = "markdown")
+knitr::kable(mock_template_df, format = "markdown")
 ```
 
 It contains the most abundant sequence for each `ltg_name` identified 
@@ -223,8 +227,6 @@ This can happen if:
 
 * the species was not amplified in the mock samples, or
 * the reference sequence in the custom database is incorrect.
-
-Here is your text with **correct R Markdown internal link syntax preserved and consistent** (anchors cleaned + safer IDs where needed).
 
 
 ### 2. Prefiltering the dataset and manually picking the expected ASVs
@@ -269,7 +271,6 @@ taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR
 sampleinfo <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
 blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
-blast_path <- "blastn" # Adapt this if BLAST is not in your PATH
 ```
 
 **Set package option to define the log_file**
@@ -305,9 +306,7 @@ See more details of taxonomic assignment [here](tutorial-vtamr-pipeline.html#tax
 asv_tax <- assign_taxonomy_ltg(
   asv = read_count_mock, 
   taxonomy = taxonomy, 
-  blast_db = blast_db,
-  quiet = TRUE,
-  blast_path = blast_path
+  blast_db = blast_db
 )
 ```
 
@@ -323,7 +322,7 @@ See details of `write_asv_table` [here](tutorial-vtamr-pipeline.html#print-outpu
 
 ```{r}
 asv_table_mock <- write_asv_table(
-  read_count_mock, 
+  read_count = read_count_mock, 
   sampleinfo = sampleinfo, 
   asv_tax = asv_tax,
   pool_replicates = TRUE

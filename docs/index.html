@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,11 +62,11 @@
 <!-- badges: start --><!-- badges: end --><p><strong>vtamR</strong> is an advanced, R-based revision of <a href="https://spj.science.org/doi/pdf/10.1016/j.csbj.2023.01.034" class="external-link">VTAM</a> (Validation and Taxonomic Assignment of Metabarcoding Data). It provides a <strong>comprehensive metabarcoding pipeline</strong>, enabling:</p>
 <ul>
 <li>
-<strong>End-to-End Sequence Analysis:</strong> Processes raw FASTQ files of amplicon sequences to generate a validated <a href="tutorial-vtamr-pipeline.html#glossary">Amplicon Sequence Variant (ASV)</a> table, with ASVs assigned to taxonomic groups.</li>
+<strong>End-to-End Sequence Analysis:</strong> Processes raw FASTQ files of amplicon sequences to generate a validated <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">Amplicon Sequence Variant (ASV)</a> table, with ASVs assigned to taxonomic groups.</li>
 <li>
 <strong>Replicate Handling:</strong> Supports technical or biological replicates of the same sample.</li>
 <li>
-<strong>Control-Based Filtering:</strong> Uses positive and negative control samples to refine filtering, minimizing both <a href="tutorial-vtamr-pipeline.html#glossary">false positives</a> and <a href="tutorial-vtamr-pipeline.html#glossary">false negatives</a>.</li>
+<strong>Control-Based Filtering:</strong> Uses positive and negative control samples to refine filtering, minimizing both <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">false positives</a> and <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary">false negatives</a>.</li>
 </ul>
 <p><strong>Novelties Compared to VTAM</strong></p>
 <ul>
@@ -180,7 +180,7 @@
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your <code>PATH</code>, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to modify your <code>PATH</code>, be sure to provide the full path to each program using the corresponding <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them to the PATH, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <ol style="list-style-type: decimal"><li>Edit (or create) your <code>~/.Renviron</code> file</li></ol>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> ~/.Renviron</span></code></pre></div>
 <ol start="2" style="list-style-type: decimal"><li>Add the directory to the PATH</li></ol>
@@ -199,10 +199,10 @@
 <div class="section level3">
 <h3 id="windows">Windows<a class="anchor" aria-label="anchor" href="#windows"></a>
 </h3>
-<p>Download binaries and save them to a convenient place on your computer (path without space, e.g. <code>C:/Users/Public/</code>)</p>
+<p>Download binaries and save them to a convenient place on your computer (path <strong>without space</strong>, e.g. <code>C:/Users/Public/</code>)</p>
 <blockquote>
 <p><strong>Note:</strong> In Windows, double-clicking a <code>.zip</code> file doesn’t actually decompress (extract) it — it just lets you browse the contents while they’re still compressed.</p>
-<p>To properly extract the files, you need to:</p>
+<p><strong>To properly extract the files</strong>, you need to:</p>
 <ul>
 <li>
 <strong>Right-click</strong> on the zip file</li>
@@ -249,7 +249,7 @@
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <p>You can use either <strong>GUI</strong> or <strong>PowerShell</strong> to add executables to your PATH.</p>
 <ol style="list-style-type: decimal"><li>Using the Windows GUI (System Settings)</li></ol>
 <ul>
@@ -309,7 +309,7 @@
 </li>
 </ul>
 <p>Alternatively, you can also create a custom version from the <strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860" class="external-link">Zenodo</a> and make a custom version using <a href="https://github.com/meglecz/mkCOInr" class="external-link">mkCOInr</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
+<p><strong>For other markers</strong> you will need a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
 </div>
 <div class="section level3">
 <h3 id="assign_taxonomy_rdp">assign_taxonomy_rdp<a class="anchor" aria-label="anchor" href="#assign_taxonomy_rdp"></a>

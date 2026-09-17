@@ -13,14 +13,16 @@ a **comprehensive metabarcoding pipeline**, enabling:
 
 -   **End-to-End Sequence Analysis:** Processes raw FASTQ files of
     amplicon sequences to generate a validated [Amplicon Sequence
-    Variant (ASV)](tutorial-vtamr-pipeline.html#glossary) table, with
-    ASVs assigned to taxonomic groups.
+    Variant
+    (ASV)](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary)
+    table, with ASVs assigned to taxonomic groups.
 -   **Replicate Handling:** Supports technical or biological replicates
     of the same sample.
 -   **Control-Based Filtering:** Uses positive and negative control
     samples to refine filtering, minimizing both [false
-    positives](tutorial-vtamr-pipeline.html#glossary) and [false
-    negatives](tutorial-vtamr-pipeline.html#glossary).
+    positives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary)
+    and [false
+    negatives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary).
 
 **Novelties Compared to VTAM**
 
@@ -151,9 +153,12 @@ If third-party executables are included in your `PATH`, you won’t need
 to manually specify their locations when running functions that use
 them.
 
-If you prefer **not** to modify your `PATH`, be sure to provide the full
-path to each program using the corresponding `vtamR` function argument
-(e.g., `vsearch_path`).
+If you prefer **not** to add them to the PATH, make sure to provide  
+[package
+options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path)
+in the beginning of yous script, or the full path to each program
+through the appropriate `vtamR` function argument (e.g.,
+`vsearch_path`).
 
 1.  Edit (or create) your `~/.Renviron` file
 
@@ -188,13 +193,13 @@ system("pigz --version")
 ### Windows
 
 Download binaries and save them to a convenient place on your computer
-(path without space, e.g. `C:/Users/Public/`)
+(path **without space**, e.g. `C:/Users/Public/`)
 
 > **Note:** In Windows, double-clicking a `.zip` file doesn’t actually
 > decompress (extract) it — it just lets you browse the contents while
 > they’re still compressed.
 >
-> To properly extract the files, you need to:
+> **To properly extract the files**, you need to:
 >
 > -   **Right-click** on the zip file
 > -   Select **“Extract All…”**
@@ -245,8 +250,11 @@ If third-party executables are included in your system PATH, you won’t
 need to manually specify their locations when running functions that use
 them.
 
-If you prefer **not** to add them, make sure to provide the full path to
-each program through the appropriate `vtamR` function argument (e.g.,
+If you prefer **not** to add them, make sure to provide  
+[package
+options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path)
+in the beginning of yous script, or the full path to each program
+through the appropriate `vtamR` function argument (e.g.,
 `vsearch_path`).
 
 You can use either **GUI** or **PowerShell** to add executables to your
@@ -335,9 +343,9 @@ using [mkCOInr](https://github.com/meglecz/mkCOInr) ([Meglécz,
 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 **For other markers** you will need a [database formatted to
-BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg),
+BLAST](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg),
 containing taxIDs and a [taxonomy
-file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
+file](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
 If all sequences are extracted from NCBI-nt, the taxonomy file provided
 in [OSF](https://osf.io/vrfwz/) can be used without modification.
 

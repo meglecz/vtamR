@@ -539,9 +539,9 @@ trim_primers_file <- function(fasta,
         "--fastaout", out_rv_rc, 
         "--quiet"
       )
-      if(num_threads > 0){
-        args <- append(args, c("--threads", num_threads))
-      }
+#      if(num_threads > 0){
+#        args <- append(args, c("--threads", num_threads))
+#      }
       run_system2(vsearch_path, args, quiet=quiet)
       
       # append content of minus_rc to plus file

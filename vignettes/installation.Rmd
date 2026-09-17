@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{Install vtamR and Third Party Programs}
   %\VignetteEngine{knitr::rmarkdown}
@@ -110,7 +111,7 @@ programs. They should be installed on your computer.
 
 * BLAST([Altschul et al., 1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
 * VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/)) (v2.7.0)
-* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200/479)) (v4.0)
+* CUTADAPT([Martin, 2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200)) (v4.0)
 * SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/)) (v2.1.12)
 * PIGZ (optional)
 
@@ -134,9 +135,10 @@ operating systems.
 If third-party executables are included in your `PATH`, 
 you won’t need to manually specify their locations when running functions that use them.
 
-If you prefer **not** to modify your `PATH`, be sure to provide the 
-full path to each program using the corresponding `vtamR` function argument 
-(e.g., `vsearch_path`).
+If you prefer **not** to add them to the PATH, make sure to provide  
+[package options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path) 
+in the beginning of yous script, or the full path to each program through the appropriate 
+`vtamR` function argument (e.g., `vsearch_path`).
 
 
 1. Edit (or create) your `~/.Renviron` file
@@ -171,12 +173,12 @@ system("pigz --version")
 ### Windows
 
 Download binaries and save them to a convenient place on your computer 
-(**path without space**, e.g. `C:/Users/Public/`)
+(path **without space**, e.g. `C:/Users/Public/`)
 
 > **Note:** In Windows, double-clicking a `.zip` file doesn't actually decompress 
 (extract) it — it just lets you browse the contents while they're still compressed.
 >
-> To properly extract the files, you need to:
+> **To properly extract the files**, you need to:
 >
 > - **Right-click** on the zip file
 > - Select **"Extract All..."**
@@ -226,7 +228,10 @@ If third-party executables are included in your
 system PATH, you won’t need to manually specify their locations when running 
 functions that use them.
 
-If you prefer **not** to add them, make sure to provide the full path to each program through the appropriate `vtamR` function argument (e.g., `vsearch_path`).
+If you prefer **not** to add them, make sure to provide  
+[package options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path) 
+in the beginning of yous script, or the full path to each program through the appropriate 
+`vtamR` function argument (e.g., `vsearch_path`).
 
 You can use either **GUI** or **PowerShell** to add executables to your PATH.
 
@@ -311,9 +316,9 @@ Alternatively, you can also create a custom version from the **TSV format** data
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 
-**For other markers** you will need a [database formatted to BLAST](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg), 
+**For other markers** you will need a [database formatted to BLAST](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg), 
 containing taxIDs and a 
-[taxonomy file](tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
+[taxonomy file](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
 If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
