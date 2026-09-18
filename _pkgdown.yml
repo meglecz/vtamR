@@ -1,4 +1,6 @@
 url: https://meglecz.github.io/vtamR/
 template:
   bootstrap: 5
+toc:
+depth: 5
 

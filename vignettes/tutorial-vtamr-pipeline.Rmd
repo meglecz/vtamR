@@ -99,8 +99,8 @@ pooling of highly similar yet distinct ASVs, preserving **intra-specific variabi
 
 
 
-```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="vtamR Workflow"}
-knitr::include_graphics("figures/vtamR_workflow.png")
+```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="Overview of the vtamR Workflow"}
+knitr::include_graphics("figures/vtamR_flochart_sceen.png")
 ```
 
 

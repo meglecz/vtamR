@@ -75,9 +75,16 @@ tutorial) without running the pipeline:
 
 ``` r
 vtamR::download_tutorial_output(dest = "my_folder/")
-#> Downloading example output (release: short-tutorial-output-v1)...
-#> Example output ready at: my_folder//short_tutorial_output
 ```
+
+<div class="figure" style="text-align: center">
+
+<img src="vignettes/figures/vtamR_flochart_sceen.png" alt="Overview of the vtamR Workflow" width="100%" />
+<p class="caption">
+Overview of the vtamR Workflow
+</p>
+
+</div>
 
 ## Install `vtamR`
 

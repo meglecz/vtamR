@@ -65,8 +65,13 @@ Detailed documentation is available at **[Manual](https://meglecz.github.io/vtam
 You can also download a ready-made example output (matching the Short
 tutorial) without running the pipeline:
 
-```{r}
+```{r, eval=FALSE}
 vtamR::download_tutorial_output(dest = "my_folder/")
+```
+
+
+```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="Overview of the vtamR Workflow"}
+knitr::include_graphics("vignettes/figures/vtamR_flochart_sceen.png")
 ```
 
 ## Install `vtamR`
