@@ -874,6 +874,15 @@ Install and README updated, with
 
 ## 2026/09/17 commit 9001-tuto
 
+## 2026/09/18 commit toc
+
+Add pkgdown/extra.css and pkgdown/extra.js to correct toc behavior on pkgdown
+Modify _pkgdown.yml to add toc depth
+url: https://meglecz.github.io/vtamR/
+template:
+  bootstrap: 5
+toc:
+depth: 5
 
 
 
