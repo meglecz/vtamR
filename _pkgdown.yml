@@ -1,6 +1,42 @@
 url: https://meglecz.github.io/vtamR/
 template:
   bootstrap: 5
-toc:
-  depth: 5
-
+navbar:
+  structure:
+    left: [intro, tutorials, howto, reference, troubleshoot]
+  components:
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Installation
+          href: articles/01-installation.html
+        - text: Quick Start
+          href: articles/02-quickstart.html
+        - text: Tutorial
+          href: articles/03-tutorial.html
+        - text: "Tutorial: In-Depth"
+          href: articles/04-tutorial-in-depth.html
+    howto:
+      text: How-To Guides
+      menu:
+        - text: "Preprocessing: FASTQ to Data Frame"
+          href: articles/10-howto-fastq-to-df.html
+        - text: Create a Mock Composition File
+          href: articles/11-howto-mock-composition-file.html
+        - text: Pool Multiple Datasets
+          href: articles/12-howto-pool-datasets.html
+    reference:
+      text: Reference
+      menu:
+        - text: Best Practices
+          href: articles/20-best-practices.html
+        - text: "Input/Output Formats"
+          href: articles/21-ref-io-formats.html
+        - text: Additional Functions
+          href: articles/22-ref-functions.html
+        - text: Glossary
+          href: articles/23-glossary.html
+    troubleshoot:
+      text: Troubleshooting
+      href: articles/90-troubleshooting.html
+      

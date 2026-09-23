@@ -311,3 +311,8 @@ help(package = "vtamR")
 apropos("filter")
 ```
 
+### show package options
+```{r}
+opts <- options()
+opts[grep("vtamR", names(opts))]
+```

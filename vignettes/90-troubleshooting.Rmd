@@ -1,0 +1,229 @@
+---
+title: "Troubleshooting"
+author: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{Troubleshooting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=FALSE,
+  cache=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+**Package version:** `r packageVersion("vtamR")`
+
+# Troubleshooting
+
+## Pool different runs of the same samples before filtering
+
+Pooling different sequencing runs is useful when the same samples were sequenced 
+in multiple runs, for example if one sequencing run was of lower quality or if 
+technical replication was performed. Pooling can be done before filtering
+to create a unified dataset.
+
+### Option 1
+
+The simplest approach is to concatenate the corresponding input files (FASTQ or FASTA).
+
+The `concatenate_files` function reads files from multiple directories 
+and concatenates the contents of files with the same filename into a single output file.
+
+**Important**: Before using this function, make sure that the sequence IDs in 
+the files to be concatenated are unique. Duplicate IDs can cause issues in downstream analyses.
+
+```{r, eval=FALSE}
+concatenate_files(
+   dirs = c("run1", "run2", "run3"),
+   outdir = "pooled",
+   pattern = ".fastq$"
+)
+```
+
+### Option 2
+
+Safer but a bit more complicated option.
+
+#### 1. Process each run separately up to dereplication
+
+For each sequencing run, perform the following steps:
+
+* Merge fastq read pairs to assemble paired-end reads
+* Demultiplex the reads
+* Trim primers and adapters
+
+Follow the steps in [from-fastq-to-df](from-fastq-to-df.html), adapting to 
+your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed 
+FASTA files in a separate directory for each run.
+
+#### 2. Dereplicate each run independently, while keeping a shared ASV list
+
+Dereplicate each run separately, but ensure that ASV identifiers (`asv_id`) 
+remain consistent across runs by:
+
+* Using the `output_asv_list` from the first `dereplicate()` call
+* Providing it as `input_asv_list` to the next run
+* Passing the updated list to subsequent runs
+
+This approach guarantees that previously detected ASVs retain the same `asv_id` 
+and newly detected ASVs receive new identifiers. 
+Harmonizing ASV IDs across datasets is essential.
+
+```{r, eval=FALSE}
+# Run 1
+updated_asv_list1 <- file.path(outdir, "ASV_list_with_IDs_1.csv")
+
+read_count_df1 <- dereplicate(
+  sampleinfo = sampleinfo_df1,
+  dir = demultiplexed_dir1,
+  input_asv_list = "",  # or an existing ASV list
+  output_asv_list = updated_asv_list1
+)
+
+# Run 2
+updated_asv_list2 <- file.path(outdir, "ASV_list_with_IDs_2.csv")
+
+read_count_df2 <- dereplicate(
+  sampleinfo = sampleinfo_df2,
+  dir = demultiplexed_dir2,
+  input_asv_list = updated_asv_list1,
+  output_asv_list = updated_asv_list2
+)
+
+# Run 3
+updated_asv_list3 <- file.path(outdir, "ASV_list_with_IDs_3.csv")
+
+read_count_df3 <- dereplicate(
+  sampleinfo = sampleinfo_df3,
+  dir = demultiplexed_dir3,
+  input_asv_list = updated_asv_list2,
+  output_asv_list = updated_asv_list3
+)
+```
+
+#### 3. Pool the dereplicated datasets
+
+After dereplication and harmonization of ASV identifiers, the resulting 
+`read_count_df` objects can be combined.
+
+```{r, eval=FALSE}
+read_count_df <- rbind(read_count_df1, read_count_df2, read_count_df3) %>%
+  group_by(asv_id, sample, replicate, asv) %>%
+  summarize(read_count = sum(read_count), .groups = "drop")
+```
+
+This pooling step:
+
+* Combines multiple runs
+* Sums read counts for identical ASV–sample–replicate combinations
+* Produces a unified dataset ready for downstream filtering
+
+## `filter_occurrence_variant` can eliminate most occurrences of a frequent ASV
+
+The `filter_occurrence_variant` function removes all occurrences where 
+the proportion of reads of an ASV in a sample-replicate relative to its total 
+read count is below the specified cutoff:
+
+`(number of reads of the ASV in a sample-replicate) / (total number of read of the ASV) < cutoff`
+
+When 
+
+- an ASV occurs in many samples and 
+- the dataset contains numerous samples and 
+- the cutoff is relatively high
+
+most occurrences of that ASV may fall below the cutoff, causing its total read 
+count to drop sharply during this filtering step.
+
+If the proportion of reads retained for an ASV after filtering is less than 
+`min_read_count_prop`, vtamR issues a warning. This should be carefully inspected:
+
+* The ASV might represent a general contaminant, in which case it may be 
+appropriate to remove it entirely from the dataset.
+* Otherwise, consider lowering the cutoff value in `filter_occurrence_variant`
+to retain more occurrences of the ASV.
+
+## Memory issues for running SWARM on the whole data set
+
+When working with very large datasets, running SWARM on the entire dataset at 
+once can cause memory issues. 
+
+Possible workarounds:
+
+* Run SWARM sample by sample (`by_sample = TRUE`).
+* Run `global_read_count` to remove singletons before SWARM.
+
+Both may slightly reduce clustering efficiency but allow the analysis to complete.
+
+## Memory issues in `merge_fastq_pairs` on Windows
+
+If very large input fastq files fail to merge, try using **uncompressed input files**.
+
+## No or few sequences passing `merge_fastq_pairs`
+
+If your amplicon is shorter than the reads, enable staggered merging by setting 
+`fastq_allowmergestagger = TRUE`.
+
+Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:
+
+
+## No or Few Sequences Passing `demultiplex_and_trim_fasta`
+
+By default, the `demultiplex_and_trim_fasta` function searches for tags and primers 
+only at the very ends of the reads (`tag_to_end = TRUE`, `primer_to_end = TRUE`). 
+This setting is both efficient and appropriate for most use cases.
+
+However, if you used sequencing spacers, the primers or tags might be located 
+a few nucleotides away from the ends of your sequences. In such cases, 
+you need to adjust these settings to ensure the function searches for 
+tags and primers in the correct positions.
+
+For more details, refer to the function documentation: `?demultiplex_and_trim_fasta`.
+
+

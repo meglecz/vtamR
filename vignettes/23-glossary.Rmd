@@ -1,0 +1,120 @@
+---
+title: "Glossary"
+author: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{Glossary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=FALSE,
+  cache=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+**Package version:** `r packageVersion("vtamR")`
+
+# Glossary
+
+* **ASV**: Amplicon Sequence Variant. A unique sequence, characterized by the number of reads in each sample–replicate.
+* **asv_id**: Unique numerical ID of an ASV.
+* **demultiplexing**: Sorting reads in a fasta (or fastq) file into different 
+sample–replicates according to the tags present at their extremities.
+* **dereplication**: The merged reads contain many identical sequences. 
+Dereplication reduces the data set to unique sequences (ASVs) and counts 
+the number of reads for each ASV in each sample–replicate.
+* **data frame (or csv) in long format**: The `read_count_df` contains one line 
+for each occurrence with `asv_id`, `asv`, `sample`, `replicate`, `read_count` columns. 
+This is the standard format used throughout the analyses and is generally more 
+compact than wide format when many ASVs occur in only a few samples.
+* **data frame (or csv) in wide format**: The `read_count_df` can be rearranged 
+so that rows are ASVs, columns are sample(-replicates), and cells contain read counts. 
+This format is more human-readable and is typically used for final ASV or mOTU tables, 
+often combined with taxonomic assignments and other metadata.
+* **false negative occurrence**: An expected ASV in a mock sample that is not detected in the data.
+* **false positive occurrence**: An unexpected presence of an ASV in a sample:
+
+  * all occurrences in negative controls,
+  * unexpected occurrences in mock samples,
+  * presence of an ASV in an incompatible habitat 
+  (e.g. an ASV abundant in habitat 1 but present at low frequency in habitat 2 
+  is considered a false positive in habitat 2).
+* **habitat**: Habitat type of organisms in real or mock samples. 
+Use this only if organisms from different habitats cannot occur in each other. 
+Use NA otherwise.
+* **long format**: Each row represents a single measurement, typically with 
+columns such as `asv`, `sample`, and `read_count`. This tidy format is well 
+suited for many data manipulation tools.
+* **Low Frequency Noise (LFN)**: ASVs present at low frequencies, 
+likely resulting from sequencing or amplification errors.
+* **merge**: Assemble a forward and reverse read pair into a single sequence.
+* **mock sample**: An artificial mixture of DNA from known organisms.
+* **negative sample**: Negative control sample.
+* **precision**: The proportion of detected positives that are true positives 
+(TP / (TP + FP)).
+* **real sample**: An environmental sample.
+* **Renkonen distance**:  $1 - \sum \min(p_{1i}, p_{2i})$, where $p_{1i}$ is the frequency of variant $i$ in sample-replicate1 (Renkonen, 1938)
+* **replicate**: Technical or biological replicate of a sample. Replicates must 
+have numerical identifiers (e.g. sample `tops1` can have replicates 1, 2, and 3).
+* **sample**: Name of the environmental or control sample. 
+Must be alphanumeric and contain no spaces.
+* **sample–replicate**: A specific replicate of a given sample.
+* **sample_type**: [real/mock/negative](#glossary)
+* **sensitivity**: The proportion of true positives correctly detected (TP / (TP + FN)).
+* **singleton**: ASV with a single read in the entire data set.
+* **tag**: Short sequence at the extremity of the amplicon, used during demultiplexing 
+to identify the sample–replicate origin of each read.
+* **Tag-jump (or Tag-switch):** During PCR, chimeric sequences can cause molecular 
+tags (indices) to be exchanged. This leads to reads being attributed to the wrong sample, potentially distorting biodiversity estimates.
+* **taxIDs**: Numerical taxonomic identifiers. These can be valid [NCBI taxID](https://www.ncbi.nlm.nih.gov/taxonomy) values or arbitrary negative numbers 
+for taxa not present in NCBI.
+* **trimming**: Cutting sequence extremities, either based on sequence quality 
+or by detecting tags or primers.
+* **true positive occurrence**: An expected occurrence in a mock sample.
+* **wide format**: In `vtamR`, wide-format data frames have one row per ASV 
+and one column per sample, with read counts in the cells.

@@ -57,11 +57,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Short Tutorial
-
 **Package version:** `r packageVersion("vtamR")`
 
-## Documentation
+# Documentation
 
 This is a short version of the tutorial using the ZFZR demo data set.
 For more details check out the appropriate section of the 
@@ -77,9 +75,9 @@ and the documentation of the functions (`?function_name`)
 > browsing the output structure before running the third-party tools
 > (vsearch, blast, swarm, cutadapt) required for the pipeline itself.
 
-## Set up
+# Set up
 
-### Load library
+## Load library
 
 ```{r}
 library(vtamR)
@@ -87,7 +85,7 @@ library(dplyr)
 ```
 
 
-### Set paths (if needed)
+## Set paths (if needed)
 
 If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.
 
@@ -109,10 +107,10 @@ options(vtamR.swarm_path = "swarm")
 options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
 ```
 
-## Input data
+# Input data
 *See [Input data](tutorial-vtamr-pipeline.html#input-data) for more details.*
 
-### Demo data, outdir, log file
+## Demo data, outdir, log file
 
 ```{r}
 outdir <- "vtamR_demo_out/zfzr_plate1"
@@ -125,7 +123,7 @@ mock_ncbi_fasta <- system.file("extdata/demo/mock_ncbi.fasta", package = "vtamR"
 asv_list <- system.file("extdata/demo/ASV_list_with_IDs.csv", package = "vtamR") # all ASV of MFZR
 ```
 
-### Database
+## Database
 
 ```{r}
 taxonomy <- system.file("extdata/db_test/taxonomy_reduced.tsv", package = "vtamR")
@@ -133,7 +131,7 @@ blast_db <- system.file("extdata/db_test", package = "vtamR")
 blast_db <- file.path(blast_db, "COInr_reduced")
 ```
 
-## Pre-processing
+# Pre-processing
 
 To demonstrate different options, here, we will use a different order of the 
 pre-processing steps
@@ -150,7 +148,7 @@ In the details tutorial we had
  - random_sample_batch_by
  - merge_fastq_pairs
  
-### Demultiplex
+## Demultiplex
 *See [Demultiplex and Trim](tutorial-vtamr-pipeline.html#demultiplex) for more details.*
 
 ```{r}
@@ -166,7 +164,7 @@ fastqinfo_df <- demultiplex_and_trim_fastq(
 )
 ```
 
-### Subsampling
+## Subsampling
 *See [Randomly Select Sequences](tutorial-vtamr-pipeline.html#randomly-subsample-sequencing-reads) for more details.*
 
 If we used `random_sample_batch` with the `n` option as in the [detailed tutoriel](tutorial-vtamr-pipeline.html#subsample),
@@ -191,7 +189,7 @@ fastqinfo_df <- random_sample_batch_by(
 
 ```
 
-### Merge Fastq Pairs
+## Merge Fastq Pairs
 *See [Merge Fastq Pairs and Quality Filter](tutorial-vtamr-pipeline.html#merge) for more details.*
 
 ```{r}
@@ -208,7 +206,7 @@ sampleinfo_df <- merge_fastq_pairs(
 ```
 
 
-### Dereplicate
+## Dereplicate
 *See [Dereplicate](tutorial-vtamr-pipeline.html#dereplicate) for more details.*
 
 ```{r}
@@ -225,10 +223,10 @@ read_count_df <- dereplicate(
 ```
 
 
-## Filtering
+# Filtering
 *See [Filtering](tutorial-vtamr-pipeline.html#filtering) for more details.*
 
-### Initialize Statistics
+## Initialize Statistics
 *See [Initialize Statistics](tutorial-vtamr-pipeline.html#init-stat) for more details.*
 
 ```{r}
@@ -243,9 +241,9 @@ stat_df <- data.frame(
 stat_df <- get_stat(read_count_df, stat_df, stage = "input", params = NA)
 ```
 
-### Filtering ASVs
+## Filtering ASVs
 
-#### Denoising
+### Denoising
 *See [Denoising with SWARM](tutorial-vtamr-pipeline.html#denoise) for more details.*
 
 ```{r}
@@ -264,7 +262,7 @@ param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters)
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm_denoise", params=param)
 ```
 
-#### Filter ASVs Global
+### Filter ASVs Global
 *See [Filter out ASVs with Low Total Read Count](tutorial-vtamr-pipeline.html#filter_asv_global) for more details.*
 
 ```{r}
@@ -281,7 +279,7 @@ param <- paste("global_read_count_cutoff:", global_read_count_cutoff)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_asv_global", params=param)
 ```
 
-#### Filter ASVs Read Length
+### Filter ASVs Read Length
 *See [Filter ASVs Based on Read Length](tutorial-vtamr-pipeline.html#filter_indel) for more details.*
 
 ```{r}
@@ -294,7 +292,7 @@ read_count_df <- filter_indel(
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
 ```
 
-#### Filter ASVs Stop Codons
+### Filter ASVs Stop Codons
 *See [Filter ASVs with Stop Codons](tutorial-vtamr-pipeline.html#filter_stop_codon) for more details.*
 
 ```{r}
@@ -308,7 +306,7 @@ read_count_df <- filter_stop_codon(
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_stop_codon", params=NA)
 ```
 
-#### Filter Contaminant ASVs
+### Filter Contaminant ASVs
 *See [Filter Potential Contaminant ASVs](tutorial-vtamr-pipeline.html#filter_contaminant) for more details.*
 
 ```{r}
@@ -325,7 +323,7 @@ read_count_df <- filter_contaminant(
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
 ```
 
-#### Filter Chimeric ASVs
+### Filter Chimeric ASVs
 *See [Filter Chimeric ASVs](tutorial-vtamr-pipeline.html#filter_chimera) for more details.*
 
 ```{r}
@@ -339,7 +337,7 @@ read_count_df <- filter_chimera(
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_chimera", params=NA)
 ```
 
-### Filter Replicates
+## Filter Replicates
 
 *See [Filter Aberrant Replicates](tutorial-vtamr-pipeline.html#filter_replicate) for more details.*
 
@@ -357,9 +355,9 @@ param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=param)
 ```
 
-### Filtering Occurrences
+## Filtering Occurrences
 
-#### Create `mock_composition` File
+### Create `mock_composition` File
 *See [Create `mock_composition` File](tutorial-vtamr-pipeline.html#match_variants_to_mock_species) for more details.*
 
 ```{r}
@@ -384,7 +382,7 @@ Since the NCBI reference sequences were correctly chosen, this indicates that th
 
 Because this sequence is absent from the `mock_composition`, it will not be counted as a false negative when evaluating performance. This is an artefact, and it should be kept in mind that it is in fact a false negative.
 
-#### Filter Occurrences by Samples
+### Filter Occurrences by Samples
 *See [Filter Low-Abundance Occurrences within Samples ](tutorial-vtamr-pipeline.html#filter_occurrence_sample) for more details.*
 
 **Suggest parameter value**
@@ -415,7 +413,7 @@ param <- paste("cutoff:", sample_cutoff)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_sample", params=param)
 ```
 
-#### Filter Occurrences by Replicate
+### Filter Occurrences by Replicate
 *See [Filter Occurrences by Replicate Consistency](tutorial-vtamr-pipeline.html#filter_min_replicate-1) for more details.*
 
 ```{r}
@@ -433,7 +431,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params
 ```
 
 
-#### Filter Occurrences by Variant and Read count
+### Filter Occurrences by Variant and Read count
 
 *See [Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`)](tutorial-vtamr-pipeline.html#filter_occurrence_variant) for more details.*
 
@@ -497,7 +495,7 @@ stat_df <- get_stat(read_count_df, stat_df, stage="pool_filters", params=NA)
 ```
 
 
-#### Filter Occurrences by Replicate Again
+### Filter Occurrences by Replicate Again
 
 *See [Filter Occurrences by Replicate Consistency](tutorial-vtamr-pipeline.html#filter_min_replicate-2) for more details.*
 
@@ -514,9 +512,9 @@ param <- paste("min_replicate_number:", min_replicate_number)
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
 ```
 
-## Final steps
+# Final steps
 
-### Pool replicates
+## Pool replicates
 *See [Pool replicates](tutorial-vtamr-pipeline.html#pool_replicates) for more details.*
 
 ```{r}
@@ -528,7 +526,7 @@ read_count_sample_df <- pool_replicates(
 )
 ```
 
-### Performance Metrics
+## Performance Metrics
 *See [Performance Metrics](tutorial-vtamr-pipeline.html#classify_control_occurrences) for more details.*
 
 ```{r}
@@ -555,7 +553,7 @@ Therefore, the true number of false negatives is 1, and the sensitivity is:
 TP / (TP + FN) = 5 / (5 + 1) = 0.833
 
 
-### Print Summary Statistics
+## Print Summary Statistics
 *See [Print Summary Statistics](tutorial-vtamr-pipeline.html#print_stats) for more details.*
 
 ```{r}
@@ -565,7 +563,7 @@ write.csv(stat_df, file = file.path(run_info_dir, "summary.csv"))
 ```
 
 
-## Taxonomic Assignment
+# Taxonomic Assignment
 *See [Taxonomic Assignment](tutorial-vtamr-pipeline.html#taxonomic-assignment) for more details.*
 
 ```{r}
@@ -579,7 +577,7 @@ asv_tax <- assign_taxonomy_ltg(
 )
 ```
 
-## Clustering (mOTUs)
+# Clustering (mOTUs)
 *See [Clustering (mOTUs)](tutorial-vtamr-pipeline.html#cluster_asv) for more details.*
 
 ```{r}
@@ -593,9 +591,9 @@ read_count_samples_df_ClusterSize <- cluster_asv(
 )
 ```
 
-## Output
+# Output
 
-### ASV table
+## ASV table
 *See [Output table](tutorial-vtamr-pipeline.html#write_asv_table) for more details.*
 
 ```{r write_asv_table}
@@ -609,7 +607,7 @@ asv_table_df <- write_asv_table(
 )
 ```
 
-### Convert output to a phyloseq object
+## Convert output to a phyloseq object
 *See [Convert output to a `phyloseq` object](tutorial-vtamr-pipeline.html#phyloseq) for more details. *
 
 ```{r make_phyloseq}
@@ -626,7 +624,7 @@ phy_object <- format_for_phyloseq(
 )
 ```
 
-### Convert output for the `vegan` package
+## Convert output for the `vegan` package
 *See [Convert output to a `vegan` object](tutorial-vtamr-pipeline.html#vegan) for more details. *
 
 ```{r format_to_vegan}
@@ -643,9 +641,9 @@ vegan_motu_df <- vegan_dfs[[1]]
 vegan_tax_df <- vegan_dfs[[2]]
 ```
 
-## Document your workflow
+# Document your workflow
 
-### Record R and package versions 
+## Record R and package versions 
 *See [Record R and package versions](tutorial-vtamr-pipeline.html#package-versions) for more details. *
 
 ```{r versions}
@@ -653,7 +651,7 @@ package_versions <- file.path(run_info_dir,  "R_package_versions.csv")
 collect_package_info(package_versions)
 ```
 
-### MIEM 
+## MIEM 
 *See [MIEM](tutorial-vtamr-pipeline.html#miem) for more details.*
 
 **MIEM bioinformatics**

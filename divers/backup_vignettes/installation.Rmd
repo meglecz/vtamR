@@ -57,10 +57,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Install vtamR and Third Party Programs
 
 **Package version:** `r packageVersion("vtamR")`
-## Documentation
+
+# Documentation
 
 Detailed documentation is available at **[Manual](https://meglecz.github.io/vtamR/)** 
 
@@ -71,7 +71,7 @@ Detailed documentation is available at **[Manual](https://meglecz.github.io/vtam
 - [How to make a mock_composition file](https://meglecz.github.io/vtamR/articles/make-mock-composition-file.html)
 
 
-## Install `vtamR`
+# Install `vtamR`
 
 Install `vtamR` and its CRAN dependencies using `pak`:
 
@@ -87,7 +87,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("meglecz/vtamR", dependencies = TRUE)
 ```
 
-### Optional Bioconductor packages
+## Optional Bioconductor packages
 
 Some `vtamR` functions require additional Bioconductor packages. These are **suggested packages** and are therefore **not installed automatically with `vtamR`**. Install them manually if you intend to use the corresponding functions:
 
@@ -103,7 +103,7 @@ if (!requireNamespace("Biostrings", quietly = TRUE)) BiocManager::install("Biost
 if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phyloseq")
 ```
 
-## Install third party programs
+# Install third party programs
 
 The heavy lifting of sequence analyses are done by the following third party 
 programs. They should be installed on your computer. 
@@ -121,7 +121,7 @@ but it should work with later versions.
 `vtamR` was tested on **Windows** and **Linux**, and should work in all 
 operating systems.
 
-### Linux
+## Linux
 
 * `VSEARCH` [https://github.com/torognes/vsearch](https://github.com/torognes/vsearch)
 * `BLAST` [https://www.ncbi.nlm.nih.gov/books/NBK52640/](https://www.ncbi.nlm.nih.gov/books/NBK52640/)
@@ -170,7 +170,7 @@ system("blastn -version")
 system("pigz --version")
 ```
 
-### Windows
+## Windows
 
 Download binaries and save them to a convenient place on your computer 
 (path **without space**, e.g. `C:/Users/Public/`)
@@ -281,9 +281,9 @@ Example:
 C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
 ```
 
-## TaxAssign reference data base
+# TaxAssign reference data base
 
-### assign_taxonomy_ltg
+## assign_taxonomy_ltg
 
 For `assign_taxonomy_ltg` (BLAST based Lowest Common Ancestor method),
 a ready-to-use COI database is available from OSF [OSF](https://osf.io/vrfwz/),
@@ -323,7 +323,7 @@ If all sequences are extracted from NCBI-nt, the taxonomy file provided in
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 
 
-### assign_taxonomy_rdp
+## assign_taxonomy_rdp
 
 `assign_taxonomy_rdp` function uses de RDP algorithm to assign bacterial 16S sequences.
 The database is provided in the `rRDPData` R data package.

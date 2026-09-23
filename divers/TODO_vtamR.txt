@@ -885,6 +885,131 @@ toc:
 depth: 5
 
 
+## 2026/09/23 commit tuto split
+
+1. Tutorials — ordered by depth, each one links to the next
+
+01-installation.Rmd → "Installation"
+02-quickstart.Rmd → "Quick Start" (your ultra-short one — the single copy-paste block to sanity-check an install)
+03-tutorial.Rmd → "Tutorial" (your "short tutorial" — the standard walkthrough most users should land on)
+04-tutorial-in-depth.Rmd → "Tutorial: In-Depth" or "Tutorial: Step by Step" (your detailed one, but trimmed — see below)
+
+2. Pull these OUT of the detailed tutorial into their own reference vignettes:
+
+Glossary → "Glossary"
+I/O Files and Data Frames → "Reference: Input/Output Formats"
+Supplementary Functions → "Reference: Additional Functions"
+Troubleshooting → "Troubleshooting & FAQ" (could absorb "Tips – Good to Know" here too, or keep Tips separate as "Best Practices" if it's more about workflow than fixing problems)
+
+What's left in the detailed tutorial is just: Summary + the fully-annotated walkthrough on the demo dataset. That's a real tutorial again — self-contained, narrative, no reference material bolted on.
+
+3. How-to guides — task-oriented, assume the user already knows the basics
+
+make-mock-composition-file → "How to Create a Mock Composition File"
+from-fastq-to-df → "Preprocessing: From FASTQ to Data Frame" (this is really several worked examples of one task — "how-to" fits better than "tutorial")
+Multiple_dataset → "How to Pool Multiple Datasets"
+
+Why this helps concretely:
+
+A brand-new user's path becomes obvious: Installation → Quick Start → Tutorial → (In-Depth Tutorial if they want the why, not just the how).
+Someone debugging an error goes straight to Troubleshooting instead of scrolling through a 6000-word tutorial.
+Someone who just needs the composition-file format goes straight to the how-to, not back into the tutorial's narrative.
+Consistent title prefixes (Tutorial: / How to / Reference: ) let people scan your vignette index and immediately know what kind of help each page offers.
+
+One thing worth deciding: do you want the short and in-depth tutorials to literally share the same demo dataset and walk the same steps (just at different levels of detail), so a user can start on the short one and "click through" to the relevant section of the in-depth one for more explanation? If so, keeping section headers identical between the two (just expanded/collapsed) will make those cross-links much more useful.
+
+Want me to also suggest a specific file/folder naming scheme (numeric prefixes, vignettes/ subfolders) so they sort correctly in browseVignettes()?
+
+yes
+
+Here's a concrete scheme. Two constraints to work around: (1) browseVignettes() and the vignette index sort alphabetically by file name, not by a custom order, so numeric prefixes are the only reliable way to force sequence; (2) the displayed title comes from the vignette_index_entry in the Rmd's YAML, which can be nice English even if the filename is terse.
+
+File naming (flat, inside vignettes/)
+vignettes/
+├── 01-installation.Rmd
+├── 02-quickstart.Rmd
+├── 03-tutorial.Rmd
+├── 04-tutorial-in-depth.Rmd
+├── 10-howto-mock-composition-file.Rmd
+├── 11-howto-fastq-to-df.Rmd
+├── 12-howto-pool-datasets.Rmd
+├── 20-ref-io-formats.Rmd
+├── 21-ref-functions.Rmd
+├── 22-glossary.Rmd
+└── 90-troubleshooting.Rmd
+
+The filename stays terse; the title shown to users is set in the header:
+
+yaml
+---
+title: "Tutorial: In-Depth"
+vignette: >
+  %\VignetteIndexEntry{Tutorial: In-Depth}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Use exactly the title strings from my previous message for each file — that keeps folder order, YAML title, and pkgdown menu all telling the same story.
+
+If you use pkgdown, group them explicitly in _pkgdown.yml
+
+This is where the categorization really pays off, since pkgdown lets you build a dropdown menu grouped by section instead of one flat list:
+
+yaml
+navbar:
+  structure:
+    left: [intro, tutorials, howto, reference, troubleshoot]
+  components:
+    tutorials:
+      text: Tutorials
+      menu:
+        - text: Installation
+          href: articles/01-installation.html
+        - text: Quick Start
+          href: articles/02-quickstart.html
+        - text: Tutorial
+          href: articles/03-tutorial.html
+        - text: "Tutorial: In-Depth"
+          href: articles/04-tutorial-in-depth.html
+    howto:
+      text: How-To Guides
+      menu:
+        - text: Create a Mock Composition File
+          href: articles/10-howto-mock-composition-file.html
+        - text: "Preprocessing: FASTQ to Data Frame"
+          href: articles/11-howto-fastq-to-df.html
+        - text: Pool Multiple Datasets
+          href: articles/12-howto-pool-datasets.html
+    reference:
+      text: Reference
+      menu:
+        - text: "Input/Output Formats"
+          href: articles/20-ref-io-formats.html
+        - text: Additional Functions
+          href: articles/21-ref-functions.html
+        - text: Glossary
+          href: articles/22-glossary.html
+    troubleshoot:
+      text: Troubleshooting
+      href: articles/90-troubleshooting.html
 
 
+quick-start => data-release
+mfzr_plate1 => update after global filter
+preprocess => demultiplex, subsample, merge
+asv_list => 11 variant of mock
+output_asv_list => 
 
+tutorial
+zfzr_plate2 => unpdate after global filter
+preprocess => demultiplex, subsample, merge
+asv_list => output of mfzr_plate1
+
+in depth tutorial
+mfzr_plate1 => unpdate after global filter
+preprocess => subsample , demultiplex, merge
+asv_list => output of mfzr_plate2
+
+
+Same tuto same data mfzr for all 3 tutos, just the detail of explanations that are changng
+make a howto with make_mock_composition, and choose parametres for zfzr
