@@ -60,7 +60,7 @@ knitr::opts_chunk$set(
 **Package version:** `r packageVersion("vtamR")`
 
 # COMPLETE and place this later
-```{r}
+```{r, eval=TRUE}
 library(vtamR)
 ```
 
@@ -408,6 +408,15 @@ start with a number).
 
 
 **Examples**
+```{r, echo=FALSE, eval=TRUE, message=FALSE}
+download_tutorial_output(dest = "tmp_outdir")
+filter_dir <- file.path("tmp_outdir", "short_tutorial_output", "4_filter")
+```
+
+```{r, eval=FALSE}
+filter_dir <- file.path("vtamR_demo_out", "QuickStart_mfzr_plate1", "4_filter")
+```
+
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r, eval=TRUE}
@@ -501,6 +510,10 @@ asvid_by_replicate <- summarize_by(
   )
 
 knitr::kable(asvid_by_replicate, format = "markdown")
+```
+
+```{r}
+unlink(tmp_outdir, recursive = TRUE)
 ```
 
 ## `update_asv_list` {#update_asv_list}
