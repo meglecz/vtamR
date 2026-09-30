@@ -46,8 +46,8 @@ table {
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  message = TRUE,
-  warning = TRUE,
+  message = FALSE,
+  warning = FALSE,
   echo=TRUE,
   eval=TRUE,
   cache=FALSE,
@@ -55,12 +55,21 @@ knitr::opts_chunk$set(
   out.width = '100%',
   comment = "#>"
 )
+
 ```
 
 **Package version:** `r packageVersion("vtamR")`
 
+> vtamR offers three tutorials that follow the same workflow and cover the majority of its functions, differing only in how much explanation is provided: a Quick Start, a step-by-step Tutorial, and an In-Depth Tutorial (see links below).
+>
+> **This is the Quick Start.** After adjusting path to external programs, 
+just copy-paste the script into R and run it — no explanations, no detours. It's the fastest way to check that your installation works correctly, and the output already gives you a good sense of the information the pipeline can produce, from raw fastq sequences to validated occurrences ready for downstream analyses. If you'd like more context on any step, switch to the [Tutorial](03-tutorial.html) or the 
+[In-Depth Tutorial](04-tutorial-in-depth.html).
+
+
 # Set Paths to Third-Party Programs 
-Adjust path according to you installation, or leave this out, if external programs are in your path.
+[Adjust path to external programs according to you installation](20-best-practices.html#set-path), 
+or leave this out, if external programs are in your path.
 
 ```{r, eval=FALSE}
 options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
@@ -70,7 +79,15 @@ options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
 options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
 ```
 
+# Run it as is
 
+The script below can be executed without any changes. It uses the demo files included in `vtamR`.
+You can use it to:
+
+* check that everything is working,
+* see most functions in action,
+* get familiar with the output,
+* use it as a starting point for your own pipeline.
 
 ```{r}
 ## Load Library
@@ -92,58 +109,61 @@ check_file_info(file = fastqinfo, dir = fastq_dir, file_type = "fastqinfo")
 check_file_info(file = asv_list, file_type = "asv_list")
 
 ## Output directory and log file
-outdir <- file.path("vtamR_demo_out", "QuickStart_mfzr_plate1")
+outdir <- file.path("vtamR_demo_out", "tutorial_quick_start")
 options(vtamR.log_file = file.path(outdir, "run_info", "vtamR_log.csv"))
 
 # Pre-process reads
 ## Demultiplex
 demultiplexed_dir <- file.path(outdir, "1_demultiplexed")
-fastqinfo_df <- demultiplex_and_trim_fastq(
-  fastqinfo = fastqinfo,
-  fastq_dir = fastq_dir,
-  outdir = demultiplexed_dir,
+fastqinfo_demultiplexed <- demultiplex_and_trim_fastq(
+  fastqinfo = fastqinfo, 
+  fastq_dir = fastq_dir,  # directory of input fastq files
+  outdir = demultiplexed_dir,  # directory of output fastq files
   primer_to_end = FALSE,
   check_reverse = TRUE,
   compress = FALSE
-)
+  )
 
 ## Randomly subsample sequencing reads
 randomseq_dir <- file.path(outdir, "2_random_sampled")
-fastqinfo_df <- random_sample_batch_by(
-  info = fastqinfo_df,
+fastqinfo_subsampled <- random_sample_batch_by(
+  info = fastqinfo_demultiplexed,
   by = "replicate",
-  dir = demultiplexed_dir,
-  outdir = randomseq_dir,
-  N = 40000,
-  compress = FALSE
+  dir = demultiplexed_dir,  # directory of input fastq files
+  outdir = randomseq_dir,  # directory of output fastq files
+  N = 37000,
+  compress = FALSE,
+  randseed = 123 # use the same random seed for reproducibility
   ) 
 
-## Merge Fastq Pairs and Quality Filter {#merge}
+## Merge Fastq Pairs and Quality Filter 
 merged_dir <- file.path(outdir, "3_merged")
 sampleinfo_df <- merge_fastq_pairs(
-  fastqinfo = fastqinfo_df,
-  fastq_dir = randomseq_dir,
-  outdir = merged_dir,
-  fastq_maxee = 1,
-  fastq_maxns = 0,
-  fastq_allowmergestagger = T
-)
+  fastqinfo = fastqinfo_subsampled, 
+  fastq_dir = randomseq_dir, # directory of input fastq files
+  outdir = merged_dir, # directory of output fasta files
+  fastq_maxee = 1, # Maximum Expected Error for each read
+  fastq_maxns = 0, # no Ns in output
+  compress = FALSE,
+  fastq_allowmergestagger = T # reads might be longer than the marker
+  )
 
 ## Dereplicate
 outfile <- file.path(outdir, "4_filter", "1_before_filter.csv")
-updated_asv_list <- file.path(outdir, "ASV_list_with_IDs.csv")
+output_asv_list <- file.path(outdir, "Updated_asv_list_mfzr_plate1.csv")
 read_count_df <- dereplicate(
-  sampleinfo = sampleinfo_df, # input df (output of demultiplex_and_trim_fasta)
+  sampleinfo = sampleinfo_df, # input df (output of merge_fastq_pairs)
   dir = merged_dir, # directory with input fasta files
   outfile = outfile, # write the output data frame to this file
-  input_asv_list = asv_list
+  input_asv_list = asv_list, # asv_list from previous analyses
+  output_asv_list = output_asv_list
   )
 
 # Filtering
 ## Initialize stat data frame
 stat_df <- get_stat(read_count_df, stat_df = NULL, stage = "input", params = NA)
 
-## Denoising with SWARM {#denoise}
+## Denoising with SWARM 
 split_clusters <- TRUE
 by_sample <- TRUE
 outfile <- file.path(outdir, "4_filter", "2_swarm_denoise.csv")
@@ -158,7 +178,7 @@ param <- paste("by_sample:", by_sample, "split_clusters:", split_clusters, sep="
 stat_df <- get_stat(read_count_df, stat_df, stage="swarm_denoise", params=param)
 
 ## Filter ASVs
-### Filter out ASVs with Low Total Read Count (`filter_asv_global`) {#filter_asv_global}
+### Filter out ASVs with Low Total Read Count (`filter_asv_global`) 
 global_read_count_cutoff = 2
 outfile <- file.path(outdir, "4_filter", "3_filter_asv_global.csv")
 read_count_df <- filter_asv_global(
@@ -169,15 +189,7 @@ read_count_df <- filter_asv_global(
 param <- paste("global_read_count_cutoff:", global_read_count_cutoff, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_asv_global", params=param)
 
-### Update the asv_list
-updated_asv_list <- file.path(outdir, "updated_ASV_list_mfzr.csv")
-
-update_asv_list(
-  asv_list1 = read_count_df,
-  asv_list2 = asv_list,
-  outfile = updated_asv_list)
-
-### Filter ASVs Based on Read Length (`filter_indel`) {#filter_indel}
+### Filter ASVs Based on Read Length (`filter_indel`)
 outfile <- file.path(outdir, "4_filter", "4_filter_indel.csv")
 read_count_df <- filter_indel(
   read_count = read_count_df,
@@ -185,7 +197,7 @@ read_count_df <- filter_indel(
   )
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_indel", params=NA)
 
-### Filter ASVs with Stop Codons (`filter_stop_codon`) {#filter_stop_codon}
+### Filter ASVs with Stop Codons (`filter_stop_codon`)
 outfile <- file.path(outdir, "4_filter", "5_filter_stop_codon.csv")
 genetic_code = 5
 read_count_df <- filter_stop_codon(
@@ -196,7 +208,7 @@ read_count_df <- filter_stop_codon(
 param <- paste("genetic_code:", genetic_code, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_stop_codon", params=param)
 
-### Filter Potential Contaminant ASVs (`filter_contaminant`) {#filter_contaminant}
+### Filter Potential Contaminant ASVs (`filter_contaminant`) 
 outfile <- file.path(outdir, "4_filter", "6_filter_contaminant.csv")
 conta_file <- file.path(outdir, "4_filter", "potential_contaminants.csv")
 read_count_df <- filter_contaminant(
@@ -207,7 +219,7 @@ read_count_df <- filter_contaminant(
   )
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_contaminant", params=NA)
 
-### Filter Chimeric ASVs (`filter_chimera`) {#filter_chimera}
+### Filter Chimeric ASVs (`filter_chimera`) 
 outfile <- file.path(outdir, "4_filter", "7_filter_chimera.csv")
 abskew=2
 by_sample = TRUE
@@ -222,22 +234,25 @@ read_count_df <- filter_chimera(
 param <- paste("by_sample:", by_sample, "sample_prop:", sample_prop, "abskew:", abskew, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_chimera", params=param)
 
-## Filter Aberrant Replicates (`filter_replicate`) {#filter_replicate}
+## Filter Aberrant Replicates (`filter_replicate`)
+### Calculate Renkonen distances
 renkonen_within_df <- compute_renkonen_distances(
   read_count = read_count_df, 
   compare_all = FALSE)
 
 ### Visualize Renkonen Distances
-plot_renkonen_distance_density(
+Renkonen_distance_density_plot <- plot_renkonen_distance_density(
   df = renkonen_within_df)
+# print(Renkonen_distance_density_plot)
 
-plot_renkonen_distance_barplot(
+Renkonen_distance_barplot <- plot_renkonen_distance_barplot(
   df = renkonen_within_df, 
   sampleinfo = sampleinfo_df, 
   x_axis_label_size = 6
   )
+# print(Renkonen_distance_barplot)
 
-### Determine Cutoff for Replicate Filtering
+###  Choose threshold automatically
 outfile <- file.path(outdir, "4_filter", "8_filter_replicate.csv")
 renkonen_distance_quantile <- 0.9
 read_count_df <- filter_replicate(
@@ -248,7 +263,7 @@ read_count_df <- filter_replicate(
 param <- paste("renkonen_distance_quantile:", renkonen_distance_quantile, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_replicate", params=param)
 
-## Create `mock_composition` File {#match_variants_to_mock_species}
+## Create `mock_composition` File
 outdir_mock <- file.path(outdir, "mock_composition")
 mock_template <- match_variants_to_mock_species(
   read_count = read_count_df,
@@ -261,7 +276,8 @@ mock_composition <- file.path(outdir_mock, "mock_composition_template_to_check.c
 mock_composition_df <- read.csv(mock_composition)
 
 ## Filter occurrences
-### Filter Low-Abundance Occurrences within Samples (`filter_occurrence_sample`) {#filter_occurrence_sample}
+### Filter Low-Abundance Occurrences within Samples (`filter_occurrence_sample`)
+#### Suggest Filter Parameters Based on Mock Sample (`suggest_sample_cutoff`)
 outfile = file.path(outdir, "4_filter", "suggest_parameters", "sample_cutoff.csv")
 suggest_sample_cutoff_df <- suggest_sample_cutoff(
   read_count = read_count_df,
@@ -270,7 +286,7 @@ suggest_sample_cutoff_df <- suggest_sample_cutoff(
   )
 
 #### Filter Low-Abundance Occurrences within Samples 
-sample_cutoff <- 0.004
+sample_cutoff <- 0.005
 outfile <- file.path(outdir, "4_filter", "9_filter_occurrence_sample.csv")
 read_count_df <- filter_occurrence_sample(
   read_count = read_count_df, 
@@ -280,7 +296,7 @@ read_count_df <- filter_occurrence_sample(
 param <- paste("cutoff:", sample_cutoff, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_occurrence_sample", params=param)
 
-### Filter Occurrences by Replicate Consistency (filter_min_replicate-1) {#filter_min_replicate-1}
+### Filter Occurrences by Replicate Consistency (filter_min_replicate-1) 
 min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "10_filter_min_replicate.csv")
 read_count_df <- filter_min_replicate(
@@ -291,7 +307,8 @@ read_count_df <- filter_min_replicate(
 param <- paste("cutoff:", min_replicate_number, sep=" ")
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate", params=param)
 
-### Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`) {#filter_occurrence_variant}
+### Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`)
+#### Choose a Cutoff for (`filter_occurrence_variant` and `filter_occurrence_read_count`)
 outdir_suggest = file.path(outdir, "4_filter", "suggest_parameters")
 suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
   read_count = read_count_df,
@@ -301,7 +318,7 @@ suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
   min_replicate_number = 2
   )
 
-#### Apply `filter_occurrence_variant` and `filter_occurrence_read_count` {#filter_occurrence_read_count}
+#### Apply `filter_occurrence_variant` and `filter_occurrence_read_count` 
 outfile <- file.path(outdir, "4_filter", "11_filter_occurrence_variant.csv")
 variant_cutoff = 0.001
 read_count_df_variant <- filter_occurrence_variant(
@@ -330,11 +347,10 @@ read_count_df <- pool_filters(
   )
 stat_df <- get_stat(read_count_df, stat_df, stage="pool_filters", params=NA)
               
-# delete temporary data frames
 rm(read_count_df_rc)
 rm(read_count_df_variant)
 
-### Filter Occurrences by Replicate Consistency (`filter_min_replicate`-2) {#filter_min_replicate-2}
+### Filter Occurrences by Replicate Consistency (`filter_min_replicate`-2)
 min_replicate_number <- 2
 outfile <- file.path(outdir, "4_filter", "14_filter_min_replicate.csv")
 read_count_df <- filter_min_replicate(
@@ -345,7 +361,7 @@ read_count_df <- filter_min_replicate(
 param <- paste("cutoff:", min_replicate_number, sep=" ")  
 stat_df <- get_stat(read_count_df, stat_df, stage="filter_min_replicate_2", params=param)
 
-## Pool Replicates {#pool_replicates}
+## Pool Replicates
 outfile <- file.path(outdir, "4_filter", "15_pool_replicates.csv")
 read_count_sample_df <- pool_replicates(
   read_count = read_count_df,
@@ -353,7 +369,7 @@ read_count_sample_df <- pool_replicates(
   outfile = outfile
 )
 
-## Performance Metrics {#performance-metrics}
+## Performance Metrics
 false_negatives <- file.path(outdir, "4_filter", "false_negatives.csv")
 performance_metrics <- file.path(outdir, "4_filter", "performance_metrics.csv")
 known_occurrences <- file.path(outdir, "4_filter", "known_occurrences.csv")
@@ -369,7 +385,7 @@ known_occurrences_df <- results[[1]]
 false_negatives_df <- results[[2]]
 performance_metrics_df <- results[[3]]
 
-## Print Summary Statistics {#print_stats}
+## Print Summary Statistics
 write.csv(stat_df, file = file.path(outdir, "run_info", "summary.csv"))
 
 # Taxonomic Assignment
@@ -380,7 +396,7 @@ asv_tax <- assign_taxonomy_ltg(
   blast_db = blast_db, 
   outfile = outfile)
 
-# Clustering (mOTUs) {#cluster_asv}
+# Clustering (mOTUs)
 ### Plot Pairwise Identity Distribution
 outfile <- file.path(outdir, "5_cluster", "pairwise_identities_vsearch.csv")
 plotfile <- file.path(outdir, "5_cluster", "plot_pairwise_identity_vsearch.png")
@@ -392,7 +408,7 @@ plot_vsearch <- plot_pairwise_identity_vsearch(
   min_id = 0.8, 
   outfile = outfile, 
   plotfile = plotfile)
-print(plot_vsearch)
+#print(plot_vsearch)
 
 ### Classify Clusters Based On Taxonomy
 outfile <- file.path(outdir, "5_cluster", "classification_vsearch.csv")
@@ -405,7 +421,7 @@ scatterplot_vsearch <- plot_cluster_classification(
   taxlevels = c("species", "genus"),
   outfile = outfile,
   plotfile = plotfile)
-print(scatterplot_vsearch)
+#print(scatterplot_vsearch)
 
 ## Cluster ASVs into mOTUs
 outfile <- file.path(outdir, "5_cluster", "16_mOTU_vsearch.csv")
@@ -424,7 +440,7 @@ stat_df <- get_stat(read_count_samples_df_ClusterSize,
 
 # Output 
 
-## ASV table {#write_asv_table}
+## ASV table 
 outfile=file.path(outdir, "motu_table_taxa.csv")
 asv_table_df <- write_asv_table(
   read_count = read_count_sample_df, 
@@ -437,8 +453,7 @@ asv_table_df <- write_asv_table(
   add_expected_asv = TRUE, 
   mock_composition = mock_composition)
 
-## Convert output to a `phyloseq` object{#phyloseq}
-# Create a data frame containing sample metadata
+## Convert output to a `phyloseq` object
 samples <- sampleinfo_df %>%
   select(sample, sample_type, habitat) %>%
   distinct()
@@ -462,24 +477,26 @@ vegan_motu_df <- vegan_dfs[[1]]
 vegan_tax_df <- vegan_dfs[[2]]
 
 # Document your workflow
-## Record R and package versions{#package-versions}
+## Record R and package versions
 package_versions <- file.path(outdir, "run_info", "R_package_versions.csv")
 collect_package_info(package_versions)
 
 ## MIEM
+### MIEM bioinformatics
 miem_dir <- file.path(outdir, "run_info", "MIEM")
 miem_bioinformatics(
   r_versions = package_versions,
   outfile =  file.path(miem_dir, "MIEM_bioinfo.csv")
   )
 
-## MIEM Sequencing Summary
+### MIEM Sequencing Summary
 info_files = c(
   fastqinfo,
   file.path(outdir, "1_demultiplexed/fastqinfo.csv"),
   file.path(outdir, "2_random_sampled/fastqinfo.csv"),
   file.path(outdir, "3_merged/fastainfo.csv")
 )
+
 read_count_files = c(
   file.path(outdir, "4_filter/1_before_filter.csv"),
   file.path(outdir, "4_filter/2_swarm_denoise.csv"),
@@ -487,6 +504,7 @@ read_count_files = c(
   file.path(outdir, "4_filter/15_pool_replicates.csv"),
   file.path(outdir, "5_cluster/16_mOTU_vsearch.csv")
 )
+
 taxa = file.path(outdir, "4_filter/assign_taxonomy_ltg.csv")
 
 miem_results(

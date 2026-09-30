@@ -8,7 +8,7 @@ denoise_by_swarm(
   read_count,
   by_sample = FALSE,
   split_clusters = FALSE,
-  min_abundance_ratio = 0.2,
+  min_abundance_ratio = 0.5,
   min_read_count = 10,
   swarm_path = NULL,
   num_threads = 0,

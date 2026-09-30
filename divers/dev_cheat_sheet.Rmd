@@ -113,6 +113,7 @@ devtools::check()
 ```{r}
 devtools::install(build_vignettes = TRUE)
 devtools::install(build_vignettes = FALSE)
+devtools::build_vignettes()
 ```
 
 ### build_readme if README.rm has been changed
@@ -221,30 +222,35 @@ library(piggyback)
 ```
 
 ### zip output files
-move /home/meglecz/vtamR/vignettes/vtamR_demo_out/zfzr_plate1/ to 
-/home/meglecz/vtamR/short_tutorial_output/ and zip
+move /home/meglecz/vtamR/vignettes/vtamR_demo_out/tutorial_output/ to 
+/home/meglecz/vtamR/tutorial_output/ and zip
 
 ```{r}
-zip::zip("short_tutorial_output.zip", files = "short_tutorial_output/", recurse = TRUE)
+zip::zip("tutorial_output.zip", files = "tutorial_output/", recurse = TRUE)
 ```
 
 First time only: create the release
 ```{r}
-piggyback::pb_release_create(repo = "meglecz/vtamR", tag = "short-tutorial-output-v1")
+piggyback::pb_release_create(repo = "meglecz/vtamR", tag = "tutorial-output-v1")
 ```
 
 ### Every time the output format changes: overwrite the asset
 ```{r eval=FALSE}
 piggyback::pb_upload(
-  file = "short_tutorial_output.zip",
+  file = "tutorial_output.zip",
   repo = "meglecz/vtamR",
-  tag  = "short-tutorial-output-v1"
+  tag  = "tutorial-output-v1"
 )
 ```
 
 ### users do
 ```{r}
-tmp_out <- download_tutorial_output()
+tmp_out <- download_tutorial_output(
+  dest = "tmp_tuto_output",
+  tag = "tutorial-output-v1",
+  filename = "tutorial_output.zip",
+  overwrite = FALSE
+)
 ```
 
 

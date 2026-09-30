@@ -98,7 +98,7 @@ For each sequencing run, perform the following steps:
 * Demultiplex the reads
 * Trim primers and adapters
 
-Follow the steps in [from-fastq-to-df](from-fastq-to-df.html), adapting to 
+Follow the steps in [Preprocessing: FASTQ to Data Frame](10-howto-fastq-to-df.html), adapting to 
 your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed 
 FASTA files in a separate directory for each run.
 
@@ -209,9 +209,6 @@ If very large input fastq files fail to merge, try using **uncompressed input fi
 
 If your amplicon is shorter than the reads, enable staggered merging by setting 
 `fastq_allowmergestagger = TRUE`.
-
-Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:
-
 
 ## No or Few Sequences Passing `demultiplex_and_trim_fasta`
 

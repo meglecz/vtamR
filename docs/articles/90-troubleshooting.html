@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/14-howto-asv-id-across-datasets.html">Consistent ASV IDs across datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +81,7 @@
       <h1>Troubleshooting</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/90-troubleshooting.Rmd" class="external-link"><code>vignettes/90-troubleshooting.Rmd</code></a></small>
       <div class="d-none name"><code>90-troubleshooting.Rmd</code></div>
@@ -115,7 +117,7 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p><strong>Package version:</strong> 2.0.0.9001</p>
+<p><strong>Package version:</strong> 2.0.0.9002</p>
 <div class="section level2">
 <h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a>
 </h2>
@@ -149,7 +151,7 @@ table {
 <li>Demultiplex the reads</li>
 <li>Trim primers and adapters</li>
 </ul>
-<p>Follow the steps in <a href="from-fastq-to-df.html">from-fastq-to-df</a>, adapting to your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed FASTA files in a separate directory for each run.</p>
+<p>Follow the steps in <a href="10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a>, adapting to your wet lab and sequencing protocol. Store the trimmed, merged, and demultiplexed FASTA files in a separate directory for each run.</p>
 </div>
 <div class="section level5">
 <h5 id="dereplicate-each-run-independently-while-keeping-a-shared-asv-list">2. Dereplicate each run independently, while keeping a shared ASV list<a class="anchor" aria-label="anchor" href="#dereplicate-each-run-independently-while-keeping-a-shared-asv-list"></a>
@@ -248,7 +250,6 @@ table {
 <h3 id="no-or-few-sequences-passing-merge_fastq_pairs">No or few sequences passing <code>merge_fastq_pairs</code><a class="anchor" aria-label="anchor" href="#no-or-few-sequences-passing-merge_fastq_pairs"></a>
 </h3>
 <p>If your amplicon is shorter than the reads, enable staggered merging by setting <code>fastq_allowmergestagger = TRUE</code>.</p>
-<p>Certainly! Here’s a clearer, more tutorial-friendly rewrite of your section:</p>
 </div>
 <div class="section level3">
 <h3 id="no-or-few-sequences-passing-demultiplex_and_trim_fasta">No or Few Sequences Passing <code>demultiplex_and_trim_fasta</code><a class="anchor" aria-label="anchor" href="#no-or-few-sequences-passing-demultiplex_and_trim_fasta"></a>

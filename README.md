@@ -14,15 +14,15 @@ a **comprehensive metabarcoding pipeline**, enabling:
 -   **End-to-End Sequence Analysis:** Processes raw FASTQ files of
     amplicon sequences to generate a validated [Amplicon Sequence
     Variant
-    (ASV)](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary)
+    (ASV)](https://meglecz.github.io/vtamR/articles/23-glossary.html#asv)
     table, with ASVs assigned to taxonomic groups.
 -   **Replicate Handling:** Supports technical or biological replicates
     of the same sample.
 -   **Control-Based Filtering:** Uses positive and negative control
     samples to refine filtering, minimizing both [false
-    positives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary)
+    positives](https://meglecz.github.io/vtamR/articles/23-glossary.html#fp)
     and [false
-    negatives](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#glossary).
+    negatives](https://meglecz.github.io/vtamR/articles/23-glossary.html#fn).
 
 **Novelties Compared to VTAM**
 
@@ -57,310 +57,74 @@ a **comprehensive metabarcoding pipeline**, enabling:
 
 ## Documentation
 
-Detailed documentation is available at
-**[Manual](https://meglecz.github.io/vtamR/)**
+Detailed documentation is available in the
+**[Manual](https://meglecz.github.io/vtamR/)**.
 
--   [Installation](https://meglecz.github.io/vtamR/articles/installation.html)
--   [Short
-    tutorial](https://meglecz.github.io/vtamR/articles/short-tutorial.html)
--   [Detailed tutorial on how to construct a full metabarcoding
-    pipeline.](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html)
--   [From fastq to data
-    frame](https://meglecz.github.io/vtamR/articles/from-fastq-to-df.html)
--   [How to make a mock\_composition
-    file](https://meglecz.github.io/vtamR/articles/make-mock-composition-file.html)
+### Installation
 
-You can also download a ready-made example output (matching the Short
-tutorial) without running the pipeline:
+Follow the detailed instructions on the
+[Installation](https://meglecz.github.io/vtamR/articles/01-installation.html)
+page.
+
+### Tutorials
+
+> The three tutorials follow the same workflow and demonstrate the use
+> of the majority of vtamR functions. They provide a working example of
+> a complete metabarcoding pipeline, starting from raw fastq sequences
+> and ending with validated occurrences ready for downstream analyses.
+> They also produce a variety of outputs for documenting the analyses,
+> along with summaries that facilitate publication of the results.
+
+-   [Quick
+    Start](https://meglecz.github.io/vtamR/articles/02-quickstart.html):
+    Just copy-paste the script into R and run it. It tests whether your
+    installation is working correctly, and the output gives a good idea
+    of the information you can obtain from the pipeline.
+-   [Tutorial](https://meglecz.github.io/vtamR/articles/03-tutorial.html):
+    A step-by-step tutorial without long explanations, but with links to
+    the in-depth tutorial when you need them.
+-   [Tutorial:
+    In-Depth](https://meglecz.github.io/vtamR/articles/04-tutorial-in-depth.html):
+    A step-by-step tutorial with detailed explanations of each function,
+    its parameters, and its outputs.
+
+### How-To Guides and Other Help
+
+Dedicated pages to help you find further information:
+
+-   [Examples of
+    preprocessing](https://meglecz.github.io/vtamR/articles/10-howto-fastq-to-df.html)
+-   [How to prepare a mock composition
+    file](https://meglecz.github.io/vtamR/articles/11-howto-mock-composition-file.html)
+-   [How to select parameters for the occurrence
+    filters](https://meglecz.github.io/vtamR/articles/12-howto-select-parameters.html)
+-   [How to pool different
+    datasets](https://meglecz.github.io/vtamR/articles/13-howto-pool-datasets.html)
+-   [Best
+    Practices](https://meglecz.github.io/vtamR/articles/20-best-practices.html)
+-   [Input-Output
+    Formats](https://meglecz.github.io/vtamR/articles/21-ref-io-formats.html)
+-   [Additional
+    Functions](https://meglecz.github.io/vtamR/articles/22-ref-functions.html)
+-   [Glossary](https://meglecz.github.io/vtamR/articles/23-glossary.html)
+-   [Troubleshooting](https://meglecz.github.io/vtamR/articles/90-troubleshooting.html)
+
+### Download Example Output
+
+You can also download a ready-made example output (matching the output
+of the tutorials) without running the pipeline:
 
 ``` r
-vtamR::download_tutorial_output(dest = "my_folder/")
+vtamR::download_tutorial_output(dest = "Tutorial_output/")
 ```
+
+### vtamR workflow
 
 <div class="figure" style="text-align: center">
 
-<img src="vignettes/figures/vtamR_flochart_sceen.png" alt="Overview of the vtamR Workflow" width="100%" />
+<img src="vignettes/figures/vtamR_flowchart_sceen.png" alt="Overview of the vtamR Workflow" width="100%" />
 <p class="caption">
 Overview of the vtamR Workflow
 </p>
 
 </div>
-
-## Install `vtamR`
-
-Install `vtamR` and its CRAN dependencies using `pak`:
-
-``` r
-if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak")
-pak::pkg_install("meglecz/vtamR", dependencies = TRUE)
-```
-
-**Alternatively**, you can install `vtamR` using `devtools`:
-
-``` r
-if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
-devtools::install_github("meglecz/vtamR", dependencies = TRUE)
-```
-
-### Optional Bioconductor packages
-
-Some `vtamR` functions require additional Bioconductor packages. These
-are **suggested packages** and are therefore **not installed
-automatically with `vtamR`**. Install them manually if you intend to use
-the corresponding functions:
-
--   `assign_taxonomy_rdp` requires `rRDP`, `rRDPData`, and `Biostrings`.
--   `make_phyloseq` requires `phyloseq`.
-
-``` r
-if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-
-if (!requireNamespace("rRDP", quietly = TRUE)) BiocManager::install("rRDP")
-if (!requireNamespace("rRDPData", quietly = TRUE)) BiocManager::install("rRDPData")
-if (!requireNamespace("Biostrings", quietly = TRUE)) BiocManager::install("Biostrings")
-if (!requireNamespace("phyloseq", quietly = TRUE)) BiocManager::install("phyloseq")
-```
-
-## Install third party programs
-
-The heavy lifting of sequence analyses are done by the following third
-party programs. They should be installed on your computer. ⚠️ **Read the
-detailed installation instructions below before proceeding if you do not
-have experience with installing command line programs.**
-
--   BLAST([Altschul et al.,
-    1990](https://pubmed.ncbi.nlm.nih.gov/2231712/)) (v2.11.0+)
--   VSEARCH ([Rognes et al., 2016](https://peerj.com/articles/2584/))
-    (v2.7.0)
--   CUTADAPT([Martin,
-    2011](https://journal.embnet.org/index.php/embnetjournal/article/view/200))
-    (v4.0)
--   SWARM ([Mahé et al., 2015](https://peerj.com/articles/1420/))
-    (v2.1.12)
--   PIGZ (optional)
-
-`vtamR` has been tested using the above mentioned versions, but it
-should work with later versions.
-
-`vtamR` was tested on **Windows** and **Linux**, and should work in all
-operating systems.
-
-### Linux
-
--   `VSEARCH` <https://github.com/torognes/vsearch>
--   `BLAST` <https://www.ncbi.nlm.nih.gov/books/NBK52640/>
--   `CUTADAPT`
-    <https://cutadapt.readthedocs.io/en/stable/installation.html>
--   `SWARM` <https://github.com/torognes/swarm>
--   `PIGZ` (optional) <https://github.com/madler/pigz>
-
-**Add executables to your PATH (Optional)**
-
-If third-party executables are included in your `PATH`, you won’t need
-to manually specify their locations when running functions that use
-them.
-
-If you prefer **not** to add them to the PATH, make sure to provide  
-[package
-options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path)
-in the beginning of yous script, or the full path to each program
-through the appropriate `vtamR` function argument (e.g.,
-`vsearch_path`).
-
-1.  Edit (or create) your `~/.Renviron` file
-
-``` bash
-nano ~/.Renviron
-```
-
-2.  Add the directory to the PATH
-
-``` bash
-PATH="/home/user/tools/myprogram/bin:${PATH}"
-```
-
-**Note:** The PATH must contain a **directory**, not an executable file.
-For example, use: `/home/username/miniconda3/envs/vtamr/bin` and
-**not**: `/home/username/miniconda3/envs/vtamr/bin/cutadapt`
-
-3.  Restart R or RStudio
-
-The new PATH is loaded at startup.
-
-4.  Verify that R sees the correct executables
-
-``` r
-system("cutadapt --version")
-system("swarm --version")
-system("vsearch --version")
-system("blastn -version")
-system("pigz --version")
-```
-
-### Windows
-
-Download binaries and save them to a convenient place on your computer
-(path **without space**, e.g. `C:/Users/Public/`)
-
-> **Note:** In Windows, double-clicking a `.zip` file doesn’t actually
-> decompress (extract) it — it just lets you browse the contents while
-> they’re still compressed.
->
-> **To properly extract the files**, you need to:
->
-> -   **Right-click** on the zip file
-> -   Select **“Extract All…”**
-> -   Choose a destination folder (or keep the default)
-> -   Click **Extract**
->
-> This creates a real, uncompressed copy of the files on your disk.
-
-**VSEARCH**
-
--   Download binaries from
-    <https://github.com/torognes/vsearch/releases/tag/v2.23.0>
--   Decompress the zip file
--   The executable are found in `vsearch-x.xx.x-win-x86_64/bin/`
-
-**CUTADAPT**
-
--   Download `cutadapt.exe` from
-    <https://github.com/marcelm/cutadapt/releases>
-
-**SWARM**
-
--   Download binaries from <https://github.com/torognes/swarm/releases>
--   Decompress the zip file
--   The executable is in the `swarm-x.x.x-win-x86_64/bin` directory
-
-**BLAST**
-
--   Download the installer (ncbi-blast-x.xx.x+-win64.exe) from:
-    <https://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/>
--   Double-click the .exe file, accept the license agreement, and keep
-    the suggested installation path. This will automatically add BLAST
-    to your system PATH, so you won’t need to specify its location when
-    using it.
--   The executables will be installed in:
-    `C:\Program Files\NCBI\blast-x.xx.x+\bin`
-
-**PIGZ** (Optional)
-
--   Download
-    [pigz-win32.zip](https://sourceforge.net/projects/pigz-for-windows/files/)
--   Decompress the zip file
--   The executable (pigz.exe) is in the pigz-win32 directory
-
-**Add executables to your PATH (Optional)**
-
-If third-party executables are included in your system PATH, you won’t
-need to manually specify their locations when running functions that use
-them.
-
-If you prefer **not** to add them, make sure to provide  
-[package
-options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path)
-in the beginning of yous script, or the full path to each program
-through the appropriate `vtamR` function argument (e.g.,
-`vsearch_path`).
-
-You can use either **GUI** or **PowerShell** to add executables to your
-PATH.
-
-1.  Using the Windows GUI (System Settings)
-
--   Press **Win + R**, type `sysdm.cpl`, and press **Enter**. *(Opens
-    System Properties.)*
--   Go to the **Advanced** tab.
--   Click **Environment Variables…**
--   In the **System variables** section, find and select **Path**.
--   Click **Edit…**
--   Click **New**, then paste the directory you want to add (for
-    example: `C:\Users\YourName\Tools\bin`)
--   Click **OK** on all windows to save.
-
-2.  Using PowerShell
-
--   Press **Win + R**, type `powershell`, and press **Enter**. *(Opens
-    Powershell)*
-
-<!-- -->
-
-    setx PATH "$($env:Path);C:\My\New\Folder\vsearch:C:\My\New\Folder\cutadapt;C:\My\New\Folder\pigz;C:\My\New\Folder\swarm"
-
--   Close de Powershell, since the change applies only to **new**
-    terminals, not the current one.
-
-**Verify Program Versions**
-
-Open a Command Prompt on Windows (**Win + R**, type `cmd`)
-
-``` bash
-cutadapt --version
-swarm --version
-vsearch --version
-pigz --version
-blastn -version
-```
-
-**Note** *These commands will display the version of each program **if
-the executables are in your PATH**. Otherwise, don’t forget to provide
-the full path to the executables.*
-
-Example:
-
-    C:/Users/Public/vsearch-x.xx.x-win-x86_64/bin/vsearch --version
-
-## TaxAssign reference data base
-
-### assign\_taxonomy\_ltg
-
-For `assign_taxonomy_ltg` (BLAST based Lowest Common Ancestor method), a
-ready-to-use COI database is available from OSF
-[OSF](https://osf.io/vrfwz/), ([Meglécz,
-2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
-
-Download and extract using:
-
-``` r
-library(vtamR)
-
-download_osf(filename = "COInr_for_vtam_2026_05_03_dbV5.tar.gz",
-    url = "https://osf.io/download/yhjvm/",
-    dest_dir = "COInr_db",
-    untar = TRUE,
-    quiet = FALSE
-    )
-```
-
-To check for newer versions:
-
--   Go to: <https://osf.io/vrfwz/files/osfstorage>
--   In **Files** open the the **dbV5** folder.
--   Open the latest file in the browser (click the file name, not just
-    the folder).
--   Look at the URL, it will look like: <https://osf.io/yhjvm/> (yhjvm =
-    file ID)
--   Build the download link like this: <https://osf.io/download/yhjvm/>
-
-Alternatively, you can also create a custom version from the **TSV
-format** database available at
-[Zenodo](https://zenodo.org/records/15515860) and make a custom version
-using [mkCOInr](https://github.com/meglecz/mkCOInr) ([Meglécz,
-2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
-
-**For other markers** you will need a [database formatted to
-BLAST](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg),
-containing taxIDs and a [taxonomy
-file](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
-If all sequences are extracted from NCBI-nt, the taxonomy file provided
-in [OSF](https://osf.io/vrfwz/) can be used without modification.
-
-### assign\_taxonomy\_rdp
-
-`assign_taxonomy_rdp` function uses de RDP algorithm to assign bacterial
-16S sequences. The database is provided in the `rRDPData` R data
-package.
-
-It is also possible to provide a trained classifier object created with
-`trainRDP()`.

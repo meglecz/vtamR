@@ -1,5 +1,5 @@
 ---
-title: "Oool Multiple Datasets"
+title: "Pool Multiple Datasets"
 author: Emese Meglécz
 date:  "`r Sys.Date()`"
 output:
@@ -60,21 +60,18 @@ knitr::opts_chunk$set(
 **Package version:** `r packageVersion("vtamR")`
 
 
-The [previous tutorial]() walked you through a detailed analysis of a single dataset, 
+The [tutorial](04-tutorial-in-depth.html) walked you through a detailed analysis of a single dataset, 
 typically consisting of sequences from one sequencing plate.
 
-In this tutorial, I will show you how to combine **datasets targeting the same marker**, 
+In this tutorial, we will see you how to combine **datasets targeting the same marker**, 
 as well as results from the **same samples obtained using multiple strongly overlapping markers**.
 
 # One Marker
 
-The [main tutorial]() presents the pipeline for analysing the first demo dataset, **mfzr_plate1**. 
-The second plate for the MFZR marker, **mfzr_plate2**, is covered in the [short tutorial]().
+The [tutorial](04-tutorial-in-depth.html) presents the pipeline for analysing the first demo dataset, **mfzr_plate1**. 
+The second plate for the MFZR marker, **mfzr_plate2** can be analysed in the same way.
 
-The two pipelines differ in the order of the preprocessing steps and demonstrate 
-different approaches to the analysis. However, the filtering steps are identical in both pipelines.
-
-Here, we continue from the outputs of these two tutorials and show how to pool 
+Here, we use he demo file to see, how to how to pool 
 datasets generated from the same marker.
 
 When pooling data from multiple plates, we recommend using the 
@@ -83,7 +80,7 @@ When pooling data from multiple plates, we recommend using the
 is performed consistently across datasets and avoids differences in cluster 
 centroids between individual runs.
 
-These files are provided in a [long format](), with the columns
+These files are provided in a [long format](23-glossary.html#long-format), with the columns
 `asv_id`, `sample`, `replicate` (optional), `read_count`, and `asv`. 
 This format makes them particularly easy to combine.
 
@@ -102,7 +99,7 @@ Define the **output directory and log file**:
 
 ```{r, eval=TRUE}
 library(vtamR)
-outdir <- file.path("vtamR_demo_out", "pooled_mfzr_plates") 
+outdir <- file.path("vtamR_demo_out", "pooled_mfzr_plates")
 options(vtamR.log_file = file.path(outdir, "vtamR_log.csv"))
 ```
 
@@ -205,10 +202,11 @@ improve taxonomic coverage by targeting complementary regions of the marker.
 Each marker should first be analyzed separately. The results can then be 
 combined by aggregating ASVs that are **identical within their overlapping region**.
 
-The first plate of the ZFZR marker can be processed in the same way as the first MFZR plate.
+The first plate of the ZFZR marker can be processed the same way as the MFZR maker 
+was done in the [tutorial](04-tutorial-in-depth.html).
 
 Here, we use the output from the ZFZR marker analysis, provided as a demo file. 
-The corresponding results are included in the package:
+included in the package:
 
 ```{r, eval=TRUE}
 mfzr_filtered <- system.file(
@@ -225,15 +223,19 @@ zfzr_filtered <- system.file(
 Let's define a new output directory and log file:
 
 ```{r, eval=TRUE}
-outdir <- file.path("vtamR_demo_out", "pooled_markers") 
+outdir <- file.path("vtamR_demo_out", "pooled_markers")
 options(vtamR.log_file = file.path(outdir, "vtamR_log.csv"))
 ```
 
 ## Pool Markers
 
-When analyzing the different datasets, we consistently used the 
-`ASV_list_with_IDs.csv` generated in the previous runs. 
-As a result, the ASV IDs are compatible across datasets and can be used directly.
+When analyzing the different datasets, we consistently used the `ASV_list_with_IDs.csv` 
+generated in the previous runs: 
+
+The `output_asv_list` of the dereplicate step from the first MFZR plate became 
+the `input_asv_list` for the second plate of MFZR, and its output, in turn, became the 
+input for the first ZFZR plate. This ensures that all ASV-`asv_id` pairs are 
+consistent across the three analyses.
 
 If the ASV IDs are **not compatible** — for example, if the same `asv_id` 
 refers to different sequences in different markers—you can resolve this by 
@@ -254,7 +256,7 @@ pooled_markers <- pool_markers(
   files = input_files,
   marker_ids = marker_ids,
   outfile = outfile,  # ASVs identical in their overlapping region are merged into a single line
-  asv_with_centroids = asv_with_centroids,  # same as input, with added centroid_id and centroid
+  asv_with_centroids = asv_with_centroids,  # same as input, with added centroid_id and centroid columns
   method = "mean"  # mean read count across pooled ASVs
 )
 ```

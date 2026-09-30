@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/14-howto-asv-id-across-datasets.html">Consistent ASV IDs across datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +81,7 @@
       <h1>Installation</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/01-installation.Rmd" class="external-link"><code>vignettes/01-installation.Rmd</code></a></small>
       <div class="d-none name"><code>01-installation.Rmd</code></div>
@@ -115,7 +117,7 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p><strong>Package version:</strong> 2.0.0.9001</p>
+<p><strong>Package version:</strong> 2.0.0.9002</p>
 <div class="section level2">
 <h2 id="install-vtamr">Install <code>vtamR</code><a class="anchor" aria-label="anchor" href="#install-vtamr"></a>
 </h2>
@@ -181,7 +183,7 @@ table {
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your <code>PATH</code>, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them to the PATH, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them to the PATH, make sure to provide<br><a href="04-tutorial-in-depth.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <ol style="list-style-type: decimal">
 <li>Edit (or create) your <code>~/.Renviron</code> file</li>
 </ol>
@@ -260,7 +262,7 @@ table {
 </ul>
 <p><strong>Add executables to your PATH (Optional)</strong></p>
 <p>If third-party executables are included in your system PATH, you won’t need to manually specify their locations when running functions that use them.</p>
-<p>If you prefer <strong>not</strong> to add them, make sure to provide<br><a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
+<p>If you prefer <strong>not</strong> to add them, make sure to provide<br><a href="04-tutorial-in-depth.html#set-path">package options</a> in the beginning of yous script, or the full path to each program through the appropriate <code>vtamR</code> function argument (e.g., <code>vsearch_path</code>).</p>
 <p>You can use either <strong>GUI</strong> or <strong>PowerShell</strong> to add executables to your PATH.</p>
 <ol style="list-style-type: decimal">
 <li>Using the Windows GUI (System Settings)</li>
@@ -328,7 +330,7 @@ table {
 </li>
 </ul>
 <p>Alternatively, you can also create a custom version from the <strong>TSV format</strong> database available at <a href="https://zenodo.org/records/15515860" class="external-link">Zenodo</a> and make a custom version using <a href="https://github.com/meglecz/mkCOInr" class="external-link">mkCOInr</a> (<a href="https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756" class="external-link">Meglécz, 2023</a>).</p>
-<p><strong>For other markers</strong> you will need a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">database formatted to BLAST</a>, containing taxIDs and a <a href="https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
+<p><strong>For other markers</strong> you will need a <a href="21-ref-io-formats.html#ref_db">database formatted to BLAST</a>, containing taxIDs and a <a href="21-ref-io-formats.html#ref_db">taxonomy file</a>. If all sequences are extracted from NCBI-nt, the taxonomy file provided in <a href="https://osf.io/vrfwz/" class="external-link">OSF</a> can be used without modification.</p>
 </div>
 <div class="section level3">
 <h3 id="assign_taxonomy_rdp">assign_taxonomy_rdp<a class="anchor" aria-label="anchor" href="#assign_taxonomy_rdp"></a>

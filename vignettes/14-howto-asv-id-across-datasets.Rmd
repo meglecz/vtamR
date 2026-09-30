@@ -1,0 +1,125 @@
+---
+title: "Consistent ASV IDs across datasets"
+author: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{Consistent ASV IDs across datasets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=FALSE,
+  cache=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+
+```
+
+**Package version:** `r packageVersion("vtamR")`
+
+# How to keep ASV IDs consistent across datasets
+
+The `dereplicate` function assigns numerical **ASV IDs** to ASVs automatically. 
+By default, IDs are specific to each run, so the same sequence can get a different ID 
+in different datasets. To compare datasets, or to add new data to an existing analysis, 
+you need IDs that stay the same for identical sequences.
+
+## Reuse IDs from a previous analysis
+
+Use the optional `input_asv_list` argument of `dereplicate` to provide a reference 
+file ([asv_list](21-ref-io-formats.html#asv_list)) containing existing ASVs and their IDs.
+
+* ASVs present in both `input_asv_list` and the current dataset keep their existing IDs.
+* ASVs present only in the current dataset receive new IDs. None of the IDs in `input_asv_list` is reused.
+
+```{r dereplicate_input_asv_list, eval=FALSE}
+read_count_df <- dereplicate(
+  sampleinfo = sampleinfo_df,          # output of demultiplex_and_trim_fasta
+  dir = fasta_dir,                     # directory with input fasta files
+  input_asv_list = input_asv_list_file # ASV list from earlier datasets
+)
+```
+
+## Keep an ASV list for future datasets
+
+To reuse the IDs in later analyses, you need to save an updated ASV list. There are two ways to do this.
+
+### Option 1: write the list during dereplication
+
+If you provide `output_asv_list`, `dereplicate` writes an updated ASV list containing all ASVs from `input_asv_list` and from the current dataset. This is the safest option. Use the resulting file as `input_asv_list` for the next dataset.
+
+```{r dereplicate_output_asv_list, eval=FALSE}
+read_count_df <- dereplicate(
+  sampleinfo = sampleinfo_df,
+  dir = fasta_dir,
+  input_asv_list = input_asv_list_file,  # ASV list from earlier datasets
+  output_asv_list = output_asv_list_file # updated list: all past and present ASV-ID pairs
+)
+```
+
+The drawback is that the list grows very quickly. Most of its ASVs are singletons that are filtered out in almost all analyses, so the file becomes unnecessarily large.
+
+### Option 2: update the list after the first filters
+
+Use only `input_asv_list` during dereplication and omit `output_asv_list`. Then update the ASV list after the first filtering steps (`denoise_by_swarm` and/or `filter_asv_global`), which typically eliminate more than 90% of the ASVs. This way, the list only tracks ASVs that have a realistic chance of reappearing in later datasets, which substantially reduces the file size.
+
+```{r update_asv_list, eval=FALSE}
+read_count_df <- dereplicate(
+  sampleinfo = sampleinfo_df,
+  dir = fasta_dir,
+  input_asv_list = input_asv_list_file # ASV list from earlier datasets
+)
+
+# ... first filters / denoising (e.g. denoise_by_swarm, filter_asv_global)
+
+update_asv_list(
+  asv_list1 = read_count_df,             # current dataset after light filtering
+  asv_list2 = input_asv_list_file,       # ASV list from earlier datasets
+  outfile = output_asv_list_file         # updated list: all past and present ASV-ID pairs
+)
+```
+
+

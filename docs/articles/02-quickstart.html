@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/14-howto-asv-id-across-datasets.html">Consistent ASV IDs across datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +81,7 @@
       <h1>Quick Start</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/02-quickstart.Rmd" class="external-link"><code>vignettes/02-quickstart.Rmd</code></a></small>
       <div class="d-none name"><code>02-quickstart.Rmd</code></div>
@@ -115,29 +117,36 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p><strong>Package version:</strong> 2.0.0.9001</p>
+<p><strong>Package version:</strong> 2.0.0.9002</p>
+<blockquote>
+<p>vtamR offers three tutorials that follow the same workflow and cover the majority of its functions, differing only in how much explanation is provided: a Quick Start, a step-by-step Tutorial, and an In-Depth Tutorial (see links below).</p>
+<p><strong>This is the Quick Start.</strong> After adjusting path to external programs, just copy-paste the script into R and run it — no explanations, no detours. It’s the fastest way to check that your installation works correctly, and the output already gives you a good sense of the information the pipeline can produce, from raw fastq sequences to validated occurrences ready for downstream analyses. If you’d like more context on any step, switch to the <a href="03-tutorial.html">Tutorial</a> or the <a href="04-tutorial-in-depth.html">In-Depth Tutorial</a>.</p>
+</blockquote>
 <div class="section level2">
 <h2 id="set-paths-to-third-party-programs">Set Paths to Third-Party Programs<a class="anchor" aria-label="anchor" href="#set-paths-to-third-party-programs"></a>
 </h2>
-<p>Adjust path according to you installation, or leave this out, if external programs are in your path.</p>
+<p><a href="20-best-practices.html#set-path">Adjust path to external programs according to you installation</a>, or leave this out, if external programs are in your path.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.vsearch_path <span class="op">=</span> <span class="st">"C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.blast_path <span class="op">=</span> <span class="st">"C:/Users/Public/blast-2.16.0+/bin/blastn"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.cutadapt_path <span class="op">=</span> <span class="st">"C:/Users/Public/cutadapt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.swarm_path <span class="op">=</span> <span class="st">"C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.pigz_path <span class="op">=</span> <span class="st">"C:/Users/Public/pigz-win32/pigz"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="run-it-as-is">Run it as is<a class="anchor" aria-label="anchor" href="#run-it-as-is"></a>
+</h2>
+<p>The script below can be executed without any changes. It uses the demo files included in <code>vtamR</code>. You can use it to:</p>
+<ul>
+<li>check that everything is working,</li>
+<li>see most functions in action,</li>
+<li>get familiar with the output,</li>
+<li>use it as a starting point for your own pipeline.</li>
+</ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Load Library</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     filter, lag</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
 <span></span>
 <span><span class="co">## Demo dataset</span></span>
 <span><span class="va">fastq_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/demo/fastq"</span>, package <span class="op">=</span> <span class="st">"vtamR"</span><span class="op">)</span></span>
@@ -168,66 +177,61 @@ table {
 <span><span class="co">#&gt; [1] "1 to 1 relation between asv_id and asv : OK"</span></span>
 <span></span>
 <span><span class="co">## Output directory and log file</span></span>
-<span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"QuickStart_mfzr_plate1"</span><span class="op">)</span></span>
+<span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"tutorial_quick_start"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"run_info"</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Pre-process reads</span></span>
 <span><span class="co">## Demultiplex</span></span>
 <span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_demultiplexed"</span><span class="op">)</span></span>
-<span><span class="va">fastqinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/demultiplex_and_trim_fastq.html">demultiplex_and_trim_fastq</a></span><span class="op">(</span></span>
-<span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo</span>,</span>
-<span>  fastq_dir <span class="op">=</span> <span class="va">fastq_dir</span>,</span>
-<span>  outdir <span class="op">=</span> <span class="va">demultiplexed_dir</span>,</span>
+<span><span class="va">fastqinfo_demultiplexed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/demultiplex_and_trim_fastq.html">demultiplex_and_trim_fastq</a></span><span class="op">(</span></span>
+<span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo</span>, </span>
+<span>  fastq_dir <span class="op">=</span> <span class="va">fastq_dir</span>,  <span class="co"># directory of input fastq files</span></span>
+<span>  outdir <span class="op">=</span> <span class="va">demultiplexed_dir</span>,  <span class="co"># directory of output fastq files</span></span>
 <span>  primer_to_end <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  check_reverse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  compress <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Randomly subsample sequencing reads</span></span>
 <span><span class="va">randomseq_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"2_random_sampled"</span><span class="op">)</span></span>
-<span><span class="va">fastqinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/random_sample_batch_by.html">random_sample_batch_by</a></span><span class="op">(</span></span>
-<span>  info <span class="op">=</span> <span class="va">fastqinfo_df</span>,</span>
+<span><span class="va">fastqinfo_subsampled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/random_sample_batch_by.html">random_sample_batch_by</a></span><span class="op">(</span></span>
+<span>  info <span class="op">=</span> <span class="va">fastqinfo_demultiplexed</span>,</span>
 <span>  by <span class="op">=</span> <span class="st">"replicate"</span>,</span>
-<span>  dir <span class="op">=</span> <span class="va">demultiplexed_dir</span>,</span>
-<span>  outdir <span class="op">=</span> <span class="va">randomseq_dir</span>,</span>
-<span>  N <span class="op">=</span> <span class="fl">40000</span>,</span>
-<span>  compress <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  dir <span class="op">=</span> <span class="va">demultiplexed_dir</span>,  <span class="co"># directory of input fastq files</span></span>
+<span>  outdir <span class="op">=</span> <span class="va">randomseq_dir</span>,  <span class="co"># directory of output fastq files</span></span>
+<span>  N <span class="op">=</span> <span class="fl">37000</span>,</span>
+<span>  compress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  randseed <span class="op">=</span> <span class="fl">123</span> <span class="co"># use the same random seed for reproducibility</span></span>
 <span>  <span class="op">)</span> </span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/tpos1-1_fw.fastq contains 22074 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/tnegtag-1_fw.fastq contains 57 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/14ben01-1_fw.fastq contains 7258 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/14ben02-1_fw.fastq contains 7398 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/tpos1-2_fw.fastq contains 27801 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/tnegtag-2_fw.fastq contains 259 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/14ben01-2_fw.fastq contains 7370 records. Input file pair is copied to output.</span></span>
-<span><span class="co">#&gt; Warning in random_sample_fastq(fastq1 = file.path(dir, files[i, "fastq_fw"]), : vtamR_demo_out/QuickStart_mfzr_plate1/1_demultiplexed/14ben02-2_fw.fastq contains 4496 records. Input file pair is copied to output.</span></span>
 <span></span>
-<span><span class="co">## Merge Fastq Pairs and Quality Filter {#merge}</span></span>
+<span><span class="co">## Merge Fastq Pairs and Quality Filter </span></span>
 <span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"3_merged"</span><span class="op">)</span></span>
 <span><span class="va">sampleinfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_fastq_pairs.html">merge_fastq_pairs</a></span><span class="op">(</span></span>
-<span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo_df</span>,</span>
-<span>  fastq_dir <span class="op">=</span> <span class="va">randomseq_dir</span>,</span>
-<span>  outdir <span class="op">=</span> <span class="va">merged_dir</span>,</span>
-<span>  fastq_maxee <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  fastq_maxns <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  fastq_allowmergestagger <span class="op">=</span> <span class="cn">T</span></span>
-<span><span class="op">)</span></span>
+<span>  fastqinfo <span class="op">=</span> <span class="va">fastqinfo_subsampled</span>, </span>
+<span>  fastq_dir <span class="op">=</span> <span class="va">randomseq_dir</span>, <span class="co"># directory of input fastq files</span></span>
+<span>  outdir <span class="op">=</span> <span class="va">merged_dir</span>, <span class="co"># directory of output fasta files</span></span>
+<span>  fastq_maxee <span class="op">=</span> <span class="fl">1</span>, <span class="co"># Maximum Expected Error for each read</span></span>
+<span>  fastq_maxns <span class="op">=</span> <span class="fl">0</span>, <span class="co"># no Ns in output</span></span>
+<span>  compress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  fastq_allowmergestagger <span class="op">=</span> <span class="cn">T</span> <span class="co"># reads might be longer than the marker</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Dereplicate</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
-<span><span class="va">updated_asv_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"ASV_list_with_IDs.csv"</span><span class="op">)</span></span>
+<span><span class="va">output_asv_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"Updated_asv_list_mfzr_plate1.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dereplicate.html">dereplicate</a></span><span class="op">(</span></span>
-<span>  sampleinfo <span class="op">=</span> <span class="va">sampleinfo_df</span>, <span class="co"># input df (output of demultiplex_and_trim_fasta)</span></span>
+<span>  sampleinfo <span class="op">=</span> <span class="va">sampleinfo_df</span>, <span class="co"># input df (output of merge_fastq_pairs)</span></span>
 <span>  dir <span class="op">=</span> <span class="va">merged_dir</span>, <span class="co"># directory with input fasta files</span></span>
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span>, <span class="co"># write the output data frame to this file</span></span>
-<span>  input_asv_list <span class="op">=</span> <span class="va">asv_list</span></span>
+<span>  input_asv_list <span class="op">=</span> <span class="va">asv_list</span>, <span class="co"># asv_list from previous analyses</span></span>
+<span>  output_asv_list <span class="op">=</span> <span class="va">output_asv_list</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Filtering</span></span>
 <span><span class="co">## Initialize stat data frame</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, stat_df <span class="op">=</span> <span class="cn">NULL</span>, stage <span class="op">=</span> <span class="st">"input"</span>, params <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Denoising with SWARM {#denoise}</span></span>
+<span><span class="co">## Denoising with SWARM </span></span>
 <span><span class="va">split_clusters</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span><span class="va">by_sample</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"2_swarm_denoise.csv"</span><span class="op">)</span></span>
@@ -242,7 +246,7 @@ table {
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"swarm_denoise"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Filter ASVs</span></span>
-<span><span class="co">### Filter out ASVs with Low Total Read Count (`filter_asv_global`) {#filter_asv_global}</span></span>
+<span><span class="co">### Filter out ASVs with Low Total Read Count (`filter_asv_global`) </span></span>
 <span><span class="va">global_read_count_cutoff</span> <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"3_filter_asv_global.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_asv_global.html">filter_asv_global</a></span><span class="op">(</span></span>
@@ -253,15 +257,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"global_read_count_cutoff:"</span>, <span class="va">global_read_count_cutoff</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_asv_global"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Update the asv_list</span></span>
-<span><span class="va">updated_asv_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"updated_ASV_list_mfzr.csv"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/update_asv_list.html">update_asv_list</a></span><span class="op">(</span></span>
-<span>  asv_list1 <span class="op">=</span> <span class="va">read_count_df</span>,</span>
-<span>  asv_list2 <span class="op">=</span> <span class="va">asv_list</span>,</span>
-<span>  outfile <span class="op">=</span> <span class="va">updated_asv_list</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">### Filter ASVs Based on Read Length (`filter_indel`) {#filter_indel}</span></span>
+<span><span class="co">### Filter ASVs Based on Read Length (`filter_indel`)</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"4_filter_indel.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_indel.html">filter_indel</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>,</span>
@@ -269,7 +265,7 @@ table {
 <span>  <span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_indel"</span>, params<span class="op">=</span><span class="cn">NA</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter ASVs with Stop Codons (`filter_stop_codon`) {#filter_stop_codon}</span></span>
+<span><span class="co">### Filter ASVs with Stop Codons (`filter_stop_codon`)</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"5_filter_stop_codon.csv"</span><span class="op">)</span></span>
 <span><span class="va">genetic_code</span> <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_stop_codon.html">filter_stop_codon</a></span><span class="op">(</span></span>
@@ -280,7 +276,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"genetic_code:"</span>, <span class="va">genetic_code</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_stop_codon"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter Potential Contaminant ASVs (`filter_contaminant`) {#filter_contaminant}</span></span>
+<span><span class="co">### Filter Potential Contaminant ASVs (`filter_contaminant`) </span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"6_filter_contaminant.csv"</span><span class="op">)</span></span>
 <span><span class="va">conta_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"potential_contaminants.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_contaminant.html">filter_contaminant</a></span><span class="op">(</span></span>
@@ -291,7 +287,7 @@ table {
 <span>  <span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_contaminant"</span>, params<span class="op">=</span><span class="cn">NA</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter Chimeric ASVs (`filter_chimera`) {#filter_chimera}</span></span>
+<span><span class="co">### Filter Chimeric ASVs (`filter_chimera`) </span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"7_filter_chimera.csv"</span><span class="op">)</span></span>
 <span><span class="va">abskew</span><span class="op">=</span><span class="fl">2</span></span>
 <span><span class="va">by_sample</span> <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -306,26 +302,25 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"by_sample:"</span>, <span class="va">by_sample</span>, <span class="st">"sample_prop:"</span>, <span class="va">sample_prop</span>, <span class="st">"abskew:"</span>, <span class="va">abskew</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_chimera"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Filter Aberrant Replicates (`filter_replicate`) {#filter_replicate}</span></span>
+<span><span class="co">## Filter Aberrant Replicates (`filter_replicate`)</span></span>
+<span><span class="co">### Calculate Renkonen distances</span></span>
 <span><span class="va">renkonen_within_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_renkonen_distances.html">compute_renkonen_distances</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>  compare_all <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">### Visualize Renkonen Distances</span></span>
-<span><span class="fu"><a href="../reference/plot_renkonen_distance_density.html">plot_renkonen_distance_density</a></span><span class="op">(</span></span>
-<span>  df <span class="op">=</span> <span class="va">renkonen_within_df</span><span class="op">)</span></span></code></pre></div>
-<p><img src="02-quickstart_files/figure-html/unnamed-chunk-3-1.png" width="100%"></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/plot_renkonen_distance_barplot.html">plot_renkonen_distance_barplot</a></span><span class="op">(</span></span>
+<span><span class="va">Renkonen_distance_density_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_renkonen_distance_density.html">plot_renkonen_distance_density</a></span><span class="op">(</span></span>
+<span>  df <span class="op">=</span> <span class="va">renkonen_within_df</span><span class="op">)</span></span>
+<span><span class="co"># print(Renkonen_distance_density_plot)</span></span>
+<span></span>
+<span><span class="va">Renkonen_distance_barplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_renkonen_distance_barplot.html">plot_renkonen_distance_barplot</a></span><span class="op">(</span></span>
 <span>  df <span class="op">=</span> <span class="va">renkonen_within_df</span>, </span>
 <span>  sampleinfo <span class="op">=</span> <span class="va">sampleinfo_df</span>, </span>
 <span>  x_axis_label_size <span class="op">=</span> <span class="fl">6</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="02-quickstart_files/figure-html/unnamed-chunk-3-2.png" width="100%"></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co">### Determine Cutoff for Replicate Filtering</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="co"># print(Renkonen_distance_barplot)</span></span>
+<span></span>
+<span><span class="co">###  Choose threshold automatically</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"8_filter_replicate.csv"</span><span class="op">)</span></span>
 <span><span class="va">renkonen_distance_quantile</span> <span class="op">&lt;-</span> <span class="fl">0.9</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_replicate.html">filter_replicate</a></span><span class="op">(</span></span>
@@ -333,11 +328,11 @@ table {
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span>,</span>
 <span>  renkonen_distance_quantile <span class="op">=</span> <span class="va">renkonen_distance_quantile</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "The cutoff value for Renkonen distances is  0.25736835614749"</span></span>
+<span><span class="co">#&gt; [1] "The cutoff value for Renkonen distances is  0.29997003296374"</span></span>
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"renkonen_distance_quantile:"</span>, <span class="va">renkonen_distance_quantile</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_replicate"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Create `mock_composition` File {#match_variants_to_mock_species}</span></span>
+<span><span class="co">## Create `mock_composition` File</span></span>
 <span><span class="va">outdir_mock</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"mock_composition"</span><span class="op">)</span></span>
 <span><span class="va">mock_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_variants_to_mock_species.html">match_variants_to_mock_species</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>,</span>
@@ -350,7 +345,8 @@ table {
 <span><span class="va">mock_composition_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">mock_composition</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Filter occurrences</span></span>
-<span><span class="co">### Filter Low-Abundance Occurrences within Samples (`filter_occurrence_sample`) {#filter_occurrence_sample}</span></span>
+<span><span class="co">### Filter Low-Abundance Occurrences within Samples (`filter_occurrence_sample`)</span></span>
+<span><span class="co">#### Suggest Filter Parameters Based on Mock Sample (`suggest_sample_cutoff`)</span></span>
 <span><span class="va">outfile</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"suggest_parameters"</span>, <span class="st">"sample_cutoff.csv"</span><span class="op">)</span></span>
 <span><span class="va">suggest_sample_cutoff_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_sample_cutoff.html">suggest_sample_cutoff</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>,</span>
@@ -359,7 +355,7 @@ table {
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co">#### Filter Low-Abundance Occurrences within Samples </span></span>
-<span><span class="va">sample_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.004</span></span>
+<span><span class="va">sample_cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.005</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"9_filter_occurrence_sample.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_occurrence_sample.html">filter_occurrence_sample</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
@@ -369,7 +365,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"cutoff:"</span>, <span class="va">sample_cutoff</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_occurrence_sample"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter Occurrences by Replicate Consistency (filter_min_replicate-1) {#filter_min_replicate-1}</span></span>
+<span><span class="co">### Filter Occurrences by Replicate Consistency (filter_min_replicate-1) </span></span>
 <span><span class="va">min_replicate_number</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"10_filter_min_replicate.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_min_replicate.html">filter_min_replicate</a></span><span class="op">(</span></span>
@@ -380,7 +376,8 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"cutoff:"</span>, <span class="va">min_replicate_number</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_min_replicate"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`) {#filter_occurrence_variant}</span></span>
+<span><span class="co">### Filter Low-Abundance Occurrences (`filter_occurrence_variant` and `filter_occurrence_read_count`)</span></span>
+<span><span class="co">#### Choose a Cutoff for (`filter_occurrence_variant` and `filter_occurrence_read_count`)</span></span>
 <span><span class="va">outdir_suggest</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"suggest_parameters"</span><span class="op">)</span></span>
 <span><span class="va">suggest_variant_readcount_cutoffs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_variant_readcount_cutoffs.html">suggest_variant_readcount_cutoffs</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>,</span>
@@ -390,7 +387,7 @@ table {
 <span>  min_replicate_number <span class="op">=</span> <span class="fl">2</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="co">#### Apply `filter_occurrence_variant` and `filter_occurrence_read_count` {#filter_occurrence_read_count}</span></span>
+<span><span class="co">#### Apply `filter_occurrence_variant` and `filter_occurrence_read_count` </span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"11_filter_occurrence_variant.csv"</span><span class="op">)</span></span>
 <span><span class="va">variant_cutoff</span> <span class="op">=</span> <span class="fl">0.001</span></span>
 <span><span class="va">read_count_df_variant</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_occurrence_variant.html">filter_occurrence_variant</a></span><span class="op">(</span></span>
@@ -419,11 +416,10 @@ table {
 <span>  <span class="op">)</span></span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"pool_filters"</span>, params<span class="op">=</span><span class="cn">NA</span><span class="op">)</span></span>
 <span>              </span>
-<span><span class="co"># delete temporary data frames</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">read_count_df_rc</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">read_count_df_variant</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">### Filter Occurrences by Replicate Consistency (`filter_min_replicate`-2) {#filter_min_replicate-2}</span></span>
+<span><span class="co">### Filter Occurrences by Replicate Consistency (`filter_min_replicate`-2)</span></span>
 <span><span class="va">min_replicate_number</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"14_filter_min_replicate.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_min_replicate.html">filter_min_replicate</a></span><span class="op">(</span></span>
@@ -434,7 +430,7 @@ table {
 <span><span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"cutoff:"</span>, <span class="va">min_replicate_number</span>, sep<span class="op">=</span><span class="st">" "</span><span class="op">)</span>  </span>
 <span><span class="va">stat_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stat.html">get_stat</a></span><span class="op">(</span><span class="va">read_count_df</span>, <span class="va">stat_df</span>, stage<span class="op">=</span><span class="st">"filter_min_replicate_2"</span>, params<span class="op">=</span><span class="va">param</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Pool Replicates {#pool_replicates}</span></span>
+<span><span class="co">## Pool Replicates</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"15_pool_replicates.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_sample_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_replicates.html">pool_replicates</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>,</span>
@@ -442,7 +438,7 @@ table {
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Performance Metrics {#performance-metrics}</span></span>
+<span><span class="co">## Performance Metrics</span></span>
 <span><span class="va">false_negatives</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"false_negatives.csv"</span><span class="op">)</span></span>
 <span><span class="va">performance_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"performance_metrics.csv"</span><span class="op">)</span></span>
 <span><span class="va">known_occurrences</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter"</span>, <span class="st">"known_occurrences.csv"</span><span class="op">)</span></span>
@@ -458,7 +454,7 @@ table {
 <span><span class="va">false_negatives_df</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">performance_metrics_df</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
-<span><span class="co">## Print Summary Statistics {#print_stats}</span></span>
+<span><span class="co">## Print Summary Statistics</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">stat_df</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"run_info"</span>, <span class="st">"summary.csv"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Taxonomic Assignment</span></span>
@@ -469,7 +465,7 @@ table {
 <span>  blast_db <span class="op">=</span> <span class="va">blast_db</span>, </span>
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Clustering (mOTUs) {#cluster_asv}</span></span>
+<span><span class="co"># Clustering (mOTUs)</span></span>
 <span><span class="co">### Plot Pairwise Identity Distribution</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"pairwise_identities_vsearch.csv"</span><span class="op">)</span></span>
 <span><span class="va">plotfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"plot_pairwise_identity_vsearch.png"</span><span class="op">)</span></span>
@@ -481,10 +477,8 @@ table {
 <span>  min_id <span class="op">=</span> <span class="fl">0.8</span>, </span>
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span>, </span>
 <span>  plotfile <span class="op">=</span> <span class="va">plotfile</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot_vsearch</span><span class="op">)</span></span></code></pre></div>
-<p><img src="02-quickstart_files/figure-html/unnamed-chunk-3-3.png" width="100%"></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<span><span class="co">#print(plot_vsearch)</span></span>
+<span></span>
 <span><span class="co">### Classify Clusters Based On Taxonomy</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"classification_vsearch.csv"</span><span class="op">)</span></span>
 <span><span class="va">plotfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"plot_cluster_classification_vsearch.png"</span><span class="op">)</span></span>
@@ -496,10 +490,8 @@ table {
 <span>  taxlevels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"genus"</span><span class="op">)</span>,</span>
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span>,</span>
 <span>  plotfile <span class="op">=</span> <span class="va">plotfile</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">scatterplot_vsearch</span><span class="op">)</span></span></code></pre></div>
-<p><img src="02-quickstart_files/figure-html/unnamed-chunk-3-4.png" width="100%"></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<span><span class="co">#print(scatterplot_vsearch)</span></span>
+<span></span>
 <span><span class="co">## Cluster ASVs into mOTUs</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster"</span>, <span class="st">"16_mOTU_vsearch.csv"</span><span class="op">)</span></span>
 <span><span class="va">identity</span> <span class="op">&lt;-</span> <span class="fl">0.97</span> </span>
@@ -517,7 +509,7 @@ table {
 <span></span>
 <span><span class="co"># Output </span></span>
 <span></span>
-<span><span class="co">## ASV table {#write_asv_table}</span></span>
+<span><span class="co">## ASV table </span></span>
 <span><span class="va">outfile</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"motu_table_taxa.csv"</span><span class="op">)</span></span>
 <span><span class="va">asv_table_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/write_asv_table.html">write_asv_table</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_sample_df</span>, </span>
@@ -530,8 +522,7 @@ table {
 <span>  add_expected_asv <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>  mock_composition <span class="op">=</span> <span class="va">mock_composition</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Convert output to a `phyloseq` object{#phyloseq}</span></span>
-<span><span class="co"># Create a data frame containing sample metadata</span></span>
+<span><span class="co">## Convert output to a `phyloseq` object</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="va">sampleinfo_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">sample</span>, <span class="va">sample_type</span>, <span class="va">habitat</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -555,26 +546,26 @@ table {
 <span><span class="va">vegan_tax_df</span> <span class="op">&lt;-</span> <span class="va">vegan_dfs</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Document your workflow</span></span>
-<span><span class="co">## Record R and package versions{#package-versions}</span></span>
+<span><span class="co">## Record R and package versions</span></span>
 <span><span class="va">package_versions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"run_info"</span>, <span class="st">"R_package_versions.csv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/collect_package_info.html">collect_package_info</a></span><span class="op">(</span><span class="va">package_versions</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## MIEM</span></span>
+<span><span class="co">### MIEM bioinformatics</span></span>
 <span><span class="va">miem_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"run_info"</span>, <span class="st">"MIEM"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/miem_bioinformatics.html">miem_bioinformatics</a></span><span class="op">(</span></span>
 <span>  r_versions <span class="op">=</span> <span class="va">package_versions</span>,</span>
 <span>  outfile <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">miem_dir</span>, <span class="st">"MIEM_bioinfo.csv"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in miem$Information[i] &lt;- text: number of items to replace is not a</span></span>
-<span><span class="co">#&gt; multiple of replacement length</span></span>
 <span></span>
-<span><span class="co">## MIEM Sequencing Summary</span></span>
+<span><span class="co">### MIEM Sequencing Summary</span></span>
 <span><span class="va">info_files</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="va">fastqinfo</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_demultiplexed/fastqinfo.csv"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"2_random_sampled/fastqinfo.csv"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"3_merged/fastainfo.csv"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">read_count_files</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter/1_before_filter.csv"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter/2_swarm_denoise.csv"</span><span class="op">)</span>,</span>
@@ -582,6 +573,7 @@ table {
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter/15_pool_replicates.csv"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"5_cluster/16_mOTU_vsearch.csv"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">taxa</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"4_filter/assign_taxonomy_ltg.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/miem_results.html">miem_results</a></span><span class="op">(</span></span>

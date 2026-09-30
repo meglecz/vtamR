@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/14-howto-asv-id-across-datasets.html">Consistent ASV IDs across datasets</a></li>
   </ul>
 </li>
 <li class="active nav-item dropdown">
@@ -79,7 +81,7 @@
       <h1>Glossary</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/23-glossary.Rmd" class="external-link"><code>vignettes/23-glossary.Rmd</code></a></small>
       <div class="d-none name"><code>23-glossary.Rmd</code></div>
@@ -115,48 +117,165 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p><strong>Package version:</strong> 2.0.0.9001</p>
+<p><strong>Package version:</strong> 2.0.0.9002</p>
 <div class="section level2">
 <h2 id="glossary">Glossary<a class="anchor" aria-label="anchor" href="#glossary"></a>
 </h2>
-<ul>
-<li><p><strong>ASV</strong>: Amplicon Sequence Variant. A unique sequence, characterized by the number of reads in each sample–replicate.</p></li>
-<li><p><strong>asv_id</strong>: Unique numerical ID of an ASV.</p></li>
-<li><p><strong>demultiplexing</strong>: Sorting reads in a fasta (or fastq) file into different sample–replicates according to the tags present at their extremities.</p></li>
-<li><p><strong>dereplication</strong>: The merged reads contain many identical sequences. Dereplication reduces the data set to unique sequences (ASVs) and counts the number of reads for each ASV in each sample–replicate.</p></li>
-<li><p><strong>data frame (or csv) in long format</strong>: The <code>read_count_df</code> contains one line for each occurrence with <code>asv_id</code>, <code>asv</code>, <code>sample</code>, <code>replicate</code>, <code>read_count</code> columns. This is the standard format used throughout the analyses and is generally more compact than wide format when many ASVs occur in only a few samples.</p></li>
-<li><p><strong>data frame (or csv) in wide format</strong>: The <code>read_count_df</code> can be rearranged so that rows are ASVs, columns are sample(-replicates), and cells contain read counts. This format is more human-readable and is typically used for final ASV or mOTU tables, often combined with taxonomic assignments and other metadata.</p></li>
-<li><p><strong>false negative occurrence</strong>: An expected ASV in a mock sample that is not detected in the data.</p></li>
-<li>
-<p><strong>false positive occurrence</strong>: An unexpected presence of an ASV in a sample:</p>
+<div class="section level3">
+<h3 id="asv">ASV<a class="anchor" aria-label="anchor" href="#asv"></a>
+</h3>
+<p>Amplicon Sequence Variant. A unique sequence, characterized by the number of reads in each sample–replicate.</p>
+</div>
+<div class="section level3">
+<h3 id="asv_id">asv_id<a class="anchor" aria-label="anchor" href="#asv_id"></a>
+</h3>
+<p>Unique numerical ID of an ASV.</p>
+</div>
+<div class="section level3">
+<h3 id="demultiplexing">demultiplexing<a class="anchor" aria-label="anchor" href="#demultiplexing"></a>
+</h3>
+<p>Sorting reads in a fasta (or fastq) file into different sample–replicates according to the tags present at their extremities.</p>
+</div>
+<div class="section level3">
+<h3 id="dereplication">dereplication<a class="anchor" aria-label="anchor" href="#dereplication"></a>
+</h3>
+<p>The merged reads contain many identical sequences. Dereplication reduces the data set to unique sequences (ASVs) and counts the number of reads for each ASV in each sample–replicate.</p>
+</div>
+<div class="section level3">
+<h3 id="data-frame-or-csv-in-long-format">data frame (or csv) in long format<a class="anchor" aria-label="anchor" href="#data-frame-or-csv-in-long-format"></a>
+</h3>
+<p>The <code>read_count_df</code> contains one line for each occurrence with <code>asv_id</code>, <code>asv</code>, <code>sample</code>, <code>replicate</code>, <code>read_count</code> columns. This is the standard format used throughout the analyses and is generally more compact than wide format when many ASVs occur in only a few samples.</p>
+</div>
+<div class="section level3">
+<h3 id="data-frame-or-csv-in-wide-format">data frame (or csv) in wide format<a class="anchor" aria-label="anchor" href="#data-frame-or-csv-in-wide-format"></a>
+</h3>
+<p>The <code>read_count_df</code> can be rearranged so that rows are ASVs, columns are sample(-replicates), and cells contain read counts. This format is more human-readable and is typically used for final ASV or mOTU tables, often combined with taxonomic assignments and other metadata.</p>
+</div>
+<div class="section level3">
+<h3 id="fn">false negative occurrence<a class="anchor" aria-label="anchor" href="#fn"></a>
+</h3>
+<p>An expected ASV in a mock sample that is not detected in the data.</p>
+</div>
+<div class="section level3">
+<h3 id="fp">false positive occurrence<a class="anchor" aria-label="anchor" href="#fp"></a>
+</h3>
+<p>An unexpected presence of an ASV in a sample:</p>
 <ul>
 <li>all occurrences in negative controls,</li>
 <li>unexpected occurrences in mock samples,</li>
 <li>presence of an ASV in an incompatible habitat (e.g. an ASV abundant in habitat 1 but present at low frequency in habitat 2 is considered a false positive in habitat 2).</li>
 </ul>
-</li>
-<li><p><strong>habitat</strong>: Habitat type of organisms in real or mock samples. Use this only if organisms from different habitats cannot occur in each other. Use NA otherwise.</p></li>
-<li><p><strong>long format</strong>: Each row represents a single measurement, typically with columns such as <code>asv</code>, <code>sample</code>, and <code>read_count</code>. This tidy format is well suited for many data manipulation tools.</p></li>
-<li><p><strong>Low Frequency Noise (LFN)</strong>: ASVs present at low frequencies, likely resulting from sequencing or amplification errors.</p></li>
-<li><p><strong>merge</strong>: Assemble a forward and reverse read pair into a single sequence.</p></li>
-<li><p><strong>mock sample</strong>: An artificial mixture of DNA from known organisms.</p></li>
-<li><p><strong>negative sample</strong>: Negative control sample.</p></li>
-<li><p><strong>precision</strong>: The proportion of detected positives that are true positives (TP / (TP + FP)).</p></li>
-<li><p><strong>real sample</strong>: An environmental sample.</p></li>
-<li><p><strong>Renkonen distance</strong>: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo>∑</mo><mo>min</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>p</mi><mrow><mn>2</mn><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 - \sum \min(p_{1i}, p_{2i})</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">p_{1i}</annotation></semantics></math> is the frequency of variant <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> in sample-replicate1 (Renkonen, 1938)</p></li>
-<li><p><strong>replicate</strong>: Technical or biological replicate of a sample. Replicates must have numerical identifiers (e.g. sample <code>tops1</code> can have replicates 1, 2, and 3).</p></li>
-<li><p><strong>sample</strong>: Name of the environmental or control sample. Must be alphanumeric and contain no spaces.</p></li>
-<li><p><strong>sample–replicate</strong>: A specific replicate of a given sample.</p></li>
-<li><p><strong>sample_type</strong>: <a href="#glossary">real/mock/negative</a></p></li>
-<li><p><strong>sensitivity</strong>: The proportion of true positives correctly detected (TP / (TP + FN)).</p></li>
-<li><p><strong>singleton</strong>: ASV with a single read in the entire data set.</p></li>
-<li><p><strong>tag</strong>: Short sequence at the extremity of the amplicon, used during demultiplexing to identify the sample–replicate origin of each read.</p></li>
-<li><p><strong>Tag-jump (or Tag-switch):</strong> During PCR, chimeric sequences can cause molecular tags (indices) to be exchanged. This leads to reads being attributed to the wrong sample, potentially distorting biodiversity estimates.</p></li>
-<li><p><strong>taxIDs</strong>: Numerical taxonomic identifiers. These can be valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy" class="external-link">NCBI taxID</a> values or arbitrary negative numbers for taxa not present in NCBI.</p></li>
-<li><p><strong>trimming</strong>: Cutting sequence extremities, either based on sequence quality or by detecting tags or primers.</p></li>
-<li><p><strong>true positive occurrence</strong>: An expected occurrence in a mock sample.</p></li>
-<li><p><strong>wide format</strong>: In <code>vtamR</code>, wide-format data frames have one row per ASV and one column per sample, with read counts in the cells.</p></li>
+</div>
+<div class="section level3">
+<h3 id="habitat">habitat<a class="anchor" aria-label="anchor" href="#habitat"></a>
+</h3>
+<p>Habitat type of organisms in real or mock samples. Use this only if organisms from different habitats cannot occur in each other. Use NA otherwise.</p>
+</div>
+<div class="section level3">
+<h3 id="long-format">long format<a class="anchor" aria-label="anchor" href="#long-format"></a>
+</h3>
+<p>Each row represents a single measurement, typically with columns such as <code>asv</code>, <code>sample</code>, and <code>read_count</code>. This tidy format is well suited for many data manipulation tools.</p>
+</div>
+<div class="section level3">
+<h3 id="lfn">Low Frequency Noise (LFN)<a class="anchor" aria-label="anchor" href="#lfn"></a>
+</h3>
+<p>ASVs present at low frequencies, likely resulting from sequencing or amplification errors.</p>
+</div>
+<div class="section level3">
+<h3 id="merge">merge<a class="anchor" aria-label="anchor" href="#merge"></a>
+</h3>
+<p>Assemble a forward and reverse read pair into a single sequence.</p>
+</div>
+<div class="section level3">
+<h3 id="mock-sample">mock sample<a class="anchor" aria-label="anchor" href="#mock-sample"></a>
+</h3>
+<p>An artificial mixture of DNA from known organisms.</p>
+</div>
+<div class="section level3">
+<h3 id="negative-sample">negative sample<a class="anchor" aria-label="anchor" href="#negative-sample"></a>
+</h3>
+<p>Negative control sample.</p>
+</div>
+<div class="section level3">
+<h3 id="precision">precision<a class="anchor" aria-label="anchor" href="#precision"></a>
+</h3>
+<p>The proportion of detected positives that are true positives (TP / (TP + FP)).</p>
+</div>
+<div class="section level3">
+<h3 id="real-sample">real sample<a class="anchor" aria-label="anchor" href="#real-sample"></a>
+</h3>
+<p>An environmental sample.</p>
+</div>
+<div class="section level3">
+<h3 id="renkonen-distance">Renkonen distance<a class="anchor" aria-label="anchor" href="#renkonen-distance"></a>
+</h3>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo>∑</mo><mo>min</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>p</mi><mrow><mn>2</mn><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 - \sum \min(p_{1i}, p_{2i})</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mn>1</mn><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">p_{1i}</annotation></semantics></math> is the frequency of variant <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> in sample-replicate1 (Renkonen, 1938)</p>
+</div>
+<div class="section level3">
+<h3 id="replicate">replicate<a class="anchor" aria-label="anchor" href="#replicate"></a>
+</h3>
+<p>Technical or biological replicate of a sample. Replicates must have numerical identifiers (e.g. sample <code>tops1</code> can have replicates 1, 2, and 3).</p>
+</div>
+<div class="section level3">
+<h3 id="sample">sample<a class="anchor" aria-label="anchor" href="#sample"></a>
+</h3>
+<p>Name of the environmental or control sample. Must be alphanumeric and contain no spaces.</p>
+</div>
+<div class="section level3">
+<h3 id="samplereplicate">sample–replicate<a class="anchor" aria-label="anchor" href="#samplereplicate"></a>
+</h3>
+<p>A specific replicate of a given sample.</p>
+</div>
+<div class="section level3">
+<h3 id="sample_type">sample_type<a class="anchor" aria-label="anchor" href="#sample_type"></a>
+</h3>
+<p>Three possible values</p>
+<ul>
+<li>real: environmental samples</li>
+<li>mock: contol sample containing a community with known composition</li>
+<li>negative: negative control</li>
 </ul>
+</div>
+<div class="section level3">
+<h3 id="sensitivity">sensitivity<a class="anchor" aria-label="anchor" href="#sensitivity"></a>
+</h3>
+<p>The proportion of true positives correctly detected (TP / (TP + FN)).</p>
+</div>
+<div class="section level3">
+<h3 id="singleton">singleton<a class="anchor" aria-label="anchor" href="#singleton"></a>
+</h3>
+<p>ASV with a single read in the entire data set.</p>
+</div>
+<div class="section level3">
+<h3 id="tag">tag<a class="anchor" aria-label="anchor" href="#tag"></a>
+</h3>
+<p>Short sequence at the extremity of the amplicon, used during demultiplexing to identify the sample–replicate origin of each read.</p>
+</div>
+<div class="section level3">
+<h3 id="tag-jump">Tag-jump (or Tag-switch)<a class="anchor" aria-label="anchor" href="#tag-jump"></a>
+</h3>
+<p>During PCR, chimeric sequences can cause molecular tags (indices) to be exchanged. This leads to reads being attributed to the wrong sample, potentially distorting biodiversity estimates.</p>
+</div>
+<div class="section level3">
+<h3 id="taxids">taxIDs<a class="anchor" aria-label="anchor" href="#taxids"></a>
+</h3>
+<p>Numerical taxonomic identifiers. These can be valid <a href="https://www.ncbi.nlm.nih.gov/taxonomy" class="external-link">NCBI taxID</a> values or arbitrary negative numbers for taxa not present in NCBI.</p>
+</div>
+<div class="section level3">
+<h3 id="trimming">trimming<a class="anchor" aria-label="anchor" href="#trimming"></a>
+</h3>
+<p>Cutting sequence extremities, either based on sequence quality or by detecting tags or primers.</p>
+</div>
+<div class="section level3">
+<h3 id="tp">true positive occurrence<a class="anchor" aria-label="anchor" href="#tp"></a>
+</h3>
+<p>An expected occurrence in a mock sample.</p>
+</div>
+<div class="section level3">
+<h3 id="wide-format">wide format<a class="anchor" aria-label="anchor" href="#wide-format"></a>
+</h3>
+<p>In <code>vtamR</code>, wide-format data frames have one row per ASV and one column per sample, with read counts in the cells.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

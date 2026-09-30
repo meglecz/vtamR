@@ -60,11 +60,11 @@ knitr::opts_chunk$set(
 **Package version:** `r packageVersion("vtamR")`
 
 
-According to your wet lab and sequencing protocol, each FASTQ file may contain one or more [sample-replicates](tutorial-vtamr-pipeline.html#glossary). In addition, sequences may include [tags](tutorial-vtamr-pipeline.html#glossary) 
-(used for [demultiplexing](tutorial-vtamr-pipeline.html#glossary)) 
+According to your wet lab and sequencing protocol, each FASTQ file may contain one or more [sample-replicates](23-glossary.html#sample–replicate). In addition, sequences may include [tags](23-glossary.html#tag) 
+(used for [demultiplexing](23-glossary.html#demultiplexing)) 
 as well as primer sequences.
 
-In the following sections, we present **three common scenarios** for generating the [read_count_df](tutorial-vtamr-pipeline.html#read_count_df) data frame, 
+In the following sections, we present **three common scenarios** for generating the [read_count_df](21-ref-io-formats.html#read_count_df) data frame, 
 which serves as the input for the filtering steps.
 
 # Set up
@@ -77,8 +77,8 @@ library(vtamR)
 
 If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.
 
-**Adapt the path** to third party programs according to your installation
-(See [Installation](installation.html)).
+**Adapt the path** to third party programs according to your installation.
+See the [detailed tutorial on how to set the PATH](20-best-practices.html#set-path) for more information.
 
 ```{r, eval=FALSE}
 options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
@@ -92,12 +92,10 @@ options(vtamR.cutadapt_path = "~/miniconda3/envs/vtam_benchmark/bin/cutadapt")
 options(vtamR.pigz_path = "~/miniconda3/envs/vtam/bin/pigz")
 ```
 
-See the [detailed tutorial on how to set the PATH](tutorial-vtamr-pipeline.html#set-path) for more information.
-
 `compress = FALSE` In the tutorial we will use uncompressed files, but see
-[To compress or not to compress](tutorial-vtamr-pipeline.html#to-compress-or-not-to-compress)
+[To compress or not to compress](20-best-practices.html#to-compress-or-not-to-compress)
 for the best strategy for you. 
-See also [Files to keep](tutorial-vtamr-pipeline.html#files-to-keep) on how to handle the 
+See also [Files to keep](20-best-practices.html#files-to-keep) on how to handle the 
 large intermediate files that should be compressed or deleted once the analyses are complete.
 
 
@@ -121,7 +119,7 @@ correct parameters for quality filtering.
 
 Set output directory and log life
 ```{r}
-outdir <- "vtamR_demo_case1"
+outdir <- file.path("vtamR_demo_out", "preprocessing_case1")
 # set package option to define the log_file
 options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
 ```
@@ -138,11 +136,11 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo1.csv", package = "vtamR")
 
 ## Merge Fastq File Pairs and Quality Filter Reads
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): is either a csv file, or a data frame. The key 
+* [fastqinfo](21-ref-io-formats.html#fastqinfo): is either a csv file, or a data frame. The key 
 information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
 The `tag_fw`, `primer_fw`, `tag_rv`, `primer_rv` are irrelevant in this case, 
 just fill them with `NA`.
-* [sampleinfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. It is the updated 
+* [sampleinfo_df](21-ref-io-formats.html#fastainfo): Output of `merge_fastq_pairs`. It is the updated 
 version of fastqinfo, where fastq file names have been replaced by fasta file 
 names and the read counts are included for each file. 
 
@@ -161,11 +159,11 @@ sampleinfo_df <- merge_fastq_pairs(
 ## Dereplicate reads
 
 The fasta files produced by `merge_fastq_pairs` can be read to a data frame and be 
-[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `dereplicate` function.
-See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
+[dereplicated](23-glossary.html#dereplication) by the `dereplicate` function.
+See the help (`?dereplicate`) and [tutorial](04-tutorial-in-depth.html#dereplicate) more
 more information.
 
-* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+* [read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with
 `asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
 It is also written to CSV file if the `outfile` is defined.
 
@@ -200,7 +198,7 @@ See the help (`?trim_primer`) for setting the correct parameters for primer trim
 
 **Set output directory and log life**
 ```{r}
-outdir <- "vtamR_demo_case2"
+outdir <- file.path("vtamR_demo_out", "preprocessing_case2")
 # set package option to define the log_file
 options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
 ```
@@ -217,10 +215,10 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo2.csv", package = "vtamR")
 
 ## Merge Fastq File Pairs and Quality Filter Reads
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame.  
+* [fastqinfo](21-ref-io-formats.html#fastqinfo): Either a csv file, or a data frame.  
 The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged. 
 The `primer_fw`, `primer_rv` columns are irrelevant in this case, just fill them with `NA`.
-* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): is the output of `merge_fastq_pairs`. 
+* [fastainfo_df](21-ref-io-formats.html#fastainfo): is the output of `merge_fastq_pairs`. 
 It is the updated version of `fastqinfo`, where fastq file names have been 
 replaced by fasta file names containing the merged sequences.
 
@@ -256,11 +254,11 @@ sampleinfo_df <- trim_primers(
 ## Dereplicate
 
 The fasta files produced by `trim_primers` can be read to a data frame and be 
-[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `dereplicate` function.
-See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
+[dereplicated](23-glossary.html#dereplication) by the `dereplicate` function.
+See the help (`?dereplicate`) and [tutorial](04-tutorial-in-depth.html#dereplicate) more
 more information.
 
-* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+* [read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with
 `asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
 It is also written to CSV file if the `outfile` is defined.
 
@@ -286,8 +284,8 @@ Read pairs should be **quality filtered**, **merged** and written to **fasta for
 in the previous sections.
 
 Then the `demultiplex_and_trim_fasta` function will 
-**[demultiplex](tutorial-vtamr-pipeline.html#glossary)** the fasta 
-files according to the **[tag](tutorial-vtamr-pipeline.html#glossary)** combinations and **[trim](tutorial-vtamr-pipeline.html#glossary)** 
+**[demultiplex](23-glossary.html#demultiplexing)** the fasta 
+files according to the **[tag](23-glossary.html#tag)** combinations and **[trim](23-glossary.html#trimming)** 
 the primers from the reads. 
 
 See the help (`?demultiplex_and_trim_fasta`) for setting the 
@@ -297,7 +295,7 @@ correct parameters for demultiplexing and primer trimming:
 
 **Set output directory and log life**
 ```{r}
-outdir <- "vtamR_demo_case3a"
+outdir <- file.path("vtamR_demo_out", "preprocessing_cas3a1")
 # set package option to define the log_file
 options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
 ```
@@ -315,9 +313,9 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "v
 
 ### Merge Fastq File Pairs and Quality Filter Reads
 
-* [fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo): Either a csv file, or a data frame. 
+* [fastqinfo](21-ref-io-formats.html#fastqinfo): Either a csv file, or a data frame. 
 The key information for `merge_fastq_pairs` is the list of the fastq file pairs that should be merged.
-* [fastainfo_df](tutorial-vtamr-pipeline.html#fastainfo): Output of `merge_fastq_pairs`. 
+* [fastainfo_df](21-ref-io-formats.html#fastainfo): Output of `merge_fastq_pairs`. 
 It is the updated version of `fastqinfo`, where fastq file names have been 
 replaced by fasta file names.
 
@@ -352,11 +350,11 @@ sampleinfo_df <- demultiplex_and_trim_fasta(
 ### Dereplicate
 
 The fasta files produced by `demultiplex_and_trim_fasta` can be read to a data frame and be 
-[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `Dereplicate` function.
-See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
+[dereplicated](23-glossary.html#dereplication) by the `Dereplicate` function.
+See the help (`?dereplicate`) and [tutorial](04-tutorial-in-depth.html#dereplicate) more
 more information.
 
-* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+* [read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with
 `asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
 It is also written to CSV file if the `outfile` is defined.
 
@@ -394,7 +392,7 @@ appropriate parameters for demultiplexing and primer trimming.
 
 **Set output directory and log life**
 ```{r}
-outdir <- "vtamR_demo_case3b"
+outdir <- file.path("vtamR_demo_out", "preprocessing_case3b")
 # set package option to define the log_file
 options(vtamR.log_file =  file.path(outdir, "vtamR_log.csv"))
 ```
@@ -412,7 +410,7 @@ fastqinfo <-  system.file("extdata/demo/fastqinfo_mfzr_plate1.csv", package = "v
 
 ### Demultiplex, Trim off Tags and Primers and keep fastq format
 
-* **`fastqinfo`** ([fastqinfo](tutorial-vtamr-pipeline.html#fastqinfo)): 
+* **`fastqinfo`** ([fastqinfo](21-ref-io-formats.html#fastqinfo)): 
 Either a CSV file or a data frame. For `demultiplex_and_trim_fastq`, the key 
 information includes the list of FASTQ file pairs to be demultiplexed,
 as well as the primer and tag sequences associated with each sample-replicate combination..
@@ -451,11 +449,11 @@ sampleinfo_df <- merge_fastq_pairs(
 ### Dereplicate
 
 The fasta files produced by `merge_fastq_pairs` can be read to a data frame and be 
-[dereplicated](tutorial-vtamr-pipeline.html#glossary) by the `Dereplicate` function.
-See the help (`?dereplicate`) and [tutorial](tutorial-vtamr-pipeline.html#dereplicate) more
+[dereplicated](23-glossary.html#dereplication) by the `Dereplicate` function.
+See the help (`?dereplicate`) and [tutorial](04-tutorial-in-depth.html#dereplicate) more
 more information.
 
-* [read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with
+* [read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with
 `asv`, `asv_id`,`sample`, `replicate`, (optional) and `read_count` columns.
 It is also written to CSV file if the `outfile` is defined.
 

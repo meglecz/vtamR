@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">vtamR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/14-howto-asv-id-across-datasets.html">Consistent ASV IDs across datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +81,7 @@
       <h1>Preprocessing: FASTQ to Data Frame</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/10-howto-fastq-to-df.Rmd" class="external-link"><code>vignettes/10-howto-fastq-to-df.Rmd</code></a></small>
       <div class="d-none name"><code>10-howto-fastq-to-df.Rmd</code></div>
@@ -115,9 +117,9 @@ table {
   box-sizing: border-box;
 }
 </style>
-<p><strong>Package version:</strong> 2.0.0.9001</p>
-<p>According to your wet lab and sequencing protocol, each FASTQ file may contain one or more <a href="tutorial-vtamr-pipeline.html#glossary">sample-replicates</a>. In addition, sequences may include <a href="tutorial-vtamr-pipeline.html#glossary">tags</a> (used for <a href="tutorial-vtamr-pipeline.html#glossary">demultiplexing</a>) as well as primer sequences.</p>
-<p>In the following sections, we present <strong>three common scenarios</strong> for generating the <a href="tutorial-vtamr-pipeline.html#read_count_df">read_count_df</a> data frame, which serves as the input for the filtering steps.</p>
+<p><strong>Package version:</strong> 2.0.0.9002</p>
+<p>According to your wet lab and sequencing protocol, each FASTQ file may contain one or more <a href="23-glossary.html#sample%E2%80%93replicate">sample-replicates</a>. In addition, sequences may include <a href="23-glossary.html#tag">tags</a> (used for <a href="23-glossary.html#demultiplexing">demultiplexing</a>) as well as primer sequences.</p>
+<p>In the following sections, we present <strong>three common scenarios</strong> for generating the <a href="21-ref-io-formats.html#read_count_df">read_count_df</a> data frame, which serves as the input for the filtering steps.</p>
 <div class="section level2">
 <h2 id="set-up">Set up<a class="anchor" aria-label="anchor" href="#set-up"></a>
 </h2>
@@ -125,13 +127,12 @@ table {
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span></code></pre></div>
 <p>If the third-party tools are not in your PATH, set the corresponding package options and specify the correct path to each tool.</p>
-<p><strong>Adapt the path</strong> to third party programs according to your installation (See <a href="installation.html">Installation</a>).</p>
+<p><strong>Adapt the path</strong> to third party programs according to your installation. See the <a href="20-best-practices.html#set-path">detailed tutorial on how to set the PATH</a> for more information.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.vsearch_path <span class="op">=</span> <span class="st">"C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.cutadapt_path <span class="op">=</span> <span class="st">"C:/Users/Public/cutadapt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.pigz_path <span class="op">=</span> <span class="st">"C:/Users/Public/pigz-win32/pigz"</span><span class="op">)</span></span></code></pre></div>
-<p>See the <a href="tutorial-vtamr-pipeline.html#set-path">detailed tutorial on how to set the PATH</a> for more information.</p>
-<p><code>compress = FALSE</code> In the tutorial we will use uncompressed files, but see <a href="tutorial-vtamr-pipeline.html#to-compress-or-not-to-compress">To compress or not to compress</a> for the best strategy for you. See also <a href="tutorial-vtamr-pipeline.html#files-to-keep">Files to keep</a> on how to handle the large intermediate files that should be compressed or deleted once the analyses are complete.</p>
+<p><code>compress = FALSE</code> In the tutorial we will use uncompressed files, but see <a href="20-best-practices.html#to-compress-or-not-to-compress">To compress or not to compress</a> for the best strategy for you. See also <a href="20-best-practices.html#files-to-keep">Files to keep</a> on how to handle the large intermediate files that should be compressed or deleted once the analyses are complete.</p>
 </div>
 <div class="section level2">
 <h2 id="case-1---one-sample-per-fastq---no-tag---no-primer">Case 1 - One sample per fastq - No tag - No primer<a class="anchor" aria-label="anchor" href="#case-1---one-sample-per-fastq---no-tag---no-primer"></a>
@@ -145,7 +146,7 @@ table {
 </h3>
 <p>Set output directory and log life</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="st">"vtamR_demo_case1"</span></span>
+<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"preprocessing_case1"</span><span class="op">)</span></span>
 <span><span class="co"># set package option to define the log_file</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and file names</strong>.</p>
@@ -158,9 +159,9 @@ table {
 </h3>
 <ul>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: is either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged. The <code>tag_fw</code>, <code>primer_fw</code>, <code>tag_rv</code>, <code>primer_rv</code> are irrelevant in this case, just fill them with <code>NA</code>.</li>
+<a href="21-ref-io-formats.html#fastqinfo">fastqinfo</a>: is either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged. The <code>tag_fw</code>, <code>primer_fw</code>, <code>tag_rv</code>, <code>primer_rv</code> are irrelevant in this case, just fill them with <code>NA</code>.</li>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastainfo">sampleinfo_df</a>: Output of <code>merge_fastq_pairs</code>. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names and the read counts are included for each file.</li>
+<a href="21-ref-io-formats.html#fastainfo">sampleinfo_df</a>: Output of <code>merge_fastq_pairs</code>. It is the updated version of fastqinfo, where fastq file names have been replaced by fasta file names and the read counts are included for each file.</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span>
@@ -175,9 +176,9 @@ table {
 <div class="section level3">
 <h3 id="dereplicate-reads">Dereplicate reads<a class="anchor" aria-label="anchor" href="#dereplicate-reads"></a>
 </h3>
-<p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
+<p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="23-glossary.html#dereplication">dereplicated</a> by the <code>dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="04-tutorial-in-depth.html#dereplicate">tutorial</a> more more information.</p>
 <ul>
-<li>[read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
+<li>[read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
 </ul>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -201,7 +202,7 @@ table {
 </h3>
 <p><strong>Set output directory and log life</strong></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="st">"vtamR_demo_case2"</span></span>
+<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"preprocessing_case2"</span><span class="op">)</span></span>
 <span><span class="co"># set package option to define the log_file</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and file names</strong>.</p>
@@ -214,10 +215,10 @@ table {
 </h3>
 <ul>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame.<br>
+<a href="21-ref-io-formats.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame.<br>
 The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged. The <code>primer_fw</code>, <code>primer_rv</code> columns are irrelevant in this case, just fill them with <code>NA</code>.</li>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>: is the output of <code>merge_fastq_pairs</code>. It is the updated version of <code>fastqinfo</code>, where fastq file names have been replaced by fasta file names containing the merged sequences.</li>
+<a href="21-ref-io-formats.html#fastainfo">fastainfo_df</a>: is the output of <code>merge_fastq_pairs</code>. It is the updated version of <code>fastqinfo</code>, where fastq file names have been replaced by fasta file names containing the merged sequences.</li>
 </ul>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span>
@@ -251,9 +252,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <div class="section level3">
 <h3 id="dereplicate">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate"></a>
 </h3>
-<p>The fasta files produced by <code>trim_primers</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
+<p>The fasta files produced by <code>trim_primers</code> can be read to a data frame and be <a href="23-glossary.html#dereplication">dereplicated</a> by the <code>dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="04-tutorial-in-depth.html#dereplicate">tutorial</a> more more information.</p>
 <ul>
-<li>[read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
+<li>[read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
 </ul>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -273,14 +274,14 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <h3 id="case-3a-merge---demultiplex">Case 3a Merge - demultiplex<a class="anchor" aria-label="anchor" href="#case-3a-merge---demultiplex"></a>
 </h3>
 <p>Read pairs should be <strong>quality filtered</strong>, <strong>merged</strong> and written to <strong>fasta format</strong> as in the previous sections.</p>
-<p>Then the <code>demultiplex_and_trim_fasta</code> function will <strong><a href="tutorial-vtamr-pipeline.html#glossary">demultiplex</a></strong> the fasta files according to the <strong><a href="tutorial-vtamr-pipeline.html#glossary">tag</a></strong> combinations and <strong><a href="tutorial-vtamr-pipeline.html#glossary">trim</a></strong> the primers from the reads.</p>
+<p>Then the <code>demultiplex_and_trim_fasta</code> function will <strong><a href="23-glossary.html#demultiplexing">demultiplex</a></strong> the fasta files according to the <strong><a href="23-glossary.html#tag">tag</a></strong> combinations and <strong><a href="23-glossary.html#trimming">trim</a></strong> the primers from the reads.</p>
 <p>See the help (<code><a href="../reference/demultiplex_and_trim_fasta.html">?demultiplex_and_trim_fasta</a></code>) for setting the correct parameters for demultiplexing and primer trimming:</p>
 <div class="section level4">
 <h4 id="set-input-2">Set Input<a class="anchor" aria-label="anchor" href="#set-input-2"></a>
 </h4>
 <p><strong>Set output directory and log life</strong></p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="st">"vtamR_demo_case3a"</span></span>
+<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"preprocessing_cas3a1"</span><span class="op">)</span></span>
 <span><span class="co"># set package option to define the log_file</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The demo files below are included with the <code>vtamR</code> package, which is why we use <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> to access them in this tutorial. When using your own data, simply provide the file and directory names (e.g. <code>~/vtamR/fastq</code>). Make sure there is <strong>no space in the path and file names</strong>.</p>
@@ -293,9 +294,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 </h4>
 <ul>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged.</li>
+<a href="21-ref-io-formats.html#fastqinfo">fastqinfo</a>: Either a csv file, or a data frame. The key information for <code>merge_fastq_pairs</code> is the list of the fastq file pairs that should be merged.</li>
 <li>
-<a href="tutorial-vtamr-pipeline.html#fastainfo">fastainfo_df</a>: Output of <code>merge_fastq_pairs</code>. It is the updated version of <code>fastqinfo</code>, where fastq file names have been replaced by fasta file names.</li>
+<a href="21-ref-io-formats.html#fastainfo">fastainfo_df</a>: Output of <code>merge_fastq_pairs</code>. It is the updated version of <code>fastqinfo</code>, where fastq file names have been replaced by fasta file names.</li>
 </ul>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">merged_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"merged"</span><span class="op">)</span></span>
@@ -328,9 +329,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <div class="section level4">
 <h4 id="dereplicate-1">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-1"></a>
 </h4>
-<p>The fasta files produced by <code>demultiplex_and_trim_fasta</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
+<p>The fasta files produced by <code>demultiplex_and_trim_fasta</code> can be read to a data frame and be <a href="23-glossary.html#dereplication">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="04-tutorial-in-depth.html#dereplicate">tutorial</a> more more information.</p>
 <ul>
-<li>[read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
+<li>[read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
 </ul>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>
@@ -354,7 +355,7 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 </h4>
 <p><strong>Set output directory and log life</strong></p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="st">"vtamR_demo_case3b"</span></span>
+<code class="sourceCode R"><span><span class="va">outdir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"preprocessing_case3b"</span><span class="op">)</span></span>
 <span><span class="co"># set package option to define the log_file</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>vtamR.log_file <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"vtamR_log.csv"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The example files used below are included with the <code>vtamR</code> package, which is why we use <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code> to access them in this tutorial. When using your own data, simply provide the appropriate file and directory paths (e.g., <code>~/vtamR/fastq</code>). Make sure that there are <strong>no spaces in file or directory names</strong>.</p>
@@ -367,7 +368,7 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 </h4>
 <ul>
 <li>
-<strong><code>fastqinfo</code></strong> (<a href="tutorial-vtamr-pipeline.html#fastqinfo">fastqinfo</a>): Either a CSV file or a data frame. For <code>demultiplex_and_trim_fastq</code>, the key information includes the list of FASTQ file pairs to be demultiplexed, as well as the primer and tag sequences associated with each sample-replicate combination..</li>
+<strong><code>fastqinfo</code></strong> (<a href="21-ref-io-formats.html#fastqinfo">fastqinfo</a>): Either a CSV file or a data frame. For <code>demultiplex_and_trim_fastq</code>, the key information includes the list of FASTQ file pairs to be demultiplexed, as well as the primer and tag sequences associated with each sample-replicate combination..</li>
 </ul>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demultiplexed_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"demultiplexed"</span><span class="op">)</span></span>
@@ -402,9 +403,9 @@ The key information for <code>merge_fastq_pairs</code> is the list of the fastq 
 <div class="section level4">
 <h4 id="dereplicate-2">Dereplicate<a class="anchor" aria-label="anchor" href="#dereplicate-2"></a>
 </h4>
-<p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="tutorial-vtamr-pipeline.html#glossary">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="tutorial-vtamr-pipeline.html#dereplicate">tutorial</a> more more information.</p>
+<p>The fasta files produced by <code>merge_fastq_pairs</code> can be read to a data frame and be <a href="23-glossary.html#dereplication">dereplicated</a> by the <code>Dereplicate</code> function. See the help (<code><a href="../reference/dereplicate.html">?dereplicate</a></code>) and <a href="04-tutorial-in-depth.html#dereplicate">tutorial</a> more more information.</p>
 <ul>
-<li>[read_count_df]((tutorial-vtamr-pipeline.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
+<li>[read_count_df]((21-ref-io-formats.html#read_count_df): Data frame with <code>asv</code>, <code>asv_id</code>,<code>sample</code>, <code>replicate</code>, (optional) and <code>read_count</code> columns. It is also written to CSV file if the <code>outfile</code> is defined.</li>
 </ul>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"1_before_filter.csv"</span><span class="op">)</span></span>

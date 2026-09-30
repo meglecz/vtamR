@@ -72,7 +72,7 @@ Each line corresponds to a sample–replicate combination.
 * `tag_rv`: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
 * `primer_rv`: Reverse primer (NA if primer has been trimmed)
 * `sample`: Name of the sample (alpha-numerical)
-* `sample_type`: [real/mock/negative](#glossary)
+* `sample_type`: [real/mock/negative](23-glossary.html#sample_type)
 * `habitat`: If real or mock samples are from different habitats that cannot
   contain the same type of organisms (e.g. terrestrial vs. marine),
   this information is used for detecting false positives.
@@ -93,7 +93,7 @@ Each line corresponds to a sample–replicate combination.
 * `tag_rv`: Sequence tag on the 3' of the rv read (NA if file is already demultiplexed)
 * `primer_rv`: Reverse primer (NA if primer has been trimmed)
 * `sample`: Name of the sample (alpha-numerical)
-* `sample_type`: [real/mock/negative](#glossary)
+* `sample_type`: [real/mock/negative](23-glossary.html#sample_type)
 * `habitat`: If real or mock samples are from different habitats that
   cannot contain the same type of organisms (e.g. terrestrial vs. marine),
   this information is used for detecting false positives. Use NA otherwise.
@@ -109,7 +109,7 @@ and samples with the following columns. Each line corresponds to a
 sample–replicate combination.
 
 * `sample`: Name of the sample (alpha-numerical)
-* `sample_type`: [real/mock/negative](#glossary)
+* `sample_type`: [real/mock/negative](23-glossary.html#sample_type)
 * `habitat`: If real or mock samples are from different habitats that
   cannot contain the same type of organisms (e.g. terrestrial vs. marine),
   this information is used for detecting false positives. Use NA otherwise.
@@ -122,15 +122,15 @@ sample–replicate combination.
 
 CSV file with the following columns.
 
-* `sample`: Name of the [mock](#glossary) sample
+* `sample`: Name of the [mock]23-glossary.html#mock-sample) sample
 * `action`:
 
   * keep: Expected ASV in the mock, that should be kept in the data set
   * tolerate: ASV that can be present in a mock, but it is not essential
     to keep it in the data set (e.g. badly amplified organism)
-* [asv](#glossary): sequence of the ASV
+* [asv](23-glossary.html#asv): sequence of the ASV
 * `taxon`: Optional; Name of the organism
-* [asv_id](#glossary): Optional; If there is a conflict between
+* [asv_id](23-glossary.html#asv_id): Optional; If there is a conflict between
   asv and asv_id, the asv_id is ignored
   
 ## reference_mock_fasta
@@ -152,7 +152,7 @@ The `taxID` must correspond to an entry in the
 
 CSV file or data frame with the following columns.
 
-* [sample](#glossary): Name of the sample
+* [sample](23-glossary.html#sample): Name of the sample
 * `action`:
 
   * keep: Expected ASVs in a mock sample (corresponds to True Positives)
@@ -160,8 +160,8 @@ CSV file or data frame with the following columns.
     all occurrences in negative controls; occurrences in real samples
     corresponding to an incompatible habitats (e.g. an ASV mostly present
     in marine samples is unexpected in a freshwater sample)
-* [asv_id](#glossary): optional
-* [asv](#glossary): sequence of the ASV
+* [asv_id](23-glossary.html#asv_id): optional
+* [asv](23-glossary.html#asv): sequence of the ASV
 
 ## asv_list
 
@@ -170,20 +170,20 @@ This file lists ASVs and their IDs from earlier data sets. When provided
 same ID. New ASVs (not present in asv_list) will get unique IDs not present in asv_list.
 It is a CSV file with the following columns:
 
-* [asv_id](#glossary): Unique numerical ID of the ASV
-* [asv](#glossary): ASV sequence
+* [asv_id](23-glossary.html#asv_id): Unique numerical ID of the ASV
+* [asv](23-glossary.html#asv): ASV sequence
 
 ## read_count_df
 
 Data frame with the following columns:
 
-* [asv](#glossary): Sequence of the ASV
-* [asv_id](#glossary): Numerical ID of the ASV
-* [sample](#glossary): Sample name
-* [replicate](#glossary): Replicate within sample (Numerical; optional)
+* [asv](23-glossary.html(#asv): Sequence of the ASV
+* [asv_id](23-glossary.html#asv_id): Numerical ID of the ASV
+* [sample](23-glossary.html#sample): Sample name
+* [replicate](23-glossary.html#replicate): Replicate within sample (Numerical; optional)
 * `read_count`: Number of reads of the ASV in the Sample–Replicate
 
-## Reference database for taxonomic assignments with `assign_taxonomy_ltg`
+## Reference database for taxonomic assignments with `assign_taxonomy_ltg`{#ref_db}
 
 A data base is composed of two elements: a BLAST database (`blast_db`)
 and a `taxonomy` file.
@@ -196,7 +196,7 @@ makeblastdb -dbtype nucl -in [FASTA_FILE] -parse_seqids -taxid_map [TAXID_FILE] 
 
 * FASTA_FILE is a fasta file containing reference sequences.
 * TAXID_FILE is a tab separated file with sequence IDs and the
-  corresponding numerical [taxIDs](#glossary).
+  corresponding numerical [taxIDs](23-glossary.html#taxids).
 * DB_NAME is the name of the newly created BLAST database.
 
 `taxonomy` is a **tab separated** csv file with the following columns:
@@ -220,4 +220,4 @@ file can be downloaded from [https://osf.io/vrfwz/](https://osf.io/vrfwz/).
 It was created using [mkCOInr](https://github.com/meglecz/mkCOInr).
 It is also possible to make a [customized database](https://mkcoinr.readthedocs.io/en/latest/content/tutorial.html#customize-database)
 using mkCOInr. It can be downloaded and extracted manually or by using the
-`download_osf` function of vtamR. See [Installation](installation.html).
+`download_osf` function of vtamR. See [Installation](01-installation.html).

@@ -2511,7 +2511,7 @@ get_path <- function(program, path = NULL){
 #' download_tutorial_output(dest = "my_vtamR_project/")
 #'
 #' # Fetch an older snapshot matching an older tutorial
-#' download_tutorial_output(tag = "short-tutorial-output-v0")
+#' download_tutorial_output(tag = "tutorial-output-v0")
 #' }
 #'
 #' @seealso
@@ -2520,8 +2520,8 @@ get_path <- function(program, path = NULL){
 #'
 #' @export
 download_tutorial_output <- function(dest = tempdir(),
-                             tag = "short-tutorial-output-v1",
-                             filename = "short_tutorial_output.zip",
+                             tag = "tutorial-output-v1",
+                             filename = "tutorial_output.zip",
                              overwrite = FALSE) {
   
   if (!dir.exists(dest)) dir.create(dest, recursive = TRUE)

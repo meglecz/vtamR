@@ -59,8 +59,7 @@ knitr::opts_chunk$set(
 
 **Package version:** `r packageVersion("vtamR")`
 
-# COMPLETE and place this later
-```{r, eval=TRUE}
+```{r, eval=TRUE, echo=FALSE}
 library(vtamR)
 ```
 
@@ -121,7 +120,7 @@ suggest_pcr_error_cutoff_df <- suggest_pcr_error_cutoff(
   )
 ```
 
-> **Tip:** If you do not yet have the exact sequences for your mock samples, see [How to make a mock_composition file](make-mock-composition-file.html) before running this function.
+> **Tip:** If you do not yet have the exact sequences for your mock samples, see [How to make a mock_composition file](11-howto-mock-composition-file.html) before running this function.
 
 ## `subsample_fasta` {#subsample_fasta}
 
@@ -238,7 +237,7 @@ is not in memory, use the **sampleinfo CSV file** in `vtamR_demo_out/demultiplex
 
 **Notes**
 
-* If you do **not** know the exact sequences in your mock samples, you will need the **[mock_composition](#mock_composition) file** before running this function. See [How to make a mock_composition file](make-mock-composition-file.html) for guidance.
+* If you do **not** know the exact sequences in your mock samples, you will need the **[mock_composition](21-ref-io-formats.html#mock_composition) file** before running this function. See [How to make a mock_composition file](11-howto-mock-composition-file.html) for guidance.
 * This function is particularly useful to assess the performance of filtering steps.
  
 ```{r make-known-occurrences, eval=FALSE}
@@ -257,7 +256,7 @@ performance_metrics_df <- results[[3]]
 
 Some ASVs may appear in many samples with high read counts, 
 which can make them resistant to a fixed cutoff in `filter_occurrence_variant`.
-This can occur due to **[tag-jump](#glossary)** or inter-sample contamination.
+This can occur due to **[tag-jump](23-glossary.html#tag-jump)** or inter-sample contamination.
 
 The `compute_asv_specific_cutoff` function computes ASV-specific cutoff values 
 for variants with known false-positive occurrences (identified by `classify_control_occurrences`), so filtering can be more targeted.
@@ -304,7 +303,8 @@ read_count_df <- filter_occurrence_variant(
   )
 ```
 
-* A warning is issued if less than `min_read_count_prop` of reads remain for some ASVs after filtering. This suggests the cutoff may be too high and should be reduced.
+* A warning is issued if less than `min_read_count_prop` of reads remain for some ASVs after filtering. 
+This suggests the cutoff may be too high and should be reduced.
 
 **Combining Global and ASV-Specific Cutoffs**
 
@@ -398,7 +398,7 @@ specific features (ASVs, samples, or replicates) across multiple filtering steps
 
 * Scans all files in a directory (`dir`) whose names match a `pattern` (by default 
 start with a number).
-  These are typically the outputs from different [filtering steps](#filtering).
+  These are typically the outputs from different [filtering steps](04-tutorial-in-depth.html#filtering).
 * Selects all rows where the selected **feature** matches any of the **values** provided in a vector.
 **Key Arguments**
 
@@ -410,17 +410,16 @@ start with a number).
 **Examples**
 ```{r, echo=FALSE, eval=TRUE, message=FALSE}
 download_tutorial_output(dest = "tmp_outdir")
-filter_dir <- file.path("tmp_outdir", "short_tutorial_output", "4_filter")
+filter_dir <- file.path("tmp_outdir", "tutorial_output", "4_filter")
 ```
 
 ```{r, eval=FALSE}
-filter_dir <- file.path("vtamR_demo_out", "QuickStart_mfzr_plate1", "4_filter")
+filter_dir <- file.path("vtamR_demo_out", "tutorial_output", "4_filter")
 ```
 
 
 *Get the history of asv_id (`feature`) 27 (`value`).*
 ```{r, eval=TRUE}
-filter_dir <- file.path("vtamR_demo_out", "QuickStart_mfzr_plate1", "4_filter")
 tmp_ASV <- history_by(dir = filter_dir, 
                         feature = "asv_id", 
                         values = c(4, 27)
@@ -460,7 +459,7 @@ across filtering steps.
 
 * Scans all files in a directory (`dir`) whose names match a pattern
 (by default, start with a number)
-  (i.e. outputs from the different [filtering steps](#filtering)).
+  (i.e. outputs from the different [filtering steps](04-tutorial-in-depth.html#filtering)).
 
 * For each file, it:
 
@@ -512,8 +511,8 @@ asvid_by_replicate <- summarize_by(
 knitr::kable(asvid_by_replicate, format = "markdown")
 ```
 
-```{r}
-unlink(tmp_outdir, recursive = TRUE)
+```{r, echo = FALSE, eval=TRUE}
+unlink("tmp_outdir", recursive = TRUE)
 ```
 
 ## `update_asv_list` {#update_asv_list}
@@ -600,6 +599,20 @@ read_count_samples_df <- pool_replicates(
   )
 ```
 
+## `count_reads_batch` {#count_reads_batch}
+
+The `count_reads_batch` function reads an information file listing the paths to FASTA files or paired-end FASTQ files. It counts the sequences in each unique file or file pair and appends the read counts to the information table.
+
+This function is particularly useful for counting the reads in raw FASTQ files.
+
+```{r count_reads_batch, eval=FALSE}
+counts <- count_reads_batch(
+  info = "fastq_info.csv",
+  dir = "data/fastq",
+  outfile = "fastq_info_with_counts.csv"
+)
+```
+
 ## `count_reads_in_dir` {#count_reads_in_dir}
 
 The `count_reads_in_dir` function counts the number of reads 
@@ -608,7 +621,7 @@ It works with both **compressed (`.gz`)** and **uncompressed** files,
 but `.zip` files are not supported.
 
 In most cases, you do not need to use this function during a standard workflow.
-The [fastainfo](#fastainfo) and [sampleinfo](#sampleinfo) files already 
+The [fastainfo](21-ref-io-formats.html#fastainfo) and [sampleinfo](21-ref-io-formats.html#sampleinfo) files already 
 include read counts after `merge_fastq_pairs` and `demultiplex_and_trim_fasta`.
 
 However, this function can be useful if you want to check the number of 

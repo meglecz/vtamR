@@ -44,7 +44,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +80,7 @@
       <h1>Input/Output Formats</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/22-ref-io-formats.Rmd" class="external-link"><code>vignettes/22-ref-io-formats.Rmd</code></a></small>
       <div class="d-none name"><code>22-ref-io-formats.Rmd</code></div>
@@ -267,7 +268,7 @@ table {
 </ul>
 </div>
 <div class="section level3">
-<h3 id="reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">Reference database for taxonomic assignments with <code>assign_taxonomy_ltg</code><a class="anchor" aria-label="anchor" href="#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg"></a>
+<h3 id="reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg">Reference database for taxonomic assignments with <code id="ref_db">assign_taxonomy_ltg</code><a class="anchor" aria-label="anchor" href="#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg"></a>
 </h3>
 <p>A data base is composed of two elements: a BLAST database (<code>blast_db</code>) and a <code>taxonomy</code> file.</p>
 <p><code>blast_db</code> can be produced using the <code>makeblastdb</code> command of BLAST:</p>

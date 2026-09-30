@@ -1,0 +1,208 @@
+---
+title: "Choose Parameters for Occurrence Filters"
+author: Emese Meglécz
+date:  "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{Choose Parameters for Occurrence Filters}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+/* Block console output (<pre>) scrolls horizontally AND vertically */
+pre {
+  white-space: pre !important;        /* preserve spacing, no wrapping */
+  overflow-x: auto !important;        /* horizontal scroll */
+  overflow-y: auto !important;        /* vertical scroll */
+  display: block;
+  max-width: 100%;
+  max-height: 500px;                  /* adjust height limit if you want */
+  box-sizing: border-box;
+}
+
+/* Ensure code inside <pre> also stays fixed and scrollable */
+pre code {
+  white-space: pre !important;
+}
+
+/* TABLES: prevent wrapping, allow horizontal AND vertical scroll */
+table {
+  display: block;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  white-space: nowrap;                /* no wrapping of table cells */
+  max-width: 100%;
+  max-height: 500px;                  /* adjust as you like */
+  box-sizing: border-box;
+}
+</style>
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  echo=TRUE,
+  eval=TRUE,
+  cache=FALSE,
+  fig.width = 6,
+  out.width = '100%',
+  comment = "#>"
+)
+```
+
+**Package version:** `r packageVersion("vtamR")`
+
+
+
+```{r load-lib}
+library(vtamR)
+```
+
+# Cutoff for `filter_occurrence_sample` {#filter_occurrence_sample}
+
+The `filter_occurrence_sample` function removes **ASV occurrences with very low read counts** 
+relative to the total number of reads in a sample-replicate. The default cutoff proportion is **0.001**.
+
+The **`suggest_sample_cutoff`** function helps you choose a suitable `cutoff`. 
+For each expected ASV in your mock samples, it calculates:
+
+> number of reads of the expected ASV / total number of reads in the sample-replicate
+
+Set the cutoff **below the lowest of these proportions**, so that expected, 
+low-abundance ASVs are not accidentally removed.
+
+## Run `suggest_sample_cutoff` {#suggest_sample_cutoff}
+
+**Note:** If you don't yet know the exact sequences in your mock samples, and therefore **don't have a [mock_composition](21-ref-io-formats.html#mock_composition) file**, see [How to make a mock_composition file](11-howto-mock-composition-file.html).
+
+```{r suggest_sample_cutoff_mfzr, eval=TRUE, echo=TRUE}
+outdir <- file.path("vtamR_demo_out", "select_parameters")
+options(vtamR.log_file = file.path(outdir, "vtamR_log.csv"))
+
+read_count_file <- system.file("extdata/demo/8_filter_replicate_mfzr_plate1.csv", package = "vtamR")
+mock_composition_file <- system.file("extdata/demo/mock_composition_mfzr.csv", package = "vtamR")
+
+suggest_sample_cutoff_df <- suggest_sample_cutoff(
+  read_count = read_count_file,
+  mock_composition = mock_composition_file,
+  outfile = file.path(outdir, "suggest_sample_cutoff.csv")
+)
+
+knitr::kable(head(suggest_sample_cutoff_df), format = "markdown")
+```
+
+The rows of `suggest_sample_cutoff_df` are sorted by the `sample_cutoff` column in **increasing order**.
+
+* The **lowest proportion** of reads for an expected ASV in a sample-replicate is **0.0048** (*Caenis pusilla*, replicate 3 of the `tpos1` mock sample).
+* A `filter_occurrence_sample` cutoff **above this value** would remove some expected ASVs and create **false negatives**.
+* We therefore choose a cutoff of **0.004**.
+
+**Notes:**
+
+* The optimal threshold depends on the **complexity of your environmental samples**: the more taxa you expect, the **lower** the cutoff should be.
+* If all mock species amplify equally well, the minimum `sample_cutoff` can be fairly high. In that case, it is often safer to choose a **low, arbitrary value** (e.g. 0.001–0.005). In practice, however, **strong PCR amplification bias is common**, so mock communities in which all species amplify equally well are rare. When designing a mock community for a metabarcoding experiment, we recommend including **some species known to amplify relatively poorly**. This requires pre-testing and optimization, but ensures that your mock samples realistically reflect amplification biases before you analyze your environmental samples.
+* If some mock species yield only a few reads, representing a very low proportion of the reads in the sample, a **very low cutoff** (e.g. 1e-4) would mean accepting many false positives. In that case, it may be better to ignore these species when setting cutoffs and accept that they may be missing from the filtered dataset. To do this, edit the `mock_composition` file and set `action` to `tolerate` (instead of `keep`) for the corresponding ASVs. The presence or absence of these variants is then ignored: they are counted neither as false positives nor as false negatives in the [known_occurrences](21-ref-io-formats.html#known_occurrences) file used by `suggest_variant_readcount_cutoffs`.
+
+
+# Cutoffs for `filter_occurrence_variant` and `filter_occurrence_read_count` {#filter_occurrence_variant}
+
+The `filter_occurrence_variant` function removes occurrences with **low read counts relative to the total reads of their ASV**. The default cutoff proportion is **0.001**. This filter is mainly designed to remove spurious detections caused by **[tag-jumps](23-glossary.html#tag-jump)** or minor **cross-sample contamination**.
+
+The `filter_occurrence_read_count` function, in contrast, removes occurrences based on an **absolute read count threshold**. The default is **10**.
+
+## `suggest_variant_readcount_cutoffs`
+
+The **`suggest_variant_readcount_cutoffs`** function helps you find suitable cutoff values for both filters. It tests different combinations of cutoff values and evaluates the number of:
+
+* [false positives](23-glossary.html#fp) (FP)
+* [false negatives](23-glossary.html#fn) (FN)
+* [true positives](23-glossary.html#tp) (TP)
+
+**`known_occurrences_df`**
+
+To run `suggest_variant_readcount_cutoffs`, you need a [`known_occurrences`](21-ref-io-formats.html#known_occurrences) data frame od CSV file. 
+It lists the **true positive (TP)** and **false positive (FP)** occurrences in control samples and, in some cases, in real samples (identified because of an incompatible habitat).
+
+There are two ways to obtain `known_occurrences_df`.
+
+**1. Full control**
+
+Create it manually with the [`classify_control_occurrences`](22-ref-functions.html#classify_control_occurrences) function. You can then review or edit the resulting `known_occurrences_df` before using it as input for `suggest_variant_readcount_cutoffs`.
+
+**2. Automatic generation**
+
+Run `suggest_variant_readcount_cutoffs` with `known_occurrences = NULL` (the default) and provide:
+
+* `mock_composition`
+* `sampleinfo`
+* `habitat_proportion` (optional; see [`classify_control_occurrences`](22-ref-functions.html#classify_control_occurrences))
+
+The function then calls `classify_control_occurrences` automatically and uses its output to estimate the optimal cutoff values.
+
+All generated data frames are saved as **CSV files** in the directory specified by `outdir`.
+
+### Run `suggest_variant_readcount_cutoffs`
+
+Here we use the **automatic approach**, where `known_occurrences_df` is generated by `suggest_variant_readcount_cutoffs`.
+
+We use the **default range of cutoff values**, but you can adjust the minimum, maximum and step size for both filters (see `?suggest_variant_readcount_cutoffs`).
+
+We also set `min_replicate_number = 2` to remove occurrences that are not repeatable across the three replicates of each sample. This is equivalent to applying the `filter_min_replicate` filter.
+
+```{r suggest_variant_readcount_cutoffs}
+read_count_file <- system.file("extdata/demo/10_filter_min_replicate_mfzr_plate1.csv", package = "vtamR")
+mock_composition_file <- system.file("extdata/demo/mock_composition_mfzr.csv", package = "vtamR")
+sampleinfo_file <- system.file("extdata/demo/sampleinfo_mfzr_plate1.csv", package = "vtamR")
+
+suggest_variant_readcount_cutoffs_df <- suggest_variant_readcount_cutoffs(
+  read_count = read_count_file,
+  mock_composition = mock_composition_file,
+  sampleinfo = sampleinfo_file,
+  outdir = outdir,
+  min_replicate_number = 2
+)
+
+knitr::kable(head(suggest_variant_readcount_cutoffs_df), format = "markdown")
+```
+
+### Understanding the output
+
+The main result is a data frame that summarizes the performance of each cutoff combination. Rows are sorted by:
+
+1. increasing number of false negatives (FN),
+2. then increasing number of false positives (FP),
+3. then increasing `variant_cutoff`,
+4. then increasing `read_count_cutoff`.
+
+The **first row** therefore gives the best compromise: minimal FN and FP with the least stringent cutoff values.
+
+Based on this row, we set `read_count_cutoff` to 10 and `variant_cutoff` to 0.001.
+
+### Filtering
+Both cutoffs apply to the same input dataset. `filter_occurrence_variant` and `filter_occurrence_read_count` are run independently on the same input data, and `pool_filters` then keeps only the occurrences that passed **both** filters.
+
+```{r filter_variant_readcount}
+read_count_df_variant <- filter_occurrence_variant(
+  read_count = read_count_file,
+  cutoff = 0.001
+)
+
+read_count_df_rc <- filter_occurrence_read_count(
+  read_count = read_count_file,
+  cutoff = 10
+)
+
+read_count_df <- pool_filters(
+  read_count_df_rc,
+  read_count_df_variant
+)
+```
+
+

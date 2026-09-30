@@ -23,8 +23,12 @@ navbar:
           href: articles/10-howto-fastq-to-df.html
         - text: Create a Mock Composition File
           href: articles/11-howto-mock-composition-file.html
+        - text: Choose Parameters for Occurrence Filters
+          href: articles/12-howto-select-parameters.html
         - text: Pool Multiple Datasets
-          href: articles/12-howto-pool-datasets.html
+          href: articles/13-howto-pool-datasets.html
+        - text: Consistent ASV IDs across datasets
+          href: articles/14-howto-asv-id-across-datasets.html
     reference:
       text: Reference
       menu:

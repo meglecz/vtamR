@@ -44,7 +44,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-how-to-guides">
 <li><a class="dropdown-item" href="../articles/10-howto-fastq-to-df.html">Preprocessing: FASTQ to Data Frame</a></li>
     <li><a class="dropdown-item" href="../articles/11-howto-mock-composition-file.html">Create a Mock Composition File</a></li>
-    <li><a class="dropdown-item" href="../articles/12-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
+    <li><a class="dropdown-item" href="../articles/12-howto-select-parameters.html">Choose Parameters for Occurrence Filters</a></li>
+    <li><a class="dropdown-item" href="../articles/13-howto-pool-datasets.html">Pool Multiple Datasets</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -79,7 +80,7 @@
       <h1>Additional Functions</h1>
                         <h4 data-toc-skip class="author">Emese Meglécz</h4>
             
-            <h4 data-toc-skip class="date">2026-09-24</h4>
+            <h4 data-toc-skip class="date">2026-09-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/meglecz/vtamR/blob/HEAD/vignettes/21-ref-functions.Rmd" class="external-link"><code>vignettes/21-ref-functions.Rmd</code></a></small>
       <div class="d-none name"><code>21-ref-functions.Rmd</code></div>
@@ -117,14 +118,9 @@ table {
 </style>
 <p><strong>Package version:</strong> 2.0.0.9001</p>
 <div class="section level2">
-<h2 id="complete-and-place-this-later">COMPLETE and place this later<a class="anchor" aria-label="anchor" href="#complete-and-place-this-later"></a>
-</h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/meglecz/vtamR" class="external-link">vtamR</a></span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="filter_pcr_error">
+<h2 id="filter_pcr_error">
 <code>filter_pcr_error</code><a class="anchor" aria-label="anchor" href="#filter_pcr_error"></a>
-</h3>
+</h2>
 <p>If you have already performed <strong>denoising</strong> using <strong>SWARM</strong> (<code>denoise_by_swarm</code>), this function may be redundant, as denoising already removes many likely PCR/sequencing errors.</p>
 <p><code>filter_pcr_error</code> works by flagging an ASV as a PCR error if it is very similar to a more abundant ASV.</p>
 <ul>
@@ -135,7 +131,7 @@ table {
 </ul>
 <p><strong>Example</strong></p>
 <p>This will remove ASVs likely caused by PCR errors, cleaning your dataset for downstream analyses. For more details and advanced options, see <code><a href="../reference/filter_pcr_error.html">?filter_pcr_error</a></code>.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"filter_pcr_error.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_pcr_error.html">filter_pcr_error</a></span><span class="op">(</span></span>
@@ -144,10 +140,10 @@ table {
 <span>  pcr_error_var_prop <span class="op">=</span> <span class="fl">0.15</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="suggest_pcr_error_cutoff">
+<div class="section level2">
+<h2 id="suggest_pcr_error_cutoff">
 <code>suggest_pcr_error_cutoff</code>: Suggesting a PCR Error Cutoff<a class="anchor" aria-label="anchor" href="#suggest_pcr_error_cutoff"></a>
-</h3>
+</h2>
 <p>The default <code>pcr_error_var_prop</code> may not be ideal for your dataset. Use <code>suggest_pcr_error_cutoff</code> to guide the choice.</p>
 <p>This function:</p>
 <ul>
@@ -156,7 +152,7 @@ table {
 <li>Considers only ASVs with more than <code>min_read_count</code> reads (default = 5) to avoid stochastic noise from very low counts.</li>
 </ul>
 <p>The output CSV lists all pairs, sorted by decreasing <code>pcr_error_var_prop</code>. The highest read count ratio observed among unexpected ASVs can be used as a <strong>lower bound</strong> for <code>pcr_error_var_prop</code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"suggest_parameters"</span>, <span class="st">"suggest_pcr_error_cutoff.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">suggest_pcr_error_cutoff_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_pcr_error_cutoff.html">suggest_pcr_error_cutoff</a></span><span class="op">(</span></span>
@@ -168,10 +164,10 @@ table {
 <p><strong>Tip:</strong> If you do not yet have the exact sequences for your mock samples, see <a href="make-mock-composition-file.html">How to make a mock_composition file</a> before running this function.</p>
 </blockquote>
 </div>
-<div class="section level3">
-<h3 id="subsample_fasta">
+<div class="section level2">
+<h2 id="subsample_fasta">
 <code>subsample_fasta</code><a class="anchor" aria-label="anchor" href="#subsample_fasta"></a>
-</h3>
+</h2>
 <p>The <code>subsample_fasta</code> function randomly selects <code>n</code> sequences (without replacement) from each input FASTA file listed in the <code>fastainfo</code> data frame.</p>
 <p>This step is useful for normalizing sequencing depth across libraries. It can be applied before or after demultiplexing (<code>demultiplex_and_trim_fasta</code>).</p>
 <blockquote>
@@ -219,18 +215,18 @@ table {
 <code>compress_method</code> – <code>"pigz"</code>, <code>"gzip"</code>, or <code>"R"</code>.</li>
 </ul>
 <p><strong>Example: Fast Version (Linux-like systems)</strong></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>randomseq_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(outdir, <span class="st">"random_seq"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>fastainfo_df <span class="ot">&lt;-</span> <span class="fu">subsample_fasta</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">fastainfo    =</span> fastainfo_df,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">fasta_dir    =</span> merged_dir,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">outdir       =</span> randomseq_dir,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">use_vsearch  =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">compress_method =</span> <span class="st">"pigz"</span>,H</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">n            =</span> <span class="dv">10000</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">compress     =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>randomseq_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(outdir, <span class="st">"random_seq"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>fastainfo_df <span class="ot">&lt;-</span> <span class="fu">subsample_fasta</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">fastainfo    =</span> fastainfo_df,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">fasta_dir    =</span> merged_dir,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">outdir       =</span> randomseq_dir,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">use_vsearch  =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">compress_method =</span> <span class="st">"pigz"</span>,H</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">n            =</span> <span class="dv">10000</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">compress     =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p><strong>Example: Cross-Platform Version</strong></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">randomseq_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"random_seq"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fastainfo_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subsample_fasta.html">subsample_fasta</a></span><span class="op">(</span></span>
@@ -244,10 +240,10 @@ table {
 <p><strong>Tip:</strong> Choose <code>use_vsearch = TRUE</code> when possible for speed. Use <code>FALSE</code> for <strong>Windows or macOS</strong>, or when VSEARCH is not installed.</p>
 </blockquote>
 </div>
-<div class="section level3">
-<h3 id="classify_control_occurrences">
+<div class="section level2">
+<h2 id="classify_control_occurrences">
 <code>classify_control_occurrences</code><a class="anchor" aria-label="anchor" href="#classify_control_occurrences"></a>
-</h3>
+</h2>
 <p>The function <code>classify_control_occurrences</code> identifies occurrences as <strong>false positives</strong>, <strong>false negatives</strong>, or <strong>true positives</strong> based on control samples and habitat context.</p>
 <ul>
 <li><p><strong>True Positives (TP):</strong> All expected occurrences detected in a mock sample (i.e., ASVs that correspond to the species intentionally included in the mock community).</p></li>
@@ -295,7 +291,7 @@ table {
 <li>If you do <strong>not</strong> know the exact sequences in your mock samples, you will need the <strong><a href="#mock_composition">mock_composition</a> file</strong> before running this function. See <a href="make-mock-composition-file.html">How to make a mock_composition file</a> for guidance.</li>
 <li>This function is particularly useful to assess the performance of filtering steps.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Detect known occurrences</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_control_occurrences.html">classify_control_occurrences</a></span><span class="op">(</span>read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>                                sampleinfo <span class="op">=</span> <span class="va">sampleinfo_df</span>, </span>
@@ -306,10 +302,10 @@ table {
 <span><span class="va">false_negatives_df</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">performance_metrics_df</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="compute_asv_specific_cutoff">
+<div class="section level2">
+<h2 id="compute_asv_specific_cutoff">
 <code>compute_asv_specific_cutoff</code><a class="anchor" aria-label="anchor" href="#compute_asv_specific_cutoff"></a>
-</h3>
+</h2>
 <p>Some ASVs may appear in many samples with high read counts, which can make them resistant to a fixed cutoff in <code>filter_occurrence_variant</code>. This can occur due to <strong><a href="#glossary">tag-jump</a></strong> or inter-sample contamination.</p>
 <p>The <code>compute_asv_specific_cutoff</code> function computes ASV-specific cutoff values for variants with known false-positive occurrences (identified by <code>classify_control_occurrences</code>), so filtering can be more targeted.</p>
 <p><strong>How It Works</strong></p>
@@ -327,7 +323,7 @@ table {
 </ul>
 </blockquote>
 <p><strong>Example</strong></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_asv_specific_cutoff.html">compute_asv_specific_cutoff</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>  max_cutoff <span class="op">=</span> <span class="fl">0.05</span>,</span>
@@ -346,7 +342,7 @@ table {
 </blockquote>
 <p><strong>Using ASV-Specific Cutoffs in Filtering</strong></p>
 <p>Pass <code>asv_spec</code> to <code>filter_occurrence_variant</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_occurrence_variant.html">filter_occurrence_variant</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>  asv_specific_cutoffs <span class="op">=</span> <span class="va">asv_spec</span>,</span>
@@ -366,7 +362,7 @@ table {
 </ul>
 </li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">read_count_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_occurrence_variant.html">filter_occurrence_variant</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>  cutoff <span class="op">=</span> <span class="fl">0.002</span>,</span>
@@ -375,15 +371,15 @@ table {
 <span>  <span class="op">)</span></span></code></pre></div>
 <p>This approach allows flexible, per-ASV filtering while maintaining a minimum global threshold for all other variants.</p>
 </div>
-<div class="section level3">
-<h3 id="assign_taxonomy_rdp">
+<div class="section level2">
+<h2 id="assign_taxonomy_rdp">
 <code id="assign_taxonomy_rdp">assign_taxonomy_rdp</code><a class="anchor" aria-label="anchor" href="#assign_taxonomy_rdp"></a>
-</h3>
+</h2>
 <p><strong>Taxonomic assignment using the RDP classifier</strong></p>
 <p>For <strong>16S rRNA</strong> data, the <strong>RDP (Ribosomal Database Project)</strong> provides a curated reference database for Bacteria and Archaea. The <strong>pre-trained sets</strong> are included in the <strong><code>rRDPData</code></strong> package, and the <strong><code>rRDP</code></strong> package performs the taxonomic classification.</p>
 <p><strong>Installing <code>rRDP</code> and <code>rRDPData</code></strong> {#install-rdp}</p>
 <p>These packages are available through <strong>Bioconductor</strong> and are <strong>not installed automatically</strong> with <code>vtamR</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
 <span></span>
@@ -391,7 +387,7 @@ table {
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"rRDPData"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Running the RDP classifier via vtamR</strong></p>
 <p>The <code><a href="../reference/assign_taxonomy_rdp.html">assign_taxonomy_rdp()</a></code> function is a wrapper around the RDP classifier, allowing direct application to your ASV dataset.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">taxa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assign_taxonomy_rdp.html">assign_taxonomy_rdp</a></span><span class="op">(</span></span>
 <span>  asv <span class="op">=</span> <span class="va">read_count_df</span>,</span>
 <span>  max_memory <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -415,18 +411,18 @@ table {
 </ul>
 <p><strong>Using a Custom RDP Training Set</strong></p>
 <p>You can provide your own RDP-trained dataset instead of the default from <code>rRDPData</code>. This requires a folder containing the trained classifier created with <code>trainRDP()</code>:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>taxa <span class="ot">&lt;-</span> <span class="fu">assign_taxonomy_rdp</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">asv =</span> read_count_df,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dir =</span> <span class="st">"path/to/custom_RDP_trained_DB"</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_memory =</span> <span class="dv">8</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">confidence =</span> <span class="fl">0.8</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rm_chloroplast =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>taxa <span class="ot">&lt;-</span> <span class="fu">assign_taxonomy_rdp</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">asv =</span> read_count_df,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dir =</span> <span class="st">"path/to/custom_RDP_trained_DB"</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_memory =</span> <span class="dv">8</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">confidence =</span> <span class="fl">0.8</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rm_chloroplast =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>For more details, see <code><a href="https://rdrr.io/pkg/rRDP/man/RDP.html" class="external-link">?rRDP::rdp</a></code> for training and using custom classifiers.</p>
 </div>
-<div class="section level3">
-<h3 id="history_by">
+<div class="section level2">
+<h2 id="history_by">
 <code>history_by</code><a class="anchor" aria-label="anchor" href="#history_by"></a>
-</h3>
+</h2>
 <p>The <code>history_by</code> function allows you to <strong>track the filtering history</strong> of specific features (ASVs, samples, or replicates) across multiple filtering steps.</p>
 <p><strong>How It Works</strong></p>
 <ul>
@@ -437,10 +433,10 @@ table {
 <li><p><code>values</code>: The specific value of the feature you want to follow.</p></li>
 </ul>
 <p><strong>Examples</strong></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filter_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"QuickStart_mfzr_plate1"</span>, <span class="st">"4_filter"</span><span class="op">)</span></span></code></pre></div>
 <p><em>Get the history of asv_id (<code>feature</code>) 27 (<code>value</code>).</em></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filter_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"vtamR_demo_out"</span>, <span class="st">"QuickStart_mfzr_plate1"</span>, <span class="st">"4_filter"</span><span class="op">)</span></span>
 <span><span class="va">tmp_ASV</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/history_by.html">history_by</a></span><span class="op">(</span>dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>                        feature <span class="op">=</span> <span class="st">"asv_id"</span>, </span>
@@ -517,7 +513,7 @@ table {
 </tbody>
 </table>
 <p><em>Get the history of a sequence of the ASV (<code>feature</code>).</em></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tmp_ASV</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/history_by.html">history_by</a></span><span class="op">(</span></span>
 <span>  dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>  feature <span class="op">=</span> <span class="st">"asv"</span>,</span>
@@ -890,7 +886,7 @@ table {
 </tbody>
 </table>
 <p><em>Get the history of the sample (<code>feature</code>) tpos1 (<code>value</code>).</em></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tmp_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/history_by.html">history_by</a></span><span class="op">(</span>dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>                         feature <span class="op">=</span> <span class="st">"sample"</span>, </span>
 <span>                         value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tpos1"</span>, <span class="st">"tnegtag"</span><span class="op">)</span></span>
@@ -966,10 +962,10 @@ table {
 </tbody>
 </table>
 </div>
-<div class="section level3">
-<h3 id="summarize_by">
+<div class="section level2">
+<h2 id="summarize_by">
 <code>summarize_by</code><a class="anchor" aria-label="anchor" href="#summarize_by"></a>
-</h3>
+</h2>
 <p>The <code>summarize_by</code> function is used to summarize how your data changes across filtering steps.</p>
 <p><strong>How It Works</strong></p>
 <ul>
@@ -986,7 +982,7 @@ table {
 </ul>
 <p><strong>Examples</strong></p>
 <p><em>Get the number of reads per sample after each filtering step:</em></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">read_count_by_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_by.html">summarize_by</a></span><span class="op">(</span></span>
 <span>  dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>  feature <span class="op">=</span> <span class="st">"read_count"</span>, </span>
@@ -1037,36 +1033,36 @@ table {
 <td align="right">26119</td>
 <td align="right">26119</td>
 <td align="right">25988</td>
-<td align="right">25965</td>
-<td align="right">25965</td>
-<td align="right">25965</td>
-<td align="right">25953</td>
-<td align="right">25953</td>
-<td align="right">25738</td>
-<td align="right">25608</td>
-<td align="right">25608</td>
-<td align="right">25608</td>
-<td align="right">25608</td>
-<td align="right">25608</td>
-<td align="right">8536</td>
+<td align="right">25986</td>
+<td align="right">25986</td>
+<td align="right">25986</td>
+<td align="right">25974</td>
+<td align="right">25974</td>
+<td align="right">25801</td>
+<td align="right">25727</td>
+<td align="right">25727</td>
+<td align="right">25727</td>
+<td align="right">25727</td>
+<td align="right">25727</td>
+<td align="right">8596</td>
 </tr>
 <tr class="even">
 <td align="left">14ben02</td>
 <td align="right">19486</td>
-<td align="right">19487</td>
-<td align="right">19234</td>
-<td align="right">19102</td>
-<td align="right">19102</td>
-<td align="right">19102</td>
-<td align="right">19096</td>
-<td align="right">19096</td>
-<td align="right">18533</td>
-<td align="right">17641</td>
-<td align="right">17641</td>
-<td align="right">17641</td>
-<td align="right">17641</td>
-<td align="right">17641</td>
-<td align="right">6022</td>
+<td align="right">19486</td>
+<td align="right">19233</td>
+<td align="right">19176</td>
+<td align="right">19176</td>
+<td align="right">19176</td>
+<td align="right">19170</td>
+<td align="right">19170</td>
+<td align="right">18653</td>
+<td align="right">17740</td>
+<td align="right">17740</td>
+<td align="right">17740</td>
+<td align="right">17740</td>
+<td align="right">17740</td>
+<td align="right">6059</td>
 </tr>
 <tr class="odd">
 <td align="left">tnegtag</td>
@@ -1107,7 +1103,7 @@ table {
 </tbody>
 </table>
 <p><em>Get the number of ASVs for each sample after each filtering steps.</em></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_by_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_by.html">summarize_by</a></span><span class="op">(</span></span>
 <span>  dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>  feature <span class="op">=</span> <span class="st">"asv"</span>, </span>
@@ -1156,31 +1152,31 @@ table {
 <tr class="odd">
 <td align="left">14ben01</td>
 <td align="right">1868</td>
-<td align="right">159</td>
-<td align="right">28</td>
+<td align="right">158</td>
+<td align="right">27</td>
 <td align="right">26</td>
 <td align="right">26</td>
 <td align="right">26</td>
 <td align="right">24</td>
 <td align="right">24</td>
 <td align="right">5</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">2</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">3</td>
 </tr>
 <tr class="even">
 <td align="left">14ben02</td>
 <td align="right">2861</td>
-<td align="right">330</td>
-<td align="right">77</td>
-<td align="right">71</td>
-<td align="right">71</td>
-<td align="right">71</td>
+<td align="right">326</td>
+<td align="right">73</td>
 <td align="right">68</td>
 <td align="right">68</td>
+<td align="right">68</td>
+<td align="right">65</td>
+<td align="right">65</td>
 <td align="right">36</td>
 <td align="right">19</td>
 <td align="right">19</td>
@@ -1210,11 +1206,11 @@ table {
 <tr class="even">
 <td align="left">tpos1</td>
 <td align="right">5405</td>
-<td align="right">572</td>
-<td align="right">104</td>
-<td align="right">99</td>
-<td align="right">99</td>
-<td align="right">99</td>
+<td align="right">571</td>
+<td align="right">103</td>
+<td align="right">98</td>
+<td align="right">98</td>
+<td align="right">98</td>
 <td align="right">70</td>
 <td align="right">70</td>
 <td align="right">13</td>
@@ -1228,7 +1224,7 @@ table {
 </tbody>
 </table>
 <p><em>Get the number asv_id for each replicate after each filtering steps.</em></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asvid_by_replicate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_by.html">summarize_by</a></span><span class="op">(</span></span>
 <span>  dir <span class="op">=</span> <span class="va">filter_dir</span>, </span>
 <span>  feature <span class="op">=</span> <span class="st">"asv_id"</span>, </span>
@@ -1276,13 +1272,13 @@ table {
 <tr class="odd">
 <td align="right">1</td>
 <td align="right">4352</td>
-<td align="right">432</td>
-<td align="right">143</td>
-<td align="right">138</td>
-<td align="right">138</td>
-<td align="right">131</td>
-<td align="right">104</td>
-<td align="right">104</td>
+<td align="right">429</td>
+<td align="right">140</td>
+<td align="right">136</td>
+<td align="right">136</td>
+<td align="right">129</td>
+<td align="right">103</td>
+<td align="right">103</td>
 <td align="right">38</td>
 <td align="right">27</td>
 <td align="right">27</td>
@@ -1293,11 +1289,11 @@ table {
 <tr class="even">
 <td align="right">2</td>
 <td align="right">4466</td>
-<td align="right">483</td>
-<td align="right">142</td>
-<td align="right">139</td>
-<td align="right">139</td>
-<td align="right">123</td>
+<td align="right">481</td>
+<td align="right">140</td>
+<td align="right">138</td>
+<td align="right">138</td>
+<td align="right">122</td>
 <td align="right">91</td>
 <td align="right">91</td>
 <td align="right">36</td>
@@ -1310,13 +1306,13 @@ table {
 <tr class="odd">
 <td align="right">3</td>
 <td align="right">4311</td>
-<td align="right">375</td>
-<td align="right">104</td>
-<td align="right">95</td>
-<td align="right">95</td>
-<td align="right">89</td>
-<td align="right">75</td>
-<td align="right">75</td>
+<td align="right">371</td>
+<td align="right">100</td>
+<td align="right">92</td>
+<td align="right">92</td>
+<td align="right">86</td>
+<td align="right">73</td>
+<td align="right">73</td>
 <td align="right">30</td>
 <td align="right">28</td>
 <td align="right">28</td>
@@ -1326,13 +1322,13 @@ table {
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">tmp_outdir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="update_asv_list">
+<div class="section level2">
+<h2 id="update_asv_list">
 <code>update_asv_list</code><a class="anchor" aria-label="anchor" href="#update_asv_list"></a>
-</h3>
+</h2>
 <p>The <code>update_asv_list</code> function merges <strong>unique <code>asv</code>–<code>asv_id</code> pairs</strong> from two input data frames or CSV files.</p>
 <p><strong>How It Works</strong></p>
 <ul>
@@ -1381,7 +1377,7 @@ table {
 <li>The ASV list stays smaller and easier to manage</li>
 </ul>
 <p><strong>Example</strong></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">asv_list</span> <span class="op">&lt;-</span> <span class="st">"PATH/TO/CSV/WITH/Earlier_asv-asv_id_pairs.csv"</span></span>
 <span><span class="va">updated_asv_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"updated_ASV_list.csv"</span><span class="op">)</span></span>
 <span></span>
@@ -1390,25 +1386,25 @@ table {
 <span>  asv_list2 <span class="op">=</span> <span class="va">asv_list</span>,</span>
 <span>  outfile <span class="op">=</span> <span class="va">updated_asv_list</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="pool_replicates_detail">
+<div class="section level2">
+<h2 id="pool_replicates_detail">
 <code>pool_replicates</code><a class="anchor" aria-label="anchor" href="#pool_replicates_detail"></a>
-</h3>
+</h2>
 <p>Replicates are used to ensure <strong>repeatability</strong> and reduce experimental variation. After the analysis, they can be pooled at the sample level.</p>
 <p>The <code>pool_replicates</code> function performs this step and is automatically called by <code>write_asv_table</code> when <code>pool_replicates = TRUE</code>.</p>
 <p><strong>How It Works</strong></p>
 <p>For each sample and ASV, the function computes the read count across replicates using the method specified by the <code>method</code> argument. The default is <code>mean</code>, which calculates the average of non-zero read counts. Alternatively, you can use <code>sum</code> to obtain the total read count across replicates, <code>min</code> to retain the lowest value, or <code>max</code> to keep the highest value.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">outdir</span>, <span class="st">"PooledReplicates.csv"</span><span class="op">)</span></span>
 <span><span class="va">read_count_samples_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_replicates.html">pool_replicates</a></span><span class="op">(</span></span>
 <span>  read_count <span class="op">=</span> <span class="va">read_count_df</span>, </span>
 <span>  outfile <span class="op">=</span> <span class="va">outfile</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="count_reads_in_dir">
+<div class="section level2">
+<h2 id="count_reads_in_dir">
 <code>count_reads_in_dir</code><a class="anchor" aria-label="anchor" href="#count_reads_in_dir"></a>
-</h3>
+</h2>
 <p>The <code>count_reads_in_dir</code> function counts the number of reads in all <strong>FASTA</strong> or <strong>FASTQ</strong> files found in a given directory. It works with both <strong>compressed (<code>.gz</code>)</strong> and <strong>uncompressed</strong> files, but <code>.zip</code> files are not supported.</p>
 <p>In most cases, you do not need to use this function during a standard workflow. The <a href="#fastainfo">fastainfo</a> and <a href="#sampleinfo">sampleinfo</a> files already include read counts after <code>merge_fastq_pairs</code> and <code>demultiplex_and_trim_fasta</code>.</p>
 <p>However, this function can be useful if you want to check the number of reads in your raw input FASTQ files before starting the analysis.</p>
@@ -1420,17 +1416,17 @@ table {
 <li>
 <code>pattern</code>: Regular expression; only file names matching this pattern in their name are processed</li>
 </ul>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_reads_in_dir.html">count_reads_in_dir</a></span><span class="op">(</span></span>
 <span>  dir <span class="op">=</span> <span class="va">fastq_dir</span>, </span>
 <span>  pattern <span class="op">=</span> <span class="st">"_fw.fastq.gz"</span>, </span>
 <span>  file_type <span class="op">=</span> <span class="st">"fastq"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="concatenate_files">
+<div class="section level2">
+<h2 id="concatenate_files">
 <code>concatenate_files</code><a class="anchor" aria-label="anchor" href="#concatenate_files"></a>
-</h3>
+</h2>
 <p>The <code>concatenate_files</code> function reads files from multiple directories and concatenates the contents of files sharing the same filename into a single output file.</p>
 <p>It is helpful for example to pool fastq files of samples that have been sequenced twice.</p>
 <p>concatenate_files &lt;- function(dirs, outdir, pattern = “\.”)</p>
@@ -1440,13 +1436,12 @@ table {
 <li>
 <code>pattern</code>: Regular expression; only file names matching this pattern in their name are processed</li>
 </ul>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/concatenate_files.html">concatenate_files</a></span><span class="op">(</span></span>
 <span>   dirs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"run1"</span>, <span class="st">"run2"</span>, <span class="st">"run3"</span><span class="op">)</span>,</span>
 <span>   outdir <span class="op">=</span> <span class="st">"pooled"</span>,</span>
 <span>   pattern <span class="op">=</span> <span class="st">".fastq$"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

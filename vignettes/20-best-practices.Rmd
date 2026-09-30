@@ -62,7 +62,101 @@ knitr::opts_chunk$set(
 
 # Tips - Good to Know
 
-## Data Frame or CSV File
+## Data Structure{#data-structure}
+
+### Dataset Composition
+
+Sequences are typically derived from **96 samples**, corresponding to a 96-well 
+plate used for PCR amplification.
+
+Each plate includes **negative controls, mock samples, and biological samples**.
+A single sequencing library is generated per replicate, with each library 
+representing a set of 96 PCR reactions.
+
+While `vtamR` can analyze datasets **without controls or replicates**, 
+its full potential is realized when these features are utilized:
+
+- **Controls** enable rigorous data filtering based on control sample content, 
+  reducing false positives and negatives.
+- **Replicates** ensure reproducibility and minimize technical variability.
+
+For projects exceeding 96 samples, analyses are conducted **plate by plate**.
+
+- Consistent use of control samples ensures **comparability** across different 
+libraries or time points (e.g., longitudinal studies tracking the same sites over time).
+- Filtered datasets can be **pooled** using the `pool_dataset()` 
+function for integrated analysis.
+
+
+### Multi-Marker Analysis
+
+`vtamR` supports the analysis of the same samples using 
+**multiple, strongly overlapping markers**. For example, our demo dataset 
+originates from a project 
+[Corse et al., 2017](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12703) 
+utilizing two markers: **MFZR** and **ZFZR**.
+
+Both markers target overlapping regions of the **COI gene**, where
+**MFZR** starts **18 nucleotides upstream** of **ZFZR**.
+
+Data from each marker should be first analyzed separately, than the filtered, 
+validated occurrences pooled together. See the [Pool Multiple Datasets](13-howto-pool-datasets.html)
+section.
+
+## Log file{#log-file}
+
+`vtamR` automatically generates a log file that records every major function called during an analysis. For each function call, the log includes:
+
+* all arguments and their values, including default values that were not explicitly specified;
+* the start and end time of the call; and
+* the function's runtime.
+
+This log is extremely valuable for reproducibility. It lets you reconstruct exactly how an analysis was performed, even years later, even if the original script has been lost or modified. In effect, the log file is a complete record of your analysis workflow.
+
+**Two ways to set the log path**
+
+*Option 1: Pass `log_file` to each function call.*
+You can specify the path to the log file directly, using the `log_file` 
+argument of each major `vtamR` function. This works, but it's a bit 
+laborious — it's easy to forget the argument on some calls, or to accidentally
+use different filenames across calls, which leaves you with several files that 
+each contain only part of the information.
+
+*Option 2: Set a package-level option once (recommended).*
+A much simpler approach is to define the log path once, as a **package option**, 
+at the start of your script. From then on, every logged function call is automatically 
+appended to the same file — you don't need to specify anything else. 
+This does mean the log will accumulate every trial and attempt, which can get a 
+bit messy, but you'll always have the complete picture of what you did.
+
+For all functions with a `log_file` argument, the log path is resolved in the following order of priority:
+
+1. the `log_file` argument, if it is provided in the function call;
+2. the `vtamR.log_file` package option, if it has been set;
+3. a default file, `vtamR_log.csv`, written to the working directory.
+
+We strongly recommend using the package option, and that's what we'll do in the tutorials.
+
+```{r set-log-file}
+options(vtamR.log_file = file.path(outdir,  "run_info", "vtamR_log.csv"))
+```
+
+*A tip for finalized pipelines*
+
+Once your pipeline is finalized, consider archiving the log file from your testing phase, 
+then running the final pipeline with a fresh `log_file`. This gives you a clean, 
+complete record of the exact procedure and parameters used to produce your final 
+results — long after the analysis is done. 
+It's also the input for the `miem_bioinfo()` function, which extracts information 
+from the log file to help you prepare documentation for publication (e.g. a MIEM checklist).
+
+Using the log file comes with only a minor requirements — well worth the benefit of fully reproducible analyses:
+
+*Always name arguments explicitly when calling a function* — for example, 
+use `my_function(input = my_file)` rather than relying on positional matching (`my_function(my_file)`).
+
+
+## Data Frame or CSV File{#df-or-csv}
 
 Most `vtamR` functions can take either a data frame or a CSV file as input.
 
@@ -95,6 +189,39 @@ Saving outputs as CSV is a good practice for long workflows. It allows you to:
 
 * Inspect the dataset after each filtering step
 * Resume processing later without rerunning earlier steps
+
+## Set Paths to Third-Party Programs {#set-path}
+
+R can execute external programs directly if their executable 
+are available in your system's `PATH` (see [Installation](01-installation.html)).
+
+**If an executable is not in your `PATH`**, you must tell R where to find it. 
+There are two ways to do this.
+
+The first option is to provide the path to the executable using the `xxx_path`
+(e.g. `vsearch_path`, `cutadapt_path`) argument of each function that calls an 
+external program. Although this approach works, it can become tedious, 
+especially when the same program is used in several functions.
+
+A simpler approach is to set a **package option** for each executable. 
+Once these options have been declared, usually at the beginning of your script, 
+`vtamR` can use them automatically. You will then no longer need to provide 
+the corresponding `xxx_path` argument in each function call.
+
+For example:
+
+```{r, eval=FALSE}
+options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
+options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
+options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+```
+
+In this example, the paths are configured for Windows. Replace them with the actual 
+locations of the programs on your computer. To configure these options, 
+locate the vsearch.exe, blastn.exe, cutadapt.exe, swarm.exe, and pigz.exe files, 
+and specify their paths without the .exe extension.
 
 ## To Compress or Not to Compress
 
@@ -147,7 +274,7 @@ For a 19 GB FASTA file (compressed size: 3 GB) on Linux:
 * The fastest workflow is to avoid compression during processing and clean up 
 intermediate files afterward.
 * If you want compressed files, `PIGZ` is clearly the best option.
-* See [Installation](installation.html) for setup instructions.
+* See [Installation](01-installation.html) for setup instructions.
 
 ### Notes on Compatibility
 
@@ -160,7 +287,9 @@ The effect of compression may vary depending on which external programs are used
 
 ## Detection of False Positives (FP), True Positives (TP), and False Negatives (FN) {#fp-tp-fn}
 
-The function `classify_control_occurrences` identifies occurrences as **false positives**, **false negatives**, or **true positives** based on control samples and habitat context.
+The function `classify_control_occurrences` identifies occurrences 
+as **false positives**, **false negatives**, or **true positives** based on 
+control samples and habitat context.
 
 - **True Positives (TP):**
   All expected occurrences detected in a mock sample (i.e., ASVs that correspond to the species intentionally included in the mock community).
@@ -259,7 +388,7 @@ These visualizations help you choose an appropriate clustering threshold:
 * See how identity (`VSEARCH`) or `d` (`SWARM`) affects cluster structure.
 * Find a balance between over-splitting and over-merging biological units.
 
-For more guidance, see the [Cluster ASVs into mOTUs](#cluster_asv) section.
+For more guidance, see the [Cluster ASVs into mOTUs](04-tutorial-in-depth.html#cluster_asv) section.
 
 ## Arguments
 
@@ -307,40 +436,8 @@ The `sep` argument defines the separator used in CSV files.
 * Recommendation: Use the same separator in all CSV files to ensure consistency.
 
 **Exception:** The 
-[taxonomy](#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg)
+[taxonomy](#ref_db)
 file of the reference database must be tab-separated (`\t`).
-
-### PATH Variables
-
-Some vtamR functions rely on external programs such as VSEARCH, CUTADAPT, BLAST, SWARM, or PIGZ.
-To use these tools, vtamR needs to know where their executables are located.
-
-* If these programs are already in your **system PATH**, vtamR will 
-find them automatically.  You don’t need to specify their locations when calling functions.
-
-* If the programs are **not in your PATH**, set a package option for each program:
-
-```{r, eval=FALSE}
-options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
-options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
-options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
-options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
-options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
-```
-
-You can also specify the path to the executable using the appropriate 
-argument when calling a function. However, this approach is more laborious 
-and error-prone, as you need to provide the path each time the function is called.
-
-```{r, eval=FALSE}
-merge_fastq_pairs(
-  vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch"
-  ...
-)
-```
-
-To see which external tools a function requires, check its help page:
-`?function_name`
 
 ## Files to Keep
 
@@ -377,7 +474,7 @@ The files generated by `dereplicate` are particularly important because dereplic
 
 * **Compress large files** to save disk space.
 
-* **Keep these files when possible**, as they can be useful for tracing the history of a sample or ASV using [`history_by`](#history_by), or for generating summary files using [`summarize_by`](#summarize_by).
+* **Keep these files when possible**, as they can be useful for tracing the history of a sample or ASV using [`history_by`](22-ref-functions.html#history_by), or for generating summary files using [`summarize_by`](22-ref-functions.html#summarize_by).
 
 This strategy provides a good balance between disk usage and reproducibility. It preserves the essential files needed to resume analyses, reproduce results, or audit the processing history, while allowing large intermediate files that can be regenerated to be safely removed.
 

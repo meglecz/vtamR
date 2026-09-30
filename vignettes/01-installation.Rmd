@@ -124,7 +124,7 @@ If third-party executables are included in your `PATH`,
 you won’t need to manually specify their locations when running functions that use them.
 
 If you prefer **not** to add them to the PATH, make sure to provide  
-[package options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path) 
+[package options](04-tutorial-in-depth.html#set-path) 
 in the beginning of yous script, or the full path to each program through the appropriate 
 `vtamR` function argument (e.g., `vsearch_path`).
 
@@ -217,7 +217,7 @@ system PATH, you won’t need to manually specify their locations when running
 functions that use them.
 
 If you prefer **not** to add them, make sure to provide  
-[package options](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#set-path) 
+[package options](04-tutorial-in-depth.html#set-path) 
 in the beginning of yous script, or the full path to each program through the appropriate 
 `vtamR` function argument (e.g., `vsearch_path`).
 
@@ -304,9 +304,9 @@ Alternatively, you can also create a custom version from the **TSV format** data
 ([Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)).
 
 
-**For other markers** you will need a [database formatted to BLAST](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg), 
+**For other markers** you will need a [database formatted to BLAST](21-ref-io-formats.html#ref_db), 
 containing taxIDs and a 
-[taxonomy file](https://meglecz.github.io/vtamR/articles/tutorial-vtamr-pipeline.html#reference-database-for-taxonomic-assignments-with-assign_taxonomy_ltg).
+[taxonomy file](21-ref-io-formats.html#ref_db).
 If all sequences are extracted from NCBI-nt, the taxonomy file provided in 
 [OSF](https://osf.io/vrfwz/) can be used without modification.
 

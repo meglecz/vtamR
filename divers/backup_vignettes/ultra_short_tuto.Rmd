@@ -69,11 +69,11 @@ library(dplyr)
 ##### 
 # Adjust path according to you installation, or leave this out, if external programs are in your path.
 ##### 
-options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
-options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
-options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
-options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
-options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
+#options(vtamR.vsearch_path = "C:/Users/Public/vsearch-2.23.0-win-x86_64/bin/vsearch")
+#options(vtamR.blast_path = "C:/Users/Public/blast-2.16.0+/bin/blastn")
+#options(vtamR.cutadapt_path = "C:/Users/Public/cutadapt")
+#options(vtamR.swarm_path = "C:/Users/Public/swarm-3.1.5-win-x86_64/bin/swarm")
+#options(vtamR.pigz_path = "C:/Users/Public/pigz-win32/pigz")
 
 ## Demo dataset
 fastq_dir <- system.file("extdata/demo/fastq", package = "vtamR")
