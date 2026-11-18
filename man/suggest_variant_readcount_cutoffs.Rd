@@ -67,6 +67,9 @@ step size between tested variant cutoff values.}
 
 \item{by_replicate}{logical; argument passed to filter_occurrence_variant}
 
+\item{min_replicate_number}{Positive integer specifying the minimum number of
+replicates for \code{filter_min_replicate()}.}
+
 \item{quiet}{logical; if TRUE, suppress informational messages and show only
 warnings or errors.}
 
@@ -80,9 +83,6 @@ The path is resolved with the following priority:
 last resort if neither of the above is set.
 }
 To disable logging entirely, set \code{log_file = NA}.}
-
-\item{`min_replicate_number()`}{Positive integer specifying the minimum number of
-replicates for \code{filter_min_replicate()}.}
 }
 \value{
 Data frame with columns \code{read_count_cutoff}, \code{variant_cutoff},

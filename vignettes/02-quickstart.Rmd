@@ -247,8 +247,7 @@ Renkonen_distance_density_plot <- plot_renkonen_distance_density(
 
 Renkonen_distance_barplot <- plot_renkonen_distance_barplot(
   df = renkonen_within_df, 
-  sampleinfo = sampleinfo_df, 
-  x_axis_label_size = 6
+  sampleinfo = sampleinfo_df
   )
 # print(Renkonen_distance_barplot)
 

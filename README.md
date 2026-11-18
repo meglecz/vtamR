@@ -115,14 +115,14 @@ You can also download a ready-made example output (matching the output
 of the tutorials) without running the pipeline:
 
 ``` r
-vtamR::download_tutorial_output(dest = "Tutorial_output/")
+vtamR::download_tutorial_output(dest = "Tutorial_output")
 ```
 
 ### vtamR workflow
 
 <div class="figure" style="text-align: center">
 
-<img src="vignettes/figures/vtamR_flowchart_sceen.png" alt="Overview of the vtamR Workflow" width="100%" />
+<img src="vignettes/figures/vtamR_flowchart.png" alt="Overview of the vtamR Workflow" width="100%" />
 <p class="caption">
 Overview of the vtamR Workflow
 </p>

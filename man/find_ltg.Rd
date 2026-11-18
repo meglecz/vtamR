@@ -25,7 +25,8 @@ of the input taxids.
 \examples{
 \dontrun{
 taxids <- c(189839, 1077837)
-tax_df <- read.delim(xxxxxxxxxxxx, package = "vtamR"), header = TRUE, sep = "\t", fill = TRUE, quote = "")
+tax_df <- read.delim(xxxxxxxxxxxx, package = "vtamR"), header = TRUE, 
+                      sep = "\t", fill = TRUE, quote = "")
 lineages <- get_taxonomic_lineage(taxids, tax_df = tax_df)
 find_ltg(taxids, lineages = lineages, phit = 80)
 }

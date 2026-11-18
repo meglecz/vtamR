@@ -931,7 +931,7 @@ miem_bioinformatics <- function(
     msg <- paste0(
       "Taxonomic assignment was performed using the Lowest Taxonomic Group (LTG) ",
       "method implemented in the vtamR R package (v", vtamR_version, ") ",
-      "[Meglécz, 2023](https://link.springer.com/article/10.1007/s42977-024-00201-x). ",
+      "[Meglecz, 2023](https://link.springer.com/article/10.1007/s42977-024-00201-x). ",
       "The LTG method is a BLAST-based Lowest Common Ancestor ",
       "(LCA) approach relying on NCBI-BLAST (v", blast_version, ") similarity searches."
     )
@@ -955,7 +955,7 @@ miem_bioinformatics <- function(
       "USER INPUT REQUIRED: Report the database origin and any sequence curation ",
       "performed. If COInr was used, cite that it contains COI sequences compiled ",
       "from the NCBI nucleotide (nt) and BOLD databases ",
-      "[Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)."
+      "[Meglecz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)."
     )
     miem <- set_miem_field(miem, field="Database creation: Source of sequences and steps to identify locus of interest", msg)
     

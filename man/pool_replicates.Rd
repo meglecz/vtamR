@@ -17,8 +17,10 @@ pool_replicates(
 \item{read_count}{Data frame or path to a CSV file with the following columns:
 \code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}, \code{cluster_id} (optional).}
 
-\item{method}{Character string specifying the aggregation method used to pool
-replicates. Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
+\item{method}{Character string specifying how replicate read counts are aggregated.
+Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, \code{"min"}, or \code{"presence"}.
+\code{"presence"} returns 1 if the read count is greater than 0 in at least one
+replicate, and 0 otherwise.}
 
 \item{digits}{Positive integer specifying the number of decimal places used
 when rounding mean read counts.}

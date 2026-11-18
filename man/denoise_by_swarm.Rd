@@ -50,6 +50,9 @@ they differ by ≤ d positions).}
 \item{fastidious}{Logical; when \code{swarm_d = 1}, perform an additional clustering
 pass to reduce the number of small clusters.}
 
+\item{outfile}{Character string: name of the output CSV file. If empty, no
+file is written.}
+
 \item{sep}{Field separator character for input and output CSV files.}
 
 \item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings/errors.}

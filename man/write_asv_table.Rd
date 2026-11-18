@@ -39,7 +39,9 @@ Required if \code{add_empty_samples = TRUE} or \code{add_expected_asv = TRUE}.}
 (see \code{method}). If \code{FALSE}, keep replicates separate (columns are \code{sample.replicate}).}
 
 \item{method}{Character string specifying how replicate read counts are aggregated.
-Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
+Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, \code{"min"}, or \code{"presence"}.
+\code{"presence"} returns 1 if the read count is greater than 0 in at least one
+replicate, and 0 otherwise.}
 
 \item{add_empty_samples}{Logical. If \code{TRUE}, include all samples from the original dataset,
 even if they have zero reads after filtering.}

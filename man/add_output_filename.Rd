@@ -25,6 +25,7 @@ the requested compression setting. Existing \code{.gz} extensions are first
 removed and then added back when \code{compress} is \code{TRUE}.
 }
 \examples{
+\dontrun{
 files <- data.frame(
   fasta = c("sample1.fasta.gz", "sample2.fasta"),
   fastq_fw = c("sample1_R1.fastq.gz", "sample2_R1.fastq")
@@ -32,6 +33,7 @@ files <- data.frame(
 
 add_output_filename(files, compress = FALSE)
 add_output_filename(files, compress = TRUE)
+}
 
 }
 \keyword{internal}

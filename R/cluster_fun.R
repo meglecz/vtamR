@@ -1394,6 +1394,8 @@ cluster_asv <- function(read_count,
 #'   they differ by ≤ d positions).
 #' @param fastidious Logical; when `swarm_d = 1`, perform an additional clustering
 #'   pass to reduce the number of small clusters.
+#' @param outfile Character string: name of the output CSV file. If empty, no
+#'   file is written.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, use all available CPUs.
 #' @param sep Field separator character for input and output CSV files.
 #' @param quiet Logical; if `TRUE`, suppress informational messages and show only warnings/errors.

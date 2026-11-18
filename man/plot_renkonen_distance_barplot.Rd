@@ -8,7 +8,6 @@ plot_renkonen_distance_barplot(
   df,
   sampleinfo = NULL,
   sep = ",",
-  x_axis_label_size = 6,
   plotfile = "",
   log_file = NULL
 )
@@ -22,8 +21,6 @@ This output can be generated using \code{make_renkonen_distance_matrix()}.}
 \code{sample_type} (e.g. \code{real}, \code{mock}, \code{negative}).}
 
 \item{sep}{Field separator used in CSV files.}
-
-\item{x_axis_label_size}{Numeric; size of x-axis labels.}
 
 \item{plotfile}{Character string: name of the output PNG file. If empty,
 no file is written.}

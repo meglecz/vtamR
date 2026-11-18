@@ -8,18 +8,8 @@
 ## wrapper
 	use a file like the log_file, that contains also the name of the output
 	write a script that corresponds to the file and excute it if specified
- 
-
-## make full R script for from fastq till filtered ASV, Try to find a good place 
-so people can easily access (vignettes? the idea is to provide Rmd or R as a template)
-Add link to the main tuto xxxx
- - mfzr_plate1 
- - mfzr_plate2
- - zfzr_plate1
-
 
 ## write function for quality filtering fastq
-
 
 ## allow sortedinfo WO sample_type and habitat.
 
@@ -29,44 +19,17 @@ Add link to the main tuto xxxx
 
 ## concatenate_file is slow and uses a lot of memory
 
-## add explanation to tuto:
-- Dezip fichier (clique droit, extraire ici)
-- Completer l'ajout de chemin dans cmd
-- Install => expliquer 
-
-
-## revise install in readme.
-
 ## pool_datasets rearrange columns in output
 
 ## Add read-count info for mock_composition_template_to_check.csv
 
-## Error FilterPCRerror: aucune boucle d'où sortir (break/next) ; saut vers le niveau le plus haut (Epi20 COI)
-
-## SortReads with check_reverse in windows is long.
-
-Revise file stucture of the tutriel. outdir/marker/...
-Use demo_pipeline.R 
- -from fastq till mOTU 
- - input file bundled with packade
- - demo mock composition
- - do not add cluster graphics
- 
 ## Add info on tolerate occurrences
-
-## replace test_filters by an R script to run with demo files (make test_run() function)
-
-## Add quality filter function
 
 ## dereplicate with vsearch
 
 ## make taxonomy.tsv and BLAST DB à partir de RDP database.
 
-## Polish Histogram_ReadCountByVariant
-
 ## taxassign with vsearch global
-
-## make useable examples
 
 ## Remote BLAST in mkLTG
 	filter out incorrect names on the fly
@@ -909,6 +872,9 @@ https://meglecz.github.io/vtamR/articles/
 Same dataset for 3 tutos.
 
 
+## 2026/11/18 v2.0.0
+
+Add method "presence" to pool_replicates
 
 
 

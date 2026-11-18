@@ -3084,7 +3084,7 @@ flag_pcr_error <- function(unique_asv_df,
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
 #'   
-#'   @template param_vsearch_path
+#' @template param_vsearch_path
 #'   
 #' @return Filtered `read_count` data frame with PCR error ASVs removed.
 #' 
@@ -3448,7 +3448,7 @@ flag_chimera <- function(unique_asv_df,
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
 #'   
-#'  @template param_vsearch_path
+#' @template param_vsearch_path
 #'   
 #' @return Filtered `read_count` data frame with chimeric ASVs removed.
 #' 
@@ -3860,7 +3860,9 @@ filter_replicate <- function(read_count,
   }
   
   # calculate Renkonen distances between all pairs of replicates of within sample
-  renkonen_df <- compute_renkonen_distances(read_count = read_count_df, compare_all=FALSE) %>%
+  renkonen_df <- compute_renkonen_distances(read_count = read_count_df, 
+                                            compare_all=FALSE,
+                                            log_file=log_file) %>%
     select("sample" = sample1, replicate1, replicate2, renkonen_d) %>%
     arrange(renkonen_d)
   
@@ -3924,8 +3926,10 @@ filter_replicate <- function(read_count,
 #'  
 #' @param read_count Data frame or path to a CSV file with the following columns: 
 #'   `asv_id`, `sample`, `replicate`, `read_count`, `asv`, `cluster_id` (optional).
-#' @param method Character string specifying the aggregation method used to pool 
-#'   replicates. Must be one of `"mean"`, `"max"`, `"sum"`, or `"min"`.
+#' @param method Character string specifying how replicate read counts are aggregated.
+#'   Must be one of `"mean"`, `"max"`, `"sum"`, `"min"`, or `"presence"`.
+#'   `"presence"` returns 1 if the read count is greater than 0 in at least one
+#'   replicate, and 0 otherwise.
 #' @param digits Positive integer specifying the number of decimal places used 
 #'   when rounding mean read counts.
 #' @param outfile Character string specifying the CSV file to write the output 
@@ -3976,12 +3980,15 @@ pool_replicates <- function(read_count,
   t <- check_one_to_one(read_count_df)
   
   # method
-    method <- match.arg(method, c("mean", "max", "sum", "min"))
-    fun <- switch(method,
-                  mean = function(x) mean(x, na.rm = TRUE),
-                  max  = function(x) max(x, na.rm = TRUE),
-                  sum  = function(x) sum(x, na.rm = TRUE),
-                  min  = function(x) min(x, na.rm = TRUE))
+  method <- match.arg(method, c("mean", "max", "sum", "min", "presence"))
+  fun <- switch(method,
+                mean = function(x) mean(x, na.rm = TRUE),
+                max  = function(x) max(x, na.rm = TRUE),
+                sum  = function(x) sum(x, na.rm = TRUE),
+                min  = function(x) min(x, na.rm = TRUE),
+                presence = function(x) as.integer(any(x > 0, na.rm = TRUE))
+  )
+  
     
   
   # make df with unique asv_id cluster_id combinations
@@ -4069,7 +4076,7 @@ pool_replicates <- function(read_count,
 #'   }
 #'   To disable logging entirely, set `log_file = NA`.
 #'  
-#'  @template param_blast_path#'
+#' @template param_blast_path
 #'   
 #' @return Data frame with columns: 
 #' `asv_id`, `ltg_taxid`, `ltg_name`, `ltg_rank`, `ltg_rank_index`,
@@ -4573,7 +4580,8 @@ remove_leading_ones <- function(row) {
 #' @examples
 #' \dontrun{
 #' taxids <- c(189839, 1077837)
-#' tax_df <- read.delim(xxxxxxxxxxxx, package = "vtamR"), header = TRUE, sep = "\t", fill = TRUE, quote = "")
+#' tax_df <- read.delim(xxxxxxxxxxxx, package = "vtamR"), header = TRUE, 
+#'                       sep = "\t", fill = TRUE, quote = "")
 #' lineages <- get_taxonomic_lineage(taxids, tax_df = tax_df)
 #' find_ltg(taxids, lineages = lineages, phit = 80)
 #' }
@@ -4849,8 +4857,10 @@ adjust_ltg_resolution <- function(taxres_df, tax_df){
 #'   Required if `add_empty_samples = TRUE` or `add_expected_asv = TRUE`.
 #' @param pool_replicates Logical. If `TRUE`, aggregate read counts across replicates 
 #'   (see `method`). If `FALSE`, keep replicates separate (columns are `sample.replicate`).
-#' @param method Character string specifying how replicate read counts are aggregated. 
-#'   Must be one of `"mean"`, `"max"`, `"sum"`, or `"min"`.
+#' @param method Character string specifying how replicate read counts are aggregated.
+#'   Must be one of `"mean"`, `"max"`, `"sum"`, `"min"`, or `"presence"`.
+#'   `"presence"` returns 1 if the read count is greater than 0 in at least one
+#'   replicate, and 0 otherwise.
 #' @param add_empty_samples Logical. If `TRUE`, include all samples from the original dataset, 
 #'   even if they have zero reads after filtering.
 #' @param add_sums_by_sample Logical. If `TRUE`, add rows with total read counts and 
@@ -6028,7 +6038,7 @@ detect_false_negatives <- function(read_count_samples, mock_composition,
 #' @param increment_variant_cutoff Numeric value between 0 and 1 defining the
 #'   step size between tested variant cutoff values.
 #' @param by_replicate logical; argument passed to filter_occurrence_variant
-#' @param `min_replicate_number()` Positive integer specifying the minimum number of
+#' @param min_replicate_number Positive integer specifying the minimum number of
 #'   replicates for `filter_min_replicate()`.
 #' @param quiet logical; if TRUE, suppress informational messages and show only
 #'   warnings or errors.
@@ -6487,7 +6497,8 @@ pool_markers <- function(files,
                      method = "vsearch",
                      vsearch_path = vsearch_path,
                      identity = 1,
-                     quiet = TRUE
+                     quiet = TRUE,
+                     log_file = NA
                      )
   
   asv_with_centroids_df <- df_pool %>%
@@ -8588,7 +8599,7 @@ demultiplex_fastq_pairs_strand_plus <- function(fastqinfo,
 #' This file is used by `demultiplex_and_trim_fastq` to demultiplex input FASTQ files pairs.
 #' 
 #' @param fastqinfo_df Data frame with columns: `tag_fw`, `tag_rv`, `fastq_fw` and `fastq_rv`.
-#' @param fastq Character string specifying the `fastq_fw` file to be demultiplexed 
+#' @param fastq_file Character string specifying the `fastq_fw` file to be demultiplexed 
 #'   (must be present in the `fastq_fw` column of `fastqinfo_df`).
 #' @param outdir Character string specifying the output directory.
 #' @param tag_to_end Logical. If `TRUE`, tags are assumed to be located at the 
@@ -9326,6 +9337,7 @@ random_sample_batch <- function(info, dir, outdir,
 #'   corresponding to the input columns that are present.
 #'
 #' @examples
+#' \dontrun{
 #' files <- data.frame(
 #'   fasta = c("sample1.fasta.gz", "sample2.fasta"),
 #'   fastq_fw = c("sample1_R1.fastq.gz", "sample2_R1.fastq")
@@ -9333,6 +9345,7 @@ random_sample_batch <- function(info, dir, outdir,
 #'
 #' add_output_filename(files, compress = FALSE)
 #' add_output_filename(files, compress = TRUE)
+#' }
 #'
 #' @keywords internal
 add_output_filename <- function(files, compress) {

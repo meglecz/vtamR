@@ -1,5 +1,10 @@
 
 
+# vtamR 2.0.0 (2026-11-18)
+
+- Tutorial restructured 
+- `pool_replicates` gains a new aggregation method, `method = "presence"`, which returns 1 if the read count is greater than 0 in at least one replicate, and 0 otherwise.
+
 # vtamR 2.0.0.9000 (2026-09-16)
 
 ## Breaking changes

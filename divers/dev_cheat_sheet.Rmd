@@ -14,17 +14,6 @@ knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 
 # Developper
-## Load and roxygenise
-```{r}
-library("devtools")
-library("roxygen2")
-setwd("C:\\Users\\emese\\vtamR")
-setwd("/home/meglecz/vtamR")
-load_all(".")
-roxygenise()
-usethis::use_roxygen_md()
-```
-
 
 ## Creating a package
 
@@ -70,10 +59,6 @@ data(full_asv_tax)
 ```
 
 
-
-
-
-
 ## Building new version
 
 - 1. Finalize DESCRIPTION version (e.g. 2.0.0)
@@ -87,8 +72,8 @@ data(full_asv_tax)
 ### Update the following files
 
 - DESCRIPTION
-- vignettes
 - inst/citation
+- CITATION.cff
 - complete NEWS.md
 
 ### load and roxygenise
@@ -137,7 +122,7 @@ devtools::document()
 devtools::install(build_vignettes = FALSE, force = TRUE, dependencies = TRUE)
 ```
 
-### Build vignettes
+### Build vignettes (not necessary; replaced by pkgdown)
 #### It creates Rmd and html in doc
 ```{r}
 setwd("/home/meglecz/vtamR")
@@ -157,7 +142,9 @@ copy Rmd to web_doc modify TOC
 # make index to link the different pages
 ```
 
-## static github website
+## static github website with pkgdown
+
+### once to set up
 Run all this from vtamR and not from vtamR/divers !!!
 
 ```{r}
@@ -171,9 +158,9 @@ usethis::use_pkgdown()
 ```
 Correct the URL manually to url: https://meglecz.github.io/vtamR/
 
+This renders the vignettes (already working locally), builds the function reference from your roxygen docs, and writes the full site into docs/ at the repo root.
 
-This renders your vignettes (already working locally), builds the function reference from your roxygen docs, and writes the full site into docs/ at the repo root.
-Do this every time the pkgdown site should be updated
+### Do this every time the pkgdown site should be updated
 
 ```{r}
 pkgdown::build_site()
@@ -185,7 +172,7 @@ git commit -m "Build pkgdown site"
 git push origin develop
 ```
 
-
+### Once to set up
 On GitHub: 
 go to your repo → Settings → Pages → under 'Build and deployment', 
   set 
@@ -199,7 +186,7 @@ GitHub takes a minute or two to build and deploy.
 Then visit https://meglecz.github.io/vtamR/ to confirm it's live. 
 If it 404s at first, give it a few minutes and refresh — first deploy can be slow.
 
-When submitting the paper, set doc to main???
+When submitting the paper, set doc to main!!
 
 
 ## create data release

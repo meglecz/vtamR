@@ -28,6 +28,10 @@ assign_taxonomy_ltg(
 
 \item{blast_db}{Character string specifying the BLAST database name.}
 
+\item{blast_path}{Optional path to the \code{blast} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.blast_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
+
 \item{ltg_params}{Data frame or path to a CSV file defining identity thresholds
 (\code{pid}) and associated parameters (\code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}).}
 
@@ -58,9 +62,7 @@ The path is resolved with the following priority:
 \item \code{"vtamR_log.csv"} in the current working directory, used as a
 last resort if neither of the above is set.
 }
-To disable logging entirely, set \code{log_file = NA}.
-
-@template param_blast_path#'}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame with columns:

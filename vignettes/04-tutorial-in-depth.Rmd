@@ -68,7 +68,7 @@ It also details the various outputs produced for documenting your analyses and t
 
 
 ```{r, out.width="100%", fig.align="center", echo=FALSE, fig.cap="Overview of the vtamR Workflow"}
-knitr::include_graphics("figures/vtamR_flowchart_sceen.png")
+knitr::include_graphics("figures/vtamR_flowchart.png")
 ```
 
 
@@ -472,7 +472,7 @@ the recommended settings are:
 These settings are designed to remove sequencing errors while preserving 
 real biological variation.
 
-### Whole Dataset vs. Sample-by-Sample Clustering**
+### Whole Dataset vs. Sample-by-Sample Clustering
 
 There are two ways to apply SWARM:
 
@@ -748,8 +748,7 @@ a **different-looking graph**.
 ```{r renkonen-dist-barplot}
 plot_renkonen_distance_barplot(
   df = renkonen_within_df, 
-  sampleinfo = sampleinfo_df, 
-  x_axis_label_size = 6
+  sampleinfo = sampleinfo_df
   )
 ```
 
@@ -757,15 +756,15 @@ plot_renkonen_distance_barplot(
 
 In this example, there are only a few Renkonen distance values, 
 so the **density plot** isn’t very informative. 
-The **barplot**, however, shows that **replicate 1 of the `tnegtag` sample** 
-(a negative control) is substantially different from the other two replicates.
+The **barplot**, however, shows that distances between replicates of the 
+negative control are the highest.
 Setting `cutoff = 0.4` would be a reasonable choice 
 for the `filter_replicate` function.
 
 The `filter_replicate` function removes replicates whose 
 **Renkonen distances exceed the cutoff** relative to most other 
 replicates of the same sample.
-Here, this means that **replicate 1 of `tnegtag` will be removed**.
+Here, this means that **one of the replicates of `tnegtag` will be removed**.
 
 **Remove replicates**
 
