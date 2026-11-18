@@ -26,11 +26,12 @@ NULL
 #' @param asv Data frame or CSV file containing `asv` and `asv_id` columns.
 #' @param min_id Numeric value between 0 and 1. Minimum identity threshold;
 #' ASV pairs with identity below this value are ignored.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
 #' @param outfile Character string: name of the output CSV file. If empty, no file is written.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: If TRUE, suppress informational messages and display only warnings or errors.
+#' 
+#' @template param_vsearch_path
 #' 
 #' @return A data frame listing ASV pairs and their sequence identity, with columns:
 #' `query`, `target`, `identity`.
@@ -40,7 +41,6 @@ NULL
 #' identity_df <- pairwise_identity(
 #'   asv,
 #'   min_id = 0.8,
-#'   vsearch_path = vsearch,
 #'   num_threads = 8
 #' )
 #' }
@@ -48,7 +48,7 @@ NULL
 #' 
 pairwise_identity <- function(asv, 
                               min_id = 0.8, 
-                              vsearch_path=vsearch, 
+                              vsearch_path=NULL, 
                               num_threads=0,
                               outfile="",
                               sep=",",
@@ -58,6 +58,7 @@ pairwise_identity <- function(asv,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
   
   # can accept df or file as an input
   if(is.character(asv)){
@@ -137,14 +138,23 @@ pairwise_identity <- function(asv,
 #' @param swarm_d Positive integer: clustering distance parameter (`d`) for Swarm.
 #' @param fastidious Logical: if TRUE and `swarm_d = 1`, performs a second clustering
 #' pass to reduce the number of small clusters.
-#' @param swarm_path Character string: path to the Swarm executable.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
 #' @param outfile Character string: name of the output CSV file containing
 #' `asv_id` and `cluster_id`. If empty, no file is written.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'
+#' @template param_swarm_path
 #' 
 #' @return A data frame with columns: `asv_id`, `cluster_id`.
 #' 
@@ -153,7 +163,6 @@ pairwise_identity <- function(asv,
 #' cluster_df <- cluster_swarm(
 #'   read_count_df,
 #'   swarm_d = 7,
-#'   swarm_path = "swarm",
 #'   num_threads = 8
 #' )
 #' }
@@ -162,7 +171,7 @@ pairwise_identity <- function(asv,
 cluster_swarm <- function(read_count, 
                           swarm_d=1, 
                           fastidious=FALSE,
-                          swarm_path="swarm", 
+                          swarm_path= NULL, 
                           num_threads=0, 
                           outfile="", 
                           sep=",", 
@@ -172,10 +181,14 @@ cluster_swarm <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  swarm_path <- get_path("swarm", path = swarm_path)
+  
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -290,14 +303,23 @@ cluster_swarm <- function(read_count,
 #' @param read_count Data frame or CSV file containing the following columns:
 #' `asv_id`, `asv`, `read_count`.
 #' @param identity Numeric value between 0 and 1. Sequence identity threshold used for clustering.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
 #' @param outfile Character string: name of the output CSV file containing
 #' `asv_id` and `cluster_id`. If empty, no file is written.
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#' 
+#' @template param_vsearch_path
 #' 
 #' @return A data frame with columns: `asv_id`, `cluster_id`.
 #' 
@@ -306,7 +328,6 @@ cluster_swarm <- function(read_count,
 #' cluster_df <- cluster_vsearch(
 #'   read_count_df,
 #'   identity = 0.97,
-#'   vsearch_path = "vsearch",
 #'   num_threads = 8
 #' )
 #' }
@@ -314,7 +335,7 @@ cluster_swarm <- function(read_count,
 #' 
 cluster_vsearch <- function(read_count, 
                             identity=0.97, 
-                            vsearch_path="vsearch", 
+                            vsearch_path=NULL, 
                             num_threads=0, 
                             outfile="", 
                             sep=",", 
@@ -324,10 +345,13 @@ cluster_vsearch <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -419,8 +443,6 @@ cluster_vsearch <- function(read_count,
 #' @param swarm_d_increment Positive integer: increment step between `d` values.
 #' @param min_id Numeric value between 0 and 1. Minimum identity threshold;
 #' ASV pairs below this value are excluded from the analysis.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
-#' @param swarm_path Character string: path to the Swarm executable.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
 #' @param outfile Character string: name of the output CSV file containing
 #' pairwise ASV identities and clustering metadata. If empty, no file is written.
@@ -429,7 +451,18 @@ cluster_vsearch <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
+#' @template param_swarm_path
 #' 
 #' @return A density plot object showing distributions of pairwise ASV identities
 #' within and between Swarm clusters across tested `d` values.
@@ -442,8 +475,6 @@ cluster_vsearch <- function(read_count,
 #'   swarm_d_max = 12,
 #'   swarm_d_increment = 2,
 #'   min_id = 0.8,
-#'   vsearch_path = "vsearch",
-#'   swarm_path = "swarm",
 #'   num_threads = 8,
 #'   plotfile = "density_plot.png"
 #' )
@@ -455,8 +486,8 @@ plot_pairwise_identity_swarm <- function(read_count,
                                          swarm_d_max=15,
                                          swarm_d_increment=1,
                                          min_id = 0.8, 
-                                         vsearch_path="vsearch", 
-                                         swarm_path="swarm",
+                                         vsearch_path=NULL, 
+                                         swarm_path= NULL,
                                          num_threads=0,
                                          outfile="", 
                                          plotfile="", 
@@ -468,10 +499,14 @@ plot_pairwise_identity_swarm <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  swarm_path <- get_path("swarm", path = swarm_path)
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -507,7 +542,8 @@ plot_pairwise_identity_swarm <- function(read_count,
                                 fastidious=FALSE,
                                 swarm_path=swarm_path, 
                                 num_threads=num_threads, 
-                                quiet=quiet)
+                                quiet=quiet,
+                                log_file = NA)
     #####
     # add to pairwise_id the clusters of each query and target and define 
     # if they are in the same or different clusters
@@ -588,7 +624,6 @@ plot_pairwise_identity_swarm <- function(read_count,
 #' clustering identity thresholds from `identity_min` to `identity_max`.
 #' @param min_id Numeric value between 0 and 1. Minimum pairwise identity;
 #' ASV pairs below this threshold are excluded from alignment and plotting.
-#' @param vsearch_path Character string: path to the VSEARCH executable.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
 #' @param outfile Character string: name of the output CSV file containing
 #' `pairwise_asv_identity`, cluster assignment, and clustering parameter.
@@ -598,7 +633,17 @@ plot_pairwise_identity_swarm <- function(read_count,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#' 
+#' @template param_vsearch_path
 #' 
 #' @return A density plot of pairwise ASV identity distributions across clustering thresholds.
 #' 
@@ -610,7 +655,6 @@ plot_pairwise_identity_swarm <- function(read_count,
 #'   identity_max = 0.99,
 #'   identity_increment = 0.01,
 #'   min_id = 0.8,
-#'   vsearch_path = "vsearch",
 #'   num_threads = 8,
 #'   plotfile = "density_plot.png"
 #' )
@@ -622,7 +666,7 @@ plot_pairwise_identity_vsearch <- function(read_count,
                                            identity_max=0.99,
                                            identity_increment=0.01,
                                            min_id = 0.8, 
-                                           vsearch_path="vsearch", 
+                                           vsearch_path=NULL, 
                                            num_threads=0,
                                            outfile="", 
                                            plotfile="",
@@ -633,10 +677,13 @@ plot_pairwise_identity_vsearch <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -676,7 +723,8 @@ plot_pairwise_identity_vsearch <- function(read_count,
                                     identity=d, 
                                     vsearch_path=vsearch_path, 
                                     num_threads=num_threads, 
-                                    quiet=TRUE)
+                                    quiet=TRUE,
+                                    log_file = NA)
     
     #####
     # add to pairwise_id the clusters of each query and target and define 
@@ -766,7 +814,15 @@ plot_pairwise_identity_vsearch <- function(read_count,
 #' @param log_file Character string specifying the path to the CSV log file.
 #'   If `NULL`, no log file is written.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
 #'
 #' @return A data frame with columns:
 #' `cluster_id` and one column per taxonomic level containing the classification
@@ -787,10 +843,10 @@ classify_clusters <- function(cluster, taxa, outfile="",
                               taxlevels=c("domain", "phylum", "class", "order","family", "genus", "species"),
                               log_file=NULL
 ){
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   ##### make df if read_count is file
   if(is.character(cluster)){
@@ -889,8 +945,6 @@ classify_clusters <- function(cluster, taxa, outfile="",
 #' `"swarm"` or `"vsearch"`.
 #' @param cluster_params Numeric vector of clustering parameters:
 #' Swarm `d` values or VSEARCH identity thresholds (values between 0 and 1).
-#' @param vsearch_path Character string: path to the VSEARCH executable.
-#' @param swarm_path Character string: path to the Swarm executable.
 #' @param taxlevels Character vector specifying taxonomic levels to classify and plot
 #' (e.g. `"species"`, `"genus"`).
 #' @param num_threads Positive integer: number of CPUs to use. If 0, all available CPUs are used.
@@ -902,7 +956,18 @@ classify_clusters <- function(cluster, taxa, outfile="",
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'
+#' @template param_vsearch_path 
+#' @template param_swarm_path
 #'
 #' @return A connected scatterplot showing the number of clusters in each class
 #' (closed, open, hybrid) across clustering parameters and taxonomic levels.
@@ -914,7 +979,6 @@ classify_clusters <- function(cluster, taxa, outfile="",
 #'   taxa,
 #'   clustering_method = "swarm",
 #'   cluster_params = c(2, 4, 6, 8, 10),
-#'   swarm_path = swarm_path,
 #'   taxlevels = c("species", "genus"),
 #'   num_threads = 8
 #' )
@@ -924,8 +988,8 @@ classify_clusters <- function(cluster, taxa, outfile="",
 plot_cluster_classification <- function(read_count, taxa, 
                                         clustering_method="swarm", 
                                         cluster_params=c(2,4,6,8,10), 
-                                        vsearch_path="vsearch", 
-                                        swarm_path="swarm", 
+                                        vsearch_path = NULL, 
+                                        swarm_path = NULL, 
                                         taxlevels= c("species", "genus"),
                                         outfile="",
                                         plotfile="",
@@ -937,7 +1001,14 @@ plot_cluster_classification <- function(read_count, taxa,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
-#  collect_log()
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  swarm_path <- get_path("swarm", path = swarm_path)
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
   ##### make df if read_count is file
   if(is.character(read_count)){
     read_count_df <- read.csv(read_count, header=T, sep=sep)
@@ -972,18 +1043,21 @@ plot_cluster_classification <- function(read_count, taxa,
                                   swarm_d=i, 
                                   swarm_path=swarm_path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
     }else{
       cluster_df <- cluster_vsearch(read_count = read_count_df, 
                                     identity=i, 
                                     vsearch_path=vsearch_path, 
                                     num_threads=num_threads, 
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
     }
     
     ### classify
     classification <- classify_clusters(cluster = cluster_df, taxa = taxa_df, quiet=quiet, 
-                                        taxlevels=taxlevels)
+                                        taxlevels=taxlevels,
+                                        log_file = NA)
     #### count the number of clusters in each class (open, closed, hybrid, NA)
     for(tl in taxlevels){
       col_name <- paste("classification", tl, sep="_")
@@ -1032,8 +1106,9 @@ plot_cluster_classification <- function(read_count, taxa,
     print(p) # print plot to file
     dev.off()
   }
-  # add end_time and runtime, print
-#  write_log(log, file=log_file)
+  
+  # Append log to log_file. If log_file == NA, no log
+  write_log(log, file = log_file)
   return(p)
   
 }
@@ -1128,7 +1203,6 @@ pool_by_cluster <- function(read_count_df,
 #' If FALSE, the input data frame is returned with an added `cluster_id` column.
 #' @param by_sample Logical: if TRUE, clustering is performed separately for each sample.
 #' @param method Character string specifying the clustering method: `"swarm"` or `"vsearch"`.
-#' @param path Character string: path to the Swarm or VSEARCH executable.
 #' @param swarm_d Positive integer: Swarm `d` parameter (maximum number of differences
 #' allowed between ASVs to cluster them together).
 #' @param fastidious Logical: if TRUE and `swarm_d = 1`, performs an additional
@@ -1140,8 +1214,19 @@ pool_by_cluster <- function(read_count_df,
 #' @param sep Field separator character used in input and output CSV files.
 #' @param quiet Logical: if TRUE, suppress informational messages and display only warnings or errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
-#'
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'   
+#' @template param_vsearch_path
+#' @template param_swarm_path
+#' 
 #' @return A data frame. If `group = TRUE`, ASVs are merged by cluster;
 #' otherwise, the original structure is preserved with an additional `cluster_id` column.
 #'
@@ -1152,7 +1237,6 @@ pool_by_cluster <- function(read_count_df,
 #'   group = TRUE,
 #'   method = "vsearch",
 #'   by_sample = TRUE,
-#'   path = swarm_path,
 #'   num_threads = 4
 #' )
 #' }
@@ -1162,7 +1246,8 @@ cluster_asv <- function(read_count,
                         group = TRUE,
                         by_sample=FALSE,
                         method = "swarm",
-                        path="", 
+                        swarm_path= NULL, 
+                        vsearch_path= NULL,
                         num_threads=0, 
                         swarm_d=1, 
                         fastidious=FALSE, 
@@ -1176,11 +1261,13 @@ cluster_asv <- function(read_count,
   if(num_threads == 0){
     num_threads <- parallel::detectCores()
   }
+  vsearch_path <- get_path("vsearch", path = vsearch_path)
+  swarm_path <- get_path("swarm", path = swarm_path)
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
-  }
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -1215,16 +1302,18 @@ cluster_asv <- function(read_count,
       if(method == "swarm"){
         cluster_df <- cluster_swarm(read_count = df_sample, 
                                     swarm_d=swarm_d, 
-                                    swarm_path=path, 
+                                    swarm_path=swarm_path, 
                                     num_threads=num_threads, 
                                     fastidious = fastidious,
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
       }else{
         cluster_df <- cluster_vsearch(read_count = df_sample, 
                                       identity=identity, 
-                                      vsearch_path=path, 
+                                      vsearch_path=vsearch_path, 
                                       num_threads=num_threads, 
-                                      quiet=quiet)
+                                      quiet=quiet,
+                                      log_file = NA)
       }
       
       # modify input df according to group
@@ -1242,15 +1331,17 @@ cluster_asv <- function(read_count,
     if(method == "swarm"){
       cluster_df <- cluster_swarm(read_count = read_count_df, 
                                   swarm_d=swarm_d, 
-                                  swarm_path=path, 
+                                  swarm_path=swarm_path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
     }else{
       cluster_df <- cluster_vsearch(read_count = read_count_df, 
                                     identity=identity, 
-                                    vsearch_path=path, 
+                                    vsearch_path=vsearch_path, 
                                     num_threads=num_threads, 
-                                    quiet=quiet)
+                                    quiet=quiet,
+                                    log_file = NA)
     }
     
     if(group){# pool ASV by cluster
@@ -1298,17 +1389,28 @@ cluster_asv <- function(read_count,
 #'   required for the ASV to define a new cluster.
 #' @param min_read_count Numeric; used when `split_clusters = TRUE`.
 #'   Minimum absolute read count required for an ASV to be considered for splitting.
-#' @param swarm_path Character string: path to SWARM executable.
 #' @param swarm_d Positive integer; SWARM `d` parameter. Maximum number of
 #'   differences allowed between two ASVs for clustering (ASVs are grouped if
 #'   they differ by ≤ d positions).
 #' @param fastidious Logical; when `swarm_d = 1`, perform an additional clustering
 #'   pass to reduce the number of small clusters.
+#' @param outfile Character string: name of the output CSV file. If empty, no
+#'   file is written.
 #' @param num_threads Positive integer: number of CPUs to use. If 0, use all available CPUs.
 #' @param sep Field separator character for input and output CSV files.
 #' @param quiet Logical; if `TRUE`, suppress informational messages and show only warnings/errors.
 #' @param log_file Character string specifying the path to the CSV log file.
-#'   If `NULL`, no log file is written.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#' 
+#' @template param_swarm_path
 #'
 #' @return A data frame with the same structure as the input, where ASVs
 #' belonging to the same cluster are pooled (read counts summed) within each
@@ -1328,9 +1430,9 @@ cluster_asv <- function(read_count,
 denoise_by_swarm <- function(read_count, 
                              by_sample=FALSE,
                              split_clusters=FALSE,
-                             min_abundance_ratio = 0.2,
+                             min_abundance_ratio = 0.5,
                              min_read_count = 10,
-                             swarm_path="swarm", 
+                             swarm_path= NULL, 
                              num_threads=0, 
                              swarm_d=1, 
                              fastidious=TRUE, 
@@ -1340,10 +1442,16 @@ denoise_by_swarm <- function(read_count,
                              log_file=NULL
 ){
   
-  # get function name, all arguments and stat time
-  if(!is.null(log_file)){
-    log <- collect_log()
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
   }
+  swarm_path <- get_path("swarm", path = swarm_path)
+  
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
   
   if (split_clusters & (!by_sample | swarm_d != 1 | !fastidious)) {
     stop(
@@ -1354,9 +1462,7 @@ denoise_by_swarm <- function(read_count,
     )
   }
   
-  if(num_threads == 0){
-    num_threads <- parallel::detectCores()
-  }
+
   
   # can accept df or file as an input
   if(is.character(read_count)){
@@ -1390,7 +1496,8 @@ denoise_by_swarm <- function(read_count,
                                   swarm_d=swarm_d, 
                                   swarm_path=swarm_path, 
                                   num_threads=num_threads, 
-                                  quiet=quiet)
+                                  quiet=quiet,
+                                  log_file = NA)
       
       # pool ASV by cluster
       if(split_clusters){
@@ -1411,7 +1518,8 @@ denoise_by_swarm <- function(read_count,
                                 swarm_d=swarm_d, 
                                 swarm_path=swarm_path, 
                                 num_threads=num_threads, 
-                                quiet=quiet)
+                                quiet=quiet,
+                                log_file = NA)
     out_df <- pool_by_cluster(read_count_df, cluster_df)
   }
   

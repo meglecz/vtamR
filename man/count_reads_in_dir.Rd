@@ -9,6 +9,8 @@ count_reads_in_dir(
   pattern = ".",
   file_type = "fasta",
   outfile = NULL,
+  chunk_lines = 1e+05,
+  fast_count = TRUE,
   sep = ",",
   quiet = T
 )
@@ -22,6 +24,15 @@ count_reads_in_dir(
 For any other value, the function returns the number of lines in each file.}
 
 \item{outfile}{Character string: output CSV file name. If NULL, no file is written.}
+
+\item{chunk_lines}{Integer specifying the maximum number of lines to read
+at a time when using the chunk-based counting method. Defaults to
+\code{1e5}. Passed to \code{count_reads()}.}
+
+\item{fast_count}{Logical value controlling the counting method. When
+\code{TRUE} on Linux-like systems, shell commands are used for faster
+counting. When \code{FALSE}, the chunk-based R implementation is used.
+Passed to \code{count_reads()}.}
 
 \item{sep}{Field separator character in input and output CSV files.}
 

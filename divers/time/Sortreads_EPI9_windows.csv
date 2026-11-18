@@ -1,5 +1,0 @@
-"","Step","user","system","elapsed"
-"user.self","SortReads_Merge_out_uncompress",21.79,4.19,1105.69
-"user.self1","SortReads_Merge_out_compress",53.71,2.37,1104.04
-"user.self2","SortReads_RandomSeq_out_uncompress",7.78,2.13,480.33
-"user.self3","SortReads_RandomSeq_out_compress",18.58,1.55,501.94

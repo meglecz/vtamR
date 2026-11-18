@@ -39,7 +39,9 @@ Required if \code{add_empty_samples = TRUE} or \code{add_expected_asv = TRUE}.}
 (see \code{method}). If \code{FALSE}, keep replicates separate (columns are \code{sample.replicate}).}
 
 \item{method}{Character string specifying how replicate read counts are aggregated.
-Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
+Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, \code{"min"}, or \code{"presence"}.
+\code{"presence"} returns 1 if the read count is greater than 0 in at least one
+replicate, and 0 otherwise.}
 
 \item{add_empty_samples}{Logical. If \code{TRUE}, include all samples from the original dataset,
 even if they have zero reads after filtering.}
@@ -59,7 +61,15 @@ and the number of samples in which each ASV is present.}
 \item{sep}{Field separator character used in input and output CSV files.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Invisible data frame corresponding to the ASV table. Columns represent samples,

@@ -7,7 +7,7 @@
 cluster_vsearch(
   read_count,
   identity = 0.97,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   outfile = "",
   sep = ",",
@@ -21,7 +21,9 @@ cluster_vsearch(
 
 \item{identity}{Numeric value between 0 and 1. Sequence identity threshold used for clustering.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
@@ -33,7 +35,15 @@ cluster_vsearch(
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A data frame with columns: \code{asv_id}, \code{cluster_id}.
@@ -47,7 +57,6 @@ returns a data frame mapping each ASV to a cluster identifier.
 cluster_df <- cluster_vsearch(
   read_count_df,
   identity = 0.97,
-  vsearch_path = "vsearch",
   num_threads = 8
 )
 }

@@ -9,10 +9,10 @@ trim_primers_file(
   outfile,
   primer_fw,
   primer_rv,
-  cutadapt_path = "cutadapt",
-  vsearch_path = "vsearch",
+  cutadapt_path = NULL,
+  vsearch_path = NULL,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   num_threads = 0,
   check_reverse = F,
   primer_to_end = T,
@@ -32,11 +32,13 @@ trim_primers_file(
 
 \item{primer_rv}{Character string specifying the reverse primer (IUPAC ambiguity codes are accepted).}
 
-\item{cutadapt_path}{Character string specifying the path to the
-\code{cutadapt} executable.}
+\item{cutadapt_path}{Optional path to the \code{cutadapt} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.cutadapt_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
-\item{vsearch_path}{Character string specifying the path to the
-\code{vsearch} executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{compress_method}{Character or logical. Compression method:
 \code{"pigz"}, \code{"gzip"}, or \code{"R"}.
@@ -47,9 +49,9 @@ system PATH (or specified via \code{pigz_path}).
 Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.
 Only used if \code{check_reverse = TRUE}.}
 
-\item{pigz_path}{Character string specifying the path to the \code{pigz}
-executable. Only required if \code{compress_method = "pigz"} and it is not
-available in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}

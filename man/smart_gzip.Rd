@@ -8,7 +8,7 @@ smart_gzip(
   file,
   outfile = NULL,
   remove = FALSE,
-  pigz_path = "pigz",
+  pigz_path = NULL,
   method = "R",
   num_threads = 0,
   quiet = TRUE,
@@ -24,9 +24,9 @@ automatically derived from file.}
 \item{remove}{Logical. If \code{TRUE}, remove the input file after a successful
 operation.}
 
-\item{pigz_path}{Character string specifying the path to the \code{pigz}
-executable. Only required if \code{method = "pigz"} and it is not available
-in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{method}{Character. Compression method: \code{pigz}, \code{gzip}, or \code{R}.
 \code{pigz} requires \code{pigz} to be installed and available in the system

@@ -17,8 +17,10 @@ pool_replicates(
 \item{read_count}{Data frame or path to a CSV file with the following columns:
 \code{asv_id}, \code{sample}, \code{replicate}, \code{read_count}, \code{asv}, \code{cluster_id} (optional).}
 
-\item{method}{Character string specifying the aggregation method used to pool
-replicates. Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, or \code{"min"}.}
+\item{method}{Character string specifying how replicate read counts are aggregated.
+Must be one of \code{"mean"}, \code{"max"}, \code{"sum"}, \code{"min"}, or \code{"presence"}.
+\code{"presence"} returns 1 if the read count is greater than 0 in at least one
+replicate, and 0 otherwise.}
 
 \item{digits}{Positive integer specifying the number of decimal places used
 when rounding mean read counts.}
@@ -30,7 +32,15 @@ data frame. If NULL, no file is written.}
 output CSV files.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame with columns: \code{asv}, \code{sample}, \code{read_count} (aggregated

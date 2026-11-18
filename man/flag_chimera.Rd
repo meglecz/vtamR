@@ -6,7 +6,7 @@
 \usage{
 flag_chimera(
   unique_asv_df,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   abskew = 2,
   quiet = TRUE,
   num_threads = 0
@@ -16,7 +16,9 @@ flag_chimera(
 \item{unique_asv_df}{Data frame with the following columns: \code{asv}, \code{read_count}.
 ASVs must be unique.}
 
-\item{vsearch_path}{Character string specifying the path to the \code{vsearch} executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{abskew}{Positive integer specifying the minimum abundance ratio required
 between parent sequences and a chimera candidate.}

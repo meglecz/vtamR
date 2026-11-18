@@ -6,7 +6,7 @@
 \usage{
 flag_pcr_error(
   unique_asv_df,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   pcr_error_var_prop = 0.1,
   max_mismatch = 1,
@@ -17,8 +17,9 @@ flag_pcr_error(
 \item{unique_asv_df}{Data frame with the following columns: \code{asv}, \code{read_count}.
 ASVs must be unique.}
 
-\item{vsearch_path}{Character string specifying the path to the
-\code{vsearch} executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}
@@ -56,7 +57,6 @@ unique_asv_df <- read_count_df \%>\%
 
 unique_asv_df_flagged <- flag_pcr_error(
   unique_asv_df,
-  vsearch_path = vsearch_path,
   pcr_error_var_prop = 0.2,
   max_mismatch = 2
 )

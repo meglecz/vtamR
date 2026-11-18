@@ -10,7 +10,7 @@ match_variants_to_mock_species(
   sampleinfo,
   taxonomy,
   outdir,
-  blast_path = "blastn",
+  blast_path = NULL,
   num_threads = 0,
   sep = ",",
   quiet = TRUE,
@@ -35,7 +35,9 @@ A COInr taxonomy file can be used.}
 
 \item{outdir}{Character string: output directory for generated files.}
 
-\item{blast_path}{Character string: path to BLAST executable.}
+\item{blast_path}{Optional path to the \code{blast} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.blast_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPU threads to use. If 0, all available CPUs are used.}
 
@@ -44,7 +46,15 @@ A COInr taxonomy file can be used.}
 \item{quiet}{Logical: if TRUE, suppress informational messages and show only warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}}
 }
 \value{
 Data frame with columns: \code{sample}, \code{action}, \code{asv}, \code{taxon}, \code{asv_id}.
@@ -89,7 +99,6 @@ match_variants_to_mock_species(
   read_count = read_count_df,
   fas = "reference.fasta",
   taxonomy = "taxonomy.tsv",
-  blast_path = blast_path,
   sampleinfo = sampleinfo_df
 )
 }

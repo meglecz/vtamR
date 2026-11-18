@@ -8,9 +8,9 @@ denoise_by_swarm(
   read_count,
   by_sample = FALSE,
   split_clusters = FALSE,
-  min_abundance_ratio = 0.2,
+  min_abundance_ratio = 0.5,
   min_read_count = 10,
-  swarm_path = "swarm",
+  swarm_path = NULL,
   num_threads = 0,
   swarm_d = 1,
   fastidious = TRUE,
@@ -37,7 +37,9 @@ required for the ASV to define a new cluster.}
 \item{min_read_count}{Numeric; used when \code{split_clusters = TRUE}.
 Minimum absolute read count required for an ASV to be considered for splitting.}
 
-\item{swarm_path}{Character string: path to SWARM executable.}
+\item{swarm_path}{Optional path to the \code{swarm} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.swarm_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, use all available CPUs.}
 
@@ -48,12 +50,23 @@ they differ by ≤ d positions).}
 \item{fastidious}{Logical; when \code{swarm_d = 1}, perform an additional clustering
 pass to reduce the number of small clusters.}
 
+\item{outfile}{Character string: name of the output CSV file. If empty, no
+file is written.}
+
 \item{sep}{Field separator character for input and output CSV files.}
 
 \item{quiet}{Logical; if \code{TRUE}, suppress informational messages and show only warnings/errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A data frame with the same structure as the input, where ASVs

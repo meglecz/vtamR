@@ -10,8 +10,8 @@ plot_pairwise_identity_swarm(
   swarm_d_max = 15,
   swarm_d_increment = 1,
   min_id = 0.8,
-  vsearch_path = "vsearch",
-  swarm_path = "swarm",
+  vsearch_path = NULL,
+  swarm_path = NULL,
   num_threads = 0,
   outfile = "",
   plotfile = "",
@@ -33,9 +33,13 @@ plot_pairwise_identity_swarm(
 \item{min_id}{Numeric value between 0 and 1. Minimum identity threshold;
 ASV pairs below this value are excluded from the analysis.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
-\item{swarm_path}{Character string: path to the Swarm executable.}
+\item{swarm_path}{Optional path to the \code{swarm} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.swarm_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPUs to use. If 0, all available CPUs are used.}
 
@@ -50,7 +54,15 @@ If empty, no file is written.}
 \item{quiet}{Logical: if TRUE, suppress informational messages and display only warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A density plot object showing distributions of pairwise ASV identities
@@ -75,8 +87,6 @@ plot <- plot_pairwise_identity_swarm(
   swarm_d_max = 12,
   swarm_d_increment = 2,
   min_id = 0.8,
-  vsearch_path = "vsearch",
-  swarm_path = "swarm",
   num_threads = 8,
   plotfile = "density_plot.png"
 )

@@ -8,7 +8,7 @@ demultiplex_and_trim_strand_plus(
   fastainfo,
   fasta_dir,
   outdir,
-  cutadapt_path = "cutadapt",
+  cutadapt_path = NULL,
   num_threads = 0,
   tag_to_end = T,
   primer_to_end = T,
@@ -31,8 +31,9 @@ FASTA files (listed in the \code{fasta} column of \code{fastainfo}).}
 
 \item{outdir}{Character string specifying the output directory.}
 
-\item{cutadapt_path}{Character string specifying the path to the
-\code{cutadapt} executable.}
+\item{cutadapt_path}{Optional path to the \code{cutadapt} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.cutadapt_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to
 use. If \code{0}, all available CPUs are used.}

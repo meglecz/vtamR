@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "vtamR: Validation and Taxonomic Assignment of Metabarcoding Data with R"
+version: 2.0.0
+date-released: 2026-11-18
+license: MIT
+repository-code: "https://github.com/meglecz/vtamR"
+url: "https://meglecz.github.io/vtamR/"
+abstract: >-
+  A rewrite and extension in R of VTAM (Gonzalez et al. 2023). vtamR enables
+  modular, control-calibrated validation of metabarcoding occurrences and
+  supports reproducible biodiversity assessment and long-term monitoring.
+keywords:
+  - metabarcoding
+  - eDNA
+  - taxonomic assignment
+  - R package
+authors:
+  - family-names: Meglecz
+    given-names: Emese
+    orcid: "https://orcid.org/0000-0001-7547-4858"
+    affiliation: "IMBE - Mediterranean Institute of Biodiversity and Ecology"

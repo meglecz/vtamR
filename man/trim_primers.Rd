@@ -10,9 +10,9 @@ trim_primers(
   outdir,
   compress = F,
   compress_method = "R",
-  pigz_path = "pigz",
-  cutadapt_path = "cutadapt",
-  vsearch_path = "vsearch",
+  pigz_path = NULL,
+  cutadapt_path = NULL,
+  vsearch_path = NULL,
   check_reverse = F,
   primer_to_end = T,
   cutadapt_error_rate = 0.1,
@@ -45,15 +45,17 @@ system PATH (or specified via \code{pigz_path}).
 \code{"R"} uses \code{R.utils}, which is cross-platform but slower.
 Relative speed: \code{R.utils} < \code{gzip} < \code{pigz}.}
 
-\item{pigz_path}{Character string specifying the path to the \code{pigz}
-executable. Only required if \code{compress_method = "pigz"} and it is not
-available in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
-\item{cutadapt_path}{Character string specifying the path to the
-\code{cutadapt} executable.}
+\item{cutadapt_path}{Optional path to the \code{cutadapt} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.cutadapt_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
-\item{vsearch_path}{Character string specifying the path to the
-\code{vsearch} executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{check_reverse}{Logical. If \code{TRUE}, also check reverse-complemented
 sequences from the input FASTA files.}
@@ -78,7 +80,15 @@ output CSV files.}
 only display warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame. The updated \code{fastainfo} data frame with modified

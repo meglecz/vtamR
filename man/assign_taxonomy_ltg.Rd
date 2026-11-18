@@ -8,7 +8,7 @@ assign_taxonomy_ltg(
   asv,
   taxonomy,
   blast_db,
-  blast_path = "blastn",
+  blast_path = NULL,
   ltg_params = NULL,
   outfile = NULL,
   fill_lineage = TRUE,
@@ -28,7 +28,9 @@ assign_taxonomy_ltg(
 
 \item{blast_db}{Character string specifying the BLAST database name.}
 
-\item{blast_path}{Character string specifying the path to the BLAST executable.}
+\item{blast_path}{Optional path to the \code{blast} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.blast_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{ltg_params}{Data frame or path to a CSV file defining identity thresholds
 (\code{pid}) and associated parameters (\code{pcov}, \code{phit}, \code{taxn}, \code{seqn}, \code{refres}, \code{ltgres}).}
@@ -52,7 +54,15 @@ output CSV files.}
 warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame with columns:

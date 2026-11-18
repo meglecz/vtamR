@@ -8,7 +8,6 @@ plot_renkonen_distance_barplot(
   df,
   sampleinfo = NULL,
   sep = ",",
-  x_axis_label_size = 6,
   plotfile = "",
   log_file = NULL
 )
@@ -23,13 +22,19 @@ This output can be generated using \code{make_renkonen_distance_matrix()}.}
 
 \item{sep}{Field separator used in CSV files.}
 
-\item{x_axis_label_size}{Numeric; size of x-axis labels.}
-
 \item{plotfile}{Character string: name of the output PNG file. If empty,
 no file is written.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 A bar plot object.

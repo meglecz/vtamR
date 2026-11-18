@@ -67,14 +67,22 @@ step size between tested variant cutoff values.}
 
 \item{by_replicate}{logical; argument passed to filter_occurrence_variant}
 
+\item{min_replicate_number}{Positive integer specifying the minimum number of
+replicates for \code{filter_min_replicate()}.}
+
 \item{quiet}{logical; if TRUE, suppress informational messages and show only
 warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
-
-\item{`min_replicate_number()`}{Positive integer specifying the minimum number of
-replicates for \code{filter_min_replicate()}.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame with columns \code{read_count_cutoff}, \code{variant_cutoff},

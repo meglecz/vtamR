@@ -1,9 +1,7 @@
-
-
 #' @importFrom dplyr filter mutate group_by select summarize summarise arrange last
 #' @importFrom dplyr desc left_join full_join inner_join %>% n_distinct distinct 
 #' @importFrom dplyr bind_rows ungroup rename rename_with rowwise n do first if_else
-#' @importFrom dplyr add_row
+#' @importFrom dplyr add_row slice_head
 #' @importFrom ggplot2 ggplot geom_bar labs theme element_text scale_y_continuous 
 #' @importFrom ggplot2 aes geom_density theme_minimal geom_histogram after_stat
 #' @importFrom utils read.csv write.table read.table read.delim count.fields
@@ -14,6 +12,8 @@
 #' @importFrom seqinr splitseq
 NULL
 
+#'
+#'
 #' Download from Zenodo
 #'
 #' Downloads a file from Zenodo and optionally extracts it if it is a
@@ -312,15 +312,14 @@ check_dir <- function(path, is_file=FALSE){
 #'   `gzip` is available on Linux systems.  
 #'   `R` uses `R.utils`, which is cross-platform but slower.  
 #'   Relative speed: `R.utils` < `gzip` < `pigz`.
-#' @param pigz_path Character string specifying the path to the `pigz`
-#'   executable. Only required if `method = "pigz"` and it is not available 
-#'   in the system PATH.
 #' @param num_threads Positive integer specifying the number of CPU threads to 
 #'   use. If `0`, all available CPUs are used.
 #' @param quiet Logical. If `TRUE`, suppress informational messages.
 #' @param compress Logical. If `TRUE`, compress the file; if 
 #'   `FALSE`, decompress it.
-#'
+#' 
+#' @template param_pigz_path
+#' 
 #' @return Invisibly returns a character string: the path to the output file.
 #' 
 #' @examples
@@ -337,13 +336,18 @@ check_dir <- function(path, is_file=FALSE){
 smart_gzip <- function(file,
                        outfile = NULL,
                        remove = FALSE,
-                       pigz_path = "pigz",
+                       pigz_path = NULL,
                        method = "R",
                        num_threads = 0,
                        quiet = TRUE,
                        compress = FALSE) {
   # Check input
   if (!file.exists(file)) stop("File not found: ", file)
+  
+  if(num_threads == 0){
+    num_threads <- parallel::detectCores()
+  }
+  pigz_path <- get_path("pigz", path = pigz_path)
   
   # Detect operation type and define flags
   if (compress) {
@@ -372,11 +376,7 @@ smart_gzip <- function(file,
            if (compress) "expected compressed (.gz ) output" else "expected uncompessed output")
   }
   outfile <- path.expand(outfile)
-  
-  # Detect number of threads
-  if (num_threads == 0){
-    num_threads <- parallel::detectCores()
-  }
+
   
   # Use pigz if provided
   if (method=="pigz") {
@@ -587,9 +587,11 @@ get_program_version <- function(name, path) {
 #'
 #'
 #' @keywords internal
-#' @noRd
-collect_log <- function() {
+collect_log <- function(file = NULL) {
   
+  if(is.na(file)){ # if user defines NA => do not write log
+    return(invisible(NA))
+  }
   ## Name of calling function
   fun_name <- as.character(sys.call(-1)[[1]])
   
@@ -710,12 +712,15 @@ collect_log <- function() {
 #' @return The completed log data frame, returned invisibly.
 #'
 #' @keywords internal
-#' @noRd
  
 write_log <- function(log, file = NULL, sep=",") {
   
-  if (is.null(file))
-    return(invisible(log))
+  if(is.na(file)){ # user do not want log
+    return(invisible(NA))
+  }
+  
+#  if (is.null(file))
+#    return(invisible(log))
   
   check_dir(file, is_file = TRUE)
   
@@ -745,6 +750,43 @@ write_log <- function(log, file = NULL, sep=",") {
   invisible(log)
 }
 
+#' Resolve the path to the log file
+#'
+#' Internal helper that determines which log file path should be used,
+#' following the priority order: an explicitly supplied `file` argument,
+#' then the `vtamR.log_file` package option, then a default
+#' `"vtamR_log.csv"` in the current working directory. If the resolved
+#' path is not `NA`, the function ensures that the parent directory of
+#' the log file exists (creating it if necessary).
+#'
+#' @param file Character string specifying the path to the CSV log file,
+#'   `NA` to disable logging, or `NULL` (the default) to resolve the path
+#'   automatically from the `vtamR.log_file` option or the default
+#'   `"vtamR_log.csv"`.
+#'
+#' @return A character string with the resolved log file path, or `NA` if
+#'   logging is disabled.
+#'
+#' @keywords internal
+get_log_file <- function(file = NULL){
+  
+  if(!is.null(file)){ # user defined something (NA => no log file, or direct path)
+    file = file
+  } else {
+    package_log <- getOption("vtamR.log_file")
+    if(!is.null(package_log)){ # package log defined
+      file = package_log
+    }else{
+      file = "vtamR_log.csv"
+    }
+  }
+  
+  if(!is.na(file)){ # user did not deacivate log
+    check_dir(file, is_file = TRUE) # make dir if do not exists
+  }
+  return(file)
+}
+
 
 #' Convert a table to a plain text representation
 #'
@@ -762,19 +804,12 @@ write_log <- function(log, file = NULL, sep=",") {
 #'
 #' @keywords internal
 #' @noRd
-
 table_to_text <- function(x){
-  
   txt <- paste(
-    capture.output(
-      print(
-        x,
-        row.names = FALSE
-      )
-    ),
+    capture.output(base::print.data.frame(x, row.names = FALSE)),
     collapse = "\n"
   )
-  return(txt)
+  txt
 }
 
 #' Update a MIEM field with information
@@ -822,8 +857,15 @@ set_miem_field <- function(miem, field, text) {
 #' in a table suitable for inclusion in the Supplementary Material of
 #' a manuscript.
 #'
-#' @param log A data.frame containing the vtamR log or the path to a CSV
-#'   log file.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
 #' @param r_versions A data.frame containing installed R package versions
 #'   or the path to a CSV file.
 #' @param outfile Optional output CSV file.
@@ -840,14 +882,19 @@ set_miem_field <- function(miem, field, text) {
 #' @export
 #' 
 miem_bioinformatics <- function(
-  log,
+  log_file = NULL,
   r_versions,
   outfile = "",
   sep = ","){
   
+  log_file <- get_log_file(file = log_file)
+  if(is.na(log_file)){
+    msg <- paste0("ERROR: `log_file` cannot be NA. Please, provide the path by the `log_file` argument")
+    stop(msg)
+  }
   
   # read input 
-  log_df <-read_input(log, sep = sep)
+  log_df <-read_input(log_file, sep = sep)
   r_df <- read_input(r_versions, sep = sep)
   
   # initialize miem
@@ -884,14 +931,14 @@ miem_bioinformatics <- function(
     msg <- paste0(
       "Taxonomic assignment was performed using the Lowest Taxonomic Group (LTG) ",
       "method implemented in the vtamR R package (v", vtamR_version, ") ",
-      "[Meglécz, 2023](https://link.springer.com/article/10.1007/s42977-024-00201-x). ",
+      "[Meglecz, 2023](https://link.springer.com/article/10.1007/s42977-024-00201-x). ",
       "The LTG method is a BLAST-based Lowest Common Ancestor ",
       "(LCA) approach relying on NCBI-BLAST (v", blast_version, ") similarity searches."
     )
     miem <- set_miem_field(miem, field="Taxonomic assignment method", msg)
     
     # Taxonomic assignment parameters (and thresholds)
-    if(ltg_par == "NULL"){
+    if(is.null(ltg_par)){
       msg <- paste0(
         "Default parameters of the assign_taxonomy_ltg function from the vtamR ",
         "package (v", vtamR_version, ") were used for taxonomic assignment."
@@ -908,7 +955,7 @@ miem_bioinformatics <- function(
       "USER INPUT REQUIRED: Report the database origin and any sequence curation ",
       "performed. If COInr was used, cite that it contains COI sequences compiled ",
       "from the NCBI nucleotide (nt) and BOLD databases ",
-      "[Meglécz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)."
+      "[Meglecz, 2023](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13756)."
     )
     miem <- set_miem_field(miem, field="Database creation: Source of sequences and steps to identify locus of interest", msg)
     
@@ -1602,7 +1649,7 @@ miem_results <- function(
   # use the last info file to get sample_types
   
   if(!is.null(info_files) && !is.null(read_count_files)){
-    read_count_by_saple(info_files = info_files, read_count_files = read_count_files, outdir = outdir, sep = sep)
+    read_count_by_sample(info_files = info_files, read_count_files = read_count_files, outdir = outdir, sep = sep)
   }
   
   ### Total number of OTUs or ASVs assigned to taxa (and to what level of taxonomy)
@@ -1634,7 +1681,8 @@ miem_results <- function(
       read_count = final_read_count, 
       sampleinfo = sampleinfo, 
       mock_composition = mock_composition, 
-      sep = sep)
+      sep = sep,
+      log_file = NA)
     known_occurrences <- results[[1]]
     false_neagtives <- results[[2]]
     performance <- results[[3]]
@@ -1694,7 +1742,7 @@ miem_results <- function(
 #' number of unique ASVs in each read-count file.
 #'
 #' @keywords internal
-read_count_by_saple  <- function(read_count_files, info_files, outdir = ".", sep = ","){
+read_count_by_sample  <- function(read_count_files, info_files, outdir = ".", sep = ","){
   
   sampleinfo <- info_files[length(info_files)]
   sampleinfo_df <- read_input(sampleinfo, sep = sep) %>%
@@ -1956,3 +2004,557 @@ count_taxassing_by_rank <- function(read_count, taxa_df, sep = ","){
 
 
 
+#' Format OTU and taxonomy tables for vegan
+#'
+#' Converts OTU/ASV abundance and taxonomy input tables into the format
+#' required for downstream analysis with the \pkg{vegan} package. The OTU
+#' table is returned with samples as rows and ASVs (or clusters) as columns,
+#' while the taxonomy table contains taxonomy information for the ASVs
+#' present in the OTU table.
+#'
+#' When \code{rm_coltrol = TRUE}, only samples classified as \code{"real"} in
+#' the \code{sample_type} input are retained, thus control samples are deleted.
+#' If a \code{replicate} column is
+#' present, sample and replicate identifiers are combined into a single
+#' \code{sample} identifier using a hyphen.
+#'
+#' If a \code{cluster_id} column is present in the OTU table, reads are
+#' aggregated by cluster and sample. Otherwise, reads are aggregated by
+#' ASV and sample.
+#'
+#' @param otu Character string giving the path to the OTU/ASV abundance
+#'   table, or a data frame.
+#'   The table must contain \code{asv_id}, \code{sample}, and
+#'   \code{read_count} columns. An optional \code{replicate} or
+#'   \code{cluster_id} column may also be present.
+#' @param tax Character string giving the path to the taxonomy table, or a data frame. 
+#'   The table must contain an
+#'   \code{asv_id} column and taxonomy columns corresponding to the expected
+#'   ranks.
+#' @param rm_coltrol Logical; if \code{TRUE}, remove control samples and
+#'   retain only samples whose \code{sample_type} is \code{"real"}.
+#'   Defaults to \code{TRUE}.
+#' @param sample_type Character string giving the path to the sample_type
+#'   table, or a data frame. Required when
+#'   \code{rm_coltrol = TRUE}. The table must contain \code{sample} and
+#'   \code{sample_type} columns.
+#' @param outfile_motu Optional character string specifying the output file
+#'   path for the formatted OTU table. If \code{NULL}, the table is not
+#'   written to disk.
+#' @param outfile_taxa Optional character string specifying the output file
+#'   path for the formatted taxonomy table. If \code{NULL}, the table is not
+#'   written to disk.
+#' @param sep Character used to separate fields in input and output files.
+#'   Defaults to \code{","}.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'
+#' @return A list of two data frames:
+#' \itemize{
+#'   \item \code{otu_table}: A sample-by-ASV (or sample-by-cluster) abundance
+#'     table, with sample identifiers as row names and zeroes for missing
+#'     abundances.
+#'   \item \code{tax_table}: A taxonomy table containing only ASVs present in
+#'     \code{otu_table}, with ASV identifiers as row names.
+#' }
+#'
+#' @details
+#' The taxonomy table contains the columns \code{domain}, \code{phylum},
+#' \code{class}, \code{order}, \code{genus}, and \code{species}. If a
+#' \code{kingdom} column is present in the input taxonomy table, it is also
+#' retained.
+#'
+#' If \code{replicate} is present in the OTU table, the resulting sample
+#' identifier is constructed as \code{sample-replicate}. The same
+#' transformation is applied to the sample-type table when controls are
+#' removed.
+#'
+#' @examples
+#' \dontrun{
+#' result <- format_for_vegan(
+#'   otu = "otu.csv",
+#'   tax = "taxonomy.csv",
+#'   sample_type = "sample_type.csv"
+#' )
+#'
+#' otu_table <- result[[1]]
+#' tax_table <- result[[2]]
+#' }
+#'
+#' @export
+
+format_for_vegan <- function(otu, tax, rm_coltrol = TRUE, sample_type = NULL, 
+                             outfile_motu = NULL, outfile_taxa = NULL, 
+                             sep = ",", log_file = NULL){
+  
+  if (missing(otu)) stop("Argument 'otu' is required")
+  if (missing(tax)) stop("Argument 'tax' is required")
+  
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
+  if(rm_coltrol){
+    if(is.null(sample_type)){
+      msg <- "sample_type must be specified when rm_coltrol is TRUE"
+      stop(msg)
+    }else{
+      sample_type_df <- read_input(sample_type, sep = sep) 
+    }
+  }
+  
+  
+  # otu ###################
+  
+  otu_table <- read_input(otu, sep = sep)
+  # make one column with sample-replicate
+  if("replicate" %in% colnames(otu_table)){
+    otu_table <- otu_table  %>%
+      mutate(sample = paste(sample, replicate, sep="-")) %>%
+      select(-replicate)
+    
+    sample_type_df <- sample_type_df %>%
+      mutate(sample = paste(sample, replicate, sep = "-"))
+  }
+  
+  if("cluster_id" %in% colnames(otu_table)){ # if cluster_id make output with clusters
+    otu_table <- otu_table  %>%
+      select(-asv_id, -asv) %>%
+      group_by(cluster_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop") %>%
+      rename(asv_id = cluster_id) 
+  } else {
+    otu_table <- otu_table  %>%
+      select(-asv) %>%
+      group_by(asv_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop")
+  }
+  
+  if(rm_coltrol){
+    
+    sample_type_df <- sample_type_df %>%
+      select(sample, sample_type) %>%
+      distinct() %>%
+      filter(sample_type == "real")
+    
+    otu_table <- otu_table %>%
+      filter(sample %in%  sample_type_df$sample) 
+  }
+  
+  otu_table <- pivot_wider(otu_table, 
+                           names_from = asv_id,
+                           values_from = read_count,
+                           values_fill = 0)
+  otu_table <- as.data.frame(otu_table)
+  rownames(otu_table) <- otu_table$sample
+  otu_table <- select(otu_table, -sample)
+  
+  
+  # taxa ##########################
+  
+  tax_table <- read_input(tax, sep = sep)
+  tax_table <- as.data.frame(tax_table)
+  # remove taxa not in otu
+  tax_table <- tax_table %>%
+    filter(asv_id %in% colnames(otu_table))
+  rownames(tax_table) <- tax_table$asv_id
+  
+  if("kingdom" %in% colnames(tax_table)){
+    tax_table <- tax_table %>%
+      select(domain, kingdom, phylum, class, order, genus, species)
+  } else {
+    tax_table <- tax_table %>%
+      select(domain, phylum, class, order, genus, species)
+  }
+  
+  if(!is.null(outfile_motu)){
+    check_dir(outfile_motu, is_file = TRUE)
+    write.table(otu_table, file = outfile_motu, sep = sep, col.names = NA)
+  }
+  if(!is.null(outfile_taxa)){
+    check_dir(outfile_taxa, is_file = TRUE)
+    write.table(tax_table, file = outfile_taxa, sep = sep, col.names = NA)
+  }
+  
+  df_list <- list(otu_table, tax_table)
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  return(df_list)
+}
+
+
+#' Format OTU, taxonomy, and sample data as a phyloseq object
+#'
+#' Converts OTU/ASV abundance data and taxonomy data into a
+#' \code{\link[phyloseq]{phyloseq}} object. Optionally, sample metadata can
+#' be included and control samples can be removed.
+#'
+#' The OTU table is formatted with taxa as rows and samples as columns.
+#' If a \code{cluster_id} column is present in the OTU table, reads are
+#' aggregated by cluster and sample; otherwise, reads are aggregated by ASV
+#' and sample. Missing abundances are replaced by zero.
+#'
+#' If a \code{replicate} column is present, the sample identifier is
+#' constructed by combining \code{sample} and \code{replicate} with a
+#' hyphen. The same transformation is applied to the sample metadata when
+#' provided.
+#'
+#' @param otu Character string giving the path to the OTU/ASV abundance
+#'   table, or a data frame. The table
+#'   must contain \code{asv_id}, \code{sample}, and \code{read_count}
+#'   columns. Optional columns include \code{asv}, \code{replicate}, and
+#'   \code{cluster_id}.
+#' @param tax Character string giving the path to the taxonomy table,  or a data frame. 
+#'   The table must contain an
+#'   \code{asv_id} column and the relevant taxonomic ranks.
+#' @param samples Optional character string giving the path to the sample
+#'   metadata table, or a data frame.
+#'   When provided, the table must contain \code{sample} and
+#'   \code{sample_type} columns. The metadata are added to the resulting
+#'   \code{phyloseq} object as sample data.
+#' @param outfile Optional character string specifying the output file
+#'   path for the \code{phyloseq} object. If \code{NULL}, the file is not
+#'   written to disk.
+#' @param rm_control Logical; if \code{TRUE}, samples whose
+#'   \code{sample_type} is not \code{"real"} are removed. 
+#'   When \code{TRUE}, \code{samples} must be provided.
+#' @param sep Character used to separate fields in the input files.
+#' @param log_file Character string specifying the path to the CSV log file.
+#'   The path is resolved with the following priority:
+#'   \enumerate{
+#'     \item the `log_file` argument, if explicitly provided by the user;
+#'     \item the `vtamR.log_file` option set with
+#'       \code{options(vtamR.log_file = ...)}, if set;
+#'     \item `"vtamR_log.csv"` in the current working directory, used as a
+#'       last resort if neither of the above is set.
+#'   }
+#'   To disable logging entirely, set `log_file = NA`.
+#'
+#' @return A \code{\link[phyloseq]{phyloseq}} object containing:
+#' \itemize{
+#'   \item an OTU table with taxa as rows and samples as columns;
+#'   \item a taxonomy table containing taxonomy for the taxa present in the
+#'     OTU table; and
+#'   \item sample metadata when \code{samples} is provided.
+#' }
+#'
+#' @details
+#' The taxonomy table contains the columns \code{domain}, \code{phylum},
+#' \code{class}, \code{order}, \code{genus}, and \code{species}. If a
+#' \code{kingdom} column is present in the input taxonomy table, it is also
+#' retained.
+#'
+#' Taxa present in the taxonomy table but absent from the OTU table are
+#' removed. When sample metadata are provided, only the first metadata row
+#' for each sample is retained.
+#'
+#' The function requires the \pkg{phyloseq} package. If it is not installed,
+#' the function stops and provides installation instructions.
+#'
+#' @examples
+#' \dontrun{
+#' # Create a phyloseq object without sample metadata
+#' physeq <- format_for_phyloseq(
+#'   otu = "otu.csv",
+#'   tax = "taxonomy.csv"
+#' )
+#'
+#' # Include sample metadata
+#' physeq <- format_for_phyloseq(
+#'   otu = "otu.csv",
+#'   tax = "taxonomy.csv",
+#'   samples = "samples.csv"
+#' )
+#'
+#' # Remove control samples
+#' physeq <- format_for_phyloseq(
+#'   otu = "otu.csv",
+#'   tax = "taxonomy.csv",
+#'   samples = "samples.csv",
+#'   rm_control = TRUE
+#' )
+#' }
+#'
+#' @export
+
+format_for_phyloseq <- function(otu, tax, samples = NULL, outfile = NULL,
+                                rm_control = FALSE, 
+                                log_file = NULL, sep = ",")
+{
+  
+  if (missing(otu)) stop("Argument 'otu' is required")
+  if (missing(tax)) stop("Argument 'tax' is required")
+  #  if (missing(samples)) stop("Argument 'samples' is required")
+  
+  ###### test if phyloseq is installed
+  if (!requireNamespace("phyloseq", quietly = TRUE) ) {
+    stop(
+      "Package 'phyloseq' is required for this function.\n",
+      "Please install it with:\n",
+      "  if (!requireNamespace('BiocManager', quietly = TRUE))\n",
+      "    install.packages('BiocManager')\n",
+      "  BiocManager::install('phyloseq')",
+      call. = FALSE
+    )
+  }
+  
+  # get function name, all arguments and stat time
+  # resolve path to log_file
+  log_file <- get_log_file(file = log_file)
+  # get function name, all arguments and stat time. If log_file == NA, no log
+  log <- collect_log(file = log_file)
+  
+  if(rm_control & is.null(samples)){
+    msg <- "samples must be specified when rm_control is TRUE and contain a sample and sample_type columns"
+    stop(msg)
+  }
+  if(!is.null(samples)){
+    sample_type_df <- read_input(samples, sep = sep) 
+  }
+  
+  ### otu ########################################
+  
+  otu_mat <- read_input(otu, sep = sep)
+  # make one column with sample-replicate
+  if("replicate" %in% colnames(otu_mat)){
+    otu_mat <- otu_mat  %>%
+      mutate(sample = paste(sample, replicate, sep="-")) %>%
+      select(-replicate)
+    
+    if(!is.null(samples)){
+      sample_type_df <- sample_type_df %>%
+        mutate(sample = paste(sample, replicate, sep = "-"))
+    }
+  }
+  
+  if("cluster_id" %in% colnames(otu_mat)){ # if cluster_id make output with clusters
+    otu_mat <- otu_mat  %>%
+      select(-asv_id, -asv) %>%
+      group_by(cluster_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop") %>%
+      rename(asv_id = cluster_id) 
+  } else {
+    otu_mat <- otu_mat  %>%
+      select(-asv) %>%
+      group_by(asv_id, sample) %>%
+      summarise(read_count = sum(read_count), .groups = "drop")
+  }
+  
+  if(rm_control){
+    
+    sample_type_df <- sample_type_df %>%
+      filter(sample_type == "real")
+    
+    otu_mat <- otu_mat %>%
+      filter(sample %in%  sample_type_df$sample) 
+  }
+  
+  otu_mat <- pivot_wider(otu_mat, 
+                         names_from = sample,
+                         values_from = read_count,
+                         values_fill = 0)
+  otu_mat <- as.data.frame(otu_mat)
+  rownames(otu_mat) <- otu_mat$asv_id
+  otu_mat <- select(otu_mat, -asv_id)
+  otu_mat <- as.matrix(otu_mat)
+  
+  ### tax ########################################
+  
+  tax_mat <- read_input(tax, sep = sep)
+  tax_mat <- as.data.frame(tax_mat)
+  # remove taxa not in otu
+  tax_mat <- tax_mat %>%
+    filter(asv_id %in% rownames(otu_mat))
+  rownames(tax_mat) <- tax_mat$asv_id
+  
+  if("kingdom" %in% colnames(tax_mat)){
+    tax_mat <- tax_mat %>%
+      select(domain, kingdom, phylum, class, order, genus, species)
+  } else {
+    tax_mat <- tax_mat %>%
+      select(domain, phylum, class, order, genus, species)
+  }
+  tax_mat <- as.matrix(tax_mat)
+  
+  ### samples ########################################
+  if(!is.null(samples)){
+    sample_type_df <- sample_type_df %>%
+      group_by(sample) %>%
+      slice_head(n = 1) %>%
+      ungroup()
+    
+    sample_df <- as.data.frame(sample_type_df)
+    rownames(sample_df) <- sample_df$sample
+    sample_df <- select(sample_df, -sample)
+  }
+  
+  ### phyloseq ########################################
+  if(is.null(samples)){
+    OTU = phyloseq::otu_table(otu_mat, taxa_are_rows = TRUE)
+    TAX = phyloseq::tax_table(tax_mat)
+    phy_object <- phyloseq::phyloseq(OTU, TAX)
+  } else {
+    OTU = phyloseq::otu_table(otu_mat, taxa_are_rows = TRUE)
+    TAX = phyloseq::tax_table(tax_mat)
+    sample_df = phyloseq::sample_data(sample_df)
+    
+    phy_object <- phyloseq::phyloseq(OTU, TAX, sample_df)
+  }
+  
+  if(!is.null(outfile)){
+    check_dir(outfile, is_file = TRUE)
+    saveRDS(phy_object, file = outfile)
+  }
+  
+  # add end_time and runtime, print
+  write_log(log, file=log_file)
+  return(phy_object)
+}
+
+#' Get the path to an external program
+#'
+#' Resolves the path to an external program (e.g. \code{vsearch}, \code{cutadapt},
+#' \code{pigz}, \code{blastn}, \code{swarm}) used by the package. The resolution
+#' follows this order of priority:
+#' \enumerate{
+#'   \item If \code{path} is explicitly supplied by the user, it is used as-is.
+#'   \item Otherwise, the package option \code{vtamR.<program>_path} is checked
+#'         (e.g. \code{vtamR.vsearch_path} for \code{program = "vsearch"}).
+#'   \item If neither is set, the bare program name is returned, relying on it
+#'         being available on the system \code{PATH}.
+#' }
+#'
+#' @param program A character string giving the name of the external program
+#'   (e.g. \code{"vsearch"}, \code{"cutadapt"}, \code{"pigz"}, \code{"blastn"},
+#'   \code{"swarm"}). Used to look up the corresponding package option
+#'   \code{vtamR.<program>_path}.
+#' @param path Optional character string giving an explicit path to the
+#'   program executable. If supplied, it takes precedence over any package
+#'   option or default. Default is \code{NULL}.
+#'
+#' @return A character string giving the resolved path (or bare name) of the
+#'   external program.
+#'
+#' @examples
+#' \dontrun{
+#' get_path("vsearch")
+#' get_path("cutadapt")
+#' get_path("blastn", path = "/usr/local/bin/blastn")
+#'
+#' options(vtamR.pigz_path = "/opt/pigz/bin/pigz")
+#' get_path("pigz")
+#' }
+#'
+#' @export
+get_path <- function(program, path = NULL){
+  
+  if(!is.null(path)){ # user defined something
+    return(path)
+  }
+  
+  opt_name <- paste0("vtamR.", program, "_path")
+  package_path <- getOption(opt_name)
+  
+  if(!is.null(package_path)){ # package option defined
+    return(package_path)
+  }
+  
+  if(program == "blast"){
+    return("blastn")
+  } else {
+    return(program) # fallback: assume it's on PATH
+  }
+}
+
+#' Download example metabarcoding pipeline output
+#'
+#' Downloads and unzips a full example output from the vtamR metabarcoding
+#' pipeline, useful for following along with the vtamR tutorials. The example
+#' data is hosted as an asset on a dedicated GitHub release, independent of
+#' package version releases, so it is only updated when the pipeline's output
+#' format actually changes.
+#'
+#' If the target output directory already exists, the function does nothing
+#' unless \code{overwrite = TRUE}, to avoid needless re-downloading.
+#'
+#' @param dest Character. Directory in which to download and unzip the
+#'   example output. Defaults to \code{tempdir()}; pass a persistent path
+#'   (e.g. a project subdirectory) if you want the files to survive beyond
+#'   the current R session.
+#' @param tag Character. GitHub release tag to download the example data
+#'   from. Defaults to \code{"short-tutorial-output-v1"}. Override this to
+#'   fetch an older snapshot (e.g. matching an older version of a tutorial).
+#' @param filename Character. Name of the zip asset attached to the release.
+#'   Defaults to \code{"short_tutorial_output.zip"}.
+#' @param overwrite Logical. If \code{TRUE}, re-downloads and overwrites any
+#'   existing files at the destination. Defaults to \code{FALSE}.
+#'
+#' @return (Invisibly) the path to the unzipped example output directory. If
+#'   the download fails, returns \code{invisible(NULL)}.
+#'
+#' @examples
+#' \dontrun{
+#' # Download the current example output to a temporary directory
+#' out_dir <- download_tutorial_output()
+#' list.files(out_dir, recursive = TRUE)
+#'
+#' # Download to a persistent project folder
+#' download_tutorial_output(dest = "my_vtamR_project/")
+#'
+#' # Fetch an older snapshot matching an older tutorial
+#' download_tutorial_output(tag = "tutorial-output-v0")
+#' }
+#'
+#' @seealso
+#' The vtamR tutorials, which use this example output as a reference for
+#' expected pipeline results at each step.
+#'
+#' @export
+download_tutorial_output <- function(dest = tempdir(),
+                             tag = "tutorial-output-v1",
+                             filename = "tutorial_output.zip",
+                             overwrite = FALSE) {
+  
+  if (!dir.exists(dest)) dir.create(dest, recursive = TRUE)
+  
+  repo <- "meglecz/vtamR"
+  zip_url <- sprintf("https://github.com/%s/releases/download/%s/%s",
+                     repo, tag, filename)
+  
+  zip_path <- file.path(dest, filename)
+  out_dir  <- file.path(dest, tools::file_path_sans_ext(filename))
+  
+  if (dir.exists(out_dir) && !overwrite) {
+    message("Example output already exists at: ", out_dir,
+            "\nUse overwrite = TRUE to re-download.")
+    return(invisible(out_dir))
+  }
+  
+  message("Downloading example output (release: ", tag, ")...")
+  
+  result <- tryCatch({
+    utils::download.file(zip_url, destfile = zip_path, mode = "wb", quiet = FALSE)
+    TRUE
+  }, error = function(e) {
+    message("Download failed. Check that the release '", tag,
+            "' has an asset named '", filename, "' attached.")
+    FALSE
+  })
+  
+  if (!result) return(invisible(NULL))
+  
+  zip::unzip(zip_path, exdir = dest, overwrite = overwrite)
+  unlink(zip_path)
+  
+  message("Example output ready at: ", out_dir)
+  invisible(out_dir)
+}

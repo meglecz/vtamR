@@ -1,11 +1,13 @@
-citHeader("To cite this package, please use:")
+year <- sub("-.*", "", meta$Date)
+if (is.null(year) || length(year) == 0 || is.na(year)) year <- format(Sys.Date(), "%Y")
+vers <- paste("R package version", meta$Version)
 
-citEntry(
-  entry = "Manual",
-  title = "vtamR: Tools for Metabarcoding Data Analysis",
-  author = person("Emese", "Meglecz"),
-  year = 2026,
-  note = "R package version 1.1.0",
-  url = "https://github.com/meglecz/vtamR",
-  textVersion = "Meglecz E. (2026). vtamR: Tools for Metabarcoding Data Analysis. R package version 1.1.0. https://github.com/meglecz/vtamR"
+bibentry(
+  bibtype = "Manual",
+  header  = "To cite vtamR in publications, please use:",
+  title   = "vtamR: Validation and Taxonomic Assignment of Metabarcoding Data with R",
+  author  = person("Emese", "Meglecz", comment = c(ORCID = "0000-0001-7547-4858")),
+  year    = year,
+  note    = vers,
+  url     = "https://github.com/meglecz/vtamR"
 )

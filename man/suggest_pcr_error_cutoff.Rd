@@ -7,7 +7,7 @@
 suggest_pcr_error_cutoff(
   read_count,
   mock_composition,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   num_threads = 0,
   sep = ",",
   outfile = NULL,
@@ -24,7 +24,9 @@ suggest_pcr_error_cutoff(
 \item{mock_composition}{Data frame or CSV file with columns:
 \code{sample}, \code{action} (\code{keep} or \code{tolerate}), \code{asv}.}
 
-\item{vsearch_path}{Character string specifying the path to vsearch executables.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer specifying the number of CPU threads to use.
 If \code{0}, all available CPUs are used.}
@@ -44,7 +46,15 @@ occurrences below this value are ignored.}
 show warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame with the following columns: \code{sample}, \code{expected_read_count},
@@ -65,7 +75,6 @@ The suggested cutoff should be set above the maximum observed ratio
 suggest_pcr_error_cutoff(
   read_count = read_count_df,
   mock_composition = "data/mock_composition.csv",
-  vsearch_path = vsearch_path,
   max_mismatch = 2,
   min_read_count = 5
 )

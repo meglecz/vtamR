@@ -14,13 +14,13 @@ write_cutadapt_adapter_fastq(
 \arguments{
 \item{fastqinfo_df}{Data frame with columns: \code{tag_fw}, \code{tag_rv}, \code{fastq_fw} and \code{fastq_rv}.}
 
+\item{fastq_file}{Character string specifying the \code{fastq_fw} file to be demultiplexed
+(must be present in the \code{fastq_fw} column of \code{fastqinfo_df}).}
+
 \item{outdir}{Character string specifying the output directory.}
 
 \item{tag_to_end}{Logical. If \code{TRUE}, tags are assumed to be located at the
 extremities of reads.}
-
-\item{fastq}{Character string specifying the \code{fastq_fw} file to be demultiplexed
-(must be present in the \code{fastq_fw} column of \code{fastqinfo_df}).}
 }
 \value{
 Vector with the output fasta files, or \code{NA} if all tags

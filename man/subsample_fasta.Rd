@@ -10,10 +10,10 @@ subsample_fasta(
   fasta_dir,
   outdir,
   use_vsearch = FALSE,
-  vsearch_path = "vsearch",
+  vsearch_path = NULL,
   randseed = NULL,
   compress_method = "R",
-  pigz_path = "pigz",
+  pigz_path = NULL,
   num_threads = 0,
   compress = FALSE,
   sep = ",",
@@ -34,7 +34,9 @@ Files may be gzipped.}
 \item{use_vsearch}{Logical: if TRUE, uses VSEARCH for subsampling (Linux only).
 Otherwise uses a cross-platform R-based implementation.}
 
-\item{vsearch_path}{Character string: path to the VSEARCH executable.}
+\item{vsearch_path}{Optional path to the \code{vsearch} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.vsearch_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{randseed}{Integer or NULL: random seed for reproducibility. If NULL or 0,
 a pseudo-random seed is used. A non-zero seed ensures reproducible results.}
@@ -48,8 +50,9 @@ Options are:
 Performance order: \code{pigz} > \code{gzip} > \code{R}
 }}
 
-\item{pigz_path}{Character string: path to the \code{pigz} executable. Required only if \code{pigz}
-is used and not available in the system PATH.}
+\item{pigz_path}{Optional path to the \code{pigz} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.pigz_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{num_threads}{Positive integer: number of CPU threads to use. If 0, all available CPUs are used.}
 
@@ -60,7 +63,15 @@ is used and not available in the system PATH.}
 \item{quiet}{Logical: if TRUE, suppress informational messages; only warnings and errors are shown.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Updated input data frame with adjusted file names (if needed) and updated read counts.

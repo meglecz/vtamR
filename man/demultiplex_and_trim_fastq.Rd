@@ -8,7 +8,7 @@ demultiplex_and_trim_fastq(
   fastqinfo,
   fastq_dir,
   outdir,
-  cutadapt_path = "cutadapt",
+  cutadapt_path = NULL,
   check_reverse = FALSE,
   num_threads = 0,
   tag_to_end = TRUE,
@@ -32,8 +32,9 @@ FASTQ files (listed in the \code{fastq_fw} and \code{fastq_rv} columns of \code{
 
 \item{outdir}{Character string specifying the output directory.}
 
-\item{cutadapt_path}{Character string specifying the path to the
-\code{cutadapt} executable.}
+\item{cutadapt_path}{Optional path to the \code{cutadapt} executable. If
+\code{NULL} (default), resolved via \code{getOption("vtamR.cutadapt_path")}
+or the \code{PATH} (see \code{\link{get_path}}).}
 
 \item{check_reverse}{Logical. If \code{TRUE}, also check reverse-complemented
 sequences from the input FASTA files.}
@@ -60,7 +61,15 @@ output CSV files.}
 only display warnings or errors.}
 
 \item{log_file}{Character string specifying the path to the CSV log file.
-If \code{NULL}, no log file is written.}
+The path is resolved with the following priority:
+\enumerate{
+\item the \code{log_file} argument, if explicitly provided by the user;
+\item the \code{vtamR.log_file} option set with
+\code{options(vtamR.log_file = ...)}, if set;
+\item \code{"vtamR_log.csv"} in the current working directory, used as a
+last resort if neither of the above is set.
+}
+To disable logging entirely, set \code{log_file = NA}.}
 }
 \value{
 Data frame similar to the input \code{fastqinfo} file,
